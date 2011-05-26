@@ -1,0 +1,110 @@
+html{
+	padding:8px;
+	margin:0px;
+	user-select:none;
+}
+body{
+	padding:0px;
+	margin:0px;
+	-webkit-user-select:none;
+}
+.window{
+	width:400px;
+	display:inline-block;
+	position:relative;
+	padding-bottom:10px;
+	margin-bottom:10px;
+	border-bottom:1px solid #b2b2b2;
+
+}
+.window:last-child{
+	padding-bottom:0px;
+	margin-bottom:0px;
+	border-bottom:none;
+}
+.icon{
+	height:20px;
+	width:20px;
+	box-sizing:border-box;
+	border:1px solid #b2b2b2;
+	padding:1px;
+	border-radius:3px;
+	background-size:16px 16px;
+	background-repeat:no-repeat;
+	background-position:center;				
+}
+.icon:hover{
+	border:2px solid #b2b2b2;
+	padding:0px;
+}
+.tab.selected{
+	border:2px solid #3B5686;
+	padding:0px;
+}
+.tab{
+	float:left;
+	margin-left:2px;
+	margin-bottom:2px;
+	background-image:url(random.png);
+	overflow:hidden;
+}
+.tab:first-child, .newliner + .tab{
+	margin-left:0px;
+}		
+.windowaction{
+	float:right;
+	margin-right:2px;
+}
+.windowaction.add{
+	background-image:url(new.png);
+}
+.windowaction.close{
+	background-image:url(close.png);
+}
+.windowaction.new{
+	background-image:url(new.png);
+}
+.windowaction.trash{
+	background-image:url(trash.png);
+}
+.windowaction.pin{
+	background-image:url(pin.png);
+}
+.tab.left > .limiter, .tab.right > .limiter{
+	width:2px;
+	height:20px;
+	background-color:#000000;
+	margin-top:-2px;
+	
+}
+.tab.left > .limiter{
+	margin-left:-4px;
+}
+.tab.right > .limiter{
+	float:right;
+	margin-right:-4px;
+}
+.icon.tab.expanded{
+	width:340px;
+	float:left;
+	background-position:2px center;
+	margin-left:0px;
+	font-family:verdana;
+	font-size:10pt;
+	padding-left:22px;
+	white-space:nowrap;
+
+	-webkit-user-select:none;
+}
+
+.newliner{
+	clear:both;
+	margin-right:-2px;
+}
+input{
+	border:1px solid #eeeeee;
+	border-radius:3px;
+	height:20px;
+	box-sizing:border-box;
+	width:330px;
+}
