@@ -1,5 +1,8 @@
 function TabManager(){
 	var This = Div();
+	
+	
+	This.Layout = "horizontal"; //vertical , horizontal
 	This.Dragging = false;
 	This.LastClicked = null;
 	This.Restart = function(){
@@ -8,6 +11,22 @@ function TabManager(){
 			for(var i = 0; i < windows.length; i++){
 				This.appendChild(Window(windows[i],This));
 			}
+			
+			if(This.Layout == "block"){
+				var wins = This.getElementsByClassName("window");
+				var highest = 0;
+				for(var i = 0; i < wins.length; i++){
+					console.log(wins[i].clientHeight);
+					if(wins[i].clientHeight > highest){
+						highest = wins[i].clientHeight;
+					}
+				}
+				for(var i = 0; i < wins.length; i++){
+					wins[i].style.height = highest+"px";
+					wins[i].style.width = "auto";
+				}
+			}
+			
 			var addwindow;
 			var deletetabs;
 			var pintabs;
@@ -20,6 +39,7 @@ function TabManager(){
 					addwindow = Div("icon windowaction new")
 				)
 			);
+			
 			search.focus();
 			search.select();
 			

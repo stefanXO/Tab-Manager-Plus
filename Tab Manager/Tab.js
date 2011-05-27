@@ -10,6 +10,10 @@ function Tab(t,w){
 		This.style.backgroundImage = "url("+t.favIconUrl+")";
 	}
 	This.title = t.title;
+	if(t.incognito){
+		This.addClass("incognito");
+	}
+	
 	
 	This.on("mousedown",function(e){
 		

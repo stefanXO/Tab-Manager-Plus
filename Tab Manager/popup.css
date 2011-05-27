@@ -12,15 +12,25 @@ body{
 	width:400px;
 	display:inline-block;
 	position:relative;
-	padding-bottom:10px;
-	margin-bottom:10px;
-	border-bottom:1px solid #b2b2b2;
-
+	padding-top:10px;
+	margin-top:10px;
+	border-top:1px solid #b2b2b2;
 }
-.window:last-child{
-	padding-bottom:0px;
-	margin-bottom:0px;
-	border-bottom:none;
+.window.block{
+	border-top:none;
+	padding-top:0px;
+	margin-top:0px;
+	border-left:1px solid #b2b2b2;
+	padding-left:10px;
+	margin-left:10px;
+}
+.window:first-child{
+	padding-top:0px;
+	margin-top:0px;
+	border-top:none;
+	padding-left:0px;
+	margin-left:0px;
+	border-left:none;
 }
 .icon{
 	height:20px;
@@ -31,10 +41,14 @@ body{
 	border-radius:3px;
 	background-size:16px 16px;
 	background-repeat:no-repeat;
-	background-position:center;				
+	background-position:center;
+	float:left;				
+}
+.icon.incognito{
+	border:1px solid #ff0000;
 }
 .icon:hover{
-	border:2px solid #b2b2b2;
+	border-width:2px;
 	padding:0px;
 }
 .tab.selected{
@@ -48,6 +62,10 @@ body{
 	background-image:url(random.png);
 	overflow:hidden;
 }
+.tab.full{
+	width:340px;
+	background-position:2px center;
+}
 .tab:first-child, .newliner + .tab{
 	margin-left:0px;
 }		
@@ -55,16 +73,16 @@ body{
 	float:right;
 	margin-right:2px;
 }
-.windowaction.add{
+.add{
 	background-image:url(new.png);
 }
-.windowaction.close{
+.close{
 	background-image:url(close.png);
 }
-.windowaction.new{
+.new{
 	background-image:url(new.png);
 }
-.windowaction.trash{
+.trash{
 	background-image:url(trash.png);
 }
 .windowaction.pin{
