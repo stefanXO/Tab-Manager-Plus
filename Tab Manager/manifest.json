@@ -1,6 +1,6 @@
 {
   	"name": "Tab Manager",
-  	"version": "3.0",
+  	"version": "3.07",
   	"description": "Let's you very easy and fast handle your tabs!",
 	"icons":{"128":"icon.png","48":"icon48.png"},
   	"permissions": ["tabs"],
