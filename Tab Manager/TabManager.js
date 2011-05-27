@@ -2,17 +2,21 @@ function TabManager(){
 	var This = Div();
 	
 	
-	This.Layout = "horizontal"; //vertical , horizontal
+	
 	This.Dragging = false;
 	This.LastClicked = null;
 	This.Restart = function(){
+		This.Layout = localStorage["layout"];
+		if(!This.Layout){
+			This.Layout = "horizontal";
+		}
 		This.innerHTML = "";
 		chrome.windows.getAll({populate:true},function(windows){
 			for(var i = 0; i < windows.length; i++){
 				This.appendChild(Window(windows[i],This));
 			}
 			
-			if(This.Layout == "block"){
+			if(This.Layout == "blocks"){
 				var wins = This.getElementsByClassName("window");
 				var highest = 0;
 				for(var i = 0; i < wins.length; i++){
@@ -31,12 +35,14 @@ function TabManager(){
 			var deletetabs;
 			var pintabs;
 			var search;
+			var layout;
 			This.appendChild(
 				Div("window",
 					search = Txt(),
+					layout = Div("icon windowaction "+This.Layout),
 					deletetabs = Div("icon windowaction trash"),
 					pintabs = Div("icon windowaction pin"),
-					addwindow = Div("icon windowaction new")
+					addwindow = Div("icon windowaction new")					
 				)
 			);
 			
@@ -98,6 +104,17 @@ function TabManager(){
 						tab.removeClass("selected");
 					}
 				}
+			});
+			
+			layout.on("click",function(){
+				if(This.Layout == "blocks"){
+					localStorage["layout"] = "horizontal";
+				}else if(This.Layout == "horizontal"){
+					localStorage["layout"] = "vertical";
+				}else{
+					localStorage["layout"] = "blocks";
+				}
+				This.Restart();
 			});
 		});					
 	}

@@ -10,6 +10,10 @@ function Tab(t,w){
 		This.style.backgroundImage = "url("+t.favIconUrl+")";
 	}
 	This.title = t.title;
+	if(This.Window.TabManager.Layout == "vertical"){
+		This.style.paddingLeft = "20px";
+		This.appendChild(Div("tabtitle",This.title));
+	}
 	if(t.incognito){
 		This.addClass("incognito");
 	}

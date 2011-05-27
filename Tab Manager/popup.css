@@ -42,7 +42,12 @@ body{
 	background-size:16px 16px;
 	background-repeat:no-repeat;
 	background-position:center;
-	float:left;				
+	float:left;
+	margin-left:2px;
+	font-family:verdana;
+	font-size:12px;
+	user-select:none;
+	cursor:arrow;			
 }
 .icon.incognito{
 	border:1px solid #ff0000;
@@ -60,18 +65,24 @@ body{
 	margin-left:2px;
 	margin-bottom:2px;
 	background-image:url(random.png);
-	overflow:hidden;
 }
 .tab.full{
 	width:340px;
 	background-position:2px center;
 }
-.tab:first-child, .newliner + .tab{
+.tab.full > .tabtitle{
+	width:310px;
+	height:100%;
+	white-space:nowrap;
+	overflow:hidden;
+}
+.tab:first-child, .newliner + .icon{
 	margin-left:0px;
 }		
 .windowaction{
 	float:right;
 	margin-right:2px;
+	margin-left:0px;
 }
 .add{
 	background-image:url(new.png);
@@ -85,7 +96,16 @@ body{
 .trash{
 	background-image:url(trash.png);
 }
-.windowaction.pin{
+.blocks{
+	background-image:url(block.png);
+}
+.horizontal{
+	background-image:url(horizontal.png);
+}
+.vertical{
+	background-image:url(vertical.png);
+}
+.pin{
 	background-image:url(pin.png);
 }
 .tab.left > .limiter, .tab.right > .limiter{
@@ -124,5 +144,5 @@ input{
 	border-radius:3px;
 	height:20px;
 	box-sizing:border-box;
-	width:330px;
+	width:310px;
 }

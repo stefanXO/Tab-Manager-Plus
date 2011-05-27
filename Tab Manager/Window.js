@@ -6,7 +6,7 @@ function Window(w,t){
 	
 	var addtab = Div("icon add");
 	var closewindow = Div("icon close");
-	if(t.Layout == "block"){
+	if(t.Layout == "blocks"){
 		This.addClass("block");
 	}else{
 		addtab.addClass("windowaction");
@@ -26,7 +26,7 @@ function Window(w,t){
 	tabs.push(closewindow);
 	tabs.push(addtab);
 	
-	if(t.Layout == "block"){
+	if(t.Layout == "blocks"){
 		for(var i = 1; i*i < tabs.length; i++);
 		tabsperrow = i;
 	}else if(t.Layout == "vertical"){
@@ -36,7 +36,7 @@ function Window(w,t){
 	
 	
 	for(var j = 0; j < tabs.length; j++){	
-		if(j % tabsperrow == 0 && j && (j < tabs.length-1 || t.Layout == "block")){
+		if(j % tabsperrow == 0 && j && (j < tabs.length-1 || t.Layout == "blocks")){
 			This.appendChild(Div("newliner"));
 		}				
 		This.appendChild(tabs[j]);
