@@ -69,7 +69,7 @@ function TabManager(){
 					});
 				}
 			});
-			addwindow.on("click",function(){
+			function addWindow(){
 				var tabs = This.getElementsByClassName("tab selected");
 				var t = [];
 				for(var i = 0; i < tabs.length; i++){
@@ -78,7 +78,8 @@ function TabManager(){
 				chrome.extension.sendRequest({action:"new",tabs:t},function(){
 					This.Restart();
 				});
-			});
+			}
+			addwindow.on("click",addWindow);
 			pintabs.on("click",function(){
 				var tabs = This.getElementsByClassName("tab selected");
 				if(tabs.length ){
@@ -105,6 +106,12 @@ function TabManager(){
 						tab.removeClass("selected");
 					}
 				}
+			});
+			search.on("keydown",function(e){
+				console.log(e.keyCode);
+				if(e.keyCode == 13){
+					addWindow();
+				}					
 			});
 			
 			layout.on("click",function(){
