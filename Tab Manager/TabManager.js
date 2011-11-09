@@ -58,7 +58,7 @@ function TabManager(){
 						t.push(tabs[i].Tab);
 					}
 					chrome.extension.sendRequest({action:"delete",tabs:t},function(){
-						This.Restart();
+						setTimeout(This.Restart,100);
 					});
 				}else{
 					chrome.windows.getCurrent(function(w){
