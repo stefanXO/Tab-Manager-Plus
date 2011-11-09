@@ -6,6 +6,7 @@ function TabManager(){
 	This.Dragging = false;
 	This.LastClicked = null;
 	This.Restart = function(){
+		console.log("restarting");
 		This.Layout = localStorage["layout"];
 		if(!This.Layout){
 			This.Layout = "horizontal";
@@ -82,7 +83,7 @@ function TabManager(){
 				var tabs = This.getElementsByClassName("tab selected");
 				if(tabs.length ){
 					for(var i = 0; i < tabs.length; i++){
-						chrome.tabs.update(tabs[i].ID,{pinned:!tabs[i].Pinned},This.Restart);
+						chrome.tabs.update(tabs[i].ID,{pinned:!tabs[i].Pinned},i==0?This.Restart:function(){});
 					}
 				}else{
 					chrome.windows.getCurrent(function(w){
