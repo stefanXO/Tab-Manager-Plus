@@ -111,9 +111,22 @@ function Tab(t,w){
 			for(var i  = 0; i < tabs.length; i++){
 				t.push(tabs[i].Tab);
 			}
-			chrome.extension.sendRequest({action:"move",tabs:t,index:index,windowId:This.Window.ID},function(){
-				This.Window.TabManager.Restart();
-			});		
+			
+			tabs = t;
+
+			var count = 0;
+			for(var i = 0; i < tabs.length; i++){
+				(function(tab){
+					chrome.tabs.move(tab.id,{windowId:This.Window.ID,index:index},function(){
+						chrome.tabs.update(tab.id,{pinned:tab.pinned},function(){
+							count++;
+							if(count == tabs.length){
+								This.Window.TabManager.Restart();
+							}
+						});
+					});
+				})(tabs[i]);
+			}	
 		}else if(!e.shiftKey && !e.ctrlKey ){
 			//chrome.windows.update(This.Tab.windowId,{focused:true});			
 			chrome.tabs.update(This.ID,{selected:true});			

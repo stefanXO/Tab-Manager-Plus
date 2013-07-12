@@ -5,9 +5,6 @@
   	"description": "Let's you very easy and fast handle your tabs!",
 	"icons":{"128":"icon.png","48":"icon48.png"},
   	"permissions": ["tabs"],
-  	"background": {
-  		"script" : "background.js"
-  	},
   	"browser_action":{
   		"default_icon":"browser_action.png",
   		"default_popup":"popup.html"

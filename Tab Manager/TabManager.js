@@ -57,9 +57,17 @@ function TabManager(){
 					for(var i = 0; i < tabs.length; i++){
 						t.push(tabs[i].Tab);
 					}
-					chrome.extension.sendRequest({action:"delete",tabs:t},function(){
-						setTimeout(This.Restart,100);
-					});
+										
+					tabs = t;
+					var count = 0;
+					for(var i = 0; i < tabs.length; i++){
+						chrome.tabs.remove(tabs[i].id,function(){
+							count++;
+							if(count == tabs.length){
+								setTimeout(This.Restart,100);
+							}
+						});
+					}
 				}else{
 					chrome.windows.getCurrent(function(w){
 						console.log(w);
@@ -75,9 +83,29 @@ function TabManager(){
 				for(var i = 0; i < tabs.length; i++){
 					t.push(tabs[i].Tab);
 				}							
-				chrome.extension.sendRequest({action:"new",tabs:t},function(){
+				tabs = t;
+				var first = tabs.shift();
+				var count = 0;
+				if(first){
+					chrome.windows.create({tabId:first.id},function(w){
+						chrome.tabs.update(first.id,{pinned:first.pinned});
+						for(var i = 0; i < tabs.length; i++){
+							(function(tab){
+								chrome.tabs.move(tab.id,{windowId:w.id,index:1},function(){
+									chrome.tabs.update(tab.id,{pinned:tab.pinned},function(){
+										count++;
+										if(count == tabs.length){									
+											This.Restart();
+										}
+									});
+								});
+							})(tabs[i]);
+						}
+					});
+				}else{
+					chrome.windows.create({});
 					This.Restart();
-				});
+				}
 			}
 			addwindow.on("click",addWindow);
 			pintabs.on("click",function(){
