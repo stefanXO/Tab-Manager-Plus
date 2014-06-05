@@ -46,6 +46,12 @@ function TabManager(){
 					addwindow = Div("icon windowaction new")					
 				)
 			);
+
+			addwindow.setAttribute('title', 'Add Window');
+			deletetabs.setAttribute('title', 'Delete Tabs');
+			pintabs.setAttribute('title', 'Pin Tabs');
+			layout.setAttribute('title', 'Toggle Layout');
+            
 			
 			search.focus();
 			search.select();
