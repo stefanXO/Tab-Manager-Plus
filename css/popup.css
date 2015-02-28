@@ -47,7 +47,7 @@ body{
 	font-family:verdana;
 	font-size:12px;
 	user-select:none;
-	cursor:arrow;			
+	cursor:arrow;
 }
 .icon.incognito{
 	border:1px solid #ff0000;
@@ -64,7 +64,7 @@ body{
 	float:left;
 	margin-left:2px;
 	margin-bottom:2px;
-	background-image:url(random.png);
+	background-image:url(../images/random.png);
 }
 .tab.full{
 	width:340px;
@@ -78,42 +78,42 @@ body{
 }
 .tab:first-child, .newliner + .icon{
 	margin-left:0px;
-}		
+}
 .windowaction{
 	float:right;
 	margin-right:2px;
 	margin-left:0px;
 }
 .add{
-	background-image:url(new.png);
+	background-image:url(../images/new.png);
 }
 .close{
-	background-image:url(close.png);
+	background-image:url(../images/close.png);
 }
 .new{
-	background-image:url(new.png);
+	background-image:url(../images/new.png);
 }
 .trash{
-	background-image:url(trash.png);
+	background-image:url(../images/trash.png);
 }
 .blocks{
-	background-image:url(block.png);
+	background-image:url(../images/block.png);
 }
 .horizontal{
-	background-image:url(horizontal.png);
+	background-image:url(../images/horizontal.png);
 }
 .vertical{
-	background-image:url(vertical.png);
+	background-image:url(../images/vertical.png);
 }
 .pin{
-	background-image:url(pin.png);
+	background-image:url(../images/pin.png);
 }
 .tab.left > .limiter, .tab.right > .limiter{
 	width:2px;
 	height:20px;
 	background-color:#000000;
 	margin-top:-2px;
-	
+
 }
 .tab.left > .limiter{
 	margin-left:-4px;

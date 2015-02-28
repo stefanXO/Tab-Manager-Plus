@@ -3,10 +3,10 @@
   	"version": "3.13",
   	"manifest_version": 2,
   	"description": "Let's you very easy and fast handle your tabs!",
-	"icons":{"128":"icon.png","48":"icon48.png"},
+	"icons":{"128":"images/icon.png","48":"images/icon48.png"},
   	"permissions": ["tabs"],
   	"browser_action":{
-  		"default_icon":"browser_action.png",
+  		"default_icon":"images/browser_action.png",
   		"default_popup":"popup.html"
   	}
 }
