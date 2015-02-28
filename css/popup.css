@@ -15,6 +15,7 @@ body{
 	padding-top:10px;
 	margin-top:10px;
 	border-top:1px solid #b2b2b2;
+	vertical-align:top;
 }
 .window.block{
 	border-top:none;
@@ -23,6 +24,7 @@ body{
 	border-left:1px solid #b2b2b2;
 	padding-left:10px;
 	margin-left:10px;
+	width:auto;
 }
 .window:first-child{
 	padding-top:0px;
@@ -65,6 +67,7 @@ body{
 	margin-left:2px;
 	margin-bottom:2px;
 	background-image:url(../images/random.png);
+	position:relative;
 }
 .tab.full{
 	width:340px;
@@ -122,6 +125,22 @@ body{
 	float:right;
 	margin-right:-4px;
 }
+
+.tab.top > .limiter, .tab.bottom > .limiter{
+	height:2px;
+	left:0px;
+	right:0px;
+	position:absolute;
+	background-color:#000000;
+
+}
+.tab.top > .limiter{
+	top:-3px;
+}
+.tab.bottom > .limiter{
+	bottom:-3px;
+}
+
 .icon.tab.expanded{
 	width:340px;
 	float:left;
