@@ -17,10 +17,10 @@ function Tab(t,w){
 	if(t.incognito){
 		This.addClass("incognito");
 	}
-	
-	
+
+
 	This.on("mousedown",function(e){
-		
+
 		var hadClass = This.hasClass("selected");
 		This.addClass("selected");
 		if(e.shiftKey && This.Window.TabManager.LastClicked){
@@ -32,20 +32,20 @@ function Tab(t,w){
 			}
 		}
 		This.Window.TabManager.LastClicked = This;
-		
+
 		var x = e.clientX;
 		var y = e.clientY;
-		
+
 		var doubel = Div();
 		doubel.style.position = "absolute";
 		doubel.style.opacity = "0.0";
 		document.body.appendChild(doubel);
-		
+
 		var tabs = This.Window.TabManager.getElementsByClassName("tab selected");
 		for(var i = 0; i < tabs.length; i++){
 			doubel.appendChild(tabs[i].cloneNode(true));
 		}
-		
+
 		function onMouseMove(e){
 			if(Math.abs(e.clientX-x) > 5 || Math.abs(e.clientY)-y > 5){
 				This.Window.TabManager.Dragging = true;
@@ -55,11 +55,11 @@ function Tab(t,w){
 			}
 		}
 		function onMouseUp(e){
-			document.body.removeChild(doubel);					
+			document.body.removeChild(doubel);
 			document.removeEventListener("mousemove",onMouseMove);
 			document.removeEventListener("mouseup",onMouseUp);
-			
-			
+
+
 			console.log(This.Window);
 			if(!This.Window.TabManager.Dragging){
 				if(!e.ctrlKey && !e.shiftKey){
@@ -75,18 +75,18 @@ function Tab(t,w){
 					}
 				}
 			}
-			
+
 			This.Window.TabManager.Dragging = false;
 		}
-		
+
 		document.addEventListener("mousemove",onMouseMove);
 		document.addEventListener("mouseup",onMouseUp);
-		
+
 	});
-	
+
 	This.on("mousemove",function(e){
 		if(This.Window.TabManager.Dragging){
-			if(e.clientX > This.offsetLeft+(This.clientWidth)){										
+			if(e.clientX > This.offsetLeft+(This.clientWidth)){
 				This.swapClass("left","right");
 			}else{
 				This.swapClass("right","left");
@@ -94,12 +94,12 @@ function Tab(t,w){
 		}
 	});
 
-		
+
 	This.on("mouseout","mouseup",function(){
 		This.removeClass("left");
 		This.removeClass("right");
 	});
-	
+
 	This.on("mouseup",function(e){
 		if(This.Window.TabManager.Dragging){
 			var tabs = This.Window.TabManager.getElementsByClassName("tab selected");
@@ -111,7 +111,7 @@ function Tab(t,w){
 			for(var i  = 0; i < tabs.length; i++){
 				t.push(tabs[i].Tab);
 			}
-			
+
 			tabs = t;
 
 			var count = 0;
@@ -126,15 +126,15 @@ function Tab(t,w){
 						});
 					});
 				})(tabs[i]);
-			}	
+			}
 		}else if(!e.shiftKey && !e.ctrlKey ){
-			//chrome.windows.update(This.Tab.windowId,{focused:true});			
-			chrome.tabs.update(This.ID,{selected:true});			
+			chrome.windows.update(This.Tab.windowId,{focused:true});			
+			chrome.tabs.update(This.ID,{selected:true});
 		}
 	});
 
-			
+
 	This.appendChild(limiter);
-	
+
 	return This;
 }
