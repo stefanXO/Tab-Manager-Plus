@@ -2,7 +2,7 @@
   	"name": "Tab Manager",
   	"version": "3.2.0",
   	"manifest_version": 2,
-  	"description": "Let's you very easy and fast handle your tabs!",
+  	"description": "Quickly and conveniently manage your open tabs",
 	"icons":{"128":"images/icon.png","48":"images/icon48.png"},
   	"permissions": ["tabs"],
   	"browser_action":{
