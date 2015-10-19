@@ -62,6 +62,9 @@ body{
 	border:2px solid #3B5686;
 	padding:0px;
 }
+.tab.hidden{
+	display:none;
+}
 .tab{
 	float:left;
 	margin-left:2px;
@@ -163,5 +166,28 @@ input{
 	border-radius:3px;
 	height:20px;
 	box-sizing:border-box;
-	width:310px;
+	margin-right:7px;
+	width:303px;
+}
+.placeholder{
+	border-width:0px;
+	height:20px;
+	z-index:-1;
+}
+.window.searchbox{
+	background-color:white;
+	padding:10px;
+	position:fixed;
+	bottom:0px;
+	left:0px;
+}
+.infobox{
+	position:fixed;
+	font-family:Arial;
+	font-weight:bold;
+	font-size:0.5em;
+	color:#00AAFF;
+	top:3px;
+	right:8px;
+	z-index:100;
 }
