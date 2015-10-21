@@ -90,6 +90,9 @@ body{
 	margin-right:2px;
 	margin-left:0px;
 }
+.windowaction + .enabled{
+	background-color:#DDEEEE;
+}
 .add{
 	background-image:url(../images/new.png);
 }
@@ -113,6 +116,9 @@ body{
 }
 .pin{
 	background-image:url(../images/pin.png);
+}
+.filter{
+	background-image:url(../images/filter.png);
 }
 .tab.left > .limiter, .tab.right > .limiter{
 	width:2px;
@@ -167,7 +173,7 @@ input{
 	height:20px;
 	box-sizing:border-box;
 	margin-right:7px;
-	width:303px;
+	width:280px;
 }
 .placeholder{
 	border-width:0px;
