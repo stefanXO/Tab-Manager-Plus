@@ -1,6 +1,6 @@
 {
   	"name": "Tab Manager",
-  	"version": "4.1.0",
+  	"version": "4.2.0",
   	"manifest_version": 2,
   	"description": "Quickly and conveniently manage your open tabs",
 	"icons":{"128":"images/icon.png","48":"images/icon48.png"},
