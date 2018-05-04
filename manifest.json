@@ -1,7 +1,7 @@
 {
 	"name": "Tab Manager Plus",
 	"short_name": "Tab Manager+",
-	"version": "4.8",
+	"version": "4.8.1",
 	"manifest_version": 2,
 	"description": "Quickly and conveniently manage your open tabs",
 	"author": "stefanXO",
