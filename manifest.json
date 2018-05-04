@@ -1,19 +1,49 @@
 {
-  	"name": "Tab Manager",
-  	"version": "4.6.1",
-  	"manifest_version": 2,
-  	"description": "Quickly and conveniently manage your open tabs",
-	"icons":{"128":"images/icon.png","48":"images/icon48.png"},
-  	"permissions": ["tabs"],
-  	"browser_action":{
-  		"default_icon":"images/browser_action.png",
-  		"default_popup":"popup.html"
-  	},
-    "commands": {
-        "_execute_browser_action": {
-            "suggested_key": {
-                "default":"Ctrl+M"
-            }
-        }
-     }
+	"name": "Tab Manager Plus",
+	"short_name": "Tab Manager+",
+	"version": "4.8",
+	"manifest_version": 2,
+	"description": "Quickly and conveniently manage your open tabs",
+	"author": "stefanXO",
+	"icons": {
+		"16": "images/browsers16.png",
+		"48": "images/browsers48.png",
+		"64": "images/browsers64.png",
+		"128": "images/browsers128.png",
+		"256": "images/browsers256.png"
+	},
+	"permissions": [
+		"tabs"
+	],
+	"incognito":"spanning",
+	"background": {
+		"scripts": ["lib/background.js"]
+	},
+	"browser_action": {
+		"default_icon": {
+			"16": "images/browsers16.png",
+			"48": "images/browsers48.png",
+			"64": "images/browsers64.png",
+			"128": "images/browsers128.png",
+			"256": "images/browsers256.png"
+		},
+		"default_popup": "popup.html"
+	},
+	"commands": {
+		"_execute_browser_action": {
+			"suggested_key": {
+				"default": "Ctrl+M",
+				"windows": "Ctrl+M",
+				"mac": "Command+M"
+			}
+		},
+		"switch_to_previous_active_tab": {
+			"suggested_key": {
+				"default": "Ctrl+Shift+Space",
+				"windows": "Ctrl+Shift+Space",
+				"mac": "Command+Shift+Space"
+			},
+			"description": "Switches to previously active tab"
+		}
+	}
 }

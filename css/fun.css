@@ -1,0 +1,23 @@
+body {
+	background-color: #fed766;
+}
+
+.window-container .window {
+	border: 3px solid black !important;
+}
+
+.window.searchbox .icon {
+	border: 2px solid black;
+	background-color: #fed76633;
+}
+
+.icon {
+	border: 2px solid black !important;
+}
+.icon.tabaction {
+	border-color: transparent !important;
+}
+
+.window.searchbox .icon:hover {
+	background-color: #fed766;
+}

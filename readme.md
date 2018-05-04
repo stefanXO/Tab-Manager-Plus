@@ -1,8 +1,9 @@
-# Tab Manager
-This is a Google Chrome extension which allows you to easily and quickly manage and access your tabs/windows ;)
-Have fun with it!
+# Tab Manager Plus
+This is an extended version of the old Tab Manager Google Chrome extension. Malware free, with a new view type and many new features.
 
-You can find and install this extension at the [Chrome Web Store](https://chrome.google.com/webstore/detail/eobcjlgohobbfcgabmijkdgpjkknpbbo).
+Please enjoy.
+
+You can find and install this extension at the [Chrome Web Store](https://chrome.google.com/webstore/detail/cnkdjjdmfiffagllbiiilooaoofcoeff).
 
 ### license
 MPLv2
