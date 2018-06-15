@@ -1,3 +1,8 @@
+4.9.3
+=====
+
+- Fixes for older browsers
+
 4.9.2
 =====
 

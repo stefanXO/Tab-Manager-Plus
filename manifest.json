@@ -1,7 +1,7 @@
 {
 	"name": "Tab Manager Plus for Chrome",
 	"short_name": "Tab Manager+",
-	"version": "4.9.2",
+	"version": "4.9.3",
 	"manifest_version": 2,
 	"offline_enabled": true,
 	"description": "Quickly find open tabs, see all windows in one view, find duplicates and limit tabs per window. The best Tab Manager for Chrome.",
