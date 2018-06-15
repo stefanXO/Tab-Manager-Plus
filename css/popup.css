@@ -6,24 +6,15 @@ html{
 
 	font-family: -apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
 	max-width: 800px;
-	min-width: 500px;
+	min-width: 450px;
 	min-height: 400px;
-/*	height:100%;
-	max-height: 100%;*/
-	/*overflow-y: scroll !important;*/
-	/*transition: 0.1s all linear;*/
 }
 body{
 	padding:0;
 	margin:0px;
 	-webkit-user-select:none;
-	min-width: 500px;
+	min-width: 450px;
 	min-height:400px;
-/*	max-width: 800px;
-	max-height: 646px;
-	*/
-	/*overflow-y: scroll !important;*/
-	/*transition: 0.1s all linear;*/
 }
 
 .c400 { min-height: 400px; max-height: 400px; height: 400px; }
@@ -61,6 +52,7 @@ html * {
 	margin: 0.125rem 0rem 0.125rem;
 	padding: 0;
 	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14),0 1px 5px 0 rgba(0, 0, 0, 0.12),0 3px 1px -2px rgba(0, 0, 0, 0.2);
+	cursor: pointer;
 }
 .animations .window{
 	transition: all 0.1s linear;
@@ -121,6 +113,8 @@ html * {
 	width: 2rem;
 	margin: 0.25rem;
 	padding: 0;
+	position: absolute;
+	right: 2px;
 }
 .icon.highlighted{
 	background-color: #eefaff80;
@@ -149,6 +143,7 @@ html * {
 	padding-left: 2rem;
 	border: 0;
 	box-shadow: none;
+	background-color:transparent;
 }
 .icon.vertical:hover {
 	background-color:#beecff;
@@ -282,6 +277,21 @@ html * {
 	background-color: transparent;
 	border: none;
 }
+.minimize{
+	background-image:url(../images/min64.png);
+	background-color: transparent;
+	border: none;
+}
+.maximize{
+	background-image:url(../images/max64.png);
+	background-color: transparent;
+	border: none;
+}
+.colors{
+	background-image:url(../images/colors64.png);
+	background-color: transparent;
+	border: none;
+}
 .add:hover{
 	background-color: #0080001f;
 }
@@ -296,7 +306,7 @@ html * {
 }
 .options{
 	float:right;
-	background-image:url(../images/browsers.svg);
+	background-image:url(../images/wrench64.png);
 }
 .blocks-big-view{
 	background-image:url(../images/views/big-blocks.png);
@@ -399,7 +409,7 @@ html * {
 	height: 2.5rem;
 }
 .window.top input {
-	width: 28rem;
+	width: 100%;
 	border:0;
 	height:1.4rem;
 	padding-right: 0;
@@ -409,7 +419,7 @@ html * {
 	padding-bottom: 0.125rem;
 }
 .window.top .taburl {
-	width: 28rem;
+	width: 100%;
 	border:0;
 	height:1rem;
 	margin:0;
@@ -502,4 +512,91 @@ html * {
 	right: 0;
 	height: 30px;
 	background-color:black;
+}
+
+.window.minimized {
+	opacity: 0.6;
+}
+
+.window.minimized:hover {
+	opacity: 1;
+}
+
+.window-colors {
+    top: 5px;
+    right: 5px;
+    left: 5px;
+    padding: 60px 110px;
+    bottom: 5px;
+    background-color: white;
+    position: fixed;
+    margin: auto;
+    vertical-align: middle;
+    z-index: 9999999;
+}
+.window-colors h2 {
+	text-align: center;
+}
+
+.color1 { background-color: rgba(142, 166, 4, 0.25); }
+.color2 { background-color: rgba(245, 187, 0, 0.25); }
+.color3 { background-color: rgba(236, 159, 5, 0.25); }
+.color4 { background-color: rgba(215, 106, 3, 0.25); }
+.color5 { background-color: rgba(191, 49, 0, 0.25); }
+.color6 { background-color: rgba(251, 80, 18, 0.25); }
+.color7 { background-color: rgba(1, 253, 246, 0.25); }
+.color8 { background-color: rgba(233, 223, 0, 0.25); }
+.color9 { background-color: rgba(237, 234, 208, 0.25); }
+.color10 { background-color: rgba(3, 252, 186, 0.25); }
+.color11 { background-color: rgba(162, 102, 111, 0.25); }
+.color12 { background-color: rgba(244, 147, 144, 0.25); }
+.color13 { background-color: rgba(244, 88, 102, 0.25); }
+.color14 { background-color: rgba(196, 90, 179, 0.25); }
+.color15 { background-color: rgba(99, 26, 134, 0.25); }
+.color16 { background-color: rgba(58, 183, 149, 0.25); }
+.color17 { background-color: rgba(160, 232, 175, 0.25); }
+.color18 { background-color: rgba(134, 186, 161, 0.25); }
+.color19 { background-color: rgba(237, 234, 208, 0.25); }
+.color20 { background-color: rgba(255, 207, 86, 0.25); }
+.color21 { background-color: rgba(204, 251, 254, 0.25); }
+.color22 { background-color: rgba(205, 214, 221, 0.25); }
+.color23 { background-color: rgba(205, 202, 204, 0.25); }
+.color24 { background-color: rgba(205, 172, 161, 0.25); }
+.color25 { background-color: rgba(205, 137, 135, 0.25); }
+
+
+.color1:hover { background-color: rgba(142, 166, 4, 0.35); }
+.color2:hover { background-color: rgba(245, 187, 0, 0.35); }
+.color3:hover { background-color: rgba(236, 159, 5, 0.35); }
+.color4:hover { background-color: rgba(215, 106, 3, 0.35); }
+.color5:hover { background-color: rgba(191, 49, 0, 0.35); }
+.color6:hover { background-color: rgba(251, 80, 18, 0.35); }
+.color7:hover { background-color: rgba(1, 253, 246, 0.35); }
+.color8:hover { background-color: rgba(233, 223, 0, 0.35); }
+.color9:hover { background-color: rgba(237, 234, 208, 0.35); }
+.color10:hover { background-color: rgba(3, 252, 186, 0.35); }
+.color11:hover { background-color: rgba(162, 102, 111, 0.35); }
+.color12:hover { background-color: rgba(244, 147, 144, 0.35); }
+.color13:hover { background-color: rgba(244, 88, 102, 0.35); }
+.color14:hover { background-color: rgba(196, 90, 179, 0.35); }
+.color15:hover { background-color: rgba(99, 26, 134, 0.35); }
+.color16:hover { background-color: rgba(58, 183, 149, 0.35); }
+.color17:hover { background-color: rgba(160, 232, 175, 0.35); }
+.color18:hover { background-color: rgba(134, 186, 161, 0.35); }
+.color19:hover { background-color: rgba(237, 234, 208, 0.35); }
+.color20:hover { background-color: rgba(255, 207, 86, 0.35); }
+.color21:hover { background-color: rgba(204, 251, 254, 0.35); }
+.color22:hover { background-color: rgba(205, 214, 221, 0.35); }
+.color23:hover { background-color: rgba(205, 202, 204, 0.35); }
+.color24:hover { background-color: rgba(205, 172, 161, 0.35); }
+.color25:hover { background-color: rgba(205, 137, 135, 0.35); }
+
+.hrCont {
+	padding-top: 20px; padding-bottom: 20px;
+}
+.hrDiv {
+	width: 100%; height: 8px; border-bottom: 1px solid black; text-align: center; 
+}
+.hrSpan {
+	font-size: 12px; background-color: #F3F5F6; color: #555; padding: 0 10px;
 }

@@ -1,9 +1,10 @@
 {
-	"name": "Tab Manager Plus",
+	"name": "Tab Manager Plus for Chrome",
 	"short_name": "Tab Manager+",
-	"version": "4.8.1",
+	"version": "4.9.2",
 	"manifest_version": 2,
-	"description": "Quickly and conveniently manage your open tabs",
+	"offline_enabled": true,
+	"description": "Quickly find open tabs, see all windows in one view, find duplicates and limit tabs per window. The best Tab Manager for Chrome.",
 	"author": "stefanXO",
 	"icons": {
 		"16": "images/browsers16.png",
@@ -29,12 +30,13 @@
 		},
 		"default_popup": "popup.html"
 	},
+	"options_page": "options.html",
 	"commands": {
 		"_execute_browser_action": {
 			"suggested_key": {
-				"default": "Ctrl+M",
-				"windows": "Ctrl+M",
-				"mac": "Command+M"
+				"default": "Ctrl+Shift+M",
+				"windows": "Ctrl+Shift+M",
+				"mac": "Command+Shift+M"
 			}
 		},
 		"switch_to_previous_active_tab": {

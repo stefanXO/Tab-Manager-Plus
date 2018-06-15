@@ -13,8 +13,9 @@
   margin-bottom: 1.5rem;
 }
 .toggle-box{
-  width: 50%;
-  float: left;
+  width: 100%;
+  clear: both;
+  /*float: left;*/
 }
 .clearfix {
   clear:both;
@@ -42,7 +43,7 @@
   cursor: pointer;
   text-align: left;
   font-size: 1rem;
-  padding: 0.5rem;
+  padding: 0.5rem 0;
 }
 .toggle label {
   position: relative;
@@ -180,4 +181,27 @@ input[type=number]::-webkit-outer-spin-button {
     -webkit-transform: translateX(0);
             transform: translateX(0);
   }
+}
+
+.optionsBox {
+  padding: 10px 20px 10px;
+
+  width: 500px;
+  max-width: 90%;
+  margin: 30px auto;
+  clear: both;
+  background: white;
+  display: block;
+  text-align: left;
+}
+
+.optionsBox h4 {
+  padding: 0px 0 10px;
+  border-bottom: 1px solid #ccc;
+  text-align: left;
+}
+
+.option-description {
+  clear: both;
+  padding-bottom: 20px;
 }
