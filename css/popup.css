@@ -74,9 +74,10 @@ html * {
 	width: 100%;
 }
 .focused {
-	background: linear-gradient(#def9ff66, #def9ff66, #fffedc66);
+	box-shadow: 0 2px 2px 0 rgba(102, 51, 153, 0.56),0 1px 5px 0 rgba(102, 51, 153, 0.48),0 3px 1px -2px rgba(102, 51, 153, 0.8) !important;
+/*	background: linear-gradient(#def9ff66, #def9ff66, #fffedc66);
 	background-color: white;
-}
+*/}
 .icon, .iconoverlay{
 	height:1.4rem;
 	width:1.4rem;
@@ -93,6 +94,10 @@ html * {
 	line-height: 1.5rem;
 	user-select:none;
 	cursor:pointer;
+	-webkit-transform: translate3d(0, 0, 0);
+	-moz-transform: translate3d(0, 0, 0);
+	-ms-transform: translate3d(0, 0, 0);
+	transform: translate3d(0, 0, 0);
 }
 .animations .icon, .animations .iconoverlay {
 	transition: all 0.1s linear;
@@ -155,7 +160,7 @@ html * {
 	background-color: #ffff97;
 }
 .icon:hover{
-	border-color: green;
+	/*border-color: green;*/
 }
 .tab:hover{
 	/*image-rendering: -webkit-optimize-contrast;*/
@@ -179,6 +184,10 @@ html * {
 }
 .animations.compact .tab.vertical:hover {
 	transform: scale(1);
+}
+.tab.highlighted {
+	border-color: purple;
+	box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05) inset, 0px 0px 4px rgba(102, 51, 153, 0.6);
 }
 .animations .tab.search-active{
 	transform: scale(0.8);
@@ -209,7 +218,7 @@ html * {
 	position:relative;
 }
 .animations .tab{
-	transition:0.05s all linear;
+	transition:0.0125s all linear;
 }
 .tab.full, .animations .tab.full{
 	min-width:300px;
