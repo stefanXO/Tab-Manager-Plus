@@ -28,8 +28,7 @@
 			"64": "images/browsers64.png",
 			"128": "images/browsers128.png",
 			"256": "images/browsers256.png"
-		},
-		"default_popup": "popup.html"
+		}
 	},
 	"options_page": "options.html",
 	"commands": {
