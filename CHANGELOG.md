@@ -1,3 +1,16 @@
+4.9.5
+=====
+
+- Unnamed windows will show now the top domains in it instead
+- Added a close option to the naming and color popups
+
+4.9.4
+=====
+
+- Fixes to stuck tab counters
+- Auto-close forgotten tab managers after 100 seconds
+- Various bugfixes and style changes
+
 4.9.3
 =====
 
