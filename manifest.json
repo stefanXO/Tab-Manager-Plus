@@ -18,7 +18,8 @@
 	],
 	"incognito":"spanning",
 	"background": {
-		"scripts": ["lib/background.js"]
+		"scripts": ["lib/background.js"],
+		"persistent": true
 	},
 	"browser_action": {
 		"default_icon": {
