@@ -1,3 +1,9 @@
+4.9.7
+=====
+
+- Fix small rendering issues
+- Re-arrange some options
+
 4.9.6
 =====
 
