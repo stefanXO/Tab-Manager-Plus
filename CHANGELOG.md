@@ -1,3 +1,10 @@
+4.9.6
+=====
+
+- Nicer wrapping of windows
+- Show the tabs with the highest count first in the title
+- Fixes in list views for high width popups, sometimes the titles were cut off
+
 4.9.5
 =====
 
@@ -29,3 +36,11 @@
 - fixes to window coloring
 - clicking on a window will activate it now
 - minimized windows are now moved to their own section
+
+4.9.0
+=====
+
+- Allows you to give windows colors
+- You can now minimize and maximize windows from Tab Manager
+- Minimized windows are now shown as faded out and at the end of the list
+- You can now set the width and height of the popup in the options
