@@ -66,6 +66,7 @@ html * {
 	margin:0.25rem;
 	padding:0.5rem;
 	width:auto;
+	display:inline-table;
 }
 .window.horizontal .windowcontainer {
 	padding: 0.5rem;
