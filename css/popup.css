@@ -4,8 +4,6 @@ html{
 	padding:0;
 	margin:0px;
 	user-select:none;
-	background-color: #f1f1f1;
-
 	font-family: interfont,-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
 	max-width: 800px;
 	min-width: 450px;
@@ -18,7 +16,10 @@ body{
 	min-width: 450px;
 	min-height:400px;
 	font-family: interfont,-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
 
+html,body,#root {
+	background-color: #f1f1f1;
 }
 
 .c400 { min-height: 400px; max-height: 400px; height: 400px; }
@@ -408,6 +409,7 @@ h1,h2,h3,h4,h5,h6 {
 	height: 0;
 	visibility: hidden;
 	transition: 0s all;
+	display: none;
 }
 .window input{
 	border:1px solid #eeeeee;
