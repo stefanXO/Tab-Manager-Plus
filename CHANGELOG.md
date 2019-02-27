@@ -1,3 +1,10 @@
+4.9.9
+=====
+
+- If the current tab is not in the initial popup screen, then we'll scroll down to it
+- "Minimize inactive windows" will only minimize windows on the same monitor ( requires additional permission )
+- Small fixes to window titles from last update
+
 4.9.8
 =====
 
