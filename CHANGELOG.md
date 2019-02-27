@@ -1,3 +1,9 @@
+4.9.8
+=====
+
+- Add option to enable/disable window titles
+- Smarter window title detection, especially for super-long titles
+
 4.9.7
 =====
 

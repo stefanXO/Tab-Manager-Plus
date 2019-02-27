@@ -123,6 +123,7 @@ h1,h2,h3,h4,h5,h6 {
 	padding: 0;
 	margin: 0.5em 0.1em 1em;
 }
+.no-windowTitles .windowTitle { display: none; }
 .animations .icon, .animations .iconoverlay {
 	transition: all 0.1s linear;
 }
@@ -427,6 +428,7 @@ h1,h2,h3,h4,h5,h6 {
 	height:3rem;
 	z-index:-1;
 	opacity:0.001;
+	display: none;
 }
 .window.vertical, .window.horizontal {
 	display:table;
