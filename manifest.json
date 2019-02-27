@@ -16,6 +16,9 @@
 	"permissions": [
 		"tabs"
 	],
+	"optional_permissions": [
+		"system.display"
+	],
 	"incognito":"spanning",
 	"background": {
 		"scripts": ["lib/background.js"],
