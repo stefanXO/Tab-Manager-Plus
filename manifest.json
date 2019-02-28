@@ -33,7 +33,9 @@
 			"256": "images/browsers256.png"
 		}
 	},
-	"options_page": "options.html",
+	"options_ui": {
+		"page": "options.html"
+	},
 	"commands": {
 		"_execute_browser_action": {
 			"suggested_key": {
