@@ -466,6 +466,7 @@ h1,h2,h3,h4,h5,h6 {
 	font-size:0.9rem;
 	padding-top: 0.25rem;
 	padding-bottom: 0.125rem;
+	background: white;
 }
 .window.top .taburl {
 	width: 100%;
