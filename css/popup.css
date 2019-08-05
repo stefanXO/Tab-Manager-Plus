@@ -124,6 +124,7 @@ h1,h2,h3,h4,h5,h6 {
 	margin: 0.5em 0.1em 1em;
 }
 .no-windowTitles .windowTitle { display: none; }
+.windowTitle { font-size: 12px; }
 .animations .icon, .animations .iconoverlay {
 	transition: all 0.1s linear;
 }
