@@ -1,3 +1,10 @@
+5.0.0
+=====
+
+- Rate and review button
+- Updated depreciated chrome api calls to the new ones
+- Prepared Firefox compatibility
+
 4.9.9
 =====
 
