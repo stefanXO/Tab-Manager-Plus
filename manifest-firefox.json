@@ -1,0 +1,52 @@
+{
+	"name": "Tab Manager Plus for Firefox",
+	"short_name": "Tab Manager+",
+	"version": "4.9.9",
+	"manifest_version": 2,
+	"description": "Quickly find open tabs, see all windows in one view, find duplicates and limit tabs per window. The best Tab Manager for Firefox.",
+	"author": "stefanXO",
+	"icons": {
+		"16": "images/browsers16.png",
+		"48": "images/browsers48.png",
+		"64": "images/browsers64.png",
+		"128": "images/browsers128.png",
+		"256": "images/browsers256.png"
+	},
+	"permissions": [
+		"tabs"
+	],
+	"incognito":"spanning",
+	"background": {
+		"scripts": ["lib/background.js"],
+		"persistent": true
+	},
+	"browser_action": {
+		"default_icon": {
+			"16": "images/browsers16.png",
+			"48": "images/browsers48.png",
+			"64": "images/browsers64.png",
+			"128": "images/browsers128.png",
+			"256": "images/browsers256.png"
+		}
+	},
+	"options_ui": {
+		"page": "options.html"
+	},
+	"commands": {
+		"_execute_browser_action": {
+			"suggested_key": {
+				"default": "Ctrl+Shift+M",
+				"windows": "Ctrl+Shift+M",
+				"mac": "Command+Shift+M"
+			}
+		},
+		"switch_to_previous_active_tab": {
+			"suggested_key": {
+				"default": "Ctrl+Shift+Space",
+				"windows": "Ctrl+Shift+Space",
+				"mac": "Command+Shift+Space"
+			},
+			"description": "Switches to previously active tab"
+		}
+	}
+}
