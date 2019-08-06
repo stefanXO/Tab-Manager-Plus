@@ -1,3 +1,15 @@
+5.0.1
+=====
+
+- Fixes to rate and review buttons
+- Added donate option - thank you for keeping this extension alive!
+- Launched for Firefox
+- Added title detection for firefox about: protocol
+- Change description of colorize button to include hint that the window name can be changed as well
+- Change colorize button to settings
+- Adjust fonts, so they look nicer
+- Font changes in options menu
+
 5.0.0
 =====
 
