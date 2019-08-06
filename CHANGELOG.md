@@ -1,3 +1,8 @@
+5.0.2
+=====
+
+- Fixes for Chrome to support the browser based api
+
 5.0.1
 =====
 
