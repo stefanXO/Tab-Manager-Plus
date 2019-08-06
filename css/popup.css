@@ -6,11 +6,13 @@
     font-style: normal;
 }
 
+
+
 html{
 	padding:0;
 	margin:0px;
 	user-select:none;
-	font-family: interfont,-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+	font-family:  "interfont",'Graphik', -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", 'Helvetica', Roboto, "Helvetica Neue", Arial, sans-serif;
 	max-width: 800px;
 	min-width: 450px;
 	min-height: 400px;
@@ -21,7 +23,8 @@ body{
 	-webkit-user-select:none;
 	min-width: 450px;
 	min-height:400px;
-	font-family: interfont,-apple-system,system-ui,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+	font-family:  "interfont",'Graphik', -apple-system, system-ui, BlinkMacSystemFont, "interfont", "Segoe UI", 'Helvetica', Roboto, "Helvetica Neue", Arial, sans-serif;
+	font-weight: 400;
 }
 
 html,body,#root {
@@ -130,7 +133,7 @@ h1,h2,h3,h4,h5,h6 {
 	margin: 0.5em 0.1em 1em;
 }
 .no-windowTitles .windowTitle { display: none; }
-.windowTitle { font-size: 12px; }
+.windowTitle { font-size: 12px; font-family: sans-serif; }
 .animations .icon, .animations .iconoverlay {
 	transition: all 0.1s linear;
 }
