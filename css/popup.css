@@ -16,6 +16,7 @@ html{
 	max-width: 800px;
 	min-width: 450px;
 	min-height: 400px;
+	font-weight: 400;
 }
 body{
 	padding:0;
