@@ -675,3 +675,17 @@ h1,h2,h3,h4,h5,h6 {
 .hrSpan {
 	font-size: 12px; background-color: #F3F5F6; color: #555; padding: 0 10px;
 }
+
+.window.searchbox table {
+	width: 100%;
+}
+
+.window.searchbox input.searchBoxInput {
+	margin: 0rem 0.25rem 0 0.25rem;
+	min-width: auto;
+	width: 100%;
+}
+
+.window.searchbox td.two {
+	width: 260px;
+}

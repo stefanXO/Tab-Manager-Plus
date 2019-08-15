@@ -2,6 +2,7 @@
 =====
 
 - Small fixes for icon borders not rendering properly
+- Fixes for the search bar when the popup is too narrow
 5.0.2
 =====
 
