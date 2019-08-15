@@ -14,7 +14,8 @@
 		"256": "images/browsers256.png"
 	},
 	"permissions": [
-		"tabs"
+		"tabs",
+		"contextMenus"
 	],
 	"optional_permissions": [
 		"system.display"
