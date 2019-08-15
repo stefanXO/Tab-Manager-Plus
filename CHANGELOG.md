@@ -6,6 +6,7 @@
 - Fixes for the search bar when the popup is too narrow
 - Added popup title and favicon
 - Disable popup auto-closing until we have a better solution
+- Fixed Firefox error where a new window would not be created
 
 5.0.2
 =====
