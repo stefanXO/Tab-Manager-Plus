@@ -1,4 +1,4 @@
-# Tab Manager Plus 5.0.2
+# Tab Manager Plus 5.0.3
 This is an extended version of the old Tab Manager Google Chrome extension. Should work on both Chrome and Firefox. Malware free, with a new view type and many new features.
 
 For a list of changes check out the [changelog](./CHANGELOG.md).
