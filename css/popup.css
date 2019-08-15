@@ -222,6 +222,11 @@ h1,h2,h3,h4,h5,h6 {
 	/*image-rendering: -webkit-optimize-contrast;*/
 	background-color: yellow;
 }
+.animations .tab {
+	transform: scale(1);
+	filter: none; 
+	-webkit-filter: blur(0px);
+}
 .animations .tab:hover {
 	transform: scale(1.4);
 	filter: none; 

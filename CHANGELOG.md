@@ -1,3 +1,7 @@
+5.0.3
+=====
+
+- Small fixes for icon borders not rendering properly
 5.0.2
 =====
 
