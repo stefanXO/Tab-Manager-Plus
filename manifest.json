@@ -22,7 +22,7 @@
 	],
 	"incognito":"spanning",
 	"background": {
-		"scripts": ["lib/background.js"],
+		"scripts": ["vendor/browser-polyfill.min.js","lib/background.js"],
 		"persistent": true
 	},
 	"browser_action": {
