@@ -672,8 +672,17 @@ h1,h2,h3,h4,h5,h6 {
     vertical-align: middle;
     z-index: 9999999;
 }
-.window-colors h2 {
+.window-colors h2, .window-colors h3 {
 	text-align: center;
+}
+.window-colors h3 {
+	padding-top: 10px;
+}
+.window-colors input {
+	width: 100%;
+	text-align: center;
+	margin-left: auto;
+	margin-right: auto;
 }
 
 .color1 { background-color: rgba(142, 166, 4, 0.25); }
