@@ -31,6 +31,25 @@ body{
 html,body,#root {
 	background-color: #f1f1f1;
 }
+table {
+	display: table;
+	border-collapse: separate;
+	border-spacing: 2px;
+	border-color: grey;
+}
+
+table > tr {
+	vertical-align: middle;
+}
+tr {
+	display: table-row;
+	vertical-align: inherit;
+	border-color: inherit;
+}
+td {
+	display: table-cell;
+	vertical-align: inherit;
+}
 
 .c400 { min-height: 400px; max-height: 400px; height: 400px; }
 .c450 { min-height: 450px; max-height: 450px; height: 450px; }
