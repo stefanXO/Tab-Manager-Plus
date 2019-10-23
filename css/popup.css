@@ -384,6 +384,11 @@ h1,h2,h3,h4,h5,h6 {
 	background-color: transparent;
 	border: none;
 }
+.colors-box, .window-name-input {
+	max-width: 400px;
+	margin: auto;
+	display: block;
+}
 .colors{
 	background-image:url(../images/dna64.png);
 	background-color: transparent;
