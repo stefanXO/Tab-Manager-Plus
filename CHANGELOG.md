@@ -1,10 +1,11 @@
 5.0.4
 =====
 
-- Session management ( beta ) - you can now save and restore windows into your local storage. Please note : History of the tabs will not be preserved
+- Save/restore windows ( beta ) - you can now save and restore windows into your local storage. Please note : History of the tabs will not be preserved. ( Disabled by default )
 - Fixes for search box displays on some configurations
 - Adjustments for wide screens
 - Various other small fixes
+- Close popup after pressing enter
 
 5.0.3
 =====
