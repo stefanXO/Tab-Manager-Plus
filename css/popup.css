@@ -740,6 +740,7 @@ h1,h2,h3,h4,h5,h6 {
 
 .hrCont {
 	padding-top: 20px; padding-bottom: 20px;
+	clear: both;
 }
 .hrDiv {
 	width: 100%; height: 8px; border-bottom: 1px solid black; text-align: center; 
