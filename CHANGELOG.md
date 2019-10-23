@@ -1,3 +1,8 @@
+5.0.6
+=====
+
+- Fixed issue where current tab wouldn't be closed when pressing the "close tabs" button
+
 5.0.5
 =====
 
