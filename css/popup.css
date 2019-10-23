@@ -503,6 +503,25 @@ h1,h2,h3,h4,h5,h6 {
 .window.vertical, .window.horizontal {
 	display:table;
 }
+.window.horizontal {
+	width: calc(100% - 1rem);
+	margin: 0.6rem 0.5rem;
+}
+@media only screen and (min-width: 800px) {
+	.window.vertical {
+		max-width: 31%;
+		float: left;
+		margin: 10px;
+	}
+}
+@media only screen and (min-width: 1280px) {
+	.window.vertical {
+		max-width: 25%;
+		float: left;
+		margin: 10px;
+	}
+}
+
 .window.top{
 	background-color:white;
 	padding:0;
