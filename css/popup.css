@@ -643,6 +643,10 @@ h1,h2,h3,h4,h5,h6 {
 }
 
 .window.minimized {
+	opacity: 0.8;
+}
+
+.window.session {
 	opacity: 0.6;
 }
 
