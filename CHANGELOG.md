@@ -1,3 +1,9 @@
+5.0.5
+=====
+
+- Removed unnecessary chrome permission
+- Slight performance improvements
+
 5.0.4
 =====
 
