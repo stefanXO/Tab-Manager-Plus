@@ -1,3 +1,11 @@
+5.0.4
+=====
+
+- Session management ( beta ) - you can now save and restore windows into your local storage. Please note : History of the tabs will not be preserved
+- Fixes for search box displays on some configurations
+- Adjustments for wide screens
+- Various other small fixes
+
 5.0.3
 =====
 

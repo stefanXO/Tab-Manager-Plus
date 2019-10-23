@@ -1,7 +1,7 @@
 {
 	"name": "Tab Manager Plus for Firefox",
 	"short_name": "Tab Manager+",
-	"version": "5.0.3",
+	"version": "5.0.4",
 	"manifest_version": 2,
 	"description": "Quickly find open tabs, see all windows in one view, find duplicates and limit tabs per window. The best Tab Manager for Firefox.",
 	"author": "stefanXO",
@@ -14,7 +14,9 @@
 	},
 	"permissions": [
 		"tabs",
-		"contextMenus"
+		"contextMenus",
+		"sessions",
+		"storage"
 	],
 	"incognito":"spanning",
 	"background": {
