@@ -349,6 +349,21 @@ h1,h2,h3,h4,h5,h6 {
 .windowaction + .enabled{
 	background-color:#DDEEEE;
 }
+.save{
+	background-image:url(../images/star64.png);
+	background-color: transparent;
+	border: none;
+}
+.restore{
+	background-image:url(../images/check64.png);
+	background-color: transparent;
+	border: none;
+}
+.delete{
+	background-image:url(../images/del64.png);
+	background-color: transparent;
+	border: none;
+}
 .add{
 	background-image:url(../images/add64.png);
 	background-color: transparent;
