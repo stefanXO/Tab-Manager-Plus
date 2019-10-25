@@ -2,6 +2,7 @@
 =====
 
 - Fixed issue where current tab wouldn't be closed when pressing the "close tabs" button
+- Backwards compatibility with older browser versions
 
 5.0.5
 =====
