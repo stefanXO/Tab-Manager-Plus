@@ -4,3 +4,6 @@
 *.crx
 *.tar.gz
 *.sh
+node_modules
+package-lock.json
+build/

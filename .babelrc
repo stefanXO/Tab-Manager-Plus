@@ -1,6 +1,7 @@
 {
   "presets": [
-    "es2015"
+    "es2015",
+    "es2017"
   ],
   "compact": false,
   "retainLines": true

@@ -19,7 +19,7 @@
 	],
 	"incognito":"spanning",
 	"background": {
-		"scripts": ["lib/background.js"],
+		"scripts": ["vendor/babel-polyfill.js", "lib/background.js"],
 		"persistent": true
 	},
 	"browser_action": {
