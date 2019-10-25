@@ -1,3 +1,8 @@
+5.0.7
+=====
+
+- Close the popup when clicking on a tab, window or restoring a session, but don't close it when we're in a Tab Manager page of its own
+
 5.0.6
 =====
 
