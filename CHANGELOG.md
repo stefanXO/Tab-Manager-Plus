@@ -1,3 +1,15 @@
+5.0.8
+=====
+
+- You can now backup and restore your saved windows
+- You can now select multiple tabs by using right mouse click while holding shift/ctrl or command. Select the first tab with a right click, and then select the last tab with shift+right mouse click, to select all the tabs in between.
+- You can now set in the options if you'd like to have the Tab Manager open as a popup by default, or in its' own tab
+- Design fixes to have the right amount of tabs per row displayed in the block view
+- Stops auto-scrolling to the first active tab, if the user has already started scrolling
+- Some small fixes to make sure we load correctly also on slower machines
+- Fixes to dark mode in its' own tab - the background was not displayed in the full window
+- Removed buggy animation transitions that would get stuck on hover
+
 5.0.7
 =====
 
