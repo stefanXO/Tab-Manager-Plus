@@ -89,7 +89,7 @@ html * {
 	cursor: pointer;
 }
 .animations .window{
-	transition: all 0.1s linear;
+	/*transition: all 0.1s linear;*/
 }
 .window.block{
 	border-top:none;
@@ -155,7 +155,7 @@ h1,h2,h3,h4,h5,h6 {
 .no-windowTitles .windowTitle { display: none; }
 .windowTitle { font-size: 12px; font-family: sans-serif; }
 .animations .icon, .animations .iconoverlay {
-	transition: all 0.1s linear;
+	/*transition: all 0.1s linear;*/
 }
 .window.blocks-big .icon {
 	border-radius: 5px;
@@ -290,7 +290,7 @@ h1,h2,h3,h4,h5,h6 {
 	position:relative;
 }
 .animations .tab{
-	transition:0.0125s all linear;
+	/*transition:0.0125s all linear;*/
 }
 .tab.full, .animations .tab.full{
 	min-width:300px;
