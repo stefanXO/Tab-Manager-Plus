@@ -428,6 +428,9 @@ h1,h2,h3,h4,h5,h6 {
 .trash{
 	background-image:url(../images/remove64.png);
 }
+.discard{
+	background-image:url(../images/ram64.png);
+}
 .rate{
 	float:right;
 	background-image:url(../images/heart.png);
