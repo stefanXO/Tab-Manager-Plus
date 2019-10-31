@@ -329,6 +329,10 @@ h1,h2,h3,h4,h5,h6 {
 	animation-duration: 3s;
 	animation-iteration-count: infinite;
 }
+.icon.discarded.blocks, .icon.discarded .iconoverlay {
+	opacity: 0.65;
+	background-blend-mode: luminosity;
+}
 @keyframes audible {
   0% {
     background-color: inherit;
