@@ -159,10 +159,27 @@ h1,h2,h3,h4,h5,h6 {
 }
 .window.blocks-big .icon {
 	border-radius: 5px;
-	height: 2rem;
-	width: 2rem;
-/*	background-size:1.5rem 1.5rem;
-*/}
+	height: 1.5rem;
+	width: 1.5rem;
+	background-size:1rem 1rem;
+}
+.window.blocks-big .tab {
+	border-radius: 5px;
+	height: 2.5rem;
+	width: 2.5rem;
+	background-size:1.5rem 1.5rem;
+}
+.animations .window.blocks-big .tab:hover {
+	transform: scale(1.1);
+	filter: none; 
+	-webkit-filter: blur(0px);
+}
+.animations .window.blocks-big .tab.search-active{
+	transform: scale(0.9);
+}
+.animations .window.blocks-big .tab.selected {
+	transform: scale(1.05);
+}
 .window.searchbox .icon{
 	height: 2rem;
 	width: 2rem;
