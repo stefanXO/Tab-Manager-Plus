@@ -612,6 +612,7 @@ h1,h2,h3,h4,h5,h6 {
 .compact .window {
 	margin: 0.1rem;
 	padding: 0.1rem;
+	padding-bottom: 0.2rem;
 }
 .compact .window.horizontal,.compact .window.vertical {
 	margin: 0.1rem 0;
