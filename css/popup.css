@@ -754,7 +754,7 @@ h1,h2,h3,h4,h5,h6 {
 }
 
 .window.searchbox input.searchBoxInput {
-	margin: 0rem 0.25rem 0 0.25rem;
+	margin: 0.5rem 0.25rem 0 0.25rem;
 	min-width: auto;
 	width: 100%;
 }
@@ -772,4 +772,8 @@ h1,h2,h3,h4,h5,h6 {
 
 .editName:hover {
 	background-color: yellow;
+}
+
+table td {
+	vertical-align: top;
 }
