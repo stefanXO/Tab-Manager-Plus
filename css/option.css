@@ -42,7 +42,8 @@
   display:block;
   cursor: pointer;
   text-align: left;
-  font-size: 1rem;
+  font-weight: bold;
+  font-size: 0.8rem;
   padding: 0.5rem 0;
 }
 .toggle label {
@@ -50,7 +51,7 @@
   display: inline-block;
   width: 80px;
   line-height: 40px;
-  font-size: 1rem;
+  /*font-size: 1rem;*/
   background-color: #e1e1e1;
   border-radius: 50px;
   transition: all 0s ease-in-out;
@@ -204,5 +205,5 @@ input[type=number]::-webkit-outer-spin-button {
 .option-description {
   clear: both;
   padding-bottom: 20px;
-  font-size: 14px;
+  /*font-size: 14px;*/
 }
