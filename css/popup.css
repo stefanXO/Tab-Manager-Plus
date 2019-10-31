@@ -231,6 +231,7 @@ h1,h2,h3,h4,h5,h6 {
 }
 .tab:hover{
 	/*image-rendering: -webkit-optimize-contrast;*/
+	z-index: 99999;
 }
 .tab.search-active{
 	opacity:0.25;
