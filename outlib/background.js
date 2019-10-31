@@ -115,19 +115,20 @@
 
 
 
-	function _callee5() {var tabs, i, tab;return regeneratorRuntime.wrap(function _callee5$(_context5) {while (1) {switch (_context5.prev = _context5.next) {case 0:_context5.next = 2;return (
-							browser.tabs.query({}));case 2:tabs = _context5.sent;
-						i = 0;case 4:if (!(i < tabs.length)) {_context5.next = 11;break;}
+	function _callee5() {var popup_page, tabs, i, tab;return regeneratorRuntime.wrap(function _callee5$(_context5) {while (1) {switch (_context5.prev = _context5.next) {case 0:
+						popup_page = browser.runtime.getURL("popup.html");_context5.next = 3;return (
+							browser.tabs.query({}));case 3:tabs = _context5.sent;
+						i = 0;case 5:if (!(i < tabs.length)) {_context5.next = 12;break;}
 						tab = tabs[i];if (!(
-						tab.url.indexOf("popup.html") > -1)) {_context5.next = 8;break;}return _context5.abrupt("return",
+						tab.url.indexOf("popup.html") > -1 && tab.url.indexOf(popup_page) > -1)) {_context5.next = 9;break;}return _context5.abrupt("return",
 						browser.windows.update(tab.windowId, { focused: true }).then(
 						function () {
 							browser.tabs.highlight({ windowId: tab.windowId, tabs: tab.index });
-						}.bind(this)));case 8:i++;_context5.next = 4;break;case 11:return _context5.abrupt("return",
+						}.bind(this)));case 9:i++;_context5.next = 5;break;case 12:return _context5.abrupt("return",
 
 
 
-						browser.tabs.create({ url: "popup.html" }));case 12:case "end":return _context5.stop();}}}, _callee5, this);}));return function openAsOwnTab() {return _ref5.apply(this, arguments);};}();var setupPopup = function () {var _ref6 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(
+						browser.tabs.create({ url: "popup.html" }));case 13:case "end":return _context5.stop();}}}, _callee5, this);}));return function openAsOwnTab() {return _ref5.apply(this, arguments);};}();var setupPopup = function () {var _ref6 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(
 
 
 	function _callee6() {var openInOwnTab;return regeneratorRuntime.wrap(function _callee6$(_context6) {while (1) {switch (_context6.prev = _context6.next) {case 0:

@@ -8,7 +8,8 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "watch": "npx babel --watch lib --out-dir outlib"
+    "watch": "npx babel --watch lib --out-dir outlib",
+    "build": "babel lib --out-dir outlib"
   },
   "repository": {
     "type": "git",
