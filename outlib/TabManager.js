@@ -566,10 +566,9 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 		{
 			this.state.optionsActive = !this.state.optionsActive;
 			this.forceUpdate();
-		} }, { key: "update", value: function () {var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {var windows, tabCount, i, window, j, tab, id;return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:
+		} }, { key: "update", value: function () {var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {var windows, tabCount, i, window, j, tab, id;return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:_context2.next = 2;return (
 
-								console.log("running update");_context2.next = 3;return (
-									browser.windows.getAll({ populate: true }));case 3:windows = _context2.sent;
+									browser.windows.getAll({ populate: true }));case 2:windows = _context2.sent;
 								windows.sort(function (a, b) {
 									var windows = [];
 									if (!!localStorage["windowAge"]) {
@@ -609,9 +608,8 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 									tabCount: tabCount });
 
 								//this.state.searchLen = 0;
-								console.log("running force");
 								// this.forceUpdate();
-							case 15:case "end":return _context2.stop();}}}, _callee2, this);}));function update() {return _ref2.apply(this, arguments);}return update;}() }, { key: "deleteTabs", value: function () {var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3() {var _this2, tabs, i, t;return regeneratorRuntime.wrap(function _callee3$(_context3) {while (1) {switch (_context3.prev = _context3.next) {case 0:
+							case 13:case "end":return _context2.stop();}}}, _callee2, this);}));function update() {return _ref2.apply(this, arguments);}return update;}() }, { key: "deleteTabs", value: function () {var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3() {var _this2, tabs, i, t;return regeneratorRuntime.wrap(function _callee3$(_context3) {while (1) {switch (_context3.prev = _context3.next) {case 0:
 
 								_this2 = this;
 								tabs = Object.keys(this.state.selection).map(function (id) {
@@ -1099,7 +1097,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 					this.refs.windowcontainer.focus();
 				}
 			}
-			//this.update();
+
 			var setTimeoutCallback = function setTimeoutCallback() {
 				_this9.forceUpdate();
 			};
@@ -1177,13 +1175,10 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 			}
 			this.scrollTo('tab', id);
 			var tab = this.state.tabsbyid[id];
-
-			console.log(this.refs);
-			console.log(this.refs['window' + tab.windowId]);
-			console.log(this.refs['window' + tab.windowId].refs['tab' + id]);
-
-			this.refs['window' + tab.windowId].refs['tab' + id].resolveFavIconUrl();
-			this.refs['window' + tab.windowId].refs['tab' + id].forceUpdate();
+			if (this.refs['window' + tab.windowId] && this.refs['window' + tab.windowId].refs['tab' + id]) {
+				this.refs['window' + tab.windowId].refs['tab' + id].resolveFavIconUrl();
+				this.refs['window' + tab.windowId].refs['tab' + id].forceUpdate();
+			}
 
 			var selected = Object.keys(this.state.selection).length;
 			if (selected == 0) {

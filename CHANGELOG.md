@@ -1,3 +1,22 @@
+5.1.0
+=====
+
+- You can now see which tabs are playing sounds and/or music. For this you need to have the "animations" option turned on. The tabs with active sounds will pulsate
+- You can see now which tabs have been discarded by the browser to save memory - the icons will lose their color if they are in a discarded / memory-saving state
+- You can also discard tabs well. Simply select one or more tabs, and press the "discard tabs" button in the bottom right corner
+- New keyboard possibilities : Use the arrow keys to jump between tabs and windows. Use shift+arrow keys to select tabs. Press Escape to delete a search / unselect everything at once.
+- The big block view has now bigger icons. Easier to read on TVs and big resolutions
+- Small design fixes for dark and compact modes and the options page
+- Fix: Sometimes switching to a tab would not focus the new window properly
+- Fix: Sometimes "open in own tab" would not focus on the tab correctly if it was already open
+- Fix: Sometimes the bottom search bar would disappear / be pushed below. This should be resolved now
+- Scroll to the new window when restoring it from saved windows
+- Scroll to the new saved window when saving it
+- When drag and dropping a tab outside of Tab Manager Plus into another program or the browser ( which is not really intended/supported ) it will now paste the URL on drop<
+- Under the hood : A rewrite of the extension and upgrade to the latest React version. A big change under the hood with slight performance improvements
+- General performance improvements
+- More options texts regarding shortcuts
+
 5.0.8
 =====
 

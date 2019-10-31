@@ -117,15 +117,17 @@
 
 	function _callee5() {var tabs, i, tab;return regeneratorRuntime.wrap(function _callee5$(_context5) {while (1) {switch (_context5.prev = _context5.next) {case 0:_context5.next = 2;return (
 							browser.tabs.query({}));case 2:tabs = _context5.sent;
-						i = 0;case 4:if (!(i < tabs.length)) {_context5.next = 15;break;}
+						i = 0;case 4:if (!(i < tabs.length)) {_context5.next = 11;break;}
 						tab = tabs[i];if (!(
-						tab.url.indexOf("popup.html") > -1)) {_context5.next = 12;break;}_context5.next = 9;return (
-							browser.windows.update(tab.windowId, { focused: true }));case 9:_context5.next = 11;return (
-							browser.tabs.highlight({ windowId: tab.windowId, tabs: tab.index }));case 11:return _context5.abrupt("return");case 12:i++;_context5.next = 4;break;case 15:_context5.next = 17;return (
+						tab.url.indexOf("popup.html") > -1)) {_context5.next = 8;break;}return _context5.abrupt("return",
+						browser.windows.update(tab.windowId, { focused: true }).then(
+						function () {
+							browser.tabs.highlight({ windowId: tab.windowId, tabs: tab.index });
+						}.bind(this)));case 8:i++;_context5.next = 4;break;case 11:return _context5.abrupt("return",
 
 
 
-							browser.tabs.create({ url: "popup.html" }));case 17:case "end":return _context5.stop();}}}, _callee5, this);}));return function openAsOwnTab() {return _ref5.apply(this, arguments);};}();var setupPopup = function () {var _ref6 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(
+						browser.tabs.create({ url: "popup.html" }));case 12:case "end":return _context5.stop();}}}, _callee5, this);}));return function openAsOwnTab() {return _ref5.apply(this, arguments);};}();var setupPopup = function () {var _ref6 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(
 
 
 	function _callee6() {var openInOwnTab;return regeneratorRuntime.wrap(function _callee6$(_context6) {while (1) {switch (_context6.prev = _context6.next) {case 0:
@@ -154,11 +156,14 @@
 								contexts: ["browser_action"],
 								onclick: openAsOwnTab }));case 4:_context7.next = 6;return (
 							browser.contextMenus.create({
+								type: "separator",
+								contexts: ["browser_action"] }));case 6:_context7.next = 8;return (
+							browser.contextMenus.create({
 								title: "Donate to keep Extensions Alive",
 								"contexts": ["browser_action"],
 								onclick: function onclick(info, tab) {
 									browser.tabs.create({ url: 'https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=67TZLSEGYQFFW' });
-								} }));case 6:_context7.next = 8;return (
+								} }));case 8:_context7.next = 10;return (
 
 
 							browser.contextMenus.create({
@@ -170,7 +175,7 @@
 									} else {
 										browser.tabs.create({ url: 'https://chrome.google.com/webstore/detail/tab-manager-plus-for-chro/cnkdjjdmfiffagllbiiilooaoofcoeff' });
 									}
-								} }));case 8:_context7.next = 10;return (
+								} }));case 10:_context7.next = 12;return (
 
 
 							browser.contextMenus.create({
@@ -178,7 +183,7 @@
 								"contexts": ["browser_action"],
 								onclick: function onclick(info, tab) {
 									browser.tabs.create({ url: 'https://github.com/stefanXO/Tab-Manager-Plus/issues' });
-								} }));case 10:_context7.next = 12;return (
+								} }));case 12:_context7.next = 14;return (
 
 
 							browser.contextMenus.create({
@@ -187,7 +192,7 @@
 								onclick: function onclick(info, tab) {
 									browser.tabs.create({ url: 'https://github.com/stefanXO/Tab-Manager-Plus/issues' });
 									browser.tabs.create({ url: 'mailto:markus+tmp@stefanxo.com' });
-								} }));case 12:
+								} }));case 14:
 
 						setupPopup();
 
@@ -214,7 +219,7 @@
 						browser.windows.onFocusChanged.addListener(windowFocus);
 						browser.windows.onCreated.addListener(windowCreated);
 						browser.windows.onRemoved.addListener(windowRemoved);
-						updateTabCountDebounce();case 36:case "end":return _context7.stop();}}}, _callee7, this);}));return function setupListeners() {return _ref7.apply(this, arguments);};}();
+						updateTabCountDebounce();case 38:case "end":return _context7.stop();}}}, _callee7, this);}));return function setupListeners() {return _ref7.apply(this, arguments);};}();
 
 
 // Returns a function, that, as long as it continues to be invoked, will not

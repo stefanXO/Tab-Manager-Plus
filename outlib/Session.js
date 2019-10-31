@@ -210,10 +210,9 @@ Session = function (_React$Component) {_inherits(Session, _React$Component);
 									}
 									names[newWindow.id] = customName || "";
 									localStorage["windowNames"] = JSON.stringify(names);
-								}_context.next = 32;return (
+								}
 
-									this.props.parentUpdate());case 32:
-								//browser.windows.remove(this.props.window.id);
+								this.props.parentUpdate();
 
 								if (!!window.inPopup) {
 									window.close();
@@ -235,7 +234,7 @@ Session = function (_React$Component) {_inherits(Session, _React$Component);
 								// browser.windows.update(this.props.window.windowsInfo.id, {
 								// 	"focused": true },
 								// function (a) {this.props.parentUpdate();}.bind(this));
-							case 33:case "end":return _context.stop();}}}, _callee, this);}));function windowClick(_x) {return _ref.apply(this, arguments);}return windowClick;}() }, { key: "close", value: function () {var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(
+							case 32:case "end":return _context.stop();}}}, _callee, this);}));function windowClick(_x) {return _ref.apply(this, arguments);}return windowClick;}() }, { key: "close", value: function () {var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(
 			e) {var value;return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:
 								e.stopPropagation();_context2.next = 3;return (
 									browser.storage.local.remove(this.props.window.id));case 3:value = _context2.sent;

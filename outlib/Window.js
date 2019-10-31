@@ -518,12 +518,12 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 										console.log(err);
 										console.error(err.message);
 									}));case 33:value = _context2.sent;
-								console.log("Value is set to " + value);_context2.next = 37;return (
-									this.props.parentUpdate());case 37:
-								//browser.windows.remove(this.props.window.id);
+								this.props.parentUpdate();
+								console.log("Value is set to " + value);
+
 								setTimeout(function () {
 									this.props.scrollTo("session", session.id);
-								}.bind(this), 250);case 38:case "end":return _context2.stop();}}}, _callee2, this);}));function save(_x) {return _ref2.apply(this, arguments);}return save;}() }, { key: "minimize", value: function () {var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(
+								}.bind(this), 250);case 37:case "end":return _context2.stop();}}}, _callee2, this);}));function save(_x) {return _ref2.apply(this, arguments);}return save;}() }, { key: "minimize", value: function () {var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(
 
 			e) {return regeneratorRuntime.wrap(function _callee3$(_context3) {while (1) {switch (_context3.prev = _context3.next) {case 0:
 								e.stopPropagation();_context3.next = 3;return (
