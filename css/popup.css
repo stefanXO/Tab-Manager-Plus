@@ -324,6 +324,23 @@ h1,h2,h3,h4,h5,h6 {
 	background-color: purple;
 	color: yellow;
 }
+.animations .icon.audible.blocks, .animations .icon.audible .iconoverlay{
+	animation-name: audible;
+	animation-duration: 3s;
+	animation-iteration-count: infinite;
+}
+@keyframes audible {
+  0% {
+    background-color: inherit;
+  }
+  50% {
+    background-color: #4285f4;
+  }
+  100% {
+    background-color: inherit;
+  }
+}
+
 .tab.full > .tabtitle{
 	max-width: calc(100% - 1.5rem);;
 	/*width:100%;*/
