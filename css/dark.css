@@ -8,7 +8,7 @@ body.dark .window{
 }
 body.dark .icon, body.dark .iconoverlay{
 	border:1px solid #b2b2b2;
-	background-color: #203238;
+	background-color: #07222b;
 }
 
 body.dark input.tabtitle::placeholder, body.dark input.taburl::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
@@ -26,7 +26,10 @@ body.dark .window-x {
 body.dark .icon.highlighted{
 	background-color: #333;
 }
-
+body.dark .icon.incognito.highlighted{
+	background-color: #333;
+	border-color: yellow;
+}
 body.dark .icon.selected .iconoverlay{
 	border-color: purple;
 }
@@ -68,9 +71,8 @@ body.dark .icon.incognito.vertical:hover {
 	background-color: purple;
 	color: yellow;
 }
-body.dark .icon.incognito.highlighted{
-	background-color: #333;
-	border-color: yellow;
+body.dark .tab.selected {
+    background-color: yellow;
 }
 body.dark .icon .iconoverlay {
 	border: 0;
@@ -121,6 +123,12 @@ body.dark img {
 
 body.dark .icon {
 	background-blend-mode: difference;
+}
+/*body.dark .icon {
+	background-blend-mode: color-dodge;
+}*/
+body.dark .icon.selected {
+	background-blend-mode: unset;
 }
 
 body.dark .licenses {
