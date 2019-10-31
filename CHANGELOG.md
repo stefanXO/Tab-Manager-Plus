@@ -12,7 +12,7 @@
 - Fix: Sometimes the bottom search bar would disappear / be pushed below. This should be resolved now
 - Scroll to the new window when restoring it from saved windows
 - Scroll to the new saved window when saving it
-- When drag and dropping a tab outside of Tab Manager Plus into another program or the browser ( which is not really intended/supported ) it will now paste the URL on drop<
+- When drag and dropping a tab outside of Tab Manager Plus into another program or the browser ( which is not really intended/supported ) it will now paste the URL on drop
 - Under the hood : A rewrite of the extension and upgrade to the latest React version. A big change under the hood with slight performance improvements
 - General performance improvements
 - More options texts regarding shortcuts
