@@ -1,3 +1,8 @@
+5.1.1
+=====
+
+- Fix: The "highlight duplicate tabs" button may have disappeared - it should be back now
+
 5.1.0
 =====
 
