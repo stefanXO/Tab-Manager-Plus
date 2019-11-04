@@ -168,9 +168,6 @@ class TabManager extends React.Component {
 	componentWillMount() {
 		this.update();
 	}
-	shouldComponentUpdate(nextProps, nextState) {
-		return true;
-	}
 	hoverHandler(tab) {
 		this.setState({ topText: tab.title });
 		this.setState({ bottomText: tab.url });
@@ -215,6 +212,13 @@ class TabManager extends React.Component {
 
 		if (this.state.sessionsFeature) {
 			if (this.state.sessions.length > 0) haveSess = true;
+			// disable session window if we have filtering enabled
+			// and filter active
+			if (haveSess && this.state.filterTabs) {
+				if (this.state.searchLen > 0 || Object.keys(this.state.hiddenTabs).length > 0) {
+					haveSess = false;
+				}
+			}
 		}
 
 		return (
@@ -304,7 +308,7 @@ class TabManager extends React.Component {
 							<span className="hrSpan">Saved windows</span>
 						</div>
 					</div>
-					{this.state.sessionsFeature
+					{haveSess
 						? this.state.sessions.map(function(window) {
 								return (
 									<Session
@@ -448,7 +452,7 @@ class TabManager extends React.Component {
 									<div
 										className={"icon windowaction filter" + (this.state.filterTabs ? " enabled" : "")}
 										title={
-											(this.state.filterTabs ? "Do not hide" : "Hide") +
+											(this.state.filterTabs ? "Turn off hiding of" : "Hide") +
 											" tabs that do not match search" +
 											(this.state.searchLen > 0
 												? "\n" +
