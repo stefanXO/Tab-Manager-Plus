@@ -42,7 +42,8 @@ Session = function (_React$Component) {_inherits(Session, _React$Component);
 						hoverHandler: _this.props.hoverHandler,
 						searchActive: _this.props.searchActive,
 						select: _this.props.select,
-						ref: "sessiontab" + tabId }));
+						ref: "sessiontab" + tabId,
+						id: "sessiontab-" + tab.id }));
 
 
 			});

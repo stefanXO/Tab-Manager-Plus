@@ -88,7 +88,7 @@
 							createWindowWithTabs([tab], tab.incognito));case 6:
 
 
-						updateTabCountDebounce();case 7:case "end":return _context4.stop();}}}, _callee4, this);}));return function tabAdded(_x4) {return _ref4.apply(this, arguments);};}();var openAsOwnTab = function () {var _ref5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(
+						updateTabCountDebounce();case 7:case "end":return _context4.stop();}}}, _callee4, this);}));return function tabAdded(_x4) {return _ref4.apply(this, arguments);};}();var openPopup = function () {var _ref5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(
 
 
 
@@ -115,23 +115,27 @@
 
 
 
-	function _callee5() {var popup_page, tabs, i, tab;return regeneratorRuntime.wrap(function _callee5$(_context5) {while (1) {switch (_context5.prev = _context5.next) {case 0:
-						popup_page = browser.runtime.getURL("popup.html");_context5.next = 3;return (
-							browser.tabs.query({}));case 3:tabs = _context5.sent;
-						i = 0;case 5:if (!(i < tabs.length)) {_context5.next = 12;break;}
+	function _callee5() {return regeneratorRuntime.wrap(function _callee5$(_context5) {while (1) {switch (_context5.prev = _context5.next) {case 0:return _context5.abrupt("return",
+						browser.browserAction.openPopup());case 1:case "end":return _context5.stop();}}}, _callee5, this);}));return function openPopup() {return _ref5.apply(this, arguments);};}();var openAsOwnTab = function () {var _ref6 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(
+
+
+	function _callee6() {var popup_page, tabs, i, tab;return regeneratorRuntime.wrap(function _callee6$(_context6) {while (1) {switch (_context6.prev = _context6.next) {case 0:
+						popup_page = browser.runtime.getURL("popup.html");_context6.next = 3;return (
+							browser.tabs.query({}));case 3:tabs = _context6.sent;
+						i = 0;case 5:if (!(i < tabs.length)) {_context6.next = 12;break;}
 						tab = tabs[i];if (!(
-						tab.url.indexOf("popup.html") > -1 && tab.url.indexOf(popup_page) > -1)) {_context5.next = 9;break;}return _context5.abrupt("return",
+						tab.url.indexOf("popup.html") > -1 && tab.url.indexOf(popup_page) > -1)) {_context6.next = 9;break;}return _context6.abrupt("return",
 						browser.windows.update(tab.windowId, { focused: true }).then(
 						function () {
 							browser.tabs.highlight({ windowId: tab.windowId, tabs: tab.index });
-						}.bind(this)));case 9:i++;_context5.next = 5;break;case 12:return _context5.abrupt("return",
+						}.bind(this)));case 9:i++;_context6.next = 5;break;case 12:return _context6.abrupt("return",
 
 
 
-						browser.tabs.create({ url: "popup.html" }));case 13:case "end":return _context5.stop();}}}, _callee5, this);}));return function openAsOwnTab() {return _ref5.apply(this, arguments);};}();var setupPopup = function () {var _ref6 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(
+						browser.tabs.create({ url: "popup.html" }));case 13:case "end":return _context6.stop();}}}, _callee6, this);}));return function openAsOwnTab() {return _ref6.apply(this, arguments);};}();var setupPopup = function () {var _ref7 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(
 
 
-	function _callee6() {var openInOwnTab;return regeneratorRuntime.wrap(function _callee6$(_context6) {while (1) {switch (_context6.prev = _context6.next) {case 0:
+	function _callee7() {var openInOwnTab;return regeneratorRuntime.wrap(function _callee7$(_context7) {while (1) {switch (_context7.prev = _context7.next) {case 0:
 						if (typeof localStorage["openInOwnTab"] === "undefined") localStorage["openInOwnTab"] = "0";
 						openInOwnTab = false;
 						try {
@@ -140,60 +144,112 @@
 							openInOwnTab = false;
 						}
 						console.log(openInOwnTab);if (!
-						openInOwnTab) {_context6.next = 11;break;}_context6.next = 7;return (
-							browser.browserAction.setPopup({ popup: "" }));case 7:_context6.next = 9;return (
-							browser.browserAction.onClicked.addListener(openAsOwnTab));case 9:_context6.next = 15;break;case 11:_context6.next = 13;return (
+						openInOwnTab) {_context7.next = 11;break;}_context7.next = 7;return (
+							browser.browserAction.setPopup({ popup: "" }));case 7:_context7.next = 9;return (
+							browser.browserAction.onClicked.addListener(openAsOwnTab));case 9:_context7.next = 15;break;case 11:_context7.next = 13;return (
 
-							browser.browserAction.setPopup({ popup: "popup.html?popup=true" }));case 13:_context6.next = 15;return (
-							browser.browserAction.onClicked.removeListener(openAsOwnTab));case 15:case "end":return _context6.stop();}}}, _callee6, this);}));return function setupPopup() {return _ref6.apply(this, arguments);};}();var setupListeners = function () {var _ref7 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(
-
-
-
-	function _callee7() {return regeneratorRuntime.wrap(function _callee7$(_context7) {while (1) {switch (_context7.prev = _context7.next) {case 0:_context7.next = 2;return (
-
-							browser.contextMenus.removeAll());case 2:_context7.next = 4;return (
-							browser.contextMenus.create({
-								title: "Open in own tab",
-								contexts: ["browser_action"],
-								onclick: openAsOwnTab }));case 4:_context7.next = 6;return (
-							browser.contextMenus.create({
-								type: "separator",
-								contexts: ["browser_action"] }));case 6:_context7.next = 8;return (
-							browser.contextMenus.create({
-								title: "Donate to keep Extensions Alive",
-								"contexts": ["browser_action"],
-								onclick: function onclick(info, tab) {
-									browser.tabs.create({ url: 'https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=67TZLSEGYQFFW' });
-								} }));case 8:_context7.next = 10;return (
+							browser.browserAction.setPopup({ popup: "popup.html?popup=true" }));case 13:_context7.next = 15;return (
+							browser.browserAction.onClicked.removeListener(openAsOwnTab));case 15:case "end":return _context7.stop();}}}, _callee7, this);}));return function setupPopup() {return _ref7.apply(this, arguments);};}();var setupListeners = function () {var _ref8 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(
 
 
-							browser.contextMenus.create({
-								title: "Leave a review",
-								"contexts": ["browser_action"],
-								onclick: function onclick(info, tab) {
-									if (navigator.userAgent.search("Firefox") > -1) {
-										browser.tabs.create({ url: 'https://addons.mozilla.org/en-US/firefox/addon/tab-manager-plus-for-firefox/' });
-									} else {
-										browser.tabs.create({ url: 'https://chrome.google.com/webstore/detail/tab-manager-plus-for-chro/cnkdjjdmfiffagllbiiilooaoofcoeff' });
-									}
-								} }));case 10:_context7.next = 12;return (
+
+	function _callee8() {return regeneratorRuntime.wrap(function _callee8$(_context8) {while (1) {switch (_context8.prev = _context8.next) {case 0:_context8.next = 2;return (
+
+							browser.contextMenus.removeAll());case 2:
+						browser.contextMenus.create({
+							title: "📔 Open in own tab",
+							contexts: ["browser_action"],
+							onclick: openAsOwnTab });
+
+						browser.contextMenus.create({
+							title: "📑 Open popup",
+							contexts: ["browser_action"],
+							onclick: openPopup });
+
+						browser.contextMenus.create({
+							type: "separator",
+							contexts: ["browser_action"] });
+
+						browser.contextMenus.create({
+							title: "😍 Support this extension",
+							id: "support_menu",
+							"contexts": ["browser_action"] });
 
 
-							browser.contextMenus.create({
-								title: "Report an issue",
-								"contexts": ["browser_action"],
-								onclick: function onclick(info, tab) {
-									browser.tabs.create({ url: 'https://github.com/stefanXO/Tab-Manager-Plus/issues' });
-								} }));case 12:_context7.next = 14;return (
+						browser.contextMenus.create({
+							title: "⭐ Leave a review",
+							"contexts": ["browser_action"],
+							parentId: "support_menu",
+							onclick: function onclick(info, tab) {
+								if (navigator.userAgent.search("Firefox") > -1) {
+									browser.tabs.create({ url: 'https://addons.mozilla.org/en-US/firefox/addon/tab-manager-plus-for-firefox/' });
+								} else {
+									browser.tabs.create({ url: 'https://chrome.google.com/webstore/detail/tab-manager-plus-for-chro/cnkdjjdmfiffagllbiiilooaoofcoeff' });
+								}
+							} });
+
+						browser.contextMenus.create({
+							title: "☕ Donate to keep Extensions Alive",
+							"contexts": ["browser_action"],
+							parentId: "support_menu",
+							onclick: function onclick(info, tab) {
+								browser.tabs.create({ url: 'https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=67TZLSEGYQFFW' });
+							} });
+
+						browser.contextMenus.create({
+							title: "💰 Become a Patron",
+							"contexts": ["browser_action"],
+							parentId: "support_menu",
+							onclick: function onclick(info, tab) {
+								browser.tabs.create({ url: 'https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=67TZLSEGYQFFW' });
+							} });
+
+						browser.contextMenus.create({
+							title: "🤔 Issues and Suggestions",
+							id: "code_menu",
+							"contexts": ["browser_action"] });
 
 
-							browser.contextMenus.create({
-								title: "Send a suggestion",
-								"contexts": ["browser_action"],
-								onclick: function onclick(info, tab) {
-									browser.tabs.create({ url: 'https://github.com/stefanXO/Tab-Manager-Plus/issues' });
-									browser.tabs.create({ url: 'mailto:markus+tmp@stefanxo.com' });
-								} }));case 14:
+						browser.contextMenus.create({
+							title: "🆕 View recent changes",
+							"contexts": ["browser_action"],
+							parentId: "code_menu",
+							onclick: function onclick(info, tab) {
+								browser.tabs.create({ url: 'changelog.html' });
+							} });
+
+						browser.contextMenus.create({
+							title: "⚙ Edit Options",
+							"contexts": ["browser_action"],
+							parentId: "code_menu",
+							onclick: function onclick(info, tab) {
+								browser.tabs.create({ url: 'options.html' });
+							} });
+
+						browser.contextMenus.create({
+							title: "💻 View source code",
+							"contexts": ["browser_action"],
+							parentId: "code_menu",
+							onclick: function onclick(info, tab) {
+								browser.tabs.create({ url: 'https://github.com/stefanXO/Tab-Manager-Plus' });
+							} });
+
+						browser.contextMenus.create({
+							title: "🤔 Report an issue",
+							"contexts": ["browser_action"],
+							parentId: "code_menu",
+							onclick: function onclick(info, tab) {
+								browser.tabs.create({ url: 'https://github.com/stefanXO/Tab-Manager-Plus/issues' });
+							} });
+
+						browser.contextMenus.create({
+							title: "💡 Send a suggestion",
+							"contexts": ["browser_action"],
+							parentId: "code_menu",
+							onclick: function onclick(info, tab) {
+								browser.tabs.create({ url: 'https://github.com/stefanXO/Tab-Manager-Plus/issues' });
+								browser.tabs.create({ url: 'mailto:markus+tmp@stefanxo.com' });
+							} });
 
 						setupPopup();
 
@@ -220,14 +276,14 @@
 						browser.windows.onFocusChanged.addListener(windowFocus);
 						browser.windows.onCreated.addListener(windowCreated);
 						browser.windows.onRemoved.addListener(windowRemoved);
-						updateTabCountDebounce();case 38:case "end":return _context7.stop();}}}, _callee7, this);}));return function setupListeners() {return _ref7.apply(this, arguments);};}();
+						updateTabCountDebounce();case 39:case "end":return _context8.stop();}}}, _callee8, this);}));return function setupListeners() {return _ref8.apply(this, arguments);};}();
 
 
 // Returns a function, that, as long as it continues to be invoked, will not
 // be triggered. The function will be called after it stops being called for
 // N milliseconds. If `immediate` is passed, trigger the function on the
 // leading edge, instead of the trailing.
-var hideWindows = function () {var _ref8 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(
+var hideWindows = function () {var _ref9 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(
 
 
 
@@ -287,49 +343,49 @@ var hideWindows = function () {var _ref8 = _asyncToGenerator( /*#__PURE__*/regen
 
 
 
-	function _callee9(windowId) {var result;return regeneratorRuntime.wrap(function _callee9$(_context9) {while (1) {switch (_context9.prev = _context9.next) {case 0:if (!(
-						!windowId || windowId < 0)) {_context9.next = 4;break;}return _context9.abrupt("return");case 4:if (!
+	function _callee10(windowId) {var result;return regeneratorRuntime.wrap(function _callee10$(_context10) {while (1) {switch (_context10.prev = _context10.next) {case 0:if (!(
+						!windowId || windowId < 0)) {_context10.next = 4;break;}return _context10.abrupt("return");case 4:if (!
 
 
-						localStorageAvailable()) {_context9.next = 10;break;}
+						localStorageAvailable()) {_context10.next = 10;break;}
 						if (typeof localStorage["hideWindows"] === "undefined") localStorage["hideWindows"] = "0";if (!(
-						localStorage["hideWindows"] == "0")) {_context9.next = 8;break;}return _context9.abrupt("return");case 8:_context9.next = 12;break;case 10:
+						localStorage["hideWindows"] == "0")) {_context10.next = 8;break;}return _context10.abrupt("return");case 8:_context10.next = 12;break;case 10:
 
-						console.log("no local storage");return _context9.abrupt("return");case 12:if (!(
-
-
-
-						navigator.userAgent.search("Firefox") > -1)) {_context9.next = 14;break;}return _context9.abrupt("return");case 14:_context9.next = 16;return (
+						console.log("no local storage");return _context10.abrupt("return");case 12:if (!(
 
 
 
-							browser.permissions.contains({ permissions: ['system.display'] }));case 16:result = _context9.sent;
+						navigator.userAgent.search("Firefox") > -1)) {_context10.next = 14;break;}return _context10.abrupt("return");case 14:_context10.next = 16;return (
+
+
+
+							browser.permissions.contains({ permissions: ['system.display'] }));case 16:result = _context10.sent;
 						if (result) {
 							// The extension has the permissions.
-							chrome.system.display.getInfo(function () {var _ref9 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(windowId, displaylayouts) {var _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, displaylayout, windows, monitor, i, a, result;return regeneratorRuntime.wrap(function _callee8$(_context8) {while (1) {switch (_context8.prev = _context8.next) {case 0:
+							chrome.system.display.getInfo(function () {var _ref10 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(windowId, displaylayouts) {var _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, displaylayout, windows, monitor, i, a, result;return regeneratorRuntime.wrap(function _callee9$(_context9) {while (1) {switch (_context9.prev = _context9.next) {case 0:
 													window.displayInfo = [];
 													_iteratorNormalCompletion = true;
 													_didIteratorError = false;
-													_iteratorError = undefined;_context8.prev = 4;
+													_iteratorError = undefined;_context9.prev = 4;
 
 													for (_iterator = displaylayouts[Symbol.iterator](); !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {displaylayout = _step.value;
 														window.displayInfo.push(displaylayout.bounds);
-													}_context8.next = 12;break;case 8:_context8.prev = 8;_context8.t0 = _context8["catch"](4);
+													}_context9.next = 12;break;case 8:_context9.prev = 8;_context9.t0 = _context9["catch"](4);
 
 													_didIteratorError = true;
-													_iteratorError = _context8.t0;case 12:_context8.prev = 12;_context8.prev = 13;
+													_iteratorError = _context9.t0;case 12:_context9.prev = 12;_context9.prev = 13;
 
 
 													if (!_iteratorNormalCompletion && _iterator.return) {
 														_iterator.return();
-													}case 15:_context8.prev = 15;if (!
+													}case 15:_context9.prev = 15;if (!
 
-													_didIteratorError) {_context8.next = 18;break;}throw (
-														_iteratorError);case 18:return _context8.finish(15);case 19:return _context8.finish(12);case 20:_context8.next = 22;return (
+													_didIteratorError) {_context9.next = 18;break;}throw (
+														_iteratorError);case 18:return _context9.finish(15);case 19:return _context9.finish(12);case 20:_context9.next = 22;return (
 
 
 
-														browser.windows.getAll({ populate: true }));case 22:windows = _context8.sent;
+														browser.windows.getAll({ populate: true }));case 22:windows = _context9.sent;
 													monitor = -1;
 													for (i = windows.length - 1; i >= 0; i--) {
 														if (windows[i].id == windowId) {
@@ -342,15 +398,15 @@ var hideWindows = function () {var _ref8 = _asyncToGenerator( /*#__PURE__*/regen
 														}
 													};
 
-													i = windows.length - 1;case 27:if (!(i >= 0)) {_context8.next = 35;break;}if (!(
-													windows[i].id != windowId)) {_context8.next = 32;break;}if (!
-													is_in_bounds(windows[i], window.displayInfo[monitor])) {_context8.next = 32;break;}_context8.next = 32;return (
-														browser.windows.update(windows[i].id, { "state": "minimized" }));case 32:i--;_context8.next = 27;break;case 35:
+													i = windows.length - 1;case 27:if (!(i >= 0)) {_context9.next = 35;break;}if (!(
+													windows[i].id != windowId)) {_context9.next = 32;break;}if (!
+													is_in_bounds(windows[i], window.displayInfo[monitor])) {_context9.next = 32;break;}_context9.next = 32;return (
+														browser.windows.update(windows[i].id, { "state": "minimized" }));case 32:i--;_context9.next = 27;break;case 35:
 
 
-													;case 36:case "end":return _context8.stop();}}}, _callee8, this, [[4, 8, 12, 20], [13,, 15, 19]]);}));return function (_x6, _x7) {return _ref9.apply(this, arguments);};}().
+													;case 36:case "end":return _context9.stop();}}}, _callee9, this, [[4, 8, 12, 20], [13,, 15, 19]]);}));return function (_x6, _x7) {return _ref10.apply(this, arguments);};}().
 							bind(null, windowId));
-						}case 18:case "end":return _context9.stop();}}}, _callee9, this);}));return function hideWindows(_x5) {return _ref8.apply(this, arguments);};}();function _asyncToGenerator(fn) {return function () {var gen = fn.apply(this, arguments);return new Promise(function (resolve, reject) {function step(key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {return Promise.resolve(value).then(function (value) {step("next", value);}, function (err) {step("throw", err);});}}return step("next");});};}var browser = browser || chrome;var updateTabCountDebounce = debounce(updateTabCount, 250);function tabRemoved() {updateTabCountDebounce();}window.tabsActive = [];function tabActiveChanged(tab) {if (!!tab && !!tab.tabId) {if (!window.tabsActive) window.tabsActive = [];if (!!window.tabsActive && window.tabsActive.length > 0) {var lastActive = window.tabsActive[window.tabsActive.length - 1];if (!!lastActive && lastActive.tabId == tab.tabId && lastActive.windowId == tab.windowId) {return;}}while (window.tabsActive.length > 20) {window.tabsActive.shift();}for (var i = window.tabsActive.length - 1; i >= 0; i--) {if (window.tabsActive[i].tabId == tab.tabId) {window.tabsActive.splice(i, 1);}};window.tabsActive.push(tab);}updateTabCountDebounce();}function debounce(func, wait, immediate) {var timeout;return function () {var context = this,args = arguments;var later = function later() {timeout = null;if (!immediate) func.apply(context, args);};var callNow = immediate && !timeout;clearTimeout(timeout);timeout = setTimeout(later, wait);if (callNow) func.apply(context, args);};};function localStorageAvailable() {var test = 'test';try {localStorage.setItem(test, test);localStorage.removeItem(test);return true;} catch (e) {return false;}}function windowFocus(windowId) {try {if (!!windowId) {windowActive(windowId); // console.log("onFocused", windowId);
+						}case 18:case "end":return _context10.stop();}}}, _callee10, this);}));return function hideWindows(_x5) {return _ref9.apply(this, arguments);};}();function _asyncToGenerator(fn) {return function () {var gen = fn.apply(this, arguments);return new Promise(function (resolve, reject) {function step(key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {return Promise.resolve(value).then(function (value) {step("next", value);}, function (err) {step("throw", err);});}}return step("next");});};}var browser = browser || chrome;var updateTabCountDebounce = debounce(updateTabCount, 250);function tabRemoved() {updateTabCountDebounce();}window.tabsActive = [];function tabActiveChanged(tab) {if (!!tab && !!tab.tabId) {if (!window.tabsActive) window.tabsActive = [];if (!!window.tabsActive && window.tabsActive.length > 0) {var lastActive = window.tabsActive[window.tabsActive.length - 1];if (!!lastActive && lastActive.tabId == tab.tabId && lastActive.windowId == tab.windowId) {return;}}while (window.tabsActive.length > 20) {window.tabsActive.shift();}for (var i = window.tabsActive.length - 1; i >= 0; i--) {if (window.tabsActive[i].tabId == tab.tabId) {window.tabsActive.splice(i, 1);}};window.tabsActive.push(tab);}updateTabCountDebounce();}function debounce(func, wait, immediate) {var timeout;return function () {var context = this,args = arguments;var later = function later() {timeout = null;if (!immediate) func.apply(context, args);};var callNow = immediate && !timeout;clearTimeout(timeout);timeout = setTimeout(later, wait);if (callNow) func.apply(context, args);};};function localStorageAvailable() {var test = 'test';try {localStorage.setItem(test, test);localStorage.removeItem(test);return true;} catch (e) {return false;}}function windowFocus(windowId) {try {if (!!windowId) {windowActive(windowId); // console.log("onFocused", windowId);
 			hideWindows(windowId);}} catch (e) {}}function windowCreated(window) {try {if (!!window && !!window.id) {windowActive(window.id);}} catch (e) {} // console.log("onCreated", window.id);
 }function windowRemoved(windowId) {try {if (!!windowId) {windowActive(windowId);}} catch (e) {} // console.log("onRemoved", windowId);
 }window.displayInfo = [];
@@ -407,8 +463,8 @@ browser.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 	}
 });
 
-_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10() {var windows, i;return regeneratorRuntime.wrap(function _callee10$(_context10) {while (1) {switch (_context10.prev = _context10.next) {case 0:_context10.next = 2;return (
-						browser.windows.getAll({ populate: true }));case 2:windows = _context10.sent;
+_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11() {var windows, i;return regeneratorRuntime.wrap(function _callee11$(_context11) {while (1) {switch (_context11.prev = _context11.next) {case 0:_context11.next = 2;return (
+						browser.windows.getAll({ populate: true }));case 2:windows = _context11.sent;
 					localStorage["windowAge"] = JSON.stringify([]);
 					if (!!windows && windows.length > 0) {
 						windows.sort(function (a, b) {
@@ -419,7 +475,7 @@ _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10() {va
 						for (i = 0; i < windows.length; i++) {
 							if (!!windows[i].id) windowActive(windows[i].id);
 						};
-					}case 5:case "end":return _context10.stop();}}}, _callee10, this);}))();
+					}case 5:case "end":return _context11.stop();}}}, _callee11, this);}))();
 
 
 setInterval(setupListeners, 300000);

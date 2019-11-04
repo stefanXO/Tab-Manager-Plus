@@ -39,6 +39,7 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 		_this2.stop = _this2.stop.bind(_this2);
 		_this2.windowClick = _this2.windowClick.bind(_this2);return _this2;
 	}_createClass(Window, [{ key: "render", value: function render()
+
 		{
 			var _this = this;
 			var colors = localStorage["windowColors"];
@@ -78,7 +79,8 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 						drag: _this.props.drag,
 						drop: _this.props.drop,
 						dropWindow: _this.props.dropWindow,
-						ref: "tab" + tab.id }));
+						ref: "tab" + tab.id,
+						id: "tab-" + tab.id }));
 
 
 			});
@@ -390,9 +392,15 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 				if (!!titleAdded) {
 					children.push(tabs.shift());
 				}
+				var z = -1;
 				for (var j = 0; j < tabs.length; j++) {
-					children.push(tabs[j]);
-					if ((j + 1) % tabsperrow == 0 && j && this.props.layout.indexOf("blocks") > -1) {
+					var tab = tabs[j].props.tab;
+					var isHidden = !!tab && !!tab.id && !!this.props.hiddenTabs[tab.id] && this.props.filterTabs;
+					if (!isHidden) {
+						z++;
+						children.push(tabs[j]);
+					}
+					if ((z + 1) % tabsperrow == 0 && z && this.props.layout.indexOf("blocks") > -1) {
 						children.push(React.createElement("div", { className: "newliner" }));
 					}
 				}

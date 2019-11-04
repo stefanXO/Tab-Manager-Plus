@@ -52,7 +52,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 			if (typeof localStorage["sessionsFeature"] === "undefined") localStorage["sessionsFeature"] = "0";
 			if (typeof localStorage["hideWindows"] === "undefined") localStorage["hideWindows"] = "0";
 			if (typeof localStorage["filter-tabs"] === "undefined") localStorage["filter-tabs"] = "0";
-			if (typeof localStorage["version"] === "undefined") localStorage["version"] = "5.1.1";
+			if (typeof localStorage["version"] === "undefined") localStorage["version"] = "5.1.2";
 
 			layout = localStorage["layout"];
 			tabLimit = JSON.parse(localStorage["tabLimit"]);
@@ -167,9 +167,6 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 	}_createClass(TabManager, [{ key: "componentWillMount", value: function componentWillMount()
 		{
 			this.update();
-		} }, { key: "shouldComponentUpdate", value: function shouldComponentUpdate(
-		nextProps, nextState) {
-			return true;
 		} }, { key: "hoverHandler", value: function hoverHandler(
 		tab) {
 			this.setState({ topText: tab.title });
@@ -215,6 +212,13 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 
 			if (this.state.sessionsFeature) {
 				if (this.state.sessions.length > 0) haveSess = true;
+				// disable session window if we have filtering enabled
+				// and filter active
+				if (haveSess && this.state.filterTabs) {
+					if (this.state.searchLen > 0 || Object.keys(this.state.hiddenTabs).length > 0) {
+						haveSess = false;
+					}
+				}
 			}
 
 			return (
@@ -304,7 +308,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 								React.createElement("span", { className: "hrSpan" }, "Saved windows"))),
 
 
-						this.state.sessionsFeature ?
+						haveSess ?
 						this.state.sessions.map(function (window) {
 							return (
 								React.createElement(Session, {
@@ -448,7 +452,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 										React.createElement("div", {
 											className: "icon windowaction filter" + (this.state.filterTabs ? " enabled" : ""),
 											title:
-											(this.state.filterTabs ? "Do not hide" : "Hide") +
+											(this.state.filterTabs ? "Turn off hiding of" : "Hide") +
 											" tabs that do not match search" + (
 											this.state.searchLen > 0 ?
 											"\n" + (
@@ -804,21 +808,22 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 			}
 			this.forceUpdate();
 		} }, { key: "clearSelection", value: function clearSelection()
-		{var _this8 = this;
+		{
 			this.state.selection = {};
 			this.setState({
 				lastSelect: false });
 
-			var setTimeoutCallback = function setTimeoutCallback() {
-				_this8.forceUpdate();
-			};
-			setTimeout(setTimeoutCallback);
 		} }, { key: "checkKey", value: function checkKey(
-		e) {var _this9 = this;
+		e) {
 			// enter
 			if (e.keyCode == 13) this.addWindow();
 			// escape key
 			if (e.keyCode == 27) {
+				if (this.state.searchLen > 0 || Object.keys(this.state.selection).length > 0) {
+					// stop popup from closing if we have search text or selection active
+					e.nativeEvent.preventDefault();
+					e.nativeEvent.stopPropagation();
+				}
 				this.state.hiddenTabs = {};
 				this.state.searchLen = 0;
 				this.refs.searchbox.value = "";
@@ -1097,11 +1102,6 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 					this.refs.windowcontainer.focus();
 				}
 			}
-
-			var setTimeoutCallback = function setTimeoutCallback() {
-				_this9.forceUpdate();
-			};
-			setTimeout(setTimeoutCallback);
 		} }, { key: "selectWindowTab", value: function selectWindowTab(
 		windowId, tabPosition) {
 			if (!tabPosition || tabPosition < 1) tabPosition = 1;var _iteratorNormalCompletion9 = true;var _didIteratorError9 = false;var _iteratorError9 = undefined;try {
@@ -1161,7 +1161,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 				return "Vertical";
 			}
 		} }, { key: "select", value: function select(
-		id) {var _this10 = this;
+		id) {
 			if (this.state.selection[id]) {
 				delete this.state.selection[id];
 				this.setState({
@@ -1177,7 +1177,6 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 			var tab = this.state.tabsbyid[id];
 			if (this.refs['window' + tab.windowId] && this.refs['window' + tab.windowId].refs['tab' + id]) {
 				this.refs['window' + tab.windowId].refs['tab' + id].resolveFavIconUrl();
-				this.refs['window' + tab.windowId].refs['tab' + id].forceUpdate();
 			}
 
 			var selected = Object.keys(this.state.selection).length;
@@ -1197,11 +1196,6 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 					bottomText: "Press enter to move them to a new window" });
 
 			}
-
-			var setTimeoutCallback = function setTimeoutCallback() {
-				_this10.forceUpdate();
-			};
-			setTimeout(setTimeoutCallback);
 		} }, { key: "selectTo", value: function selectTo(
 		id, tabs) {
 			var activate = false;
@@ -1532,7 +1526,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 				bottomText: "Allows you to export your saved windows to an external backup" });
 
 		} }, { key: "importSessions", value: function importSessions(
-		evt) {var _this11 = this;
+		evt) {var _this8 = this;
 			try {
 				var inputField = evt.target; // #session_import
 				var files = evt.target.files;
@@ -1552,7 +1546,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 										} catch (err) {
 											console.error(err);
 											window.alert(err);
-											_this11.setState({ bottomText: "Error: Could not read the backup file!" });
+											_this8.setState({ bottomText: "Error: Could not read the backup file!" });
 										} //console.log('FILE CONTENT', event.target.result);
 										if (!(!!backupFile && backupFile.length > 0)) {_context10.next = 18;break;}
 										success = backupFile.length;
@@ -1570,12 +1564,12 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 
 
 
-										_this11.setState({ bottomText: success + " windows successfully restored!" });_context10.next = 19;break;case 18:
+										_this8.setState({ bottomText: success + " windows successfully restored!" });_context10.next = 19;break;case 18:
 
-										_this11.setState({ bottomText: "Error: Could not restore any windows from the backup file!" });case 19:
+										_this8.setState({ bottomText: "Error: Could not restore any windows from the backup file!" });case 19:
 
 										inputField.value = "";
-										_this11.sessionSync();case 21:case "end":return _context10.stop();}}}, _callee10, _this11);}));return function (_x4) {return _ref10.apply(this, arguments);};}();
+										_this8.sessionSync();case 21:case "end":return _context10.stop();}}}, _callee10, _this8);}));return function (_x4) {return _ref10.apply(this, arguments);};}();
 
 				reader.readAsText(file);
 			} catch (err) {

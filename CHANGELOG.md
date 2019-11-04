@@ -1,3 +1,13 @@
+5.1.2
+=====
+- Overworked and more friendlier context menu. You can now open the popup from the context menu, if opening as own tab is the default. You can now also access the changelog from the context menu
+- Increase popup size/width steps to 25
+- Fix: Hide saved windows when a filter is active
+- Fix: Don't break rows on tabs based on the hidden tabs
+- Fix: Sometimes when using the keyboard the tabs would not highlight properly. This should be resolved now.
+- Fix: Background color for dark mode.
+- Performance improvements, such as not rendering hidden tabs to the DOM
+
 5.1.1
 =====
 

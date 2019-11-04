@@ -6,7 +6,7 @@ TabOptions = function (_React$Component) {_inherits(TabOptions, _React$Component
 		_this.state = {};return _this;
 	}_createClass(TabOptions, [{ key: "logo", value: function logo()
 		{
-			var logo = [React.createElement("img", { src: "images/browsers.svg", style: { maxWidth: "3rem" } }), React.createElement("h2", null, "Tab Manager Plus ", "5.1.1")];
+			var logo = [React.createElement("img", { src: "images/browsers.svg", style: { maxWidth: "3rem" } }), React.createElement("h2", null, "Tab Manager Plus ", "5.1.2")];
 
 			return (
 				React.createElement("div", { className: "logo-options" },
@@ -55,7 +55,7 @@ TabOptions = function (_React$Component) {_inherits(TabOptions, _React$Component
 						type: "number",
 						min: "450",
 						max: "800",
-						step: "10",
+						step: "25",
 						onMouseEnter: this.props.tabWidthText,
 						onChange: this.props.changeTabWidth,
 						value: this.props.tabWidth,
@@ -72,7 +72,7 @@ TabOptions = function (_React$Component) {_inherits(TabOptions, _React$Component
 						type: "number",
 						min: "400",
 						max: "600",
-						step: "10",
+						step: "25",
 						onMouseEnter: this.props.tabHeightText,
 						onChange: this.props.changeTabHeight,
 						value: this.props.tabHeight,
