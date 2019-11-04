@@ -819,6 +819,11 @@ class TabManager extends React.Component {
 		if (e.keyCode == 13) this.addWindow();
 		// escape key
 		if (e.keyCode == 27) {
+			if(this.state.searchLen > 0 || Object.keys(this.state.selection).length > 0) {
+				// stop popup from closing if we have search text or selection active
+				e.nativeEvent.preventDefault();
+				e.nativeEvent.stopPropagation();
+			}
 			this.state.hiddenTabs = {};
 			this.state.searchLen = 0;
 			this.refs.searchbox.value = "";
