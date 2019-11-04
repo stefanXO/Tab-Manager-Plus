@@ -161,10 +161,12 @@
 							contexts: ["browser_action"],
 							onclick: openAsOwnTab });
 
-						browser.contextMenus.create({
-							title: "📑 Open popup",
-							contexts: ["browser_action"],
-							onclick: openPopup });
+						if (!!browser.browserAction.openPopup) {
+							browser.contextMenus.create({
+								title: "📑 Open popup",
+								contexts: ["browser_action"],
+								onclick: openPopup });
+						}
 
 						browser.contextMenus.create({
 							type: "separator",
