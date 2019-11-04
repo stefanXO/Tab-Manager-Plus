@@ -43,6 +43,7 @@ class Session extends React.Component {
 					searchActive={_this.props.searchActive}
 					select={_this.props.select}
 					ref={"sessiontab" + tabId}
+					id={"sessiontab-" + tab.id}
 				/>
 			);
 		});

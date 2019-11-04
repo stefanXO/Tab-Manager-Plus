@@ -39,6 +39,7 @@ class Window extends React.Component {
 		this.stop = this.stop.bind(this);
 		this.windowClick = this.windowClick.bind(this);
 	}
+
 	render() {
 		var _this = this;
 		var colors = localStorage["windowColors"];
@@ -79,6 +80,7 @@ class Window extends React.Component {
 					drop={_this.props.drop}
 					dropWindow={_this.props.dropWindow}
 					ref={"tab" + tab.id}
+					id={"tab-" + tab.id}
 				/>
 			);
 		});

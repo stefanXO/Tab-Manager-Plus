@@ -78,7 +78,7 @@ class Tab extends React.Component {
 					: { backgroundImage: this.state.favIcon }
 				)
 			,
-
+			id: this.props.id,
 			title: this.props.tab.title,
 			onClick: this.click,
 			onMouseDown: this.onMouseDown,
