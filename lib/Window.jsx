@@ -390,9 +390,15 @@ class Window extends React.Component {
 			if (!!titleAdded) {
 				children.push(tabs.shift());
 			}
+			var z = -1;
 			for (var j = 0; j < tabs.length; j++) {
-				children.push(tabs[j]);
-				if ((j + 1) % tabsperrow == 0 && j && this.props.layout.indexOf("blocks") > -1) {
+				var tab = tabs[j].props.tab;
+				var isHidden = !!tab && !!tab.id && !!this.props.hiddenTabs[tab.id] && this.props.filterTabs;
+				if(!isHidden) {
+					z++;
+					children.push(tabs[j]);
+				}
+				if ((z + 1) % tabsperrow == 0 && z && this.props.layout.indexOf("blocks") > -1) {
 					children.push(<div className="newliner" />);
 				}
 			}
