@@ -1,3 +1,8 @@
+5.1.3
+=====
+- Fix: Popup width adjustable again instead of stuck to 800px
+- Fix: Only open the popup from context menu if current browser supports it
+
 5.1.2
 =====
 - Overworked and more friendlier context menu. You can now open the popup from the context menu, if opening as own tab is the default. You can now also access the changelog from the context menu

@@ -9,7 +9,7 @@
   "sourceType": "script",
   "plugins": [
     ["inline-replace-variables", {
-      "__VERSION__": "5.1.2"
+      "__VERSION__": "5.1.3"
     }]
   ]
 }
