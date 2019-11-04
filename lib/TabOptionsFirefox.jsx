@@ -55,7 +55,7 @@ class TabOptions extends React.Component {
 						type="number"
 						min="450"
 						max="800"
-						step="10"
+						step="25"
 						onMouseEnter={this.props.tabWidthText}
 						onChange={this.props.changeTabWidth}
 						value={this.props.tabWidth}
@@ -72,7 +72,7 @@ class TabOptions extends React.Component {
 						type="number"
 						min="400"
 						max="600"
-						step="10"
+						step="25"
 						onMouseEnter={this.props.tabHeightText}
 						onChange={this.props.changeTabHeight}
 						value={this.props.tabHeight}
