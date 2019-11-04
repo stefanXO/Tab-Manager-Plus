@@ -813,10 +813,6 @@ class TabManager extends React.Component {
 		this.setState({
 			lastSelect: false
 		});
-		const setTimeoutCallback = () => {
-			this.forceUpdate();
-		}
-		setTimeout(setTimeoutCallback)
 	}
 	checkKey(e) {
 		// enter
@@ -1101,11 +1097,6 @@ class TabManager extends React.Component {
 				this.refs.windowcontainer.focus();
 			}
 		}
-
-		const setTimeoutCallback = () => {
-			this.forceUpdate();
-		}
-		setTimeout(setTimeoutCallback)
 	}
 	selectWindowTab(windowId, tabPosition) {
 		if (!tabPosition || tabPosition < 1) tabPosition = 1;
@@ -1181,7 +1172,6 @@ class TabManager extends React.Component {
 		var tab = this.state.tabsbyid[id];
 		if(this.refs['window' + tab.windowId] && this.refs['window' + tab.windowId].refs['tab' + id]) {
 			this.refs['window' + tab.windowId].refs['tab' + id].resolveFavIconUrl();
-			this.refs['window' + tab.windowId].refs['tab' + id].forceUpdate();
 		}
 
 		var selected = Object.keys(this.state.selection).length;
@@ -1201,11 +1191,6 @@ class TabManager extends React.Component {
 				bottomText: "Press enter to move them to a new window"
 			});
 		}
-
-		const setTimeoutCallback = () => {
-			this.forceUpdate();
-		}
-		setTimeout(setTimeoutCallback)
 	}
 	selectTo(id, tabs) {
 		var activate = false;
