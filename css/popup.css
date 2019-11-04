@@ -13,8 +13,7 @@ html{
 	margin:0px;
 	user-select:none;
 	font-family:  "interfont",'Graphik', -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", 'Helvetica', Roboto, "Helvetica Neue", Arial, sans-serif;
-	max-width: 800px;
-	min-width: 450px;
+	min-width: 800px;
 	min-height: 400px;
 	font-weight: 400;
 }
@@ -22,13 +21,13 @@ body{
 	padding:0;
 	margin:0px;
 	-webkit-user-select:none;
-	min-width: 450px;
+	min-width: 800px;
 	min-height:400px;
 	font-family:  "interfont",'Graphik', -apple-system, system-ui, BlinkMacSystemFont, "interfont", "Segoe UI", 'Helvetica', Roboto, "Helvetica Neue", Arial, sans-serif;
 	font-weight: 400;
 }
 
-html,body,#root {
+html,body,#root,#TMP {
 	background-color: #f1f1f1;
 }
 table {
@@ -51,11 +50,11 @@ td {
 	vertical-align: inherit;
 }
 
-.c400 { min-height: 400px; max-height: 400px; height: 400px; }
+/*.c400 { min-height: 400px; max-height: 400px; height: 400px; }
 .c450 { min-height: 450px; max-height: 450px; height: 450px; }
 .c500 { min-height: 500px; max-height: 500px; height: 500px; }
 .c550 {	min-height: 550px; max-height: 550px; height: 550px; }
-.c600 {	min-height: 600px; max-height: 600px; height: 600px; }
+.c600 {	min-height: 600px; max-height: 600px; height: 600px; }*/
 
 html * {
 	-webkit-touch-callout: none;
@@ -87,6 +86,10 @@ html * {
 	padding: 0;
 	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14),0 1px 5px 0 rgba(0, 0, 0, 0.12),0 3px 1px -2px rgba(0, 0, 0, 0.2);
 	cursor: pointer;
+/*	-webkit-transform: translate3d(0, 0, 0);
+	-moz-transform: translate3d(0, 0, 0);
+	-ms-transform: translate3d(0, 0, 0);
+	transform: translate3d(0, 0, 0);*/
 }
 .animations .window{
 	/*transition: all 0.1s linear;*/
@@ -97,6 +100,9 @@ html * {
 	padding:0.5rem;
 	width:auto;
 	display:inline-table;
+}
+.windowcontainer {
+	display: inline-block;
 }
 .window.horizontal .windowcontainer {
 	padding: 0.5rem;
@@ -129,10 +135,11 @@ html * {
 	line-height: 1.5rem;
 	user-select:none;
 	cursor:pointer;
-	-webkit-transform: translate3d(0, 0, 0);
+	will-change: transform;
+/*	-webkit-transform: translate3d(0, 0, 0);
 	-moz-transform: translate3d(0, 0, 0);
 	-ms-transform: translate3d(0, 0, 0);
-	transform: translate3d(0, 0, 0);
+	transform: translate3d(0, 0, 0);*/
 }
 .center {
 	text-align: center;
@@ -257,12 +264,19 @@ h1,h2,h3,h4,h5,h6 {
 .tab.selected{
 	opacity:1;
 	/*image-rendering: -webkit-optimize-contrast;*/
+	z-index: 90000;
 	background-color: yellow;
+	will-change: transform;
+/*	-webkit-transform: translate3d(0, 0, 0);
+	-moz-transform: translate3d(0, 0, 0);
+	-ms-transform: translate3d(0, 0, 0);
+	transform: translate3d(0, 0, 0);*/
 }
 .animations .tab {
 	transform: scale(1);
 	filter: none; 
 	-webkit-filter: blur(0px);
+	will-change: transform;
 }
 .animations .tab:hover {
 	transform: scale(1.4);
@@ -363,7 +377,7 @@ h1,h2,h3,h4,h5,h6 {
 }
 
 .tab.full > .tabtitle{
-	max-width: calc(100% - 1.5rem);;
+	max-width: calc(100% - 1.5rem);
 	/*width:100%;*/
 	height:100%;
 	padding-left:1.5rem;
@@ -526,7 +540,7 @@ h1,h2,h3,h4,h5,h6 {
 .hidden {
 	height: 0;
 	visibility: hidden;
-	transition: 0s all;
+	/*transition: 0s all;*/
 	display: none;
 }
 .window input{
