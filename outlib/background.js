@@ -115,24 +115,49 @@
 
 
 
-	function _callee5() {return regeneratorRuntime.wrap(function _callee5$(_context5) {while (1) {switch (_context5.prev = _context5.next) {case 0:return _context5.abrupt("return",
-						browser.browserAction.openPopup());case 1:case "end":return _context5.stop();}}}, _callee5, this);}));return function openPopup() {return _ref5.apply(this, arguments);};}();var openAsOwnTab = function () {var _ref6 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(
+	function _callee5() {var openInOwnTab;return regeneratorRuntime.wrap(function _callee5$(_context5) {while (1) {switch (_context5.prev = _context5.next) {case 0:
+						if (typeof localStorage["openInOwnTab"] === "undefined") localStorage["openInOwnTab"] = "0";
+						openInOwnTab = false;
+						try {
+							openInOwnTab = !!JSON.parse(localStorage["openInOwnTab"]);
+						} catch (e) {
+							openInOwnTab = false;
+						}if (!
+						openInOwnTab) {_context5.next = 12;break;}_context5.next = 6;return (
+							browser.browserAction.setPopup({ popup: "popup.html?popup=true" }));case 6:_context5.next = 8;return (
+							browser.browserAction.openPopup());case 8:_context5.next = 10;return (
+							browser.browserAction.setPopup({ popup: "" }));case 10:_context5.next = 14;break;case 12:_context5.next = 14;return (
+
+							browser.browserAction.openPopup());case 14:case "end":return _context5.stop();}}}, _callee5, this);}));return function openPopup() {return _ref5.apply(this, arguments);};}();var openAsOwnTab = function () {var _ref6 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(
 
 
-	function _callee6() {var popup_page, tabs, i, tab;return regeneratorRuntime.wrap(function _callee6$(_context6) {while (1) {switch (_context6.prev = _context6.next) {case 0:
+
+	function _callee6() {var popup_page, tabs, currentTab, previousTab, i, tab;return regeneratorRuntime.wrap(function _callee6$(_context6) {while (1) {switch (_context6.prev = _context6.next) {case 0:
 						popup_page = browser.runtime.getURL("popup.html");_context6.next = 3;return (
 							browser.tabs.query({}));case 3:tabs = _context6.sent;
-						i = 0;case 5:if (!(i < tabs.length)) {_context6.next = 12;break;}
+
+
+
+						if (!!window.tabsActive && window.tabsActive.length > 1) {
+							currentTab = window.tabsActive[window.tabsActive.length - 1];
+							previousTab = window.tabsActive[window.tabsActive.length - 2];
+						}
+
+						i = 0;case 6:if (!(i < tabs.length)) {_context6.next = 17;break;}
 						tab = tabs[i];if (!(
-						tab.url.indexOf("popup.html") > -1 && tab.url.indexOf(popup_page) > -1)) {_context6.next = 9;break;}return _context6.abrupt("return",
+						tab.url.indexOf("popup.html") > -1 && tab.url.indexOf(popup_page) > -1)) {_context6.next = 14;break;}if (!(
+						currentTab && currentTab.tabId && tab.id == currentTab.tabId && previousTab && previousTab.tabId)) {_context6.next = 13;break;}return _context6.abrupt("return",
+						focusOnTabAndWindow(previousTab));case 13:return _context6.abrupt("return",
+
 						browser.windows.update(tab.windowId, { focused: true }).then(
 						function () {
 							browser.tabs.highlight({ windowId: tab.windowId, tabs: tab.index });
-						}.bind(this)));case 9:i++;_context6.next = 5;break;case 12:return _context6.abrupt("return",
+						}.bind(this)));case 14:i++;_context6.next = 6;break;case 17:return _context6.abrupt("return",
 
 
 
-						browser.tabs.create({ url: "popup.html" }));case 13:case "end":return _context6.stop();}}}, _callee6, this);}));return function openAsOwnTab() {return _ref6.apply(this, arguments);};}();var setupPopup = function () {var _ref7 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(
+
+						browser.tabs.create({ url: "popup.html" }));case 18:case "end":return _context6.stop();}}}, _callee6, this);}));return function openAsOwnTab() {return _ref6.apply(this, arguments);};}();var setupPopup = function () {var _ref7 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(
 
 
 	function _callee7() {var openInOwnTab;return regeneratorRuntime.wrap(function _callee7$(_context7) {while (1) {switch (_context7.prev = _context7.next) {case 0:
