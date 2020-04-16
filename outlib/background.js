@@ -2,19 +2,43 @@
 
 
 
-	function _callee(tabs, isIncognito) {var first, t, i, w, tab;return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:
-						first = tabs.shift();
+	function _callee(tabs, isIncognito) {var pinnedIndex, firstTab, t, i, firstPinned, w, _iteratorNormalCompletion2, _didIteratorError2, _iteratorError2, _iterator2, _step2, oldTabId, oldTab, tabPinned, movedTabs, newTab;return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:
+
+						pinnedIndex = 0;
+						firstTab = tabs.shift();
 						t = [];
 						for (i = 0; i < tabs.length; i++) {
 							t.push(tabs[i].id);
-						};_context.next = 6;return (
-							browser.windows.create({ tabId: first.id, incognito: !!isIncognito }));case 6:w = _context.sent;_context.next = 9;return (
-							browser.tabs.update(first.id, { pinned: first.pinned }));case 9:if (!(
-						t.length > 0)) {_context.next = 15;break;}_context.next = 12;return (
-							browser.tabs.move(t, { windowId: w.id, index: -1 }));case 12:tab = _context.sent;_context.next = 15;return (
-							browser.tabs.update(tab.id, { pinned: tab.pinned }));case 15:_context.next = 17;return (
+						};
 
-							browser.windows.update(w.id, { focused: true }));case 17:case "end":return _context.stop();}}}, _callee, this);}));return function createWindowWithTabs(_x, _x2) {return _ref.apply(this, arguments);};}();var focusOnTabAndWindow = function () {var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(
+						firstPinned = firstTab.pinned;_context.next = 8;return (
+							browser.windows.create({ tabId: firstTab.id, incognito: !!isIncognito }));case 8:w = _context.sent;if (!
+						firstPinned) {_context.next = 13;break;}_context.next = 12;return (
+							browser.tabs.update(w.tabs[0].id, { pinned: firstPinned }));case 12:
+						pinnedIndex++;case 13:if (!(
+
+
+						t.length > 0)) {_context.next = 60;break;}
+						i = 0;_iteratorNormalCompletion2 = true;_didIteratorError2 = false;_iteratorError2 = undefined;_context.prev = 18;_iterator2 =
+						t[Symbol.iterator]();case 20:if (_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done) {_context.next = 45;break;}oldTabId = _step2.value;
+						i++;_context.next = 25;return (
+							browser.tabs.get(oldTabId));case 25:oldTab = _context.sent;
+						tabPinned = oldTab.pinned;
+						movedTabs = [];if (
+						tabPinned) {_context.next = 34;break;}_context.next = 31;return (
+							browser.tabs.move(oldTabId, { windowId: w.id, index: -1 }));case 31:movedTabs = _context.sent;_context.next = 37;break;case 34:_context.next = 36;return (
+
+							browser.tabs.move(oldTabId, { windowId: w.id, index: pinnedIndex++ }));case 36:movedTabs = _context.sent;case 37:if (!(
+
+						movedTabs.length > 0)) {_context.next = 42;break;}
+						newTab = movedTabs[0];if (!
+						tabPinned) {_context.next = 42;break;}_context.next = 42;return (
+							browser.tabs.update(newTab.id, { pinned: tabPinned }));case 42:_iteratorNormalCompletion2 = true;_context.next = 20;break;case 45:_context.next = 51;break;case 47:_context.prev = 47;_context.t0 = _context["catch"](18);_didIteratorError2 = true;_iteratorError2 = _context.t0;case 51:_context.prev = 51;_context.prev = 52;if (!_iteratorNormalCompletion2 && _iterator2.return) {_iterator2.return();}case 54:_context.prev = 54;if (!_didIteratorError2) {_context.next = 57;break;}throw _iteratorError2;case 57:return _context.finish(54);case 58:return _context.finish(51);case 59:
+
+
+						;case 60:_context.next = 62;return (
+
+							browser.windows.update(w.id, { focused: true }));case 62:case "end":return _context.stop();}}}, _callee, this, [[18, 47, 51, 59], [52,, 54, 58]]);}));return function createWindowWithTabs(_x, _x2) {return _ref.apply(this, arguments);};}();var focusOnTabAndWindow = function () {var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(
 
 
 	function _callee2(tab) {return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:_context2.next = 2;return (
@@ -168,13 +192,13 @@
 						} catch (e) {
 							openInOwnTab = false;
 						}
-						console.log(openInOwnTab);if (!
-						openInOwnTab) {_context7.next = 11;break;}_context7.next = 7;return (
-							browser.browserAction.setPopup({ popup: "" }));case 7:_context7.next = 9;return (
-							browser.browserAction.onClicked.addListener(openAsOwnTab));case 9:_context7.next = 15;break;case 11:_context7.next = 13;return (
+						console.log(openInOwnTab);_context7.next = 6;return (
+							browser.browserAction.onClicked.removeListener(openAsOwnTab));case 6:if (!
+						openInOwnTab) {_context7.next = 13;break;}_context7.next = 9;return (
+							browser.browserAction.setPopup({ popup: "" }));case 9:_context7.next = 11;return (
+							browser.browserAction.onClicked.addListener(openAsOwnTab));case 11:_context7.next = 15;break;case 13:_context7.next = 15;return (
 
-							browser.browserAction.setPopup({ popup: "popup.html?popup=true" }));case 13:_context7.next = 15;return (
-							browser.browserAction.onClicked.removeListener(openAsOwnTab));case 15:case "end":return _context7.stop();}}}, _callee7, this);}));return function setupPopup() {return _ref7.apply(this, arguments);};}();var setupListeners = function () {var _ref8 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(
+							browser.browserAction.setPopup({ popup: "popup.html?popup=true" }));case 15:case "end":return _context7.stop();}}}, _callee7, this);}));return function setupPopup() {return _ref7.apply(this, arguments);};}();var setupListeners = function () {var _ref8 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(
 
 
 

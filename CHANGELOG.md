@@ -1,3 +1,7 @@
+5.1.4
+=====
+- Moving multiple tabs would sometimes not work when using the button or [Enter] key. This should be fixed now
+
 5.1.3
 =====
 - Fix: Popup width adjustable again instead of stuck to 800px
