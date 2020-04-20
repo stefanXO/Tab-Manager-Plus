@@ -456,13 +456,15 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 		e) {
 			e.stopPropagation();
 			this.props.dropWindow(this.props.window.id);
-		} }, { key: "windowClick", value: function () {var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:_context.next = 2;return (
+		} }, { key: "windowClick", value: function () {var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:
 
+								e.nativeEvent.preventDefault();
+								e.nativeEvent.stopPropagation();_context.next = 4;return (
 									browser.windows.update(this.props.window.id, {
-										focused: true }));case 2:
+										focused: true }));case 4:
 
 								this.props.parentUpdate();
-								if (!!window.inPopup) window.close();case 4:case "end":return _context.stop();}}}, _callee, this);}));function windowClick() {return _ref.apply(this, arguments);}return windowClick;}() }, { key: "selectTo", value: function selectTo(
+								if (!!window.inPopup) window.close();case 6:case "end":return _context.stop();}}}, _callee, this);}));function windowClick() {return _ref.apply(this, arguments);}return windowClick;}() }, { key: "selectTo", value: function selectTo(
 
 		tabId) {
 			this.props.selectTo(tabId, this.props.tabs);

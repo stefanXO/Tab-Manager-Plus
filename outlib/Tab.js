@@ -108,33 +108,31 @@ Tab = function (_React$Component) {_inherits(Tab, _React$Component);
 			if (e.button === 0) return;
 			if (!this.props.drag) return;
 			this.click(e);
-		} }, { key: "click", value: function click(
-		e) {
-			e.nativeEvent.preventDefault();
-			e.nativeEvent.stopPropagation();
-			if (!this.props.drag) return;
-			if (e.button === 1) {
-				this.props.middleClick(this.props.tab.id);
-			} else if (e.button === 2 || e.nativeEvent.metaKey || e.nativeEvent.altKey || e.nativeEvent.shiftKey || e.nativeEvent.ctrlKey) {
-				e.preventDefault();
-				if (e.button === 2 && (e.nativeEvent.metaKey || e.nativeEvent.altKey || e.nativeEvent.shiftKey || e.nativeEvent.ctrlKey)) {
-					this.props.selectTo(this.props.tab.id);
-				} else {
-					this.props.select(this.props.tab.id);
-				}
-			} else {
-				browser.tabs.update(this.props.tab.id, { active: true }).then(
-				function () {
-					browser.windows.update(this.props.window.id, { focused: true }).then(
-					function () {
-						if (!!window.inPopup) window.close();
-					}.bind(this));
+		} }, { key: "click", value: function () {var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(
+			e) {var tabId, windowId, backgroundPage;return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:
+								e.nativeEvent.preventDefault();
+								e.nativeEvent.stopPropagation();if (
+								this.props.drag) {_context.next = 4;break;}return _context.abrupt("return");case 4:
 
-				}.bind(this));
+								tabId = this.props.tab.id;
+								windowId = this.props.window.id;if (!(
 
-			}
-			return false;
-		} }, { key: "dragStart", value: function dragStart(
+								e.button === 1)) {_context.next = 10;break;}
+								this.props.middleClick(tabId);_context.next = 21;break;case 10:if (!(
+								e.button === 2 || e.nativeEvent.metaKey || e.nativeEvent.altKey || e.nativeEvent.shiftKey || e.nativeEvent.ctrlKey)) {_context.next = 15;break;}
+								e.preventDefault();
+								if (e.button === 2 && (e.nativeEvent.metaKey || e.nativeEvent.altKey || e.nativeEvent.shiftKey || e.nativeEvent.ctrlKey)) {
+									this.props.selectTo(tabId);
+								} else {
+									this.props.select(tabId);
+								}_context.next = 21;break;case 15:_context.next = 17;return (
+
+									browser.runtime.getBackgroundPage());case 17:backgroundPage = _context.sent;_context.next = 20;return (
+									backgroundPage.focusOnTabAndWindow({ id: this.props.tab.id, windowId: this.props.window.id }));case 20:
+								if (!!window.inPopup) window.close();case 21:return _context.abrupt("return",
+
+								false);case 22:case "end":return _context.stop();}}}, _callee, this);}));function click(_x) {return _ref.apply(this, arguments);}return click;}() }, { key: "dragStart", value: function dragStart(
+
 		e) {
 			if (!!this.props.drag) {
 				e.dataTransfer.setData("Text", this.props.tab.id);
@@ -170,7 +168,7 @@ Tab = function (_React$Component) {_inherits(Tab, _React$Component);
 			} else {
 				return false;
 			}
-		} }, { key: "resolveFavIconUrl", value: function () {var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {var image, favIcons, iconName;return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:
+		} }, { key: "resolveFavIconUrl", value: function () {var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {var image, favIcons, iconName;return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:
 
 
 								// firefox screenshots; needs <all_urls>
@@ -199,4 +197,4 @@ Tab = function (_React$Component) {_inherits(Tab, _React$Component);
 									image = !iconName || favIcons.indexOf(iconName[0]) < 0 ? "" : "url(../images/chrome/" + iconName[0] + ".png)";
 								}
 								this.setState({
-									favIcon: image });case 2:case "end":return _context.stop();}}}, _callee, this);}));function resolveFavIconUrl() {return _ref.apply(this, arguments);}return resolveFavIconUrl;}() }]);return Tab;}(React.Component);
+									favIcon: image });case 2:case "end":return _context2.stop();}}}, _callee2, this);}));function resolveFavIconUrl() {return _ref2.apply(this, arguments);}return resolveFavIconUrl;}() }]);return Tab;}(React.Component);
