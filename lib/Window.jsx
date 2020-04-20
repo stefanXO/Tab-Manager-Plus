@@ -458,6 +458,8 @@ class Window extends React.Component {
 		this.props.dropWindow(this.props.window.id);
 	}
 	async windowClick() {
+		e.nativeEvent.preventDefault();
+		e.nativeEvent.stopPropagation();
 		await browser.windows.update(this.props.window.id, {
 			focused: true
 		});

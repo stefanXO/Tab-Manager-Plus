@@ -109,29 +109,27 @@ class Tab extends React.Component {
 		if (!this.props.drag) return;
 		this.click(e);
 	}
-	click(e) {
+	async click(e) {
 		e.nativeEvent.preventDefault();
 		e.nativeEvent.stopPropagation();
 		if (!this.props.drag) return;
+
+		var tabId = this.props.tab.id;
+		var windowId = this.props.window.id;
+
 		if (e.button === 1) {
-			this.props.middleClick(this.props.tab.id);
+			this.props.middleClick(tabId);
 		} else if (e.button === 2 || e.nativeEvent.metaKey || e.nativeEvent.altKey || e.nativeEvent.shiftKey || e.nativeEvent.ctrlKey) {
 			e.preventDefault();
 			if (e.button === 2 && (e.nativeEvent.metaKey || e.nativeEvent.altKey || e.nativeEvent.shiftKey || e.nativeEvent.ctrlKey)) {
-				this.props.selectTo(this.props.tab.id);
+				this.props.selectTo(tabId);
 			} else {
-				this.props.select(this.props.tab.id);
+				this.props.select(tabId);
 			}
 		} else {
-			browser.tabs.update(this.props.tab.id, { active: true }).then(
-				function() {
-					browser.windows.update(this.props.window.id, { focused: true }).then(
-						function() {
-							if (!!window.inPopup) window.close();
-						}.bind(this)
-					);
-				}.bind(this)
-			);
+			var backgroundPage = await browser.runtime.getBackgroundPage();
+			await backgroundPage.focusOnTabAndWindow({ id: this.props.tab.id, windowId: this.props.window.id });
+			if (!!window.inPopup) window.close();
 		}
 		return false;
 	}
