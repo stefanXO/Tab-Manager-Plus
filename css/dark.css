@@ -51,6 +51,7 @@ body.dark .icon.pinned.vertical:hover {
 }
 body.dark .tab.selected.vertical:hover{
 	background-color: #405258;
+	color: black;
 }
 body.dark .tab.selected:hover{
 	background-color: #607268;
