@@ -28,6 +28,7 @@ class Window extends React.Component {
 		this.addTab = this.addTab.bind(this);
 		this.changeColors = this.changeColors.bind(this);
 		this.changeName = this.changeName.bind(this);
+		this.checkKey = this.checkKey.bind(this);
 		this.closePopup = this.closePopup.bind(this);
 		this.close = this.close.bind(this);
 		this.colors = this.colors.bind(this);
@@ -141,7 +142,7 @@ class Window extends React.Component {
 			}
 			if (this.state.colorActive) {
 				tabs.push(
-					<div className={"window-colors " + (this.state.colorActive ? "" : "hidden")} onClick={this.stop}>
+					<div className={"window-colors " + (this.state.colorActive ? "" : "hidden")} onClick={this.stop} onKeyDown={this.checkKey}>
 						<h2 className="window-x" onClick={this.closePopup}>
 							x
 						</h2>
@@ -154,6 +155,7 @@ class Window extends React.Component {
 							placeholder={this.state.windowTitles ? this.topEntries(this.state.windowTitles).join("") : "Name window..."}
 							tabIndex="1"
 							ref="namebox"
+							onKeyDown={this.checkKey}
 						/>
 						<h3 className="center">Pick a color</h3>
 						<div className="colors-box">
@@ -456,6 +458,13 @@ class Window extends React.Component {
 	drop(e) {
 		this.stopProp(e);
 		this.props.dropWindow(this.props.window.id);
+	}
+	checkKey(e) {
+		// close popup when enter or escape have been pressed
+		if (e.keyCode == 13 || e.keyCode == 27) {
+			this.stopProp(e);
+			this.closePopup();
+		}
 	}
 	async windowClick(e) {
 		this.stopProp(e);
