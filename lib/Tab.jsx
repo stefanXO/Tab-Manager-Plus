@@ -110,9 +110,8 @@ class Tab extends React.Component {
 		this.click(e);
 	}
 	async click(e) {
-		e.nativeEvent.preventDefault();
-		e.nativeEvent.stopPropagation();
 		if (!this.props.drag) return;
+		this.stopProp(e);
 
 		var tabId = this.props.tab.id;
 		var windowId = this.props.window.id;
@@ -143,7 +142,7 @@ class Tab extends React.Component {
 		}
 	}
 	dragOver(e) {
-		e.nativeEvent.preventDefault();
+		this.stopProp(e);
 		if (!this.props.drag) return;
 		var before = this.state.draggingOver;
 		if (this.props.layout == "vertical") {
@@ -160,8 +159,7 @@ class Tab extends React.Component {
 	}
 	drop(e) {
 		if (!!this.props.drop) {
-			e.nativeEvent.preventDefault();
-			e.stopPropagation();
+			this.stopProp(e);
 			var before = this.state.draggingOver == "top" || this.state.draggingOver == "left";
 			delete this.state.draggingOver;
 			this.props.drop(this.props.tab.id, before);
@@ -199,5 +197,15 @@ class Tab extends React.Component {
 		this.setState({
 			favIcon: image
 		});
+	}
+	stopProp(e) {
+		if(e && e.nativeEvent) {
+			e.nativeEvent.preventDefault();
+			e.nativeEvent.stopPropagation();
+		}
+		if(e && e.preventDefault) {
+			e.preventDefault();
+			e.stopPropagation();
+		}
 	}
 }
