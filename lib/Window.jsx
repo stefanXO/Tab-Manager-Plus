@@ -480,7 +480,7 @@ class Window extends React.Component {
 		return false;
 	}
 	selectTo(tabId) {
-		this.props.selectTo(tabId, this.props.tabs);
+		if(tabId) this.props.selectTo(tabId, this.props.tabs);
 	}
 	close(e) {
 		this.stopProp(e);
