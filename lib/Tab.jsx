@@ -127,7 +127,11 @@ class Tab extends React.Component {
 			}
 		} else {
 			var backgroundPage = await browser.runtime.getBackgroundPage();
-			await backgroundPage.focusOnTabAndWindow({ id: this.props.tab.id, windowId: this.props.window.id });
+			if (navigator.userAgent.search("Firefox") > -1) {
+				backgroundPage.focusOnTabAndWindowDelayed({ id: tabId, windowId: windowId });
+			}else{
+				backgroundPage.focusOnTabAndWindow({ id: tabId, windowId: windowId });
+			}
 			if (!!window.inPopup) window.close();
 		}
 		return false;
