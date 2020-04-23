@@ -444,25 +444,24 @@ class Window extends React.Component {
 		}
 	}
 	stop(e) {
-		e.stopPropagation();
+		this.stopProp(e);
 	}
 	addTab(e) {
-		e.stopPropagation();
+		this.stopProp(e);
 		browser.tabs.create({ windowId: this.props.window.id });
 	}
 	dragOver(e) {
-		e.nativeEvent.preventDefault();
+		this.stopProp(e);
 	}
 	drop(e) {
-		e.stopPropagation();
+		this.stopProp(e);
 		this.props.dropWindow(this.props.window.id);
 	}
-	async windowClick() {
-		e.nativeEvent.preventDefault();
-		e.nativeEvent.stopPropagation();
 		await browser.windows.update(this.props.window.id, {
 			focused: true
 		});
+	async windowClick(e) {
+		this.stopProp(e);
 		this.props.parentUpdate();
 		if (!!window.inPopup) window.close();
 	}
@@ -470,7 +469,7 @@ class Window extends React.Component {
 		this.props.selectTo(tabId, this.props.tabs);
 	}
 	close(e) {
-		e.stopPropagation();
+		this.stopProp(e);
 		browser.windows.remove(this.props.window.id);
 	}
 	uuidv4() {
@@ -481,7 +480,7 @@ class Window extends React.Component {
 		});
 	}
 	async save(e) {
-		e.stopPropagation();
+		this.stopProp(e);
 
 		console.log("session name", this.state.name);
 		var sessionName = this.state.name || this.topEntries(this.state.windowTitles).join("");
@@ -536,21 +535,21 @@ class Window extends React.Component {
 		}.bind(this), 250);
 	}
 	async minimize(e) {
-		e.stopPropagation();
+		this.stopProp(e);
 		await browser.windows.update(this.props.window.id, {
 			state: "minimized"
 		});
 		this.props.parentUpdate();
 	}
 	async maximize(e) {
-		e.stopPropagation();
+		this.stopProp(e);
 		await browser.windows.update(this.props.window.id, {
 			state: "normal"
 		});
 		this.props.parentUpdate();
 	}
 	colors(e) {
-		e.stopPropagation();
+		this.stopProp(e);
 		this.setState({
 			colorActive: !this.state.colorActive
 		});
@@ -611,5 +610,15 @@ class Window extends React.Component {
 			sorted.push(" & " + more + " more");
 		}
 		return sorted;
+	}
+	stopProp(e) {
+		if(e && e.nativeEvent) {
+			e.nativeEvent.preventDefault();
+			e.nativeEvent.stopPropagation();
+		}
+		if(e && e.preventDefault) {
+			e.preventDefault();
+			e.stopPropagation();
+		}
 	}
 }
