@@ -109,29 +109,32 @@ Tab = function (_React$Component) {_inherits(Tab, _React$Component);
 			if (!this.props.drag) return;
 			this.click(e);
 		} }, { key: "click", value: function () {var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(
-			e) {var tabId, windowId, backgroundPage;return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:
-								e.nativeEvent.preventDefault();
-								e.nativeEvent.stopPropagation();if (
-								this.props.drag) {_context.next = 4;break;}return _context.abrupt("return");case 4:
+			e) {var tabId, windowId, backgroundPage;return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:if (
+								this.props.drag) {_context.next = 2;break;}return _context.abrupt("return");case 2:
+								this.stopProp(e);
 
 								tabId = this.props.tab.id;
 								windowId = this.props.window.id;if (!(
 
-								e.button === 1)) {_context.next = 10;break;}
-								this.props.middleClick(tabId);_context.next = 21;break;case 10:if (!(
-								e.button === 2 || e.nativeEvent.metaKey || e.nativeEvent.altKey || e.nativeEvent.shiftKey || e.nativeEvent.ctrlKey)) {_context.next = 15;break;}
+								e.button === 1)) {_context.next = 9;break;}
+								this.props.middleClick(tabId);_context.next = 19;break;case 9:if (!(
+								e.button === 2 || e.nativeEvent.metaKey || e.nativeEvent.altKey || e.nativeEvent.shiftKey || e.nativeEvent.ctrlKey)) {_context.next = 14;break;}
 								e.preventDefault();
 								if (e.button === 2 && (e.nativeEvent.metaKey || e.nativeEvent.altKey || e.nativeEvent.shiftKey || e.nativeEvent.ctrlKey)) {
 									this.props.selectTo(tabId);
 								} else {
 									this.props.select(tabId);
-								}_context.next = 21;break;case 15:_context.next = 17;return (
+								}_context.next = 19;break;case 14:_context.next = 16;return (
 
-									browser.runtime.getBackgroundPage());case 17:backgroundPage = _context.sent;_context.next = 20;return (
-									backgroundPage.focusOnTabAndWindow({ id: this.props.tab.id, windowId: this.props.window.id }));case 20:
-								if (!!window.inPopup) window.close();case 21:return _context.abrupt("return",
+									browser.runtime.getBackgroundPage());case 16:backgroundPage = _context.sent;
+								if (navigator.userAgent.search("Firefox") > -1) {
+									backgroundPage.focusOnTabAndWindowDelayed({ id: tabId, windowId: windowId });
+								} else {
+									backgroundPage.focusOnTabAndWindow({ id: tabId, windowId: windowId });
+								}
+								if (!!window.inPopup) window.close();case 19:return _context.abrupt("return",
 
-								false);case 22:case "end":return _context.stop();}}}, _callee, this);}));function click(_x) {return _ref.apply(this, arguments);}return click;}() }, { key: "dragStart", value: function dragStart(
+								false);case 20:case "end":return _context.stop();}}}, _callee, this);}));function click(_x) {return _ref.apply(this, arguments);}return click;}() }, { key: "dragStart", value: function dragStart(
 
 		e) {
 			if (!!this.props.drag) {
@@ -143,7 +146,7 @@ Tab = function (_React$Component) {_inherits(Tab, _React$Component);
 			}
 		} }, { key: "dragOver", value: function dragOver(
 		e) {
-			e.nativeEvent.preventDefault();
+			this.stopProp(e);
 			if (!this.props.drag) return;
 			var before = this.state.draggingOver;
 			if (this.props.layout == "vertical") {
@@ -160,8 +163,7 @@ Tab = function (_React$Component) {_inherits(Tab, _React$Component);
 		} }, { key: "drop", value: function drop(
 		e) {
 			if (!!this.props.drop) {
-				e.nativeEvent.preventDefault();
-				e.stopPropagation();
+				this.stopProp(e);
 				var before = this.state.draggingOver == "top" || this.state.draggingOver == "left";
 				delete this.state.draggingOver;
 				this.props.drop(this.props.tab.id, before);
@@ -197,4 +199,16 @@ Tab = function (_React$Component) {_inherits(Tab, _React$Component);
 									image = !iconName || favIcons.indexOf(iconName[0]) < 0 ? "" : "url(../images/chrome/" + iconName[0] + ".png)";
 								}
 								this.setState({
-									favIcon: image });case 2:case "end":return _context2.stop();}}}, _callee2, this);}));function resolveFavIconUrl() {return _ref2.apply(this, arguments);}return resolveFavIconUrl;}() }]);return Tab;}(React.Component);
+									favIcon: image });case 2:case "end":return _context2.stop();}}}, _callee2, this);}));function resolveFavIconUrl() {return _ref2.apply(this, arguments);}return resolveFavIconUrl;}() }, { key: "stopProp", value: function stopProp(
+
+
+		e) {
+			if (e && e.nativeEvent) {
+				e.nativeEvent.preventDefault();
+				e.nativeEvent.stopPropagation();
+			}
+			if (e && e.preventDefault) {
+				e.preventDefault();
+				e.stopPropagation();
+			}
+		} }]);return Tab;}(React.Component);

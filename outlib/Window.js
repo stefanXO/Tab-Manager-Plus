@@ -17,6 +17,9 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 			names = {};
 		}
 		var name = names[_this2.props.window.id] || "";
+		if (!!_this2.props.window.titlePreface) {
+			name = _this2.props.window.titlePreface;
+		}
 		_this2.state = {
 			colorActive: false,
 			windowTitles: [],
@@ -28,6 +31,7 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 		_this2.addTab = _this2.addTab.bind(_this2);
 		_this2.changeColors = _this2.changeColors.bind(_this2);
 		_this2.changeName = _this2.changeName.bind(_this2);
+		_this2.checkKey = _this2.checkKey.bind(_this2);
 		_this2.closePopup = _this2.closePopup.bind(_this2);
 		_this2.close = _this2.close.bind(_this2);
 		_this2.colors = _this2.colors.bind(_this2);
@@ -141,7 +145,7 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 				}
 				if (this.state.colorActive) {
 					tabs.push(
-					React.createElement("div", { className: "window-colors " + (this.state.colorActive ? "" : "hidden"), onClick: this.stop },
+					React.createElement("div", { className: "window-colors " + (this.state.colorActive ? "" : "hidden"), onClick: this.stop, onKeyDown: this.checkKey },
 						React.createElement("h2", { className: "window-x", onClick: this.closePopup }, "x"),
 
 
@@ -153,7 +157,8 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 							value: this.state.name,
 							placeholder: this.state.windowTitles ? this.topEntries(this.state.windowTitles).join("") : "Name window...",
 							tabIndex: "1",
-							ref: "namebox" }),
+							ref: "namebox",
+							onKeyDown: this.checkKey }),
 
 						React.createElement("h3", { className: "center" }, "Pick a color"),
 						React.createElement("div", { className: "colors-box" },
@@ -444,33 +449,44 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 			}
 		} }, { key: "stop", value: function stop(
 		e) {
-			e.stopPropagation();
+			this.stopProp(e);
 		} }, { key: "addTab", value: function addTab(
 		e) {
-			e.stopPropagation();
+			this.stopProp(e);
 			browser.tabs.create({ windowId: this.props.window.id });
 		} }, { key: "dragOver", value: function dragOver(
 		e) {
-			e.nativeEvent.preventDefault();
+			this.stopProp(e);
 		} }, { key: "drop", value: function drop(
 		e) {
-			e.stopPropagation();
+			this.stopProp(e);
 			this.props.dropWindow(this.props.window.id);
-		} }, { key: "windowClick", value: function () {var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:
-
-								e.nativeEvent.preventDefault();
-								e.nativeEvent.stopPropagation();_context.next = 4;return (
-									browser.windows.update(this.props.window.id, {
-										focused: true }));case 4:
-
+		} }, { key: "checkKey", value: function checkKey(
+		e) {
+			// close popup when enter or escape have been pressed
+			if (e.keyCode == 13 || e.keyCode == 27) {
+				this.stopProp(e);
+				this.closePopup();
+			}
+		} }, { key: "windowClick", value: function () {var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(
+			e) {var backgroundPage, windowId;return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:
+								this.stopProp(e);_context.next = 3;return (
+									browser.runtime.getBackgroundPage());case 3:backgroundPage = _context.sent;
+								windowId = this.props.window.id;
+								if (navigator.userAgent.search("Firefox") > -1) {
+									backgroundPage.focusOnWindowDelayed(windowId);
+								} else {
+									backgroundPage.focusOnWindow(windowId);
+								}
 								this.props.parentUpdate();
-								if (!!window.inPopup) window.close();case 6:case "end":return _context.stop();}}}, _callee, this);}));function windowClick() {return _ref.apply(this, arguments);}return windowClick;}() }, { key: "selectTo", value: function selectTo(
+								if (!!window.inPopup) window.close();return _context.abrupt("return",
+								false);case 9:case "end":return _context.stop();}}}, _callee, this);}));function windowClick(_x) {return _ref.apply(this, arguments);}return windowClick;}() }, { key: "selectTo", value: function selectTo(
 
 		tabId) {
-			this.props.selectTo(tabId, this.props.tabs);
+			if (tabId) this.props.selectTo(tabId, this.props.tabs);
 		} }, { key: "close", value: function close(
 		e) {
-			e.stopPropagation();
+			this.stopProp(e);
 			browser.windows.remove(this.props.window.id);
 		} }, { key: "uuidv4", value: function uuidv4()
 		{
@@ -481,7 +497,7 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 			});
 		} }, { key: "save", value: function () {var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(
 			e) {var sessionName, session, queryInfo, tabs, tabkey, newTab, obj, value;return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:
-								e.stopPropagation();
+								this.stopProp(e);
 
 								console.log("session name", this.state.name);
 								sessionName = this.state.name || this.topEntries(this.state.windowTitles).join("");
@@ -533,27 +549,32 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 
 								setTimeout(function () {
 									this.props.scrollTo("session", session.id);
-								}.bind(this), 250);case 37:case "end":return _context2.stop();}}}, _callee2, this);}));function save(_x) {return _ref2.apply(this, arguments);}return save;}() }, { key: "minimize", value: function () {var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(
+								}.bind(this), 250);case 37:case "end":return _context2.stop();}}}, _callee2, this);}));function save(_x2) {return _ref2.apply(this, arguments);}return save;}() }, { key: "minimize", value: function () {var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(
 
 			e) {return regeneratorRuntime.wrap(function _callee3$(_context3) {while (1) {switch (_context3.prev = _context3.next) {case 0:
-								e.stopPropagation();_context3.next = 3;return (
+								this.stopProp(e);_context3.next = 3;return (
 									browser.windows.update(this.props.window.id, {
 										state: "minimized" }));case 3:
 
-								this.props.parentUpdate();case 4:case "end":return _context3.stop();}}}, _callee3, this);}));function minimize(_x2) {return _ref3.apply(this, arguments);}return minimize;}() }, { key: "maximize", value: function () {var _ref4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(
+								this.props.parentUpdate();case 4:case "end":return _context3.stop();}}}, _callee3, this);}));function minimize(_x3) {return _ref3.apply(this, arguments);}return minimize;}() }, { key: "maximize", value: function () {var _ref4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(
 
 			e) {return regeneratorRuntime.wrap(function _callee4$(_context4) {while (1) {switch (_context4.prev = _context4.next) {case 0:
-								e.stopPropagation();_context4.next = 3;return (
+								this.stopProp(e);_context4.next = 3;return (
 									browser.windows.update(this.props.window.id, {
 										state: "normal" }));case 3:
 
-								this.props.parentUpdate();case 4:case "end":return _context4.stop();}}}, _callee4, this);}));function maximize(_x3) {return _ref4.apply(this, arguments);}return maximize;}() }, { key: "colors", value: function colors(
+								this.props.parentUpdate();case 4:case "end":return _context4.stop();}}}, _callee4, this);}));function maximize(_x4) {return _ref4.apply(this, arguments);}return maximize;}() }, { key: "colors", value: function colors(
 
 		e) {
-			e.stopPropagation();
+			this.stopProp(e);
 			this.setState({
 				colorActive: !this.state.colorActive });
 
+			setTimeout(function () {
+				if (this.state.colorActive) {
+					this.refs.namebox.focus();
+				}
+			}.bind(this), 250);
 		} }, { key: "changeColors", value: function changeColors(
 		a) {
 			this.setState(a);
@@ -570,21 +591,36 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 			this.setState({
 				colorActive: !this.state.colorActive });
 
-		} }, { key: "changeName", value: function changeName(
-		e) {
-			// this.setState(a);
-			var names = localStorage["windowNames"];
-			if (!!names) {
-				names = JSON.parse(names);
-			} else {
-				names = {};
-			}
-			names[this.props.window.id] = e.target.value || "";
-			localStorage["windowNames"] = JSON.stringify(names);
-			this.setState({
-				name: e.target.value || "" });
+			this.props.parentUpdate();
+		} }, { key: "changeName", value: function () {var _ref5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(
+			e) {var name, names;return regeneratorRuntime.wrap(function _callee5$(_context5) {while (1) {switch (_context5.prev = _context5.next) {case 0:
+								// this.setState(a);
+								name = "";
+								if (e && e.target && e.target.value) name = e.target.value;
 
-		} }, { key: "topEntries", value: function topEntries(
+								names = localStorage["windowNames"];
+								if (!!names) {
+									names = JSON.parse(names);
+								} else {
+									names = {};
+								}
+								names[this.props.window.id] = name;
+								localStorage["windowNames"] = JSON.stringify(names);
+								this.setState({
+									name: name });
+
+								if (navigator.userAgent.search("Firefox") > -1) {
+									if (!!name) {
+										browser.windows.update(this.props.window.id, {
+											titlePreface: name + " - " });
+
+									} else {
+										browser.windows.update(this.props.window.id, {
+											titlePreface: name });
+
+									}
+								}case 8:case "end":return _context5.stop();}}}, _callee5, this);}));function changeName(_x5) {return _ref5.apply(this, arguments);}return changeName;}() }, { key: "topEntries", value: function topEntries(
+
 		arr) {
 			var cnts = arr.reduce(function (obj, val) {
 				obj[val] = (obj[val] || 0) + 1;
@@ -611,4 +647,14 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 				sorted.push(" & " + more + " more");
 			}
 			return sorted;
+		} }, { key: "stopProp", value: function stopProp(
+		e) {
+			if (e && e.nativeEvent) {
+				e.nativeEvent.preventDefault();
+				e.nativeEvent.stopPropagation();
+			}
+			if (e && e.preventDefault) {
+				e.preventDefault();
+				e.stopPropagation();
+			}
 		} }]);return Window;}(React.Component);

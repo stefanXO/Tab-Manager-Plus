@@ -41,14 +41,32 @@
 							browser.windows.update(w.id, { focused: true }));case 62:case "end":return _context.stop();}}}, _callee, this, [[18, 47, 51, 59], [52,, 54, 58]]);}));return function createWindowWithTabs(_x, _x2) {return _ref.apply(this, arguments);};}();var focusOnTabAndWindow = function () {var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(
 
 
-	function _callee2(tab) {return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:_context2.next = 2;return (
-							browser.windows.update(tab.windowId, { focused: true }));case 2:if (
-						!tab.tabId) {_context2.next = 8;break;}_context2.next = 5;return (
-							browser.tabs.update(tab.tabId, { active: true }));case 5:
-						tabActiveChanged(tab);_context2.next = 11;break;case 8:_context2.next = 10;return (
 
-							browser.tabs.update(tab.id, { active: true }));case 10:
-						tabActiveChanged({ tabId: tab.id, windowId: tab.windowId });case 11:case "end":return _context2.stop();}}}, _callee2, this);}));return function focusOnTabAndWindow(_x3) {return _ref2.apply(this, arguments);};}();var updateTabCount = function () {var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(
+
+
+
+
+	function _callee2(tab) {var windowId, tabId;return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:
+						windowId = tab.windowId;
+
+						if (!!tab.tabId) {
+							tabId = tab.tabId;
+						} else {
+							tabId = tab.id;
+						}
+
+						browser.windows.update(windowId, { focused: true }).then(function (tabId, windowId) {
+							browser.tabs.update(tabId, { active: true }).then(function (tabId, windowId) {
+								tabActiveChanged({ tabId: tabId, windowId: windowId });
+							}.bind(this, tabId, windowId));
+						}.bind(this, tabId, windowId));case 3:case "end":return _context2.stop();}}}, _callee2, this);}));return function focusOnTabAndWindow(_x3) {return _ref2.apply(this, arguments);};}();var updateTabCount = function () {var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(
+
+
+
+
+
+
+
 
 
 
@@ -100,19 +118,22 @@
 
 
 
-	function _callee4(tab) {var tabLimit;return regeneratorRuntime.wrap(function _callee4$(_context4) {while (1) {switch (_context4.prev = _context4.next) {case 0:
+	function _callee4(tab) {var tabLimit, tabCount;return regeneratorRuntime.wrap(function _callee4$(_context4) {while (1) {switch (_context4.prev = _context4.next) {case 0:
 						if (typeof localStorage["tabLimit"] === "undefined") localStorage["tabLimit"] = "0";
 						try {
 							tabLimit = JSON.parse(localStorage["tabLimit"]);
 						} catch (e) {
 							tabLimit = 0;
 						}if (!(
-						tabLimit > 0)) {_context4.next = 6;break;}if (!(
-						tab.index >= tabLimit)) {_context4.next = 6;break;}_context4.next = 6;return (
-							createWindowWithTabs([tab], tab.incognito));case 6:
+						tabLimit > 0)) {_context4.next = 10;break;}if (!(
+						tab.id != browser.tabs.TAB_ID_NONE)) {_context4.next = 10;break;}_context4.next = 6;return (
+							browser.tabs.query({ currentWindow: true }));case 6:tabCount = _context4.sent;if (!(
+						tabCount.length > tabLimit)) {_context4.next = 10;break;}_context4.next = 10;return (
+							createWindowWithTabs([tab], tab.incognito));case 10:
 
 
-						updateTabCountDebounce();case 7:case "end":return _context4.stop();}}}, _callee4, this);}));return function tabAdded(_x4) {return _ref4.apply(this, arguments);};}();var openPopup = function () {var _ref5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(
+
+						updateTabCountDebounce();case 11:case "end":return _context4.stop();}}}, _callee4, this);}));return function tabAdded(_x4) {return _ref4.apply(this, arguments);};}();var openPopup = function () {var _ref5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(
 
 
 
@@ -395,18 +416,18 @@ var hideWindows = function () {var _ref9 = _asyncToGenerator( /*#__PURE__*/regen
 
 
 	function _callee10(windowId) {var result;return regeneratorRuntime.wrap(function _callee10$(_context10) {while (1) {switch (_context10.prev = _context10.next) {case 0:if (!(
-						!windowId || windowId < 0)) {_context10.next = 4;break;}return _context10.abrupt("return");case 4:if (!
+						navigator.userAgent.search("Firefox") > -1)) {_context10.next = 2;break;}return _context10.abrupt("return");case 2:if (!(
 
 
-						localStorageAvailable()) {_context10.next = 10;break;}
+
+						!windowId || windowId < 0)) {_context10.next = 6;break;}return _context10.abrupt("return");case 6:if (!
+
+
+						localStorageAvailable()) {_context10.next = 12;break;}
 						if (typeof localStorage["hideWindows"] === "undefined") localStorage["hideWindows"] = "0";if (!(
-						localStorage["hideWindows"] == "0")) {_context10.next = 8;break;}return _context10.abrupt("return");case 8:_context10.next = 12;break;case 10:
+						localStorage["hideWindows"] == "0")) {_context10.next = 10;break;}return _context10.abrupt("return");case 10:_context10.next = 14;break;case 12:
 
-						console.log("no local storage");return _context10.abrupt("return");case 12:if (!(
-
-
-
-						navigator.userAgent.search("Firefox") > -1)) {_context10.next = 14;break;}return _context10.abrupt("return");case 14:_context10.next = 16;return (
+						console.log("no local storage");return _context10.abrupt("return");case 14:_context10.next = 16;return (
 
 
 
@@ -457,7 +478,7 @@ var hideWindows = function () {var _ref9 = _asyncToGenerator( /*#__PURE__*/regen
 
 													;case 36:case "end":return _context9.stop();}}}, _callee9, this, [[4, 8, 12, 20], [13,, 15, 19]]);}));return function (_x6, _x7) {return _ref10.apply(this, arguments);};}().
 							bind(null, windowId));
-						}case 18:case "end":return _context10.stop();}}}, _callee10, this);}));return function hideWindows(_x5) {return _ref9.apply(this, arguments);};}();function _asyncToGenerator(fn) {return function () {var gen = fn.apply(this, arguments);return new Promise(function (resolve, reject) {function step(key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {return Promise.resolve(value).then(function (value) {step("next", value);}, function (err) {step("throw", err);});}}return step("next");});};}var browser = browser || chrome;var updateTabCountDebounce = debounce(updateTabCount, 250);function tabRemoved() {updateTabCountDebounce();}window.tabsActive = [];function tabActiveChanged(tab) {if (!!tab && !!tab.tabId) {if (!window.tabsActive) window.tabsActive = [];if (!!window.tabsActive && window.tabsActive.length > 0) {var lastActive = window.tabsActive[window.tabsActive.length - 1];if (!!lastActive && lastActive.tabId == tab.tabId && lastActive.windowId == tab.windowId) {return;}}while (window.tabsActive.length > 20) {window.tabsActive.shift();}for (var i = window.tabsActive.length - 1; i >= 0; i--) {if (window.tabsActive[i].tabId == tab.tabId) {window.tabsActive.splice(i, 1);}};window.tabsActive.push(tab);}updateTabCountDebounce();}function debounce(func, wait, immediate) {var timeout;return function () {var context = this,args = arguments;var later = function later() {timeout = null;if (!immediate) func.apply(context, args);};var callNow = immediate && !timeout;clearTimeout(timeout);timeout = setTimeout(later, wait);if (callNow) func.apply(context, args);};};function localStorageAvailable() {var test = 'test';try {localStorage.setItem(test, test);localStorage.removeItem(test);return true;} catch (e) {return false;}}function windowFocus(windowId) {try {if (!!windowId) {windowActive(windowId); // console.log("onFocused", windowId);
+						}case 18:case "end":return _context10.stop();}}}, _callee10, this);}));return function hideWindows(_x5) {return _ref9.apply(this, arguments);};}();function _asyncToGenerator(fn) {return function () {var gen = fn.apply(this, arguments);return new Promise(function (resolve, reject) {function step(key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {return Promise.resolve(value).then(function (value) {step("next", value);}, function (err) {step("throw", err);});}}return step("next");});};}var browser = browser || chrome;function focusOnTabAndWindowDelayed(tab) {var tab = JSON.parse(JSON.stringify(tab));setTimeout(focusOnTabAndWindow.bind(this, tab), 125);}function focusOnWindowDelayed(windowId) {setTimeout(focusOnWindow.bind(this, windowId), 125);}function focusOnWindow(windowId) {browser.windows.update(windowId, { focused: true });}var updateTabCountDebounce = debounce(updateTabCount, 250);function tabRemoved() {updateTabCountDebounce();}window.tabsActive = [];function tabActiveChanged(tab) {if (!!tab && !!tab.tabId) {if (!window.tabsActive) window.tabsActive = [];if (!!window.tabsActive && window.tabsActive.length > 0) {var lastActive = window.tabsActive[window.tabsActive.length - 1];if (!!lastActive && lastActive.tabId == tab.tabId && lastActive.windowId == tab.windowId) {return;}}while (window.tabsActive.length > 20) {window.tabsActive.shift();}for (var i = window.tabsActive.length - 1; i >= 0; i--) {if (window.tabsActive[i].tabId == tab.tabId) {window.tabsActive.splice(i, 1);}};window.tabsActive.push(tab);}updateTabCountDebounce();}function debounce(func, wait, immediate) {var timeout;return function () {var context = this,args = arguments;var later = function later() {timeout = null;if (!immediate) func.apply(context, args);};var callNow = immediate && !timeout;clearTimeout(timeout);timeout = setTimeout(later, wait);if (callNow) func.apply(context, args);};};function localStorageAvailable() {var test = 'test';try {localStorage.setItem(test, test);localStorage.removeItem(test);return true;} catch (e) {return false;}}function windowFocus(windowId) {try {if (!!windowId) {windowActive(windowId); // console.log("onFocused", windowId);
 			hideWindows(windowId);}} catch (e) {}}function windowCreated(window) {try {if (!!window && !!window.id) {windowActive(window.id);}} catch (e) {} // console.log("onCreated", window.id);
 }function windowRemoved(windowId) {try {if (!!windowId) {windowActive(windowId);}} catch (e) {} // console.log("onRemoved", windowId);
 }window.displayInfo = [];
