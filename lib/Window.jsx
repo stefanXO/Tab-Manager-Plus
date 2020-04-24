@@ -567,6 +567,11 @@ class Window extends React.Component {
 		this.setState({
 			colorActive: !this.state.colorActive
 		});
+		setTimeout(function() {
+			if(this.state.colorActive) {
+				this.refs.namebox.focus();
+			}
+		}.bind(this), 250);
 	}
 	changeColors(a) {
 		this.setState(a);
