@@ -1,3 +1,12 @@
+5.1.5
+=====
+- Feature: Changing the name of a window will set change the windows' title in Firefox as well
+- Fix: Clicking on a window/tab would not focus it properly in Firefox
+- Fix: Rendering fixes in Firefox for vertical scrolling
+- Fix: Properly close title/color popup after pressing enter/escape ( instead of closing the TMP popup )
+- Fix: When selecting a tab in dark mode, the text was unreadable
+- Fix: Changed the way how tabs are counted - sometimes it was possible to open more tabs per window than allowed
+
 5.1.4
 =====
 - Moving multiple tabs would sometimes not work when using the button or [Enter] key. This should be fixed now
