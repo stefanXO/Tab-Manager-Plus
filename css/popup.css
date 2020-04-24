@@ -26,9 +26,12 @@ body{
 	font-family:  "interfont",'Graphik', -apple-system, system-ui, BlinkMacSystemFont, "interfont", "Segoe UI", 'Helvetica', Roboto, "Helvetica Neue", Arial, sans-serif;
 	font-weight: 400;
 }
-
-html,body,#root,#TMP {
+body {
 	background-color: #f1f1f1;
+}
+html,body,#root,#TMP {
+	min-width: 450px;
+	min-height: 400px;
 }
 table {
 	display: table;
@@ -308,6 +311,9 @@ h1,h2,h3,h4,h5,h6 {
 .tab.search-active.vertical, .animations .tab.search-active.vertical {
 	transform: scale(1) !important;
 	background-size: 0.75rem;
+}
+.tab.vertical {
+	height: auto;
 }
 .tab.vertical.selected, .animations .tab.vertical.selected {
 	transform: scale(1) !important;
@@ -605,11 +611,13 @@ h1,h2,h3,h4,h5,h6 {
 	padding-top: 0.25rem;
 	padding-bottom: 0.125rem;
 	background: white;
+	border-radius: 0;
 }
 .window.top .taburl {
 	width: 100%;
 	border:0;
-	height:1rem;
+	/*height:1rem;*/
+	border-radius: 0;
 	margin:0;
 	font-size:0.6rem;
 	padding-top: 0;
@@ -646,6 +654,16 @@ h1,h2,h3,h4,h5,h6 {
 }
 .window-container.blocks-big, .window-container.blocks {
 	padding: 0.5rem 0;
+}
+.window-container.vertical {
+	min-height: 0;
+	will-change: transform;
+}
+.window-container.vertical > div {
+	will-change: scroll-position;
+	min-height: 0;
+	min-width: 0;
+	z-index: 30000;
 }
 .compact .window {
 	margin: 0.1rem;
