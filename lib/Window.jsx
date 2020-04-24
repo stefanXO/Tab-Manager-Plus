@@ -17,6 +17,9 @@ class Window extends React.Component {
 			names = {};
 		}
 		var name = names[this.props.window.id] || "";
+		if(!!this.props.window.titlePreface) {
+			name = this.props.window.titlePreface;
+		}
 		this.state = {
 			colorActive: false,
 			windowTitles: [],
@@ -588,20 +591,35 @@ class Window extends React.Component {
 		this.setState({
 			colorActive: !this.state.colorActive
 		});
+		this.props.parentUpdate();
 	}
-	changeName(e) {
+	async changeName(e) {
 		// this.setState(a);
+		var name = "";
+		if(e && e.target && e.target.value) name = e.target.value;
+
 		var names = localStorage["windowNames"];
 		if (!!names) {
 			names = JSON.parse(names);
 		} else {
 			names = {};
 		}
-		names[this.props.window.id] = e.target.value || "";
+		names[this.props.window.id] = name;
 		localStorage["windowNames"] = JSON.stringify(names);
 		this.setState({
-			name: e.target.value || ""
+			name: name
 		});
+		if (navigator.userAgent.search("Firefox") > -1) {
+			if(!!name) {
+				browser.windows.update(this.props.window.id, {
+					titlePreface: name + " - "
+				});
+			}else{
+				browser.windows.update(this.props.window.id, {
+					titlePreface: name
+				});
+			}
+		}
 	}
 	topEntries(arr) {
 		var cnts = arr.reduce(function(obj, val) {
