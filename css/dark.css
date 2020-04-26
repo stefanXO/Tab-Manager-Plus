@@ -112,6 +112,12 @@ body.dark .window.top input {
 body.dark .window.searchbox{
 	background-color:#19272c;
 }
+body.dark .window.searchbox input,
+body.dark .window-colors input,
+body.dark .optionsBox input {
+	background-color:#19272c;
+	color: white;
+}
 body.dark .optionsBox {
   background: #203238;
 }
