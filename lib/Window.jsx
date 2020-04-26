@@ -441,7 +441,7 @@ class Window extends React.Component {
 					onMouseEnter={this.props.hoverIcon}
 					onDrop={this.drop}
 				>
-					<div className="windowcontainer">{children}</div>
+					<div className="windowcontainer" title={"Focus this window\nWill select this window with " + tabs.length + " tabs"}>{children}</div>
 				</div>
 			);
 		} else {
