@@ -1,11 +1,14 @@
 5.1.5
 =====
 - Feature: Changing the name of a window will set change the windows' title in Firefox as well
+- Dark mode has now dark input fields, to ease the eye strain
+- Slight design and color adjustments
 - Fix: Clicking on a window/tab would not focus it properly in Firefox
 - Fix: Rendering fixes in Firefox for vertical scrolling
 - Fix: Properly close title/color popup after pressing enter/escape ( instead of closing the TMP popup )
 - Fix: When selecting a tab in dark mode, the text was unreadable
 - Fix: Changed the way how tabs are counted - sometimes it was possible to open more tabs per window than allowed
+- Fix: When hovering in Firefox, the window help text would not be displayed in the top
 
 5.1.4
 =====
