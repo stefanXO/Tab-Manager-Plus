@@ -68,6 +68,13 @@ html * {
 	user-select: none;
 	outline: none;
 }
+input, textarea {
+	-webkit-touch-callout: initial;
+	-webkit-user-select: initial;
+	-moz-user-select: initial;
+	-ms-user-select: initial;
+	user-select: initial;
+}
 /*.noscrollbar {
 	padding-right: 20px;
 }*/
