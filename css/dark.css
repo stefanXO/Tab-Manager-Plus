@@ -49,8 +49,12 @@ body.dark .icon.vertical:hover {
 body.dark .icon.pinned.vertical:hover {
 	background-color: #FF117788;
 }
+body.dark .tab.selected {
+    background-color: yellow;
+    color: black;
+}
 body.dark .tab.selected.vertical:hover{
-	background-color: #405258;
+	background-color: yellow;
 	color: black;
 }
 body.dark .tab.selected:hover{
@@ -65,15 +69,12 @@ body.dark .icon.incognito.vertical {
 	color: white;
 }
 body.dark .icon.incognito.vertical.selected {
-	background-color: #222222;
-	color: white;
+	background-color: yellow;
+	color: black;
 }
 body.dark .icon.incognito.vertical:hover {
 	background-color: purple;
-	color: yellow;
-}
-body.dark .tab.selected {
-    background-color: yellow;
+	color: orange;
 }
 body.dark .icon .iconoverlay {
 	border: 0;
