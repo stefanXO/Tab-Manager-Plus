@@ -186,7 +186,10 @@ class TabManager extends React.Component {
 		//this.update();
 	}
 	hoverIcon(e) {
-		var text = e.target.title || " ";
+		var text = "";
+		if(e && e.target && e.target.title) {
+			text = e.target.title;
+		}
 		var bottom = " ";
 		if (text.indexOf("\n") > -1) {
 			var a = text.split("\n");
