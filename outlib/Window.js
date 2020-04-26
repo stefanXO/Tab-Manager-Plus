@@ -441,7 +441,7 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 							onMouseEnter: this.props.hoverIcon,
 							onDrop: this.drop },
 
-						React.createElement("div", { className: "windowcontainer" }, children)));
+						React.createElement("div", { className: "windowcontainer", title: "Focus this window\nWill select this window with " + tabs.length + " tabs" }, children)));
 
 
 			} else {
