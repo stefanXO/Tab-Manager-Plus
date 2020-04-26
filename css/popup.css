@@ -73,10 +73,11 @@ html * {
 }*/
 .window-container, .options-container {
 	position: fixed;
-	top: 2.5rem;
+	top: 2.85rem;
 	bottom: 3.2rem;
 	width: 100%;
 	overflow-y: scroll;
+	padding-top: 5px;
 }
 .window{
 	background-color: white;
@@ -607,6 +608,7 @@ h1,h2,h3,h4,h5,h6 {
 	padding-bottom: 0.125rem;
 	background: white;
 	border-radius: 0;
+	color: black;
 }
 .window.top .taburl {
 	width: 100%;
