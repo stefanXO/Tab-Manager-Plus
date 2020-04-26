@@ -1,0 +1,20 @@
+.icon, .iconoverlay{
+	will-change: transform;
+}
+
+.animations .window.blocks-big .tab:hover {
+	-webkit-filter: blur(0px);
+}
+
+.tab.selected {
+	will-change: transform;
+}
+
+.animations .tab {
+	-webkit-filter: blur(0px);
+	will-change: transform;
+}
+
+.animations .tab:hover {
+	-webkit-filter: blur(0px);
+}
