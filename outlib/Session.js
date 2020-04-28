@@ -142,16 +142,16 @@ Session = function (_React$Component) {_inherits(Session, _React$Component);
 									customName = this.props.window.name;
 								}
 
-								whitelistWindow = ["url", "tabId", "left", "top", "width", "height", "focused", "incognito", "type", "setSelfAsOpener"];
+								whitelistWindow = ["left", "top", "width", "height", "incognito", "type"];
 
 								if (navigator.userAgent.search("Firefox") > -1) {
-									whitelistWindow = ["url", "tabId", "left", "top", "width", "height", "incognito", "type", "setSelfAsOpener"];
+									whitelistWindow = ["left", "top", "width", "height", "incognito", "type"];
 								}
 
-								whitelistTab = ["windowId", "index", "url", "active", "selected", "pinned"];
+								whitelistTab = ["url", "active", "selected", "pinned"];
 
 								if (navigator.userAgent.search("Firefox") > -1) {
-									whitelistTab = ["windowId", "index", "url", "active", "pinned"];
+									whitelistTab = ["url", "active", "pinned"];
 								}
 
 								filteredWindow = Object.keys(this.props.window.windowsInfo).

@@ -663,16 +663,20 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 									return _this3.state.tabsbyid[id];
 								});if (!(
 
-								count == 0)) {_context5.next = 7;break;}
-								browser.windows.create({});_context5.next = 18;break;case 7:if (!(
-								count == 1)) {_context5.next = 14;break;}_context5.next = 10;return (
-									browser.runtime.getBackgroundPage());case 10:backgroundPage = _context5.sent;
-								backgroundPage.focusOnTabAndWindow(tabs[0]);_context5.next = 18;break;case 14:_context5.next = 16;return (
+								count == 0)) {_context5.next = 8;break;}_context5.next = 6;return (
+									browser.windows.create({}));case 6:_context5.next = 19;break;case 8:if (!(
+								count == 1)) {_context5.next = 15;break;}_context5.next = 11;return (
+									browser.runtime.getBackgroundPage());case 11:backgroundPage = _context5.sent;
+								if (navigator.userAgent.search("Firefox") > -1) {
+									backgroundPage.focusOnTabAndWindowDelayed(tabs[0]);
+								} else {
+									backgroundPage.focusOnTabAndWindow(tabs[0]);
+								}_context5.next = 19;break;case 15:_context5.next = 17;return (
 
-									browser.runtime.getBackgroundPage());case 16:backgroundPage = _context5.sent;
-								backgroundPage.createWindowWithTabs(tabs);case 18:
+									browser.runtime.getBackgroundPage());case 17:backgroundPage = _context5.sent;
+								backgroundPage.createWindowWithTabs(tabs);case 19:
 
-								if (!!window.inPopup) window.close();case 19:case "end":return _context5.stop();}}}, _callee5, this);}));function addWindow() {return _ref5.apply(this, arguments);}return addWindow;}() }, { key: "pinTabs", value: function () {var _ref6 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6() {var _this4, tabs, i, t;return regeneratorRuntime.wrap(function _callee6$(_context6) {while (1) {switch (_context6.prev = _context6.next) {case 0:
+								if (!!window.inPopup) window.close();case 20:case "end":return _context5.stop();}}}, _callee5, this);}));function addWindow() {return _ref5.apply(this, arguments);}return addWindow;}() }, { key: "pinTabs", value: function () {var _ref6 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6() {var _this4, tabs, i, t;return regeneratorRuntime.wrap(function _callee6$(_context6) {while (1) {switch (_context6.prev = _context6.next) {case 0:
 
 
 								_this4 = this;

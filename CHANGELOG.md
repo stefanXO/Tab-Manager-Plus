@@ -1,3 +1,9 @@
+5.1.6
+=====
+- Fix: Pressing "enter" or "return" when only one tab is selected, should focus that tab properly in Firefox
+- Reduce options that would be restored in sessions, to limit conflicts
+- Make inputs selectable in Firefox! You can now select text again in title, search and option inputs, etc. 
+
 5.1.5
 =====
 - Feature: Changing the name of a window will set change the windows' title in Firefox as well
