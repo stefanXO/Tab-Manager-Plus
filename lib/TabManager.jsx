@@ -664,10 +664,14 @@ class TabManager extends React.Component {
 		});
 
 		if (count == 0) {
-			browser.windows.create({});
+			await browser.windows.create({});
 		} else if (count == 1) {
 			var backgroundPage = await browser.runtime.getBackgroundPage();
-			backgroundPage.focusOnTabAndWindow(tabs[0]);
+			if (navigator.userAgent.search("Firefox") > -1) {
+				backgroundPage.focusOnTabAndWindowDelayed(tabs[0]);
+			}else{
+				backgroundPage.focusOnTabAndWindow(tabs[0]);
+			}
 		} else {
 			var backgroundPage = await browser.runtime.getBackgroundPage();
 			backgroundPage.createWindowWithTabs(tabs);
