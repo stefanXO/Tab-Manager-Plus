@@ -142,16 +142,16 @@ class Session extends React.Component {
 			customName = this.props.window.name;
 		}
 
-		var whitelistWindow = ["url", "tabId", "left", "top", "width", "height", "focused", "incognito", "type", "setSelfAsOpener"];
+		var whitelistWindow = ["left", "top", "width", "height", "incognito", "type"];
 
 		if (navigator.userAgent.search("Firefox") > -1) {
-			whitelistWindow = ["url", "tabId", "left", "top", "width", "height", "incognito", "type", "setSelfAsOpener"];
+			whitelistWindow = ["left", "top", "width", "height", "incognito", "type"];
 		}
 
-		var whitelistTab = ["windowId", "index", "url", "active", "selected", "pinned"];
+		var whitelistTab = ["url", "active", "selected", "pinned"];
 
 		if (navigator.userAgent.search("Firefox") > -1) {
-			whitelistTab = ["windowId", "index", "url", "active", "pinned"];
+			whitelistTab = ["url", "active", "pinned"];
 		}
 
 		var filteredWindow = Object.keys(this.props.window.windowsInfo)
