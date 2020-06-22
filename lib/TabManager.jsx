@@ -22,7 +22,7 @@ class TabManager extends React.Component {
 			);
 		}
 
-		var layout = "horizontal";
+		var layout = "blocks";
 		var animations = true;
 		var windowTitles = true;
 		var compact = false;
@@ -34,15 +34,15 @@ class TabManager extends React.Component {
 		var filterTabs = false;
 		var tabLimit = 0;
 		var openInOwnTab = false;
-		var tabWidth = 530;
-		var tabHeight = 450;
+		var tabWidth = 800;
+		var tabHeight = 600;
 
 		if (this.localStorageAvailable()) {
-			if (!localStorage["layout"]) localStorage["layout"] = "horizontal";
+			if (!localStorage["layout"]) localStorage["layout"] = "blocks";
 			if (typeof localStorage["tabLimit"] === "undefined") localStorage["tabLimit"] = "0";
 			if (typeof localStorage["openInOwnTab"] === "undefined") localStorage["openInOwnTab"] = "0";
-			if (typeof localStorage["tabWidth"] === "undefined") localStorage["tabWidth"] = "530";
-			if (typeof localStorage["tabHeight"] === "undefined") localStorage["tabHeight"] = "450";
+			if (typeof localStorage["tabWidth"] === "undefined") localStorage["tabWidth"] = "800";
+			if (typeof localStorage["tabHeight"] === "undefined") localStorage["tabHeight"] = "600";
 			if (typeof localStorage["animations"] === "undefined") localStorage["animations"] = "1";
 			if (typeof localStorage["windowTitles"] === "undefined") localStorage["windowTitles"] = "1";
 			if (typeof localStorage["compact"] === "undefined") localStorage["compact"] = "0";
@@ -106,7 +106,7 @@ class TabManager extends React.Component {
 			windowsbyid: {},
 			closeTimeout: closeTimeout,
 			resetTimeout: resetTimeout,
-			height: 400,
+			height: 600,
 			hasScrollBar: false,
 			focusUpdates: 0,
 			topText: "",
@@ -200,6 +200,7 @@ class TabManager extends React.Component {
 		this.setState({ topText: text });
 		this.setState({ bottomText: bottom });
 		//this.update();
+		this.forceUpdate();
 	}
 	render() {
 		var _this = this;
@@ -1410,7 +1411,7 @@ class TabManager extends React.Component {
 	}
 	tabWidthText() {
 		this.setState({
-			bottomText: "Change the width of this window. 530 by default."
+			bottomText: "Change the width of this window. 800 by default."
 		});
 	}
 	changeTabHeight(e) {
@@ -1422,7 +1423,7 @@ class TabManager extends React.Component {
 	}
 	tabHeightText() {
 		this.setState({
-			bottomText: "Change the height of this window. 400 by default."
+			bottomText: "Change the height of this window. 600 by default."
 		});
 	}
 	toggleAnimations() {
