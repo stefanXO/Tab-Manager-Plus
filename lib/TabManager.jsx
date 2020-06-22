@@ -416,7 +416,7 @@ class TabManager extends React.Component {
 						<tbody>
 							<tr>
 								<td className="one">
-									<input className="searchBoxInput" type="text" placeholder="Search tabs..." tabIndex="1" onChange={this.search} ref="searchbox" />
+									<input className="searchBoxInput" type="text" placeholder="Start typing to search tabs..." tabIndex="1" onChange={this.search} ref="searchbox" />
 								</td>
 								<td className="two">
 									<div
