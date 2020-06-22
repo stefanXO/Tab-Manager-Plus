@@ -1,6 +1,6 @@
 {
   "name": "tab-manager",
-  "version": "5.1.6",
+  "version": "5.2.0",
   "description": "This is an extended version of the old Tab Manager Google Chrome extension. Should work on both Chrome and Firefox. Malware free, with a new view type and many new features.",
   "main": "index.js",
   "directories": {
@@ -31,7 +31,8 @@
     "babel-preset-es2015": "^6.24.1",
     "babel-preset-es2017": "^6.24.1",
     "babel-preset-react": "^6.24.1",
-    "babel-preset-react-app": "^3.1.2"
+    "babel-preset-react-app": "^3.1.2",
+    "crx3": "^1.1.2"
   },
   "dependencies": {}
 }

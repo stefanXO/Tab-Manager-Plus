@@ -41,7 +41,8 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 		_this2.minimize = _this2.minimize.bind(_this2);
 		_this2.save = _this2.save.bind(_this2);
 		_this2.stop = _this2.stop.bind(_this2);
-		_this2.windowClick = _this2.windowClick.bind(_this2);return _this2;
+		_this2.windowClick = _this2.windowClick.bind(_this2);
+		_this2.selectToFromTab = _this2.selectToFromTab.bind(_this2);return _this2;
 	}_createClass(Window, [{ key: "render", value: function render()
 
 		{
@@ -79,7 +80,7 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 						hoverHandler: _this.props.hoverHandler,
 						searchActive: _this.props.searchActive,
 						select: _this.props.select,
-						selectTo: _this.selectTo,
+						selectTo: _this.selectToFromTab,
 						drag: _this.props.drag,
 						drop: _this.props.drop,
 						dropWindow: _this.props.dropWindow,
@@ -480,7 +481,7 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 								}
 								this.props.parentUpdate();
 								if (!!window.inPopup) window.close();return _context.abrupt("return",
-								false);case 9:case "end":return _context.stop();}}}, _callee, this);}));function windowClick(_x) {return _ref.apply(this, arguments);}return windowClick;}() }, { key: "selectTo", value: function selectTo(
+								false);case 9:case "end":return _context.stop();}}}, _callee, this);}));function windowClick(_x) {return _ref.apply(this, arguments);}return windowClick;}() }, { key: "selectToFromTab", value: function selectToFromTab(
 
 		tabId) {
 			if (tabId) this.props.selectTo(tabId, this.props.tabs);
@@ -567,6 +568,7 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 
 		e) {
 			this.stopProp(e);
+			this.props.toggleColors(!this.state.colorActive, this.props.window.id);
 			this.setState({
 				colorActive: !this.state.colorActive });
 
@@ -588,6 +590,7 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 			localStorage["windowColors"] = JSON.stringify(colors);
 		} }, { key: "closePopup", value: function closePopup()
 		{
+			this.props.toggleColors(!this.state.colorActive, this.props.window.id);
 			this.setState({
 				colorActive: !this.state.colorActive });
 

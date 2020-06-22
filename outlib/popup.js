@@ -5,6 +5,11 @@ if (window.location.search.indexOf("?popup") > -1) {
 } else {
 	window.inPopup = false;
 }
+if (window.location.search.indexOf("?panel") > -1) {
+	window.inPanel = true;
+} else {
+	window.inPanel = false;
+}
 window.onload = function () {
 	window.requestAnimationFrame(loadApp);
 };
@@ -46,6 +51,12 @@ function loadApp() {
 			}
 		}
 	} else {
+		if (window.inPanel) {
+			document.documentElement.style.maxHeight = "auto";
+			document.documentElement.style.maxWidth = "auto";
+			document.body.style.maxHeight = "auto";
+			document.body.style.maxWidth = "auto";
+		}
 		document.documentElement.style.maxHeight = "100%";
 		document.documentElement.style.maxWidth = "100%";
 		document.documentElement.style.height = "100%";

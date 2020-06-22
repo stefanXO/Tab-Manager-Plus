@@ -6,7 +6,7 @@ TabOptions = function (_React$Component) {_inherits(TabOptions, _React$Component
 		_this.state = {};return _this;
 	}_createClass(TabOptions, [{ key: "logo", value: function logo()
 		{
-			var logo = [React.createElement("img", { src: "images/browsers.svg", style: { maxWidth: "3rem" } }), React.createElement("h2", null, "Tab Manager Plus ", "5.1.6")];
+			var logo = [React.createElement("img", { src: "images/browsers.svg", style: { maxWidth: "3rem" } }), React.createElement("h2", null, "Tab Manager Plus ", "5.2.0")];
 
 			return (
 				React.createElement("div", { className: "logo-options" },
@@ -189,7 +189,7 @@ TabOptions = function (_React$Component) {_inherits(TabOptions, _React$Component
 						React.createElement("i", null, "By default: disabled ( experimental feature )"))),
 
 
-				React.createElement("div", { className: "toggle-box" },
+				this.props.sessionsFeature && React.createElement("div", { className: "toggle-box" },
 					React.createElement("div", { className: "toggle-box" },
 						React.createElement("label", { className: "textlabel", htmlFor: "session_export", style: { whiteSpace: "pre", lineHeight: "2rem" } },
 							React.createElement("h4", null, "Export/Backup Sessions")),
@@ -201,7 +201,7 @@ TabOptions = function (_React$Component) {_inherits(TabOptions, _React$Component
 
 					React.createElement("div", { className: "option-description" }, "Allows you to backup your saved windows to an external file.")),
 
-				React.createElement("div", { className: "toggle-box" },
+				this.props.sessionsFeature && React.createElement("div", { className: "toggle-box" },
 					React.createElement("div", { className: "toggle-box" },
 						React.createElement("label", { className: "textlabel", htmlFor: "session_import", style: { whiteSpace: "pre", lineHeight: "2rem" } },
 							React.createElement("h4", null, "Import/Restore Sessions")),
@@ -315,19 +315,6 @@ TabOptions = function (_React$Component) {_inherits(TabOptions, _React$Component
 
 			React.createElement("div", { className: "optionsBox" },
 				React.createElement("h4", null, "Advanced settings"),
-				React.createElement("div", { className: "toggle-box" },
-					React.createElement("div", { className: "toggle-box" },
-						React.createElement("a", { href: "#", onClick: this.openIncognitoOptions }, "Allow in Incognito")),
-
-
-
-					React.createElement("div", { className: "option-description" }, "If you also want to see your incognito tabs in the Tab Manager overview, then enable incognito access for this extension."))),
-
-
-
-
-			React.createElement("div", { className: "optionsBox" },
-				React.createElement("h4", null, "Other shortcuts"),
 				React.createElement("div", { className: "toggle-box" },
 					React.createElement("div", { className: "toggle-box" },
 						React.createElement("a", { href: "#", onClick: this.openIncognitoOptions }, "Allow in Incognito")),
