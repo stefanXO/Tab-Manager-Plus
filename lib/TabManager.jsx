@@ -1566,6 +1566,10 @@ class TabManager extends React.Component {
 		});
 	}
 	exportSessions() {
+		if (this.state.sessions.length == 0) {
+			window.alert("You have currently no windows saved for later. There is nothing to export.");
+			return;
+		}
 		var exportName = "tab-manager-plus-backup";
 		var today = new Date();
 		var y = today.getFullYear();
