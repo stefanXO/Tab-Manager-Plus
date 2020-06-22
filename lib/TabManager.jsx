@@ -114,7 +114,8 @@ class TabManager extends React.Component {
 			lastDirection: false,
 			optionsActive: !!this.props.optionsActive,
 			filterTabs: filterTabs,
-			dupTabs: false
+			dupTabs: false,
+			colorsActive: false
 		};
 
 		this.addWindow = this.addWindow.bind(this);
@@ -241,6 +242,7 @@ class TabManager extends React.Component {
 				<div className={"window-container " + this.state.layout + " " + (this.state.optionsActive ? "hidden" : "")} ref="windowcontainer" tabIndex={2}>
 					{this.state.windows.map(function(window) {
 						if (window.state == "minimized") return;
+						if (!!this.state.colorsActive && this.state.colorsActive !== window.id) return;
 						return (
 							<Window
 								key={"window" + window.id}
@@ -258,6 +260,7 @@ class TabManager extends React.Component {
 								scrollTo={_this.scrollTo.bind(_this)}
 								hoverIcon={_this.hoverIcon.bind(_this)}
 								parentUpdate={_this.update.bind(_this)}
+								toggleColors={_this.toggleColors.bind(_this)}
 								tabMiddleClick={_this.deleteTab.bind(_this)}
 								select={_this.select.bind(_this)}
 								selectTo={_this.selectTo.bind(_this)}
@@ -269,7 +272,7 @@ class TabManager extends React.Component {
 								ref={"window" + window.id}
 							/>
 						);
-					})}
+					}.bind(this))}
 					<div className={"hrCont " + (!haveMin ? "hidden" : "")}>
 						<div className="hrDiv">
 							<span className="hrSpan">Minimized windows</span>
@@ -277,6 +280,7 @@ class TabManager extends React.Component {
 					</div>
 					{this.state.windows.map(function(window) {
 						if (window.state !== "minimized") return;
+						if (!!this.state.colorsActive && this.state.colorsActive !== window.id) return;
 						return (
 							<Window
 								key={"window" + window.id}
@@ -294,6 +298,7 @@ class TabManager extends React.Component {
 								scrollTo={_this.scrollTo.bind(_this)}
 								hoverIcon={_this.hoverIcon.bind(_this)}
 								parentUpdate={_this.update.bind(_this)}
+								toggleColors={_this.toggleColors.bind(_this)}
 								tabMiddleClick={_this.deleteTab.bind(_this)}
 								select={_this.select.bind(_this)}
 								selectTo={_this.selectTo.bind(_this)}
@@ -305,7 +310,7 @@ class TabManager extends React.Component {
 								ref={"window" + window.id}
 							/>
 						);
-					})}
+					}.bind(this))}
 					<div className={"hrCont " + (!haveSess ? "hidden" : "")}>
 						<div className="hrDiv">
 							<span className="hrSpan">Saved windows</span>
@@ -313,6 +318,7 @@ class TabManager extends React.Component {
 					</div>
 					{haveSess
 						? this.state.sessions.map(function(window) {
+								if (!!this.state.colorsActive && this.state.colorsActive !== window.id) return;
 								return (
 									<Session
 										key={"session" + window.id}
@@ -329,6 +335,7 @@ class TabManager extends React.Component {
 										scrollTo={_this.scrollTo.bind(_this)}
 										hoverIcon={_this.hoverIcon.bind(_this)}
 										parentUpdate={_this.update.bind(_this)}
+										toggleColors={_this.toggleColors.bind(_this)}
 										tabMiddleClick={_this.deleteTab.bind(_this)}
 										select={_this.select.bind(_this)}
 										windowTitles={_this.state.windowTitles}
@@ -336,7 +343,7 @@ class TabManager extends React.Component {
 										ref={"session" + window.id}
 									/>
 								);
-							})
+							}.bind(this))
 						: false}
 				</div>
 				<div className={"options-container " + (this.state.optionsActive ? "" : "hidden")} ref="options-container">
@@ -403,7 +410,7 @@ class TabManager extends React.Component {
 					/>
 					<input type="text" disabled={true} className="taburl" ref="topboxurl" placeholder={this.getTip()} value={this.state.bottomText} />
 				</div>
-				<div className={"window searchbox " + (this.state.optionsActive ? "hidden" : "")}>
+				<div className={"window searchbox " + (this.state.optionsActive || !!this.state.colorsActive ? "hidden" : "")}>
 					<table>
 						<tbody>
 							<tr>
@@ -572,6 +579,14 @@ class TabManager extends React.Component {
 	}
 	toggleOptions() {
 		this.state.optionsActive = !this.state.optionsActive;
+		this.forceUpdate();
+	}
+	toggleColors(active, windowId) {
+		if(!!active) {
+			this.state.colorsActive = windowId;
+		}else{
+			this.state.colorsActive = false;
+		}
 		this.forceUpdate();
 	}
 	async update() {

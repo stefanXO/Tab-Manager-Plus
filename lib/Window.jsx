@@ -568,6 +568,7 @@ class Window extends React.Component {
 	}
 	colors(e) {
 		this.stopProp(e);
+		this.props.toggleColors(!this.state.colorActive, this.props.window.id);
 		this.setState({
 			colorActive: !this.state.colorActive
 		});
@@ -589,6 +590,7 @@ class Window extends React.Component {
 		localStorage["windowColors"] = JSON.stringify(colors);
 	}
 	closePopup() {
+		this.props.toggleColors(!this.state.colorActive, this.props.window.id);
 		this.setState({
 			colorActive: !this.state.colorActive
 		});
