@@ -16,6 +16,7 @@ html{
 	min-width: 450px;
 	min-height: 400px;
 	font-weight: 400;
+	font-size: 16px;
 }
 body{
 	padding:0;
@@ -29,10 +30,11 @@ body{
 body {
 	background-color: #f1f1f1;
 }
-html,body,#root,#TMP {
+html,body {
 	min-width: 450px;
 	min-height: 400px;
 }
+/* #root,#TMP */
 table {
 	display: table;
 	border-collapse: separate;

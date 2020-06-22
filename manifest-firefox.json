@@ -31,6 +31,17 @@
 			"256": "images/browsers256.png"
 		}
 	},
+	"sidebar_action": {
+		"default_icon": {
+			"16": "images/browsers16.png",
+			"48": "images/browsers48.png",
+			"64": "images/browsers64.png",
+			"128": "images/browsers128.png",
+			"256": "images/browsers256.png"
+		},
+		"default_title" : "Tab Manager Plus",
+		"default_panel": "popup.html?panel=true"
+	},
 	"options_ui": {
 		"page": "options.html"
 	},
