@@ -189,7 +189,7 @@ class TabOptions extends React.Component {
 						<i>By default: disabled ( experimental feature )</i>
 					</div>
 				</div>
-				<div className="toggle-box">
+				{this.props.sessionsFeature && <div className="toggle-box">
 					<div className="toggle-box">
 						<label className="textlabel" htmlFor="session_export" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
 							<h4>Export/Backup Sessions</h4>
@@ -200,8 +200,8 @@ class TabOptions extends React.Component {
 						<label onMouseEnter={this.props.exportSessionsText} htmlFor="session_export" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
 					</div>
 					<div className="option-description">Allows you to backup your saved windows to an external file.</div>
-				</div>
-				<div className="toggle-box">
+				</div>}
+				{this.props.sessionsFeature && <div className="toggle-box">
 					<div className="toggle-box">
 						<label className="textlabel" htmlFor="session_import" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
 							<h4>Import/Restore Sessions</h4>
@@ -220,7 +220,7 @@ class TabOptions extends React.Component {
 					<div className="option-description">
 						Allows you to restore your backup from an external file. The restored windows will be added to your current saved windows.
 					</div>
-				</div>
+				</div>}
 			</div>,
 			<div className="optionsBox">
 				<h4>Popup icon</h4>
@@ -315,19 +315,6 @@ class TabOptions extends React.Component {
 			</div>,
 			<div className="optionsBox">
 				<h4>Advanced settings</h4>
-				<div className="toggle-box">
-					<div className="toggle-box">
-						<a href="#" onClick={this.openIncognitoOptions}>
-							Allow in Incognito
-						</a>
-					</div>
-					<div className="option-description">
-						If you also want to see your incognito tabs in the Tab Manager overview, then enable incognito access for this extension.
-					</div>
-				</div>
-			</div>,
-			<div className="optionsBox">
-				<h4>Other shortcuts</h4>
 				<div className="toggle-box">
 					<div className="toggle-box">
 						<a href="#" onClick={this.openIncognitoOptions}>
