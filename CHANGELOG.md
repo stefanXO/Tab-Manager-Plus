@@ -1,3 +1,23 @@
+5.2.0
+=====
+- Improves search! Searching for "google mail" will highlight tabs that have both words included #107
+- Improves search! Searching for "google OR mail" will highlight tabs that have either of the worlds included #106
+- Fix: Searching for the same string length would not trigger another search, but that could have stopped an accent selection #93
+- Shift-right click will now select tabs in between the last selected tab #104 #94
+- Design Fix: default font size set to 16px
+- Firefox: Experimental Sidebar/Panel support added! #60
+- Firefox: Restore sessions will throw warning when trying in the popup
+- Default popup size increased to 800x600
+- Default design changed to blocks
+- Improvements: Background clean up added, to keep resources low
+- Improvements: Don't render windows in the background while the color/title selection is active
+- Improvements: Warn when trying to backup empty sessions #98
+- Fix: Doesn't allow users to export empty session files, shows a warning instead
+- Fix: Don't show import/export options for sessions if the feature is not enabled #98
+- Fix: Make it more obvious that you can type right away #86
+- Fix: Pluralization fixes when only 1 tab was selected #87
+- Firefox: Fix: Don't allow to import from the popup due to a Firefox bug. Show warning instead #57 #96
+
 5.1.6
 =====
 - Fix: Pressing "enter" or "return" when only one tab is selected, should focus that tab properly in Firefox
