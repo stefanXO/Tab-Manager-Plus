@@ -1592,6 +1592,12 @@ class TabManager extends React.Component {
 		});
 	}
 	importSessions(evt) {
+		if (navigator.userAgent.search("Firefox") > -1) {
+			if(window.inPopup) {
+				window.alert("Due to a Firefox bug session import does not work in the popup. Please use the options screen or open Tab Manager Plus in its' own tab");
+				return;
+			}
+		}
 		try {
 			let inputField = evt.target; // #session_import
 			let files = evt.target.files;
