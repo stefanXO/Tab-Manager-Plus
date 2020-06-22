@@ -42,6 +42,7 @@ class Window extends React.Component {
 		this.save = this.save.bind(this);
 		this.stop = this.stop.bind(this);
 		this.windowClick = this.windowClick.bind(this);
+		this.selectToFromTab = this.selectToFromTab.bind(this);
 	}
 
 	render() {
@@ -79,7 +80,7 @@ class Window extends React.Component {
 					hoverHandler={_this.props.hoverHandler}
 					searchActive={_this.props.searchActive}
 					select={_this.props.select}
-					selectTo={_this.selectTo}
+					selectTo={_this.selectToFromTab}
 					drag={_this.props.drag}
 					drop={_this.props.drop}
 					dropWindow={_this.props.dropWindow}
@@ -482,7 +483,7 @@ class Window extends React.Component {
 		if (!!window.inPopup) window.close();
 		return false;
 	}
-	selectTo(tabId) {
+	selectToFromTab(tabId) {
 		if(tabId) this.props.selectTo(tabId, this.props.tabs);
 	}
 	close(e) {
