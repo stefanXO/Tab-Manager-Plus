@@ -405,7 +405,7 @@ class TabManager extends React.Component {
 						disabled={true}
 						className="tabtitle"
 						ref="topbox"
-						placeholder={tabCount + " tabs in " + this.state.windows.length + " windows"}
+						placeholder={maybePluralize(tabCount, 'tab') + " in " + this.state.windows.length + " windows"}
 						value={this.state.topText}
 					/>
 					<input type="text" disabled={true} className="taburl" ref="topboxurl" placeholder={this.getTip()} value={this.state.bottomText} />
@@ -428,7 +428,7 @@ class TabManager extends React.Component {
 										className="icon windowaction trash"
 										title={
 											Object.keys(this.state.selection).length > 0
-												? "Close selected tabs\nWill close " + Object.keys(this.state.selection).length + " tabs"
+												? "Close selected tabs\nWill close " + maybePluralize(Object.keys(this.state.selection).length, 'tab')
 												: "Close current Tab"
 										}
 										onClick={this.deleteTabs}
@@ -438,7 +438,7 @@ class TabManager extends React.Component {
 										className="icon windowaction discard"
 										title={
 											Object.keys(this.state.selection).length > 0
-												? "Discard selected tabs\nWill discard " + Object.keys(this.state.selection).length + " tabs - freeing memory"
+												? "Discard selected tabs\nWill discard " + maybePluralize(Object.keys(this.state.selection).length, 'tab') + " - freeing memory"
 												: "Select tabs to discard them and free memory"
 										}
 										style={
@@ -453,7 +453,7 @@ class TabManager extends React.Component {
 										className="icon windowaction pin"
 										title={
 											Object.keys(this.state.selection).length > 0
-												? "Pin selected tabs\nWill pin " + Object.keys(this.state.selection).length + " tabs"
+												? "Pin selected tabs\nWill pin " + maybePluralize(Object.keys(this.state.selection).length, 'tab')
 												: "Pin current Tab"
 										}
 										onClick={this.pinTabs}
@@ -467,8 +467,7 @@ class TabManager extends React.Component {
 											(this.state.searchLen > 0
 												? "\n" +
 													(this.state.filterTabs ? "Will reveal " : "Will hide ") +
-													(Object.keys(this.state.tabsbyid).length - Object.keys(this.state.selection).length) +
-													" tabs"
+													maybePluralize((Object.keys(this.state.tabsbyid).length - Object.keys(this.state.selection).length), 'tab')
 												: "")
 										}
 										onClick={this.toggleFilterMismatchedTabs}
@@ -478,7 +477,7 @@ class TabManager extends React.Component {
 										className="icon windowaction new"
 										title={
 											Object.keys(this.state.selection).length > 0
-												? "Move tabs to new window\nWill move " + Object.keys(this.state.selection).length + " selected tabs to it"
+												? "Move tabs to new window\nWill move " + maybePluralize(Object.keys(this.state.selection).length, 'selected tab') + " to it"
 												: "Open new empty window"
 										}
 										onClick={this.addWindow}
@@ -1713,3 +1712,6 @@ function debounce(func, wait, immediate) {
 		if (callNow) func.apply(context, args);
 	};
 }
+
+const maybePluralize = (count, noun, suffix = 's') =>
+  `${count} ${noun}${count !== 1 ? suffix : ''}`;
