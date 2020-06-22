@@ -771,7 +771,24 @@ class TabManager extends React.Component {
 	}
 	search(e) {
 		var hiddenCount = this.state.hiddenCount || 0;
-		var searchLen = (e.target.value || "").length;
+		var searchQuery = e.target.value || "";
+		var searchLen = searchQuery.length;
+
+		var searchType = "normal";
+		var searchTerms = [];
+		if(searchQuery.indexOf(" ") === -1) {
+			searchType = "normal";
+		}else if(searchQuery.indexOf(" OR ") > -1) {
+			searchTerms = searchQuery.split(" OR ");
+			searchType = "OR";
+		}else if(searchQuery.indexOf(" ") > -1) {
+			searchTerms = searchQuery.split(" ");
+			searchType = "AND";
+		}
+		if(searchType != "normal") {
+			searchTerms = searchTerms.filter(function(entry) { return entry.trim() != ''; });
+		}
+
 		if (!searchLen) {
 			this.state.selection = {};
 			this.state.hiddenTabs = {};
@@ -779,18 +796,44 @@ class TabManager extends React.Component {
 		} else {
 			var idList;
 			var lastSearchLen = this.state.searchLen;
-			if (!lastSearchLen) {
-				idList = this.state.tabsbyid;
-			} else if (lastSearchLen > searchLen) {
-				idList = this.state.hiddenTabs;
-			} else if (lastSearchLen < searchLen) {
-				idList = this.state.selection;
-			} else {
-				return;
+			idList = this.state.tabsbyid;
+			if(searchType == "normal") {
+				if (!lastSearchLen) {
+					idList = this.state.tabsbyid;
+				} else if (lastSearchLen > searchLen) {
+					idList = this.state.hiddenTabs;
+				} else if (lastSearchLen < searchLen) {
+					idList = this.state.selection;
+				}
 			}
 			for (var id in idList) {
 				var tab = this.state.tabsbyid[id];
-				if ((tab.title + tab.url).toLowerCase().indexOf(e.target.value.toLowerCase()) >= 0) {
+				var tabSearchTerm = (tab.title + tab.url).toLowerCase();
+				var match = false;
+				if(searchType == "normal") {
+					match = (tabSearchTerm.indexOf(e.target.value.toLowerCase()) >= 0);
+				}else if(searchType == "OR") {
+					for (var searchOR of searchTerms) {
+						searchOR = searchOR.trim().toLowerCase();
+						if(tabSearchTerm.indexOf(searchOR) >= 0) {
+							match = true;
+							break;
+						}
+					}
+				}else if(searchType == "AND") {
+					var andMatch = true;
+					for (var searchAND of searchTerms) {
+						searchAND = searchAND.trim().toLowerCase();
+						if(tabSearchTerm.indexOf(searchAND) >= 0) {
+
+						}else{
+							andMatch = false;
+							break;
+						}
+					}
+					match = andMatch;
+				}
+				if (match) {
 					hiddenCount -= this.state.hiddenTabs[id] || 0;
 					this.state.selection[id] = true;
 					delete this.state.hiddenTabs[id];
