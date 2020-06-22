@@ -587,6 +587,7 @@ class TabManager extends React.Component {
 		}else{
 			this.state.colorsActive = false;
 		}
+		console.log("colorsActive", active, windowId, this.state.colorsActive);
 		this.forceUpdate();
 	}
 	async update() {
@@ -1687,7 +1688,9 @@ class TabManager extends React.Component {
 			"Middle click to close a tab",
 			"Tab Manager Plus loves saving time",
 			"To see incognito tabs, enable incognito access in the extension settings",
-			"You can drag and drop tabs to other windows"
+			"You can drag and drop tabs to other windows",
+			"You can type to search right away",
+			"You can search for different tabs : google OR yahoo"
 		];
 
 		return "Tip: " + tips[Math.floor(Math.random() * tips.length)];
