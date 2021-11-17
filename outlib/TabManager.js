@@ -406,7 +406,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 							disabled: true,
 							className: "tabtitle",
 							ref: "topbox",
-							placeholder: maybePluralize(tabCount, 'tab') + " in " + this.state.windows.length + " windows",
+							placeholder: maybePluralize(tabCount, 'tab') + " in " + maybePluralize(this.state.windows.length, 'window'),
 							value: this.state.topText }),
 
 						React.createElement("input", { type: "text", disabled: true, className: "taburl", ref: "topboxurl", placeholder: this.getTip(), value: this.state.bottomText })),
@@ -592,6 +592,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 		} }, { key: "update", value: function () {var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {var windows, tabCount, i, window, j, tab, id;return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:_context2.next = 2;return (
 
 									browser.windows.getAll({ populate: true }));case 2:windows = _context2.sent;
+								windows = windows.filter(filterExtensionWindow);
 								windows.sort(function (a, b) {
 									var windows = [];
 									if (!!localStorage["windowAge"]) {
@@ -632,7 +633,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 
 								//this.state.searchLen = 0;
 								// this.forceUpdate();
-							case 13:case "end":return _context2.stop();}}}, _callee2, this);}));function update() {return _ref2.apply(this, arguments);}return update;}() }, { key: "deleteTabs", value: function () {var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3() {var _this2, tabs, i, t;return regeneratorRuntime.wrap(function _callee3$(_context3) {while (1) {switch (_context3.prev = _context3.next) {case 0:
+							case 14:case "end":return _context2.stop();}}}, _callee2, this);}));function update() {return _ref2.apply(this, arguments);}return update;}() }, { key: "deleteTabs", value: function () {var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3() {var _this2, tabs, i, t;return regeneratorRuntime.wrap(function _callee3$(_context3) {while (1) {switch (_context3.prev = _context3.next) {case 0:
 
 								_this2 = this;
 								tabs = Object.keys(this.state.selection).map(function (id) {
@@ -1772,3 +1773,20 @@ function debounce(func, wait, immediate) {
 
 var maybePluralize = function maybePluralize(count, noun) {var suffix = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 's';return (
 		count + " " + noun + (count !== 1 ? suffix : ''));};
+
+/**   If a window only contains our extension as a popup in a single tab, we
+                                                       	* don't want it polluting its own tab manager, where it will always be
+                                                       	* the first window, with no other tabs in it, and it really gets in the
+                                                       	* way.
+                                                       	*/
+function filterExtensionWindow(window) {
+	return !isExtensionWindow(window);
+}
+/** with openInOwnTab, e.g. "moz-extension://df16e922-4c5e-c443-9dba-d480e8c77b06/popup.html" */
+var extensionUrl = browser.runtime.getURL('popup.html');
+function isExtensionWindow(window) {
+	if (window.type !== 'normal') return true;
+	// if we only manage to create a single-tab normal window
+	if (window.tabs.length !== 1) return false;
+	return window.tabs[0].url.startsWith(extensionUrl);
+}

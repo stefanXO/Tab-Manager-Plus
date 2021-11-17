@@ -406,7 +406,7 @@ class TabManager extends React.Component {
 						disabled={true}
 						className="tabtitle"
 						ref="topbox"
-						placeholder={maybePluralize(tabCount, 'tab') + " in " + this.state.windows.length + " windows"}
+						placeholder={maybePluralize(tabCount, 'tab') + " in " + maybePluralize(this.state.windows.length, 'window')}
 						value={this.state.topText}
 					/>
 					<input type="text" disabled={true} className="taburl" ref="topboxurl" placeholder={this.getTip()} value={this.state.bottomText} />
@@ -592,6 +592,7 @@ class TabManager extends React.Component {
 	}
 	async update() {
 		var windows = await browser.windows.getAll({ populate: true });
+		windows = windows.filter(filterExtensionWindow);
 		windows.sort(function(a, b) {
 			var windows = [];
 			if (!!localStorage["windowAge"]) {
@@ -1772,3 +1773,20 @@ function debounce(func, wait, immediate) {
 
 const maybePluralize = (count, noun, suffix = 's') =>
   `${count} ${noun}${count !== 1 ? suffix : ''}`;
+
+/**   If a window only contains our extension as a popup in a single tab, we
+	* don't want it polluting its own tab manager, where it will always be
+	* the first window, with no other tabs in it, and it really gets in the
+	* way.
+	*/
+function filterExtensionWindow(window) {
+	return !isExtensionWindow(window);
+}
+/** with openInOwnTab, e.g. "moz-extension://df16e922-4c5e-c443-9dba-d480e8c77b06/popup.html" */
+let extensionUrl = browser.runtime.getURL('popup.html');
+function isExtensionWindow(window) {
+	if (window.type !== 'normal') return true;
+	// if we only manage to create a single-tab normal window
+	if (window.tabs.length !== 1) return false;
+	return window.tabs[0].url.startsWith(extensionUrl);
+}
