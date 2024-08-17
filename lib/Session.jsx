@@ -2,6 +2,7 @@
 import React, { Component } from "react"
 import browser from "webextension-polyfill"
 import Tab from "./Tab";
+import { getItem, setItem } from "./storage";
 
 export default class Session extends Component {
 	constructor(props) {
@@ -208,14 +209,10 @@ export default class Session extends Component {
 		});
 
 		if (customName) {
-			var names = localStorage["windowNames"];
-			if (!!names) {
-				names = JSON.parse(names);
-			} else {
-				names = {};
-			}
+			var names = await getItem("windowNames") ?? {}
+
 			names[newWindow.id] = customName || "";
-			localStorage["windowNames"] = JSON.stringify(names);
+			await setItem("windowNames", names)
 		}
 
 		this.props.parentUpdate();

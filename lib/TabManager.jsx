@@ -5,6 +5,7 @@ import Session from "./Session";
 import TabOptions from "./TabOptions";
 import TWindow from "./Window";
 import { sendMessage } from "webext-bridge/popup";
+import { getItem, setItem } from "./storage";
 
 export default class TabManager extends Component {
 	constructor(props) {
@@ -17,130 +18,18 @@ export default class TabManager extends Component {
 				permissions: ["system.display"],
 			});
 			check.then(
-				function (result) {
+				async function (result) {
 					if (result) {
 						// The extension has the permissions.
 					} else {
-						localStorage["hideWindows"] = "0";
+						await setItem("hideWindows", 0);
 						this.state.hideWindows = false;
 					}
 				}.bind(this)
 			);
 		}
 
-		var layout = "blocks";
-		var animations = true;
-		var windowTitles = true;
-		var compact = false;
-		var dark = false;
-		var tabactions = true;
-		var badge = true;
-		var sessionsFeature = false;
-		var hideWindows = false;
-		var filterTabs = false;
-		var tabLimit = 0;
-		var openInOwnTab = false;
-		var tabWidth = 800;
-		var tabHeight = 600;
-
-		if (this.localStorageAvailable()) {
-			if (!localStorage["layout"]) localStorage["layout"] = "blocks";
-			if (typeof localStorage["tabLimit"] === "undefined")
-				localStorage["tabLimit"] = "0";
-			if (typeof localStorage["openInOwnTab"] === "undefined")
-				localStorage["openInOwnTab"] = "0";
-			if (typeof localStorage["tabWidth"] === "undefined")
-				localStorage["tabWidth"] = "800";
-			if (typeof localStorage["tabHeight"] === "undefined")
-				localStorage["tabHeight"] = "600";
-			if (typeof localStorage["animations"] === "undefined")
-				localStorage["animations"] = "1";
-			if (typeof localStorage["windowTitles"] === "undefined")
-				localStorage["windowTitles"] = "1";
-			if (typeof localStorage["compact"] === "undefined")
-				localStorage["compact"] = "0";
-			if (typeof localStorage["dark"] === "undefined")
-				localStorage["dark"] = "0";
-			if (typeof localStorage["tabactions"] === "undefined")
-				localStorage["tabactions"] = "1";
-			if (typeof localStorage["badge"] === "undefined")
-				localStorage["badge"] = "1";
-			if (typeof localStorage["sessionsFeature"] === "undefined")
-				localStorage["sessionsFeature"] = "0";
-			if (typeof localStorage["hideWindows"] === "undefined")
-				localStorage["hideWindows"] = "0";
-			if (typeof localStorage["filter-tabs"] === "undefined")
-				localStorage["filter-tabs"] = "0";
-			if (typeof localStorage["version"] === "undefined")
-				localStorage["version"] = __VERSION__;
-
-			layout = localStorage["layout"];
-			tabLimit = JSON.parse(localStorage["tabLimit"]);
-			tabWidth = JSON.parse(localStorage["tabWidth"]);
-			tabHeight = JSON.parse(localStorage["tabHeight"]);
-			openInOwnTab = this.toBoolean(localStorage["openInOwnTab"]);
-			animations = this.toBoolean(localStorage["animations"]);
-			windowTitles = this.toBoolean(localStorage["windowTitles"]);
-			compact = this.toBoolean(localStorage["compact"]);
-			dark = this.toBoolean(localStorage["dark"]);
-			tabactions = this.toBoolean(localStorage["tabactions"]);
-			badge = this.toBoolean(localStorage["badge"]);
-			sessionsFeature = this.toBoolean(localStorage["sessionsFeature"]);
-			hideWindows = this.toBoolean(localStorage["hideWindows"]);
-			filterTabs = this.toBoolean(localStorage["filter-tabs"]);
-		}
-
-		if (dark) {
-			document.body.className = "dark";
-		} else {
-			document.body.className = "";
-		}
-
-		// var closeTimeout = setTimeout(function () {
-		//  window.close();
-		// }, 100000);
-		var closeTimeout;
-		/** @type NodeJS.Timeout | number | undefined */
-		var resetTimeout;
-
-		this.state = {
-			layout: layout,
-			animations: animations,
-			windowTitles: windowTitles,
-			tabLimit: tabLimit,
-			openInOwnTab: openInOwnTab,
-			tabWidth: tabWidth,
-			tabHeight: tabHeight,
-			compact: compact,
-			dark: dark,
-			tabactions: tabactions,
-			badge: badge,
-			hideWindows: hideWindows,
-			sessionsFeature: sessionsFeature,
-			lastOpenWindow: -1,
-			/** @type any[] */
-			windows: [],
-			/** @type any[] */
-			sessions: [],
-			selection: {},
-			/** @type string | boolean */
-			lastSelect: false,
-			hiddenTabs: {},
-			tabsbyid: {},
-			windowsbyid: {},
-			closeTimeout: closeTimeout,
-			resetTimeout: resetTimeout,
-			height: 600,
-			hasScrollBar: false,
-			focusUpdates: 0,
-			topText: "",
-			bottomText: "",
-			lastDirection: false,
-			optionsActive: !!this.props.optionsActive,
-			filterTabs: filterTabs,
-			dupTabs: false,
-			colorsActive: false,
-		};
+		this.state = {};
 
 		this.addWindow = this.addWindow.bind(this);
 		this.animationsText = this.animationsText.bind(this);
@@ -190,6 +79,118 @@ export default class TabManager extends Component {
 		this.update = this.update.bind(this);
 		this.windowTitlesText = this.windowTitlesText.bind(this);
 	}
+	async initState() {
+		var layout = "blocks";
+		var animations = true;
+		var windowTitles = true;
+		var compact = false;
+		var dark = false;
+		var tabactions = true;
+		var badge = true;
+		var sessionsFeature = false;
+		var hideWindows = false;
+		var filterTabs = false;
+		var tabLimit = 0;
+		var openInOwnTab = false;
+		var tabWidth = 800;
+		var tabHeight = 600;
+
+		if (!(await getItem("layout"))) await setItem("layout", "blocks");
+		if (typeof (await getItem("tabLimit")) === "undefined")
+			await setItem("tabLimit", 0);
+		if (typeof (await getItem("tabWidth")) === "undefined")
+			await setItem("tabWidth", 800);
+		if (typeof (await getItem("tabHeight")) === "undefined")
+			await setItem("tabHeight", 600);
+		if (typeof (await getItem("animations")) === "undefined")
+			await setItem("animations", 1);
+		if (typeof (await getItem("windowTitles")) === "undefined")
+			await setItem("windowTitles", 1);
+		if (typeof (await getItem("compact")) === "undefined")
+			await setItem("compact", 0);
+		if (typeof (await getItem("dark")) === "undefined")
+			await setItem("dark", 0);
+		if (typeof (await getItem("tabactions")) === "undefined")
+			await setItem("tabactions", 1);
+		if (typeof (await getItem("badge")) === "undefined")
+			await setItem("badge", 1);
+		if (typeof (await getItem("sessionsFeature")) === "undefined")
+			await setItem("sessionsFeature", 0);
+		if (typeof (await getItem("hideWindows")) === "undefined")
+			await setItem("hideWindows", 0);
+		if (typeof (await getItem("filter-tabs")) === "undefined")
+			await setItem("filter-tabs", 0);
+		if (typeof (await getItem("version")) === "undefined")
+			await setItem("version", __VERSION__);
+
+		layout = await getItem("layout");
+		tabLimit = await getItem("tabLimit");
+		tabWidth = await getItem("tabWidth");
+		tabHeight = await getItem("tabHeight");
+		openInOwnTab = (await getItem("openInOwnTab")) ?? false;
+		animations = this.toBoolean(await getItem("animations"));
+		windowTitles = this.toBoolean(await getItem("windowTitles"));
+		compact = this.toBoolean(await getItem("compact"));
+		dark = this.toBoolean(await getItem("dark"));
+		tabactions = this.toBoolean(await getItem("tabactions"));
+		badge = this.toBoolean(await getItem("badge"));
+		sessionsFeature = this.toBoolean(await getItem("sessionsFeature"));
+		hideWindows = this.toBoolean(await getItem("hideWindows"));
+		filterTabs = this.toBoolean(await getItem("filter-tabs"));
+
+		if (dark) {
+			document.body.className = "dark";
+		} else {
+			document.body.className = "";
+		}
+
+		// var closeTimeout = setTimeout(function () {
+		//  window.close();
+		// }, 100000);
+		var closeTimeout;
+		/** @type NodeJS.Timeout | number | undefined */
+		var resetTimeout;
+
+		this.setState({
+			inited: true,
+			layout: layout,
+			animations: animations,
+			windowTitles: windowTitles,
+			tabLimit: tabLimit,
+			openInOwnTab: openInOwnTab,
+			tabWidth: tabWidth,
+			tabHeight: tabHeight,
+			compact: compact,
+			dark: dark,
+			tabactions: tabactions,
+			badge: badge,
+			hideWindows: hideWindows,
+			sessionsFeature: sessionsFeature,
+			lastOpenWindow: -1,
+			/** @type any[] */
+			windows: [],
+			/** @type any[] */
+			sessions: [],
+			selection: {},
+			/** @type string | boolean */
+			lastSelect: false,
+			hiddenTabs: {},
+			tabsbyid: {},
+			windowsbyid: {},
+			closeTimeout: closeTimeout,
+			resetTimeout: resetTimeout,
+			height: 600,
+			hasScrollBar: false,
+			focusUpdates: 0,
+			topText: "",
+			bottomText: "",
+			lastDirection: false,
+			optionsActive: !!this.props.optionsActive,
+			filterTabs: filterTabs,
+			dupTabs: false,
+			colorsActive: false,
+		});
+	}
 	hoverHandler(tab) {
 		this.setState({ topText: tab.title });
 		this.setState({ bottomText: tab.url });
@@ -224,6 +225,8 @@ export default class TabManager extends Component {
 		this.forceUpdate();
 	}
 	render() {
+		if (!this.state.inited) return <></>;
+
 		var _this = this;
 
 		var hiddenCount = this.state.hiddenCount || 0;
@@ -690,7 +693,10 @@ export default class TabManager extends Component {
 			</div>
 		);
 	}
-	componentDidMount() {
+	async componentDidMount() {
+		console.log(12789);
+		await this.initState();
+
 		var runUpdate = debounce(this.update, 250);
 		runUpdate = runUpdate.bind(this);
 
@@ -797,13 +803,10 @@ export default class TabManager extends Component {
 	}
 	async update() {
 		var windows = await browser.windows.getAll({ populate: true });
+		const windowsAge = (await getItem("windowAge")) ?? {};
 		windows.sort(function (a, b) {
-			var windows = [];
-			if (!!localStorage["windowAge"]) {
-				windows = JSON.parse(localStorage["windowAge"]);
-			}
-			var aSort = windows.indexOf(a.id);
-			var bSort = windows.indexOf(b.id);
+			var aSort = windowsAge.indexOf(a.id);
+			var bSort = windowsAge.indexOf(b.id);
 			if (a.state == "minimized" && b.state != "minimized") return 1;
 			if (b.state == "minimized" && a.state != "minimized") return -1;
 			if (aSort < bSort) return -1;
@@ -1474,13 +1477,13 @@ export default class TabManager extends Component {
 	}
 	changelayout() {
 		if (this.state.layout == "blocks") {
-			localStorage["layout"] = this.state.layout = "blocks-big";
+			void setItem("layout", (this.state.layout = "blocks-big"));
 		} else if (this.state.layout == "blocks-big") {
-			localStorage["layout"] = this.state.layout = "horizontal";
+			void setItem("layout", (this.state.layout = "horizontal"));
 		} else if (this.state.layout == "horizontal") {
-			localStorage["layout"] = this.state.layout = "vertical";
+			void setItem("layout", (this.state.layout = "vertical"));
 		} else {
-			localStorage["layout"] = this.state.layout = "blocks";
+			void setItem("layout", (this.state.layout = "blocks"));
 		}
 		this.setState({
 			topText:
@@ -1731,7 +1734,7 @@ export default class TabManager extends Component {
 	}
 	changeTabLimit(e) {
 		this.state.tabLimit = e.target.value;
-		localStorage["tabLimit"] = JSON.stringify(this.state.tabLimit);
+		void setItem("tabLimit", this.state.tabLimit);
 		this.tabLimitText();
 		this.forceUpdate();
 	}
@@ -1743,7 +1746,7 @@ export default class TabManager extends Component {
 	}
 	changeTabWidth(e) {
 		this.state.tabWidth = e.target.value;
-		localStorage["tabWidth"] = JSON.stringify(this.state.tabWidth);
+		void setItem("tabWidth", this.state.tabWidth);
 		document.body.style.width = this.state.tabWidth + "px";
 		this.tabWidthText();
 		this.forceUpdate();
@@ -1755,7 +1758,7 @@ export default class TabManager extends Component {
 	}
 	changeTabHeight(e) {
 		this.state.tabHeight = e.target.value;
-		localStorage["tabHeight"] = JSON.stringify(this.state.tabHeight);
+		void setItem("tabHeight", this.state.tabHeight);
 		document.body.style.height = this.state.tabHeight + "px";
 		this.tabHeightText();
 		this.forceUpdate();
@@ -1767,7 +1770,7 @@ export default class TabManager extends Component {
 	}
 	toggleAnimations() {
 		this.state.animations = !this.state.animations;
-		localStorage["animations"] = this.state.animations ? "1" : "0";
+		void setItem("animations", this.state.animations ? 1 : 0);
 		this.animationsText();
 		this.forceUpdate();
 	}
@@ -1778,7 +1781,7 @@ export default class TabManager extends Component {
 	}
 	toggleWindowTitles() {
 		this.state.windowTitles = !this.state.windowTitles;
-		localStorage["windowTitles"] = this.state.windowTitles ? "1" : "0";
+		void setItem("windowTitles", this.state.windowTitles ? 1 : 0);
 		this.windowTitlesText();
 		this.forceUpdate();
 	}
@@ -1789,7 +1792,7 @@ export default class TabManager extends Component {
 	}
 	toggleCompact() {
 		this.state.compact = !this.state.compact;
-		localStorage["compact"] = this.state.compact ? "1" : "0";
+		void setItem("compact", this.state.compact ? 1 : 0);
 		this.compactText();
 		this.forceUpdate();
 	}
@@ -1801,7 +1804,7 @@ export default class TabManager extends Component {
 	}
 	toggleDark() {
 		this.state.dark = !this.state.dark;
-		localStorage["dark"] = this.state.dark ? "1" : "0";
+		void setItem("dark", this.state.dark ? 1 : 0);
 		this.darkText();
 		if (this.state.dark) {
 			document.body.className = "dark";
@@ -1818,7 +1821,7 @@ export default class TabManager extends Component {
 	}
 	toggleTabActions() {
 		this.state.tabactions = !this.state.tabactions;
-		localStorage["tabactions"] = this.state.tabactions ? "1" : "0";
+		void setItem("tabactions", this.state.tabactions ? 1 : 0);
 		this.tabActionsText();
 		this.forceUpdate();
 	}
@@ -1830,10 +1833,11 @@ export default class TabManager extends Component {
 	}
 	async toggleBadge() {
 		this.state.badge = !this.state.badge;
-		localStorage["badge"] = this.state.badge ? "1" : "0";
+		await setItem("badge", this.state.badge ? 1 : 0);
 		this.badgeText();
-		var backgroundPage = await browser.runtime.getBackgroundPage();
-		backgroundPage.updateTabCount();
+
+		await sendMessage("update_tab_count", {}, "background");
+
 		this.forceUpdate();
 	}
 	badgeText() {
@@ -1842,11 +1846,11 @@ export default class TabManager extends Component {
 				"Shows the number of open tabs on the Tab Manager icon. Default : on",
 		});
 	}
-	toggleOpenInOwnTab() {
+	async toggleOpenInOwnTab() {
 		this.state.openInOwnTab = !this.state.openInOwnTab;
-		localStorage["openInOwnTab"] = this.state.openInOwnTab ? "1" : "0";
+		await setItem("openInOwnTab", this.state.openInOwnTab);
 		this.openInOwnTabText();
-		browser.runtime.sendMessage({ command: "reload_popup_controls" });
+		await sendMessage("reload_popup_controls", {}, "background");
 		this.forceUpdate();
 	}
 	openInOwnTabText() {
@@ -1857,9 +1861,7 @@ export default class TabManager extends Component {
 	}
 	toggleSessions() {
 		this.state.sessionsFeature = !this.state.sessionsFeature;
-		localStorage["sessionsFeature"] = this.state.sessionsFeature
-			? "1"
-			: "0";
+		void setItem("sessionsFeature", this.state.sessionsFeature ? 1 : 0);
 		this.sessionsText();
 		this.forceUpdate();
 	}
@@ -1995,7 +1997,7 @@ export default class TabManager extends Component {
 		} else {
 			this.state.hideWindows = false;
 		}
-		localStorage["hideWindows"] = this.state.hideWindows ? "1" : "0";
+		await setItem("hideWindows", this.state.hideWindows ? 1 : 0);
 		this.hideText();
 		this.forceUpdate();
 	}
@@ -2007,7 +2009,7 @@ export default class TabManager extends Component {
 	}
 	toggleFilterMismatchedTabs() {
 		this.state.filterTabs = !this.state.filterTabs;
-		localStorage["filter-tabs"] = this.state.filterTabs ? "1" : "0";
+		void setItem("filter-tabs", this.state.filterTabs ? 1 : 0);
 		this.forceUpdate();
 	}
 	getTip() {
@@ -2025,23 +2027,7 @@ export default class TabManager extends Component {
 		return "Tip: " + tips[Math.floor(Math.random() * tips.length)];
 	}
 	toBoolean(str) {
-		if (typeof str === "undefined" || str === null) {
-			return false;
-		} else if (typeof str === "string") {
-			switch (str.toLowerCase()) {
-				case "false":
-				case "no":
-				case "0":
-				case "":
-					return false;
-				default:
-					return true;
-			}
-		} else if (typeof str === "number") {
-			return str !== 0;
-		} else {
-			return true;
-		}
+		return !!str;
 	}
 	localStorageAvailable() {
 		var test = "test";

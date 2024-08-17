@@ -2,6 +2,7 @@
 import React from "react"
 import ReactDOM from "react-dom"
 import TabManager from "./TabManager"
+import { getItem, setItem } from "./storage";
 
 window.loaded = false;
 if (window.location.search.indexOf("?popup") > -1) {
@@ -28,18 +29,18 @@ setTimeout(loadApp, 3000);
 setTimeout(loadApp, 5000);
 setTimeout(loadApp, 15000);
 
-function loadApp() {
+async function loadApp() {
 	if (!!window.loaded) return;
 	if (window.inPopup) {
-		if (!!localStorage["tabHeight"]) {
-			var height = JSON.parse(localStorage["tabHeight"]);
-			document.body.style.height = height + "px";
-		}
+		const tabHeight = await getItem("tabHeight")
+		if (tabHeight) 
+			document.body.style.height = tabHeight + "px";
+		
 
-		if (!!localStorage["tabWidth"]) {
-			var width = JSON.parse(localStorage["tabWidth"]);
-			document.body.style.width = width + "px";
-		}
+		const tabWidth = await getItem("tabWidth")
+		if (tabWidth) 
+			document.body.style.width = tabWidth + "px";
+		
 
 		var root = document.getElementById("root");
 		if (root != null) {
