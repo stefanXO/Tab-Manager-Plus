@@ -1,4 +1,8 @@
-"use strict";
+
+import React from "react"
+import ReactDOM from "react-dom"
+import TabManager from "./TabManager"
+
 window.loaded = false;
 if (window.location.search.indexOf("?popup") > -1) {
 	window.inPopup = true;
@@ -69,7 +73,7 @@ function loadApp() {
 
 	if (!!window.loaded) return;
 	window.loaded = true;
-	ReactDOM.render(<TabManager optionsActive={!!window.optionPage} />, document.getElementById("TMP"));
+	ReactDOM.render(<TabManager optionsActive={window.isOption} />, document.getElementById("TMP"));
 }
 
 window.addEventListener("contextmenu", function (e) {e.preventDefault();});

@@ -8,8 +8,8 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "watch": "npx babel --watch lib --out-dir outlib",
-    "build": "babel lib --out-dir outlib"
+    "watch": "esbuild lib/*.js lib/popup.jsx --outdir=outlib --bundle --banner:js=\"(typeof self.window === 'undefined' ? self.window = self : void 0);\" --watch",
+    "build": "esbuild lib/*.js lib/popup.jsx --outdir=outlib --bundle --minify --banner:js=\"(typeof self.window === 'undefined' ? self.window = self : void 0);\""
   },
   "repository": {
     "type": "git",
@@ -22,17 +22,9 @@
   },
   "homepage": "https://github.com/stefanXO/Tab-Manager#readme",
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.3",
-    "babel-plugin-inline-replace-variables": "^1.3.1",
-    "babel-plugin-transform-async-to-generator": "^6.24.1",
-    "babel-plugin-transform-react-createelement-to-jsx": "^1.1.0",
-    "babel-preset-browser": "^1.0.1",
-    "babel-preset-es2015": "^6.24.1",
-    "babel-preset-es2017": "^6.24.1",
-    "babel-preset-react": "^6.24.1",
-    "babel-preset-react-app": "^3.1.2",
-    "crx3": "^1.1.2"
+    "crx3": "^1.1.2",
+    "esbuild": "^0.23.1",
+    "tsx": "^4.17.0"
   },
-  "dependencies": {}
+  "dependencies": { "react": "16.11.0", "react-dom": "16.11.0", "webext-bridge": "^6.0.1", "webextension-polyfill": "^0.12.0" }
 }

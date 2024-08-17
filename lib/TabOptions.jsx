@@ -1,22 +1,26 @@
-"use strict";
 
-class TabOptions extends React.Component {
+import React, { Component } from "react"
+import { version as __VERSION__ } from "../manifest.json"
+import browser from "webextension-polyfill"
+
+export default class TabOptions extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {};
 	}
 	logo() {
-		var logo = [<img src="images/browsers.svg" style={{ maxWidth: "3rem" }} />, <h2>Tab Manager Plus {__VERSION__}</h2>];
-
 		return (
-			<div className="logo-options">
-				<div className="logo-box">{logo}</div>
+			<div className="logo-options" key="logo">
+				<div className="logo-box">
+					<img src="images/browsers.svg" style={{ maxWidth: "3rem" }} />
+					<h2>Tab Manager Plus {__VERSION__}</h2>
+				</div>
 			</div>
 		);
 	}
 	optionsSection() {
 		var opts = [
-			<div className="optionsBox">
+			<div className="optionsBox" key="0">
 				<h4>Tab options</h4>
 				<div className="toggle-box">
 					<input
@@ -40,7 +44,7 @@ class TabOptions extends React.Component {
 					</div>
 				</div>
 			</div>,
-			<div className="optionsBox">
+			<div className="optionsBox" key="1">
 				<h4>Popup size</h4>
 				<div className="option-description">
 					You can resize the popup here up to a maximum size of 800x600. This limitation is a browser limitation, and we cannot display a bigger popup due to
@@ -82,7 +86,7 @@ class TabOptions extends React.Component {
 					<label onMouseEnter={this.props.tabHeightText} htmlFor="enable_tabHeight" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
 				</div>
 			</div>,
-			<div className="optionsBox">
+			<div className="optionsBox" key="2">
 				<h4>Window style</h4>
 				<div className="toggle-box">
 					<div className="toggle">
@@ -165,7 +169,7 @@ class TabOptions extends React.Component {
 					</div>
 				</div>
 			</div>,
-			<div className="optionsBox">
+			<div className="optionsBox" key="3">
 				<h4>Session Management</h4>
 				<div className="toggle-box">
 					<div className="toggle">
@@ -222,7 +226,7 @@ class TabOptions extends React.Component {
 					</div>
 				</div>}
 			</div>,
-			<div className="optionsBox">
+			<div className="optionsBox" key="4">
 				<h4>Popup icon</h4>
 				<div className="toggle-box">
 					<div className="toggle">
@@ -267,7 +271,7 @@ class TabOptions extends React.Component {
 					</div>
 				</div>
 			</div>,
-			<div className="optionsBox">
+			<div className="optionsBox" key="5">
 				<h4>Window settings</h4>
 				<div className="toggle-box">
 					<div className="toggle">
@@ -313,7 +317,7 @@ class TabOptions extends React.Component {
 					</div>
 				</div>
 			</div>,
-			<div className="optionsBox">
+			<div className="optionsBox" key="6">
 				<h4>Advanced settings</h4>
 				<div className="toggle-box">
 					<div className="toggle-box">
@@ -332,7 +336,7 @@ class TabOptions extends React.Component {
 					<div className="option-description">If you want to disable or change the shortcut key with which to open Tab Manager Plus, you can do so here.</div>
 				</div>
 			</div>,
-			<div className="optionsBox">
+			<div className="optionsBox" key="7">
 				<div className="toggle-box">
 					<h4>Right mouse button</h4>
 					<div className="option-description">With the right mouse button you can select tabs</div>
@@ -350,7 +354,7 @@ class TabOptions extends React.Component {
 			</div>
 		];
 
-		return <div className="toggle-options">{opts}</div>;
+		return <div className="toggle-options" key="options">{opts}</div>;
 	}
 	openIncognitoOptions() {
 		browser.tabs.create({
@@ -363,7 +367,7 @@ class TabOptions extends React.Component {
 	licenses() {
 		var licenses = [];
 		licenses.push(
-			<div className="license">
+			<div className="license" key="0">
 				Tab Manager Plus is based on{" "}
 				<a href="https://github.com/dsc/Tab-Manager" target="_blank" title="Tab-Manager">
 					dsc/Tab-Manager
@@ -397,15 +401,15 @@ class TabOptions extends React.Component {
 			</div>
 		);
 
-		return <div className="licenses">{licenses}</div>;
+		return <div className="licenses" key="license">{licenses}</div>;
 	}
 	render() {
 		var children = [];
 
 		children.push(this.logo());
 		children.push(this.optionsSection());
-		children.push(<div className="clearfix" />);
-		//children.push(React.createElement('h4', {}, this.props.getTip()));
+		children.push(<div className="clearfix" key="clear" />);
+		children.push(React.createElement('h4', { key: "tips" }, this.props.getTip()));
 		children.push(this.licenses());
 
 		return (

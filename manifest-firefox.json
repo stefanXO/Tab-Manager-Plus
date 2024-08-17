@@ -2,7 +2,7 @@
 	"name": "Tab Manager Plus for Firefox",
 	"short_name": "Tab Manager+",
 	"version": "5.2.0",
-	"manifest_version": 2,
+	"manifest_version": 3,
 	"description": "Quickly find open tabs, see all windows in one view, find duplicates and limit tabs per window. The best Tab Manager for Firefox.",
 	"author": "stefanXO",
 	"icons": {
@@ -17,12 +17,11 @@
 		"contextMenus",
 		"storage"
 	],
-	"incognito":"spanning",
 	"background": {
-		"scripts": ["vendor/babel-polyfill.js", "outlib/background.js"],
-		"persistent": true
+		"service_worker": "outlib/background.js",
+		"persistent": false
 	},
-	"browser_action": {
+	"action": {
 		"default_icon": {
 			"16": "images/browsers16.png",
 			"48": "images/browsers48.png",
@@ -39,14 +38,15 @@
 			"128": "images/browsers128.png",
 			"256": "images/browsers256.png"
 		},
-		"default_title" : "Tab Manager Plus",
+		"default_title": "Tab Manager Plus",
 		"default_panel": "popup.html?panel=true"
 	},
 	"options_ui": {
-		"page": "options.html"
+		"page": "options.html",
+		"open_in_tab": true
 	},
 	"commands": {
-		"_execute_browser_action": {
+		"_execute_action": {
 			"suggested_key": {
 				"default": "Ctrl+Shift+M",
 				"windows": "Ctrl+Shift+M",

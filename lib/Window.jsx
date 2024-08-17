@@ -1,6 +1,9 @@
-"use strict";
+import React, { Component } from "react";
+import browser from "webextension-polyfill";
+import Tab from "./Tab";
+import { sendMessage } from "webext-bridge/popup";
 
-class Window extends React.Component {
+export default class TWindow extends Component {
 	constructor(props) {
 		super(props);
 		var colors = localStorage["windowColors"];
@@ -17,7 +20,7 @@ class Window extends React.Component {
 			names = {};
 		}
 		var name = names[this.props.window.id] || "";
-		if(!!this.props.window.titlePreface) {
+		if (!!this.props.window.titlePreface) {
 			name = this.props.window.titlePreface;
 		}
 		this.state = {
@@ -25,7 +28,7 @@ class Window extends React.Component {
 			windowTitles: [],
 			color: color,
 			name: name,
-			tabs: 0
+			tabs: 0,
 		};
 
 		this.addTab = this.addTab.bind(this);
@@ -63,9 +66,16 @@ class Window extends React.Component {
 		var name = names[this.props.window.id] || "";
 		var hideWindow = true;
 		var titleAdded = false;
-		var tabsperrow = this.props.layout.indexOf("blocks") > -1 ? Math.ceil(Math.sqrt(this.props.tabs.length + 2)) : this.props.layout == "vertical" ? 1 : 15;
-		var tabs = this.props.tabs.map(function(tab) {
-			var isHidden = !!_this.props.hiddenTabs[tab.id] && _this.props.filterTabs;
+		var tabsperrow =
+			this.props.layout.indexOf("blocks") > -1
+				? Math.ceil(Math.sqrt(this.props.tabs.length + 2))
+				: this.props.layout == "vertical"
+				? 1
+				: 15;
+		var tabs = this.props.tabs.map(function (tab) {
+			/** @type boolean */
+			var isHidden =
+				!!_this.props.hiddenTabs[tab.id] && _this.props.filterTabs;
 			var isSelected = !!_this.props.selection[tab.id];
 			hideWindow &= isHidden;
 			return (
@@ -92,11 +102,16 @@ class Window extends React.Component {
 		if (!hideWindow) {
 			if (!!this.props.tabactions) {
 				tabs.push(
-					<div className="newliner" />,
-					<div className="window-actions">
+					<div className="newliner" key={"x" + tabs.length} />,
+					<div className="window-actions" key={"y" + tabs.length}>
 						{this.props.sessionsFeature ? (
 							<div
-								className={"icon tabaction save " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+								className={
+									"icon tabaction save " +
+									(this.props.layout.indexOf("blocks") > -1
+										? ""
+										: "windowaction")
+								}
 								title={
 									"Save this window for later\nWill save " +
 									tabs.length +
@@ -109,35 +124,72 @@ class Window extends React.Component {
 							false
 						)}
 						<div
-							className={"icon tabaction add " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+							className={
+								"icon tabaction add " +
+								(this.props.layout.indexOf("blocks") > -1
+									? ""
+									: "windowaction")
+							}
 							title="Open a new tab"
 							onClick={this.addTab}
 							onMouseEnter={this.props.hoverIcon}
 						/>
 						<div
-							className={"icon tabaction colors " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+							className={
+								"icon tabaction colors " +
+								(this.props.layout.indexOf("blocks") > -1
+									? ""
+									: "windowaction")
+							}
 							title="Change window name or color"
 							onClick={this.colors}
 							onMouseEnter={this.props.hoverIcon}
 						/>
 						{this.props.window.state == "minimized" ? (
 							<div
-								className={"icon tabaction maximize " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title={"Maximize this window\nWill maximize " + tabs.length + " tabs"}
+								className={
+									"icon tabaction maximize " +
+									(this.props.layout.indexOf("blocks") > -1
+										? ""
+										: "windowaction")
+								}
+								title={
+									"Maximize this window\nWill maximize " +
+									tabs.length +
+									" tabs"
+								}
 								onClick={this.maximize}
 								onMouseEnter={this.props.hoverIcon}
 							/>
 						) : (
 							<div
-								className={"icon tabaction minimize " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title={"Minimize this window\nWill minimize " + tabs.length + " tabs"}
+								className={
+									"icon tabaction minimize " +
+									(this.props.layout.indexOf("blocks") > -1
+										? ""
+										: "windowaction")
+								}
+								title={
+									"Minimize this window\nWill minimize " +
+									tabs.length +
+									" tabs"
+								}
 								onClick={this.minimize}
 								onMouseEnter={this.props.hoverIcon}
 							/>
 						)}
 						<div
-							className={"icon tabaction close " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-							title={"Close this window\nWill close " + tabs.length + " tabs"}
+							className={
+								"icon tabaction close " +
+								(this.props.layout.indexOf("blocks") > -1
+									? ""
+									: "windowaction")
+							}
+							title={
+								"Close this window\nWill close " +
+								tabs.length +
+								" tabs"
+							}
 							onClick={this.close}
 							onMouseEnter={this.props.hoverIcon}
 						/>
@@ -146,7 +198,15 @@ class Window extends React.Component {
 			}
 			if (this.state.colorActive) {
 				tabs.push(
-					<div className={"window-colors " + (this.state.colorActive ? "" : "hidden")} onClick={this.stop} onKeyDown={this.checkKey}>
+					<div
+						className={
+							"window-colors " +
+							(this.state.colorActive ? "" : "hidden")
+						}
+						onClick={this.stop}
+						onKeyDown={this.checkKey}
+						key="13"
+					>
 						<h2 className="window-x" onClick={this.closePopup}>
 							x
 						</h2>
@@ -156,7 +216,13 @@ class Window extends React.Component {
 							type="text"
 							onChange={this.changeName}
 							value={this.state.name}
-							placeholder={this.state.windowTitles ? this.topEntries(this.state.windowTitles).join("") : "Name window..."}
+							placeholder={
+								this.state.windowTitles
+									? this.topEntries(
+											this.state.windowTitles
+									  ).join("")
+									: "Name window..."
+							}
 							tabIndex="1"
 							ref="namebox"
 							onKeyDown={this.checkKey}
@@ -164,159 +230,367 @@ class Window extends React.Component {
 						<h3 className="center">Pick a color</h3>
 						<div className="colors-box">
 							<div
-								className={"icon tabaction default " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+								className={
+									"icon tabaction default " +
+									(this.props.layout.indexOf("blocks") > -1
+										? ""
+										: "windowaction")
+								}
 								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "default" })}
+								onClick={this.changeColors.bind(this, {
+									colorActive: false,
+									color: "default",
+								})}
 								onMouseEnter={this.props.hoverIcon}
 							/>
 							<div
-								className={"icon tabaction color1 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+								className={
+									"icon tabaction color1 " +
+									(this.props.layout.indexOf("blocks") > -1
+										? ""
+										: "windowaction")
+								}
 								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color1" })}
+								onClick={this.changeColors.bind(this, {
+									colorActive: false,
+									color: "color1",
+								})}
 								onMouseEnter={this.props.hoverIcon}
 							/>
 							<div
-								className={"icon tabaction color2 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+								className={
+									"icon tabaction color2 " +
+									(this.props.layout.indexOf("blocks") > -1
+										? ""
+										: "windowaction")
+								}
 								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color2" })}
+								onClick={this.changeColors.bind(this, {
+									colorActive: false,
+									color: "color2",
+								})}
 								onMouseEnter={this.props.hoverIcon}
 							/>
 							<div
-								className={"icon tabaction color3 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+								className={
+									"icon tabaction color3 " +
+									(this.props.layout.indexOf("blocks") > -1
+										? ""
+										: "windowaction")
+								}
 								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color3" })}
+								onClick={this.changeColors.bind(this, {
+									colorActive: false,
+									color: "color3",
+								})}
 								onMouseEnter={this.props.hoverIcon}
 							/>
 							<div
-								className={"icon tabaction color4 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+								className={
+									"icon tabaction color4 " +
+									(this.props.layout.indexOf("blocks") > -1
+										? ""
+										: "windowaction")
+								}
 								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color4" })}
+								onClick={this.changeColors.bind(this, {
+									colorActive: false,
+									color: "color4",
+								})}
 								onMouseEnter={this.props.hoverIcon}
 							/>
 							<div
-								className={"icon tabaction color5 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+								className={
+									"icon tabaction color5 " +
+									(this.props.layout.indexOf("blocks") > -1
+										? ""
+										: "windowaction")
+								}
 								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color5" })}
+								onClick={this.changeColors.bind(this, {
+									colorActive: false,
+									color: "color5",
+								})}
 								onMouseEnter={this.props.hoverIcon}
 							/>
 							<div
-								className={"icon tabaction color6 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+								className={
+									"icon tabaction color6 " +
+									(this.props.layout.indexOf("blocks") > -1
+										? ""
+										: "windowaction")
+								}
 								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color6" })}
+								onClick={this.changeColors.bind(this, {
+									colorActive: false,
+									color: "color6",
+								})}
 								onMouseEnter={this.props.hoverIcon}
 							/>
 							<div
-								className={"icon tabaction color7 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+								className={
+									"icon tabaction color7 " +
+									(this.props.layout.indexOf("blocks") > -1
+										? ""
+										: "windowaction")
+								}
 								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color7" })}
+								onClick={this.changeColors.bind(this, {
+									colorActive: false,
+									color: "color7",
+								})}
 								onMouseEnter={this.props.hoverIcon}
 							/>
 							<div
-								className={"icon tabaction color8 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+								className={
+									"icon tabaction color8 " +
+									(this.props.layout.indexOf("blocks") > -1
+										? ""
+										: "windowaction")
+								}
 								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color8" })}
+								onClick={this.changeColors.bind(this, {
+									colorActive: false,
+									color: "color8",
+								})}
 								onMouseEnter={this.props.hoverIcon}
 							/>
 							<div
-								className={"icon tabaction color9 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+								className={
+									"icon tabaction color9 " +
+									(this.props.layout.indexOf("blocks") > -1
+										? ""
+										: "windowaction")
+								}
 								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color9" })}
+								onClick={this.changeColors.bind(this, {
+									colorActive: false,
+									color: "color9",
+								})}
 								onMouseEnter={this.props.hoverIcon}
 							/>
 							<div
-								className={"icon tabaction color10 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+								className={
+									"icon tabaction color10 " +
+									(this.props.layout.indexOf("blocks") > -1
+										? ""
+										: "windowaction")
+								}
 								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color10" })}
+								onClick={this.changeColors.bind(this, {
+									colorActive: false,
+									color: "color10",
+								})}
 								onMouseEnter={this.props.hoverIcon}
 							/>
 							<div
-								className={"icon tabaction color11 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+								className={
+									"icon tabaction color11 " +
+									(this.props.layout.indexOf("blocks") > -1
+										? ""
+										: "windowaction")
+								}
 								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color11" })}
+								onClick={this.changeColors.bind(this, {
+									colorActive: false,
+									color: "color11",
+								})}
 								onMouseEnter={this.props.hoverIcon}
 							/>
 							<div
-								className={"icon tabaction color12 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+								className={
+									"icon tabaction color12 " +
+									(this.props.layout.indexOf("blocks") > -1
+										? ""
+										: "windowaction")
+								}
 								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color12" })}
+								onClick={this.changeColors.bind(this, {
+									colorActive: false,
+									color: "color12",
+								})}
 								onMouseEnter={this.props.hoverIcon}
 							/>
 							<div
-								className={"icon tabaction color13 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+								className={
+									"icon tabaction color13 " +
+									(this.props.layout.indexOf("blocks") > -1
+										? ""
+										: "windowaction")
+								}
 								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color13" })}
+								onClick={this.changeColors.bind(this, {
+									colorActive: false,
+									color: "color13",
+								})}
 								onMouseEnter={this.props.hoverIcon}
 							/>
 							<div
-								className={"icon tabaction color14 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+								className={
+									"icon tabaction color14 " +
+									(this.props.layout.indexOf("blocks") > -1
+										? ""
+										: "windowaction")
+								}
 								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color14" })}
+								onClick={this.changeColors.bind(this, {
+									colorActive: false,
+									color: "color14",
+								})}
 								onMouseEnter={this.props.hoverIcon}
 							/>
 							<div
-								className={"icon tabaction color15 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+								className={
+									"icon tabaction color15 " +
+									(this.props.layout.indexOf("blocks") > -1
+										? ""
+										: "windowaction")
+								}
 								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color15" })}
+								onClick={this.changeColors.bind(this, {
+									colorActive: false,
+									color: "color15",
+								})}
 								onMouseEnter={this.props.hoverIcon}
 							/>
 							<div
-								className={"icon tabaction color16 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+								className={
+									"icon tabaction color16 " +
+									(this.props.layout.indexOf("blocks") > -1
+										? ""
+										: "windowaction")
+								}
 								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color16" })}
+								onClick={this.changeColors.bind(this, {
+									colorActive: false,
+									color: "color16",
+								})}
 								onMouseEnter={this.props.hoverIcon}
 							/>
 							<div
-								className={"icon tabaction color17 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+								className={
+									"icon tabaction color17 " +
+									(this.props.layout.indexOf("blocks") > -1
+										? ""
+										: "windowaction")
+								}
 								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color17" })}
+								onClick={this.changeColors.bind(this, {
+									colorActive: false,
+									color: "color17",
+								})}
 								onMouseEnter={this.props.hoverIcon}
 							/>
 							<div
-								className={"icon tabaction color18 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+								className={
+									"icon tabaction color18 " +
+									(this.props.layout.indexOf("blocks") > -1
+										? ""
+										: "windowaction")
+								}
 								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color18" })}
+								onClick={this.changeColors.bind(this, {
+									colorActive: false,
+									color: "color18",
+								})}
 								onMouseEnter={this.props.hoverIcon}
 							/>
 							<div
-								className={"icon tabaction color19 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+								className={
+									"icon tabaction color19 " +
+									(this.props.layout.indexOf("blocks") > -1
+										? ""
+										: "windowaction")
+								}
 								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color19" })}
+								onClick={this.changeColors.bind(this, {
+									colorActive: false,
+									color: "color19",
+								})}
 								onMouseEnter={this.props.hoverIcon}
 							/>
 							<div
-								className={"icon tabaction color20 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+								className={
+									"icon tabaction color20 " +
+									(this.props.layout.indexOf("blocks") > -1
+										? ""
+										: "windowaction")
+								}
 								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color20" })}
+								onClick={this.changeColors.bind(this, {
+									colorActive: false,
+									color: "color20",
+								})}
 								onMouseEnter={this.props.hoverIcon}
 							/>
 							<div
-								className={"icon tabaction color21 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+								className={
+									"icon tabaction color21 " +
+									(this.props.layout.indexOf("blocks") > -1
+										? ""
+										: "windowaction")
+								}
 								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color21" })}
+								onClick={this.changeColors.bind(this, {
+									colorActive: false,
+									color: "color21",
+								})}
 								onMouseEnter={this.props.hoverIcon}
 							/>
 							<div
-								className={"icon tabaction color22 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+								className={
+									"icon tabaction color22 " +
+									(this.props.layout.indexOf("blocks") > -1
+										? ""
+										: "windowaction")
+								}
 								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color22" })}
+								onClick={this.changeColors.bind(this, {
+									colorActive: false,
+									color: "color22",
+								})}
 								onMouseEnter={this.props.hoverIcon}
 							/>
 							<div
-								className={"icon tabaction color23 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+								className={
+									"icon tabaction color23 " +
+									(this.props.layout.indexOf("blocks") > -1
+										? ""
+										: "windowaction")
+								}
 								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color23" })}
+								onClick={this.changeColors.bind(this, {
+									colorActive: false,
+									color: "color23",
+								})}
 								onMouseEnter={this.props.hoverIcon}
 							/>
 							<div
-								className={"icon tabaction color24 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+								className={
+									"icon tabaction color24 " +
+									(this.props.layout.indexOf("blocks") > -1
+										? ""
+										: "windowaction")
+								}
 								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color24" })}
+								onClick={this.changeColors.bind(this, {
+									colorActive: false,
+									color: "color24",
+								})}
 								onMouseEnter={this.props.hoverIcon}
 							/>
 							<div
-								className={"icon tabaction color25 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+								className={
+									"icon tabaction color25 " +
+									(this.props.layout.indexOf("blocks") > -1
+										? ""
+										: "windowaction")
+								}
 								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color25" })}
+								onClick={this.changeColors.bind(this, {
+									colorActive: false,
+									color: "color25",
+								})}
 								onMouseEnter={this.props.hoverIcon}
 							/>
 						</div>
@@ -328,7 +602,11 @@ class Window extends React.Component {
 				if (name) {
 					tabs.unshift(
 						<h3
-							key={"window-" + this.props.window.id + "-windowTitle"}
+							key={
+								"window-" +
+								this.props.window.id +
+								"-windowTitle"
+							}
 							className="editName center windowTitle"
 							onClick={this.colors}
 							title="Change the name of this window"
@@ -339,11 +617,20 @@ class Window extends React.Component {
 					);
 					titleAdded = true;
 				} else {
-					if (this.state.windowTitles.length == 0 || this.state.tabs != tabs.length + this.props.window.id * 99) {
+					if (
+						this.state.windowTitles.length == 0 ||
+						this.state.tabs !=
+							tabs.length + this.props.window.id * 99
+					) {
 						this.state.windowTitles = [];
-						this.state.tabs = tabs.length + this.props.window.id * 99;
+						this.state.tabs =
+							tabs.length + this.props.window.id * 99;
 						for (var i = 0; i < tabs.length; i++) {
-							if (!!tabs[i].props && !!tabs[i].props.tab && !!tabs[i].props.tab.url) {
+							if (
+								!!tabs[i].props &&
+								!!tabs[i].props.tab &&
+								!!tabs[i].props.tab.url
+							) {
 								var url = new URL(tabs[i].props.tab.url);
 								var protocol = url.protocol;
 								var hostname = url.hostname;
@@ -351,11 +638,15 @@ class Window extends React.Component {
 									hostname = tabs[i].props.tab.title;
 								} else if (protocol.indexOf("about") > -1) {
 									hostname = tabs[i].props.tab.title;
-								} else if (hostname.indexOf("mail.google") > -1) {
+								} else if (
+									hostname.indexOf("mail.google") > -1
+								) {
 									hostname = "gmail";
 								} else {
 									hostname = hostname.replace("www.", "");
-									var regex_var = new RegExp(/(\.[^\.]{0,2})(\.[^\.]{0,2})(\.*$)|(\.[^\.]*)(\.*$)/);
+									var regex_var = new RegExp(
+										/(\.[^\.]{0,2})(\.[^\.]{0,2})(\.*$)|(\.[^\.]*)(\.*$)/
+									);
 									hostname = hostname
 										.replace(regex_var, "")
 										.split(".")
@@ -363,7 +654,10 @@ class Window extends React.Component {
 								}
 								if (hostname.length > 18) {
 									hostname = tabs[i].props.tab.title;
-									while (hostname.length > 18 && hostname.indexOf(" ") > -1) {
+									while (
+										hostname.length > 18 &&
+										hostname.indexOf(" ") > -1
+									) {
 										hostname = hostname.split(" ");
 										hostname.pop();
 										hostname = hostname.join(" ");
@@ -377,13 +671,19 @@ class Window extends React.Component {
 					if (this.state.windowTitles.length > 0) {
 						tabs.unshift(
 							<h3
-								key={"window-" + this.props.window.id + "-windowTitle"}
+								key={
+									"window-" +
+									this.props.window.id +
+									"-windowTitle"
+								}
 								className="editName center windowTitle"
 								onClick={this.colors}
 								title="Change the name of this window"
 								onMouseEnter={this.props.hoverIcon}
 							>
-								{this.topEntries(this.state.windowTitles).join("")}
+								{this.topEntries(this.state.windowTitles).join(
+									""
+								)}
 							</h3>
 						);
 						titleAdded = true;
@@ -401,17 +701,30 @@ class Window extends React.Component {
 			var z = -1;
 			for (var j = 0; j < tabs.length; j++) {
 				var tab = tabs[j].props.tab;
-				var isHidden = !!tab && !!tab.id && !!this.props.hiddenTabs[tab.id] && this.props.filterTabs;
-				if(!isHidden) {
+				var isHidden =
+					!!tab &&
+					!!tab.id &&
+					!!this.props.hiddenTabs[tab.id] &&
+					this.props.filterTabs;
+				if (!isHidden) {
 					z++;
 					children.push(tabs[j]);
 				}
-				if ((z + 1) % tabsperrow == 0 && z && this.props.layout.indexOf("blocks") > -1) {
-					children.push(<div className="newliner" />);
+				if (
+					(z + 1) % tabsperrow == 0 &&
+					z &&
+					this.props.layout.indexOf("blocks") > -1
+				) {
+					children.push(
+						<div className="newliner" key={children.length + ""} />
+					);
 				}
 			}
 			var focused = false;
-			if (this.props.window.focused || this.props.lastOpenWindow == this.props.window.id) {
+			if (
+				this.props.window.focused ||
+				this.props.lastOpenWindow == this.props.window.id
+			) {
 				focused = true;
 			}
 			return (
@@ -428,7 +741,9 @@ class Window extends React.Component {
 						" " +
 						color +
 						" " +
-						(this.props.layout.indexOf("blocks") > -1 ? "block" : "") +
+						(this.props.layout.indexOf("blocks") > -1
+							? "block"
+							: "") +
 						" " +
 						this.props.layout +
 						" " +
@@ -438,11 +753,24 @@ class Window extends React.Component {
 					}
 					onDragOver={this.dragOver}
 					onClick={this.windowClick}
-					title={"Focus this window\nWill select this window with " + tabs.length + " tabs"}
+					title={
+						"Focus this window\nWill select this window with " +
+						tabs.length +
+						" tabs"
+					}
 					onMouseEnter={this.props.hoverIcon}
 					onDrop={this.drop}
 				>
-					<div className="windowcontainer" title={"Focus this window\nWill select this window with " + tabs.length + " tabs"}>{children}</div>
+					<div
+						className="windowcontainer"
+						title={
+							"Focus this window\nWill select this window with " +
+							tabs.length +
+							" tabs"
+						}
+					>
+						{children}
+					</div>
 				</div>
 			);
 		} else {
@@ -472,36 +800,45 @@ class Window extends React.Component {
 	}
 	async windowClick(e) {
 		this.stopProp(e);
-		var backgroundPage = await browser.runtime.getBackgroundPage();
 		var windowId = this.props.window.id;
-		if (navigator.userAgent.search("Firefox") > -1) {
-			backgroundPage.focusOnWindowDelayed(windowId);
-		}else{
-			backgroundPage.focusOnWindow(windowId);
-		}
+
+		await sendMessage(
+			"focus_on_window",
+			{
+				windowId,
+				isFirefox: navigator.userAgent.search("Firefox") > -1,
+			},
+			"background"
+		);
+
 		this.props.parentUpdate();
 		if (!!window.inPopup) window.close();
 		return false;
 	}
 	selectToFromTab(tabId) {
-		if(tabId) this.props.selectTo(tabId, this.props.tabs);
+		if (tabId) this.props.selectTo(tabId, this.props.tabs);
 	}
 	close(e) {
 		this.stopProp(e);
 		browser.windows.remove(this.props.window.id);
 	}
 	uuidv4() {
-		return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
-			var r = (Math.random() * 16) | 0,
-				v = c == "x" ? r : (r & 0x3) | 0x8;
-			return v.toString(16);
-		});
+		return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+			/[xy]/g,
+			function (c) {
+				var r = (Math.random() * 16) | 0,
+					v = c == "x" ? r : (r & 0x3) | 0x8;
+				return v.toString(16);
+			}
+		);
 	}
 	async save(e) {
 		this.stopProp(e);
 
 		console.log("session name", this.state.name);
-		var sessionName = this.state.name || this.topEntries(this.state.windowTitles).join("");
+		var sessionName =
+			this.state.name ||
+			this.topEntries(this.state.windowTitles).join("");
 		console.log("session name", sessionName);
 
 		var session = {
@@ -510,7 +847,7 @@ class Window extends React.Component {
 			name: sessionName,
 			date: Date.now(),
 			sessionStartTime: Date.now(),
-			id: this.uuidv4()
+			id: this.uuidv4(),
 		};
 
 		if (this.state.name) {
@@ -541,28 +878,31 @@ class Window extends React.Component {
 		obj[session.id] = session;
 		console.log(obj);
 
-		var value = await browser.storage.local.set(obj).catch(function(err) {
+		var value = await browser.storage.local.set(obj).catch(function (err) {
 			console.log(err);
 			console.error(err.message);
 		});
 		this.props.parentUpdate();
 		console.log("Value is set to " + value);
 
-		setTimeout(function() {
-			this.props.scrollTo("session", session.id);
-		}.bind(this), 250);
+		setTimeout(
+			function () {
+				this.props.scrollTo("session", session.id);
+			}.bind(this),
+			250
+		);
 	}
 	async minimize(e) {
 		this.stopProp(e);
 		await browser.windows.update(this.props.window.id, {
-			state: "minimized"
+			state: "minimized",
 		});
 		this.props.parentUpdate();
 	}
 	async maximize(e) {
 		this.stopProp(e);
 		await browser.windows.update(this.props.window.id, {
-			state: "normal"
+			state: "normal",
 		});
 		this.props.parentUpdate();
 	}
@@ -570,13 +910,16 @@ class Window extends React.Component {
 		this.stopProp(e);
 		this.props.toggleColors(!this.state.colorActive, this.props.window.id);
 		this.setState({
-			colorActive: !this.state.colorActive
+			colorActive: !this.state.colorActive,
 		});
-		setTimeout(function() {
-			if(this.state.colorActive) {
-				this.refs.namebox.focus();
-			}
-		}.bind(this), 250);
+		setTimeout(
+			function () {
+				if (this.state.colorActive) {
+					this.refs.namebox.focus();
+				}
+			}.bind(this),
+			250
+		);
 	}
 	changeColors(a) {
 		this.setState(a);
@@ -592,14 +935,14 @@ class Window extends React.Component {
 	closePopup() {
 		this.props.toggleColors(!this.state.colorActive, this.props.window.id);
 		this.setState({
-			colorActive: !this.state.colorActive
+			colorActive: !this.state.colorActive,
 		});
 		this.props.parentUpdate();
 	}
 	async changeName(e) {
 		// this.setState(a);
 		var name = "";
-		if(e && e.target && e.target.value) name = e.target.value;
+		if (e && e.target && e.target.value) name = e.target.value;
 
 		var names = localStorage["windowNames"];
 		if (!!names) {
@@ -610,26 +953,26 @@ class Window extends React.Component {
 		names[this.props.window.id] = name;
 		localStorage["windowNames"] = JSON.stringify(names);
 		this.setState({
-			name: name
+			name: name,
 		});
 		if (navigator.userAgent.search("Firefox") > -1) {
-			if(!!name) {
+			if (!!name) {
 				browser.windows.update(this.props.window.id, {
-					titlePreface: name + " - "
+					titlePreface: name + " - ",
 				});
-			}else{
+			} else {
 				browser.windows.update(this.props.window.id, {
-					titlePreface: name
+					titlePreface: name,
 				});
 			}
 		}
 	}
 	topEntries(arr) {
-		var cnts = arr.reduce(function(obj, val) {
+		var cnts = arr.reduce(function (obj, val) {
 			obj[val] = (obj[val] || 0) + 1;
 			return obj;
 		}, {});
-		var sorted = Object.keys(cnts).sort(function(a, b) {
+		var sorted = Object.keys(cnts).sort(function (a, b) {
 			return cnts[b] - cnts[a];
 		});
 
@@ -652,11 +995,11 @@ class Window extends React.Component {
 		return sorted;
 	}
 	stopProp(e) {
-		if(e && e.nativeEvent) {
+		if (e && e.nativeEvent) {
 			e.nativeEvent.preventDefault();
 			e.nativeEvent.stopPropagation();
 		}
-		if(e && e.preventDefault) {
+		if (e && e.preventDefault) {
 			e.preventDefault();
 			e.stopPropagation();
 		}

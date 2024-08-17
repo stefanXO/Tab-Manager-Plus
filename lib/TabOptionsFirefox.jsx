@@ -1,6 +1,9 @@
-"use strict";
 
-class TabOptions extends React.Component {
+import React, { Component } from "react"
+import { version as __VERSION__ } from "../manifest.json"
+import browser from "webextension-polyfill"
+
+export default class TabOptions extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {};

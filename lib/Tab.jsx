@@ -1,10 +1,13 @@
-"use strict";
+import React, { Component } from "react";
+import ReactDOM from "react-dom";
+import browser from "webextension-polyfill";
+import { sendMessage } from "webext-bridge/popup";
 
-class Tab extends React.Component {
+export default class Tab extends Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			favIcon: ""
+			favIcon: "",
 		};
 
 		this.onHover = this.onHover.bind(this);
@@ -15,26 +18,41 @@ class Tab extends React.Component {
 		this.dragOut = this.dragOut.bind(this);
 		this.drop = this.drop.bind(this);
 		this.resolveFavIconUrl = this.resolveFavIconUrl.bind(this);
-
 	}
-	componentWillMount() {
+	componentDidMount() {
 		this.resolveFavIconUrl();
 	}
 	render() {
 		var children = [];
 		if (this.props.layout == "vertical") {
 			children.push(
-				<div key={"tab-pinned-" + this.props.tab.id} className={"tab-pinned " + (!this.props.tab.pinned ? "hidden" : "")}>
+				<div
+					key={"tab-pinned-" + this.props.tab.id}
+					className={
+						"tab-pinned " + (!this.props.tab.pinned ? "hidden" : "")
+					}
+				>
 					Pinned
 				</div>
 			);
 			children.push(
-				<div key={"tab-highlighted-" + this.props.tab.id} className={"tab-highlighted " + (!this.props.tab.highlighted ? "hidden" : "")}>
+				<div
+					key={"tab-highlighted-" + this.props.tab.id}
+					className={
+						"tab-highlighted " +
+						(!this.props.tab.highlighted ? "hidden" : "")
+					}
+				>
 					Active
 				</div>
 			);
 			children.push(
-				<div key={"tab-selected-" + this.props.tab.id} className={"tab-selected " + (!this.props.selected ? "hidden" : "")}>
+				<div
+					key={"tab-selected-" + this.props.tab.id}
+					className={
+						"tab-selected " + (!this.props.selected ? "hidden" : "")
+					}
+				>
 					Selected
 				</div>
 			);
@@ -43,12 +61,15 @@ class Tab extends React.Component {
 					key={"tab-icon-" + this.props.tab.id}
 					className="iconoverlay "
 					style={{
-						backgroundImage: this.state.favIcon
+						backgroundImage: this.state.favIcon,
 					}}
 				/>
 			);
 			children.push(
-				<div key={"tab-title-" + this.props.tab.id} className="tabtitle">
+				<div
+					key={"tab-title-" + this.props.tab.id}
+					className="tabtitle"
+				>
 					{this.props.tab.title}
 				</div>
 			);
@@ -61,7 +82,9 @@ class Tab extends React.Component {
 				(this.props.tab.pinned ? "pinned " : "") +
 				(this.props.tab.highlighted ? "highlighted " : "") +
 				(this.props.hidden ? "hidden " : "") +
-				((this.props.tab.mutedInfo && this.props.tab.mutedInfo.muted) ? "muted " : "") +
+				(this.props.tab.mutedInfo && this.props.tab.mutedInfo.muted
+					? "muted "
+					: "") +
 				(this.props.tab.audible ? "audible " : "") +
 				(this.props.tab.discarded ? "discarded " : "") +
 				(this.props.layout == "vertical" ? "full " : "") +
@@ -72,17 +95,15 @@ class Tab extends React.Component {
 				this.props.tab.id +
 				" " +
 				(this.props.layout == "vertical" ? "vertical " : "blocks "),
-			style: 
-				(this.props.layout == "vertical"
-					? { }
-					: { backgroundImage: this.state.favIcon }
-				)
-			,
+			style:
+				this.props.layout == "vertical"
+					? {}
+					: { backgroundImage: this.state.favIcon },
 			id: this.props.id,
 			title: this.props.tab.title,
 			onClick: this.click,
 			onMouseDown: this.onMouseDown,
-			onMouseEnter: this.onHover
+			onMouseEnter: this.onHover,
 		};
 
 		if (!!this.props.drag) {
@@ -118,20 +139,35 @@ class Tab extends React.Component {
 
 		if (e.button === 1) {
 			this.props.middleClick(tabId);
-		} else if (e.button === 2 || e.nativeEvent.metaKey || e.nativeEvent.altKey || e.nativeEvent.shiftKey || e.nativeEvent.ctrlKey) {
+		} else if (
+			e.button === 2 ||
+			e.nativeEvent.metaKey ||
+			e.nativeEvent.altKey ||
+			e.nativeEvent.shiftKey ||
+			e.nativeEvent.ctrlKey
+		) {
 			e.preventDefault();
-			if (e.button === 2 && (e.nativeEvent.metaKey || e.nativeEvent.altKey || e.nativeEvent.shiftKey || e.nativeEvent.ctrlKey)) {
+			if (
+				e.button === 2 &&
+				(e.nativeEvent.metaKey ||
+					e.nativeEvent.altKey ||
+					e.nativeEvent.shiftKey ||
+					e.nativeEvent.ctrlKey)
+			) {
 				this.props.selectTo(tabId);
 			} else {
 				this.props.select(tabId);
 			}
 		} else {
-			var backgroundPage = await browser.runtime.getBackgroundPage();
-			if (navigator.userAgent.search("Firefox") > -1) {
-				backgroundPage.focusOnTabAndWindowDelayed({ id: tabId, windowId: windowId });
-			}else{
-				backgroundPage.focusOnTabAndWindow({ id: tabId, windowId: windowId });
-			}
+			await sendMessage(
+				"focus_on_tab_and_window",
+				{
+					tab: { id: tabId, windowId },
+					isFirefox: navigator.userAgent.search("Firefox") > -1,
+				},
+				"background"
+			);
+
 			if (!!window.inPopup) window.close();
 		}
 		return false;
@@ -150,9 +186,17 @@ class Tab extends React.Component {
 		if (!this.props.drag) return;
 		var before = this.state.draggingOver;
 		if (this.props.layout == "vertical") {
-			this.state.draggingOver = e.nativeEvent.offsetY > ReactDOM.findDOMNode(this).clientHeight / 2 ? "bottom" : "top";
+			this.state.draggingOver =
+				e.nativeEvent.offsetY >
+				ReactDOM.findDOMNode(this).clientHeight / 2
+					? "bottom"
+					: "top";
 		} else {
-			this.state.draggingOver = e.nativeEvent.offsetX > ReactDOM.findDOMNode(this).clientWidth / 2 ? "right" : "left";
+			this.state.draggingOver =
+				e.nativeEvent.offsetX >
+				ReactDOM.findDOMNode(this).clientWidth / 2
+					? "right"
+					: "left";
 		}
 		if (before != this.state.draggingOver) this.forceUpdate();
 	}
@@ -164,7 +208,9 @@ class Tab extends React.Component {
 	drop(e) {
 		if (!!this.props.drop) {
 			this.stopProp(e);
-			var before = this.state.draggingOver == "top" || this.state.draggingOver == "left";
+			var before =
+				this.state.draggingOver == "top" ||
+				this.state.draggingOver == "left";
 			delete this.state.draggingOver;
 			this.props.drop(this.props.tab.id, before);
 		} else {
@@ -179,7 +225,10 @@ class Tab extends React.Component {
 		// 	image = await browser.tabs.captureTab(this.props.tab.id);
 		// 	image = "url(" + image + ")";
 		// }else
-		if (this.props.tab.url.indexOf("chrome://") !== 0 && this.props.tab.url.indexOf("about:") !== 0) {
+		if (
+			this.props.tab.url.indexOf("chrome://") !== 0 &&
+			this.props.tab.url.indexOf("about:") !== 0
+		) {
 			// chrome screenshots / only for active tabs; needs <all_urls>
 			// if(!!browser.tabs.captureVisibleTab && this.props.tab.highlighted) {
 			// 	console.log("tabsCapture");
@@ -191,23 +240,37 @@ class Tab extends React.Component {
 			// 	}
 			// 	image = "url(" + image + ")";
 			// }else{
-			image = this.props.tab.favIconUrl ? "url(" + this.props.tab.favIconUrl + ")" : "";
+			image = this.props.tab.favIconUrl
+				? "url(" + this.props.tab.favIconUrl + ")"
+				: "";
 			//}
 		} else {
-			var favIcons = ["bookmarks", "chrome", "crashes", "downloads", "extensions", "flags", "history", "settings"];
+			var favIcons = [
+				"bookmarks",
+				"chrome",
+				"crashes",
+				"downloads",
+				"extensions",
+				"flags",
+				"history",
+				"settings",
+			];
 			var iconName = this.props.tab.url.slice(9).match(/^\w+/g);
-			image = !iconName || favIcons.indexOf(iconName[0]) < 0 ? "" : "url(../images/chrome/" + iconName[0] + ".png)";
+			image =
+				!iconName || favIcons.indexOf(iconName[0]) < 0
+					? ""
+					: "url(../images/chrome/" + iconName[0] + ".png)";
 		}
 		this.setState({
-			favIcon: image
+			favIcon: image,
 		});
 	}
 	stopProp(e) {
-		if(e && e.nativeEvent) {
+		if (e && e.nativeEvent) {
 			e.nativeEvent.preventDefault();
 			e.nativeEvent.stopPropagation();
 		}
-		if(e && e.preventDefault) {
+		if (e && e.preventDefault) {
 			e.preventDefault();
 			e.stopPropagation();
 		}

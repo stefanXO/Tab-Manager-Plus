@@ -1,6 +1,9 @@
-"use strict";
 
-class Session extends React.Component {
+import React, { Component } from "react"
+import browser from "webextension-polyfill"
+import Tab from "./Tab";
+
+export default class Session extends Component {
 	constructor(props) {
 		super(props);
 		//console.log(this.props.window);
@@ -21,6 +24,7 @@ class Session extends React.Component {
 	render() {
 		var _this = this;
 		var name = this.props.window.name;
+		/** @type any */
 		var hideWindow = true;
 		var titleAdded = false;
 		var tabsperrow = this.props.layout.indexOf("blocks") > -1 ? Math.ceil(Math.sqrt(this.props.tabs.length + 2)) : this.props.layout == "vertical" ? 1 : 15;
@@ -173,6 +177,7 @@ class Session extends React.Component {
 		var emptyTab = newWindow.tabs[0].id;
 
 		for (var i = 0; i < this.props.window.tabs.length; i++) {
+			/** @type any */
 			var newTab = Object.keys(this.props.window.tabs[i])
 				.filter(function(key) {
 					return whitelistTab.includes(key);
