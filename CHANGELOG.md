@@ -5,6 +5,8 @@ next
 - Fix: Closing many tabs could stop early because of popup closing in the meantime
 - Fix: Discarding many tabs could stop early because of popup closing in the meantime
 - Fix: Selecting a color for a window would hide all other windows until the next open
+- Fix: Windows that were saved out of bounds of the current monitor, could not be restored
+- Fix: Windows that were too big for the current monitor, would not be restored
 
 5.3.0
 =====
