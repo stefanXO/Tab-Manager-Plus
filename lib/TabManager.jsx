@@ -171,7 +171,7 @@ class TabManager extends React.Component {
 	}
 	hoverHandler(tab) {
 		this.setState({ topText: tab.title });
-		this.setState({ bottomText: tab.url });
+		this.setState({ bottomText: tab.url || "" });
 		// clearTimeout(this.state.closeTimeout);
 		// this.state.closeTimeout = setTimeout(function () {
 		//  window.close();
@@ -809,7 +809,10 @@ class TabManager extends React.Component {
 			}
 			for (var id in idList) {
 				var tab = this.state.tabsbyid[id];
-				var tabSearchTerm = (tab.title + tab.url).toLowerCase();
+				var tabSearchTerm;
+				if (!!tab.title) tabSearchTerm = tab.title;
+				if (!!tab.url) tabSearchTerm += " " + tab.url;
+				tabSearchTerm = tabSearchTerm.toLowerCase();
 				var match = false;
 				if(searchType == "normal") {
 					match = (tabSearchTerm.indexOf(e.target.value.toLowerCase()) >= 0);
