@@ -52,7 +52,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 			if (typeof localStorage["sessionsFeature"] === "undefined") localStorage["sessionsFeature"] = "0";
 			if (typeof localStorage["hideWindows"] === "undefined") localStorage["hideWindows"] = "0";
 			if (typeof localStorage["filter-tabs"] === "undefined") localStorage["filter-tabs"] = "0";
-			if (typeof localStorage["version"] === "undefined") localStorage["version"] = "5.2.1";
+			if (typeof localStorage["version"] === "undefined") localStorage["version"] = "5.2.2";
 
 			layout = localStorage["layout"];
 			tabLimit = JSON.parse(localStorage["tabLimit"]);
@@ -1662,17 +1662,23 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 			this.setState({
 				bottomText: "Allows you to restore your saved windows from an external backup" });
 
-		} }, { key: "toggleHide", value: function () {var _ref11 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11() {var granted;return regeneratorRuntime.wrap(function _callee11$(_context11) {while (1) {switch (_context11.prev = _context11.next) {case 0:_context11.next = 2;return (
+		} }, { key: "toggleHide", value: function () {var _ref11 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11() {var granted;return regeneratorRuntime.wrap(function _callee11$(_context11) {while (1) {switch (_context11.prev = _context11.next) {case 0:if (!(
 
-									browser.permissions.request({ permissions: ["system.display"] }));case 2:granted = _context11.sent;
+
+								navigator.userAgent.search("Firefox") > -1)) {_context11.next = 4;break;}
+								this.state.hideWindows = false;_context11.next = 8;break;case 4:_context11.next = 6;return (
+
+									browser.permissions.request({ permissions: ["system.display"] }));case 6:granted = _context11.sent;
 								if (granted) {
 									this.state.hideWindows = !this.state.hideWindows;
 								} else {
 									this.state.hideWindows = false;
-								}
+								}case 8:
+
+
 								localStorage["hideWindows"] = this.state.hideWindows ? "1" : "0";
 								this.hideText();
-								this.forceUpdate();case 7:case "end":return _context11.stop();}}}, _callee11, this);}));function toggleHide() {return _ref11.apply(this, arguments);}return toggleHide;}() }, { key: "hideText", value: function hideText()
+								this.forceUpdate();case 11:case "end":return _context11.stop();}}}, _callee11, this);}));function toggleHide() {return _ref11.apply(this, arguments);}return toggleHide;}() }, { key: "hideText", value: function hideText()
 
 		{
 			this.setState({
