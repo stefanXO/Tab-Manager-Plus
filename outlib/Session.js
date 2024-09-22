@@ -129,7 +129,7 @@ Session = function (_React$Component) {_inherits(Session, _React$Component);
 		e) {
 			e.stopPropagation();
 		} }, { key: "windowClick", value: function () {var _ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(
-			e) {var _this2, customName, whitelistWindow, whitelistTab, filteredWindow, newWindow, emptyTab, i, newTab, tabCreated, names;return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:
+			e) {var _this2;return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:
 								_this2 = this;
 								e.stopPropagation();
 								console.log("source window", this.props.window);
@@ -137,81 +137,9 @@ Session = function (_React$Component) {_inherits(Session, _React$Component);
 
 
 
-								customName = false;
-								if (this.props.window && this.props.window.name && this.props.window.customName) {
-									customName = this.props.window.name;
-								}
-
-								whitelistWindow = ["left", "top", "width", "height", "incognito", "type"];
-
-								if (navigator.userAgent.search("Firefox") > -1) {
-									whitelistWindow = ["left", "top", "width", "height", "incognito", "type"];
-								}
-
-								whitelistTab = ["url", "active", "selected", "pinned"];
-
-								if (navigator.userAgent.search("Firefox") > -1) {
-									whitelistTab = ["url", "active", "pinned"];
-								}
-
-								filteredWindow = Object.keys(this.props.window.windowsInfo).
-								filter(function (key) {
-									return whitelistWindow.includes(key);
-								}).
-								reduce(function (obj, key) {
-									obj[key] = _this2.props.window.windowsInfo[key];
-									return obj;
-								}, {});
-								console.log("filtered window", filteredWindow);_context.next = 13;return (
-
-									browser.windows.create(filteredWindow).catch(function (error) {
-										console.error(error);
-										console.log(error);
-										console.log(error.message);
-									}));case 13:newWindow = _context.sent;
-
-								emptyTab = newWindow.tabs[0].id;
-
-								i = 0;case 16:if (!(i < this.props.window.tabs.length)) {_context.next = 27;break;}
-								newTab = Object.keys(this.props.window.tabs[i]).
-								filter(function (key) {
-									return whitelistTab.includes(key);
-								}).
-								reduce(function (obj, key) {
-									obj[key] = _this2.props.window.tabs[i][key];
-									return obj;
-								}, {});
-								console.log("source tab", newTab);
-								if (navigator.userAgent.search("Firefox") > -1) {
-									if (!!newTab.url && newTab.url.search("about:") > -1) {
-										console.log("filtered by about: url", newTab.url);
-										newTab.url = "";
-									}
-								}
-								newTab.windowId = newWindow.id;_context.next = 23;return (
-									browser.tabs.create(newTab).catch(function (error) {
-										console.error(error);
-										console.log(error);
-										console.log(error.message);
-									}));case 23:tabCreated = _context.sent;case 24:i++;_context.next = 16;break;case 27:_context.next = 29;return (
+								browser.runtime.sendMessage({ command: "create_window_with_session_tabs", window: this.props.window });
 
 
-									browser.tabs.remove(emptyTab).catch(function (error) {
-										console.error(error);
-										console.log(error);
-										console.log(error.message);
-									}));case 29:
-
-								if (customName) {
-									names = localStorage["windowNames"];
-									if (!!names) {
-										names = JSON.parse(names);
-									} else {
-										names = {};
-									}
-									names[newWindow.id] = customName || "";
-									localStorage["windowNames"] = JSON.stringify(names);
-								}
 
 								this.props.parentUpdate();
 
@@ -221,7 +149,7 @@ Session = function (_React$Component) {_inherits(Session, _React$Component);
 									setTimeout(function () {
 										this.props.scrollTo("window", newWindow.id);
 									}.bind(this), 250);
-								}case 32:case "end":return _context.stop();}}}, _callee, this);}));function windowClick(_x) {return _ref.apply(this, arguments);}return windowClick;}() }, { key: "close", value: function () {var _ref2 = _asyncToGenerator(regeneratorRuntime.mark(function _callee2(
+								}case 6:case "end":return _context.stop();}}}, _callee, this);}));function windowClick(_x) {return _ref.apply(this, arguments);}return windowClick;}() }, { key: "close", value: function () {var _ref2 = _asyncToGenerator(regeneratorRuntime.mark(function _callee2(
 
 
 
