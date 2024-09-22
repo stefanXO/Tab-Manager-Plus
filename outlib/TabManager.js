@@ -628,7 +628,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 								}
 								this.state.tabCount = tabCount;
 								this.setState({
-									tabCount: tabCount });case 13:case "end":return _context2.stop();}}}, _callee2, this);}));function update() {return _ref2.apply(this, arguments);}return update;}() }, { key: "deleteTabs", value: function () {var _ref3 = _asyncToGenerator(regeneratorRuntime.mark(function _callee3() {var _this2, tabs, i, t;return regeneratorRuntime.wrap(function _callee3$(_context3) {while (1) {switch (_context3.prev = _context3.next) {case 0:
+									tabCount: tabCount });case 13:case "end":return _context2.stop();}}}, _callee2, this);}));function update() {return _ref2.apply(this, arguments);}return update;}() }, { key: "deleteTabs", value: function () {var _ref3 = _asyncToGenerator(regeneratorRuntime.mark(function _callee3() {var _this2, tabs, t;return regeneratorRuntime.wrap(function _callee3$(_context3) {while (1) {switch (_context3.prev = _context3.next) {case 0:
 
 
 
@@ -638,36 +638,28 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 								tabs = Object.keys(this.state.selection).map(function (id) {
 									return _this2.state.tabsbyid[id];
 								});if (!
-								tabs.length) {_context3.next = 12;break;}
-								i = 0;case 4:if (!(i < tabs.length)) {_context3.next = 10;break;}_context3.next = 7;return (
-									browser.tabs.remove(tabs[i].id));case 7:i++;_context3.next = 4;break;case 10:_context3.next = 18;break;case 12:_context3.next = 14;return (
+								tabs.length) {_context3.next = 6;break;}
+								browser.runtime.sendMessage({ command: "close_tabs", tabs: tabs });_context3.next = 12;break;case 6:_context3.next = 8;return (
+
+									browser.tabs.query({ currentWindow: true, active: true }));case 8:t = _context3.sent;if (!(
+								t && t.length > 0)) {_context3.next = 12;break;}_context3.next = 12;return (
+									browser.tabs.remove(t[0].id));case 12:
 
 
-									browser.tabs.query({ currentWindow: true, active: true }));case 14:t = _context3.sent;if (!(
-								t && t.length > 0)) {_context3.next = 18;break;}_context3.next = 18;return (
-									browser.tabs.remove(t[0].id));case 18:
-
-
-								this.forceUpdate();case 19:case "end":return _context3.stop();}}}, _callee3, this);}));function deleteTabs() {return _ref3.apply(this, arguments);}return deleteTabs;}() }, { key: "deleteTab", value: function deleteTab(
+								this.forceUpdate();case 13:case "end":return _context3.stop();}}}, _callee3, this);}));function deleteTabs() {return _ref3.apply(this, arguments);}return deleteTabs;}() }, { key: "deleteTab", value: function deleteTab(
 
 		tabId) {
 			browser.tabs.remove(tabId);
-		} }, { key: "discardTabs", value: function () {var _ref4 = _asyncToGenerator(regeneratorRuntime.mark(function _callee4() {var tabs, i;return regeneratorRuntime.wrap(function _callee4$(_context4) {while (1) {switch (_context4.prev = _context4.next) {case 0:
+		} }, { key: "discardTabs", value: function () {var _ref4 = _asyncToGenerator(regeneratorRuntime.mark(function _callee4() {var _this2, tabs;return regeneratorRuntime.wrap(function _callee4$(_context4) {while (1) {switch (_context4.prev = _context4.next) {case 0:
 
+								_this2 = this;
 								tabs = Object.keys(this.state.selection).map(function (id) {
-									return parseInt(id);
+									return _this2.state.tabsbyid[id];
 								});
 								if (tabs.length) {
-									for (i = 0; i < tabs.length; i++) {
-										if (!this.state.tabsbyid[tabs[i]].discarded) {
-											browser.tabs.discard(tabs[i]).catch(function (e) {
-												console.error(e);
-												console.log(e.message);
-											});
-										}
-									}
+									browser.runtime.sendMessage({ command: "discard_tabs", tabs: tabs });
 								}
-								this.clearSelection();case 3:case "end":return _context4.stop();}}}, _callee4, this);}));function discardTabs() {return _ref4.apply(this, arguments);}return discardTabs;}() }, { key: "discardTab", value: function discardTab(
+								this.clearSelection();case 4:case "end":return _context4.stop();}}}, _callee4, this);}));function discardTabs() {return _ref4.apply(this, arguments);}return discardTabs;}() }, { key: "discardTab", value: function discardTab(
 
 		tabId) {
 			browser.tabs.discard(tabId);
@@ -1422,18 +1414,16 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 
 								this.update();case 16:case "end":return _context7.stop();}}}, _callee7, this);}));function drop(_x, _x2) {return _ref7.apply(this, arguments);}return drop;}() }, { key: "dropWindow", value: function () {var _ref8 = _asyncToGenerator(regeneratorRuntime.mark(function _callee8(
 
-			windowId) {var _this6, tabs, i, t;return regeneratorRuntime.wrap(function _callee8$(_context8) {while (1) {switch (_context8.prev = _context8.next) {case 0:
+			windowId) {var _this6, tabs;return regeneratorRuntime.wrap(function _callee8$(_context8) {while (1) {switch (_context8.prev = _context8.next) {case 0:
 								_this6 = this;
 								tabs = Object.keys(this.state.selection).map(function (id) {
 									return _this6.state.tabsbyid[id];
 								});
-								i = 0;case 3:if (!(i < tabs.length)) {_context8.next = 12;break;}
-								t = tabs[i];_context8.next = 7;return (
-									browser.tabs.move(t.id, { windowId: windowId, index: -1 }));case 7:_context8.next = 9;return (
-									browser.tabs.update(t.id, { pinned: t.pinned }));case 9:i++;_context8.next = 3;break;case 12:
+
+								browser.runtime.sendMessage({ command: "move_tabs_to_window", window_id: windowId, tabs: tabs });
 
 								this.setState({
-									selection: {} });case 13:case "end":return _context8.stop();}}}, _callee8, this);}));function dropWindow(_x3) {return _ref8.apply(this, arguments);}return dropWindow;}() }, { key: "changeTabLimit", value: function changeTabLimit(
+									selection: {} });case 4:case "end":return _context8.stop();}}}, _callee8, this);}));function dropWindow(_x3) {return _ref8.apply(this, arguments);}return dropWindow;}() }, { key: "changeTabLimit", value: function changeTabLimit(
 
 
 		e) {
