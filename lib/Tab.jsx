@@ -72,7 +72,7 @@ class Tab extends React.Component {
 				this.props.tab.id +
 				" " +
 				(this.props.layout == "vertical" ? "vertical " : "blocks "),
-			style: 
+			style:
 				(this.props.layout == "vertical"
 					? { }
 					: { backgroundImage: this.state.favIcon }
@@ -126,12 +126,12 @@ class Tab extends React.Component {
 				this.props.select(tabId);
 			}
 		} else {
-			var backgroundPage = await browser.runtime.getBackgroundPage();
 			if (navigator.userAgent.search("Firefox") > -1) {
-				backgroundPage.focusOnTabAndWindowDelayed({ id: tabId, windowId: windowId });
-			}else{
-				backgroundPage.focusOnTabAndWindow({ id: tabId, windowId: windowId });
+				browser.runtime.sendMessage({command: "focus_on_tab_and_window_delayed", tab: { id: tabId, windowId: windowId }});
+			} else {
+				browser.runtime.sendMessage({command: "focus_on_tab_and_window", tab: { id: tabId, windowId: windowId }});
 			}
+
 			if (!!window.inPopup) window.close();
 		}
 		return false;
