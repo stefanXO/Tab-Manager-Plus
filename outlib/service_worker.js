@@ -8512,8 +8512,14 @@ var removeLocalStorage = function () {var _ref3 = _asyncToGenerator(regeneratorR
 							return whitelistWindow.includes(key);
 						}).
 						reduce(function (obj, key) {
-							console.log("key : " + key + " - " + window.windowsInfo[key]);
 							obj[key] = window.windowsInfo[key];
+							if (key == "left" || key == "top") {
+								if (obj[key] < 0) obj[key] = 0;
+							}
+							if (key == "width" || key == "height") {
+								if (obj[key] > 800) obj[key] = 800;
+							}
+
 							return obj;
 						}, {});
 						console.log("filtered window", filteredWindow);_context6.next = 10;return (
@@ -8532,7 +8538,6 @@ var removeLocalStorage = function () {var _ref3 = _asyncToGenerator(regeneratorR
 							return whitelistTab.includes(key);
 						}).
 						reduce(function (obj, key) {
-							console.log("key : " + key + " - " + window.tabs[i][key]);
 							obj[key] = window.tabs[i][key];
 							return obj;
 						}, {});
