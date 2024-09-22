@@ -639,9 +639,7 @@ class TabManager extends React.Component {
 			return _this2.state.tabsbyid[id];
 		});
 		if (tabs.length) {
-			for (var i = 0; i < tabs.length; i++) {
-				await browser.tabs.remove(tabs[i].id);
-			}
+			browser.runtime.sendMessage({command: "close_tabs", tabs: tabs});
 		} else {
 			var t = await browser.tabs.query({ currentWindow: true, active: true });
 			if (t && t.length > 0) {
