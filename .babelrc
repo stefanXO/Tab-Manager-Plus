@@ -4,11 +4,12 @@
     "es2016",
     "react"
   ],
+  "comments": false,
   "compact": false,
   "retainLines": true,
   "sourceType": "script",
   "plugins": [
-
+    "transform-async-to-generator",
     ["inline-replace-variables", {
       "__VERSION__": "5.3.0"
     }]
