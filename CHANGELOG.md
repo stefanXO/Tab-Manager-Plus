@@ -1,6 +1,9 @@
 next
 =====
 - Fix: Make sure session tabs are fully restored before closing the popup
+- Fix: Moving many tabs could stop early because of popup closing in the meantime
+- Fix: Closing many tabs could stop early because of popup closing in the meantime
+- Fix: Discarding many tabs could stop early because of popup closing in the meantime
 
 5.3.0
 =====
