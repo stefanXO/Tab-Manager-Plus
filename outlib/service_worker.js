@@ -8515,6 +8515,7 @@ var removeLocalStorage = function () {var _ref3 = _asyncToGenerator(regeneratorR
 							obj[key] = window.windowsInfo[key];
 							if (key == "left" || key == "top") {
 								if (obj[key] < 0) obj[key] = 0;
+								if (obj[key] > 800) obj[key] = 0;
 							}
 							if (key == "width" || key == "height") {
 								if (obj[key] > 800) obj[key] = 800;
