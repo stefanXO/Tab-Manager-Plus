@@ -534,7 +534,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 						}
 					}
 				}
-			}, 1000);
+			}, 250);
 
 
 

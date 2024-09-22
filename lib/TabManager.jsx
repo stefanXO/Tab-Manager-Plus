@@ -534,7 +534,7 @@ class TabManager extends React.Component {
 					}
 				}
 			}
-		}, 1000);
+		}, 250);
 
 		// box.select();
 		// box.focus();

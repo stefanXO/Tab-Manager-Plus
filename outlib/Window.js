@@ -598,7 +598,7 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 				if (this.state.colorActive) {
 					this.refs.namebox.focus();
 				}
-			}.bind(this), 250);
+			}.bind(this), 150);
 		} }, { key: "changeColors", value: function changeColors(
 		a) {
 			this.setState(a);

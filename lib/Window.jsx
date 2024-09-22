@@ -572,7 +572,7 @@ class Window extends React.Component {
 
 		setTimeout(function() {
 			this.props.scrollTo("session", session.id);
-		}.bind(this), 250);
+		}.bind(this), 150);
 	}
 	async minimize(e) {
 		this.stopProp(e);
@@ -598,7 +598,7 @@ class Window extends React.Component {
 			if(this.state.colorActive) {
 				this.refs.namebox.focus();
 			}
-		}.bind(this), 250);
+		}.bind(this), 150);
 	}
 	changeColors(a) {
 		this.setState(a);
