@@ -1,5 +1,6 @@
 5.3.0
 =====
+- Fix: Move to manifest v3
 - Fix: White page crash when tab had no hostname / title
 
 5.2.0
