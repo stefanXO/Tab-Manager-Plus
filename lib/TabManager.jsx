@@ -1651,12 +1651,18 @@ class TabManager extends React.Component {
 		});
 	}
 	async toggleHide() {
-		var granted = await browser.permissions.request({ permissions: ["system.display"] });
-		if (granted) {
-			this.state.hideWindows = !this.state.hideWindows;
-		} else {
+
+		if (navigator.userAgent.search("Firefox") > -1) {
 			this.state.hideWindows = false;
+		} else {
+			var granted = await browser.permissions.request({ permissions: ["system.display"] });
+			if (granted) {
+				this.state.hideWindows = !this.state.hideWindows;
+			} else {
+				this.state.hideWindows = false;
+			}
 		}
+
 		localStorage["hideWindows"] = this.state.hideWindows ? "1" : "0";
 		this.hideText();
 		this.forceUpdate();
