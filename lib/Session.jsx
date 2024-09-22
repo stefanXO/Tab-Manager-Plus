@@ -137,81 +137,9 @@ class Session extends React.Component {
 		// 	backgroundPage.createWindowWithTabs(tabs);
 		// }.bind(null, this.props.window.tabs));
 
-		var customName = false;
-		if (this.props.window && this.props.window.name && this.props.window.customName) {
-			customName = this.props.window.name;
-		}
+		browser.runtime.sendMessage({command: "create_window_with_session_tabs", window: this.props.window});
 
-		var whitelistWindow = ["left", "top", "width", "height", "incognito", "type"];
 
-		if (navigator.userAgent.search("Firefox") > -1) {
-			whitelistWindow = ["left", "top", "width", "height", "incognito", "type"];
-		}
-
-		var whitelistTab = ["url", "active", "selected", "pinned"];
-
-		if (navigator.userAgent.search("Firefox") > -1) {
-			whitelistTab = ["url", "active", "pinned"];
-		}
-
-		var filteredWindow = Object.keys(this.props.window.windowsInfo)
-			.filter(function(key) {
-				return whitelistWindow.includes(key);
-			})
-			.reduce(function(obj, key) {
-				obj[key] = _this2.props.window.windowsInfo[key];
-				return obj;
-			}, {});
-		console.log("filtered window", filteredWindow);
-
-		var newWindow = await browser.windows.create(filteredWindow).catch(function(error) {
-			console.error(error);
-			console.log(error);
-			console.log(error.message);
-		});
-
-		var emptyTab = newWindow.tabs[0].id;
-
-		for (var i = 0; i < this.props.window.tabs.length; i++) {
-			var newTab = Object.keys(this.props.window.tabs[i])
-				.filter(function(key) {
-					return whitelistTab.includes(key);
-				})
-				.reduce(function(obj, key) {
-					obj[key] = _this2.props.window.tabs[i][key];
-					return obj;
-				}, {});
-			console.log("source tab", newTab);
-			if (navigator.userAgent.search("Firefox") > -1) {
-				if (!!newTab.url && newTab.url.search("about:") > -1) {
-					console.log("filtered by about: url", newTab.url);
-					newTab.url = "";
-				}
-			}
-			newTab.windowId = newWindow.id;
-			var tabCreated = await browser.tabs.create(newTab).catch(function(error) {
-				console.error(error);
-				console.log(error);
-				console.log(error.message);
-			});
-		}
-
-		await browser.tabs.remove(emptyTab).catch(function(error) {
-			console.error(error);
-			console.log(error);
-			console.log(error.message);
-		});
-
-		if (customName) {
-			var names = localStorage["windowNames"];
-			if (!!names) {
-				names = JSON.parse(names);
-			} else {
-				names = {};
-			}
-			names[newWindow.id] = customName || "";
-			localStorage["windowNames"] = JSON.stringify(names);
-		}
 
 		this.props.parentUpdate();
 
