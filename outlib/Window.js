@@ -343,17 +343,22 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 							this.state.windowTitles = [];
 							this.state.tabs = tabs.length + this.props.window.id * 99;
 							for (var i = 0; i < tabs.length; i++) {
+
 								if (!!tabs[i].props && !!tabs[i].props.tab && !!tabs[i].props.tab.url) {
 									var url = new URL(tabs[i].props.tab.url);
-									var protocol = url.protocol;
-									var hostname = url.hostname;
-									if (protocol.indexOf("chrome-extension") > -1) {
-										hostname = tabs[i].props.tab.title;
+									var protocol = url.protocol || "";
+									var hostname = url.hostname || "";
+									if (protocol.indexOf("view-source") > -1 && !!url.pathname) {
+										url = new URL(url.pathname);
+										hostname = url.hostname || "source";
+									} else if (protocol.indexOf("chrome-extension") > -1) {
+										hostname = tabs[i].props.tab.title || "extension";
 									} else if (protocol.indexOf("about") > -1) {
-										hostname = tabs[i].props.tab.title;
+										hostname = tabs[i].props.tab.title || "about";
 									} else if (hostname.indexOf("mail.google") > -1) {
 										hostname = "gmail";
 									} else {
+										if (!hostname) hostname = "";
 										hostname = hostname.replace("www.", "");
 										var regex_var = new RegExp(/(\.[^\.]{0,2})(\.[^\.]{0,2})(\.*$)|(\.[^\.]*)(\.*$)/);
 										hostname = hostname.
@@ -361,13 +366,28 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 										split(".").
 										pop();
 									}
-									if (hostname.length > 18) {
-										hostname = tabs[i].props.tab.title;
+
+									if (!!hostname && hostname.length > 18) {
+										hostname = tabs[i].props.tab.title || "";
+
+										while (hostname.length > 18 && hostname.indexOf("—") > -1) {
+											hostname = hostname.split("—");
+											hostname.pop();
+											hostname = hostname.join("—");
+										}
+
+										while (hostname.length > 18 && hostname.indexOf("-") > -1) {
+											hostname = hostname.split("-");
+											hostname.pop();
+											hostname = hostname.join("-");
+										}
+
 										while (hostname.length > 18 && hostname.indexOf(" ") > -1) {
 											hostname = hostname.split(" ");
 											hostname.pop();
 											hostname = hostname.join(" ");
 										}
+
 									}
 									this.state.windowTitles.push(hostname);
 								}

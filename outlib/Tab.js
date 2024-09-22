@@ -49,7 +49,7 @@ Tab = function (_React$Component) {_inherits(Tab, _React$Component);
 
 				children.push(
 				React.createElement("div", { key: "tab-title-" + this.props.tab.id, className: "tabtitle" },
-					this.props.tab.title));
+					this.props.tab.title || ""));
 
 
 			}
@@ -139,7 +139,7 @@ Tab = function (_React$Component) {_inherits(Tab, _React$Component);
 		e) {
 			if (!!this.props.drag) {
 				e.dataTransfer.setData("Text", this.props.tab.id);
-				e.dataTransfer.setData("text/uri-list", this.props.tab.url);
+				e.dataTransfer.setData("text/uri-list", this.props.tab.url || "");
 				this.props.drag(e, this.props.tab.id);
 			} else {
 				return false;
@@ -170,7 +170,7 @@ Tab = function (_React$Component) {_inherits(Tab, _React$Component);
 			} else {
 				return false;
 			}
-		} }, { key: "resolveFavIconUrl", value: function () {var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {var image, favIcons, iconName;return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:
+		} }, { key: "resolveFavIconUrl", value: function () {var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {var image, favIcons, iconUrl, iconName;return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:
 
 
 								// firefox screenshots; needs <all_urls>
@@ -179,7 +179,7 @@ Tab = function (_React$Component) {_inherits(Tab, _React$Component);
 								// 	image = await browser.tabs.captureTab(this.props.tab.id);
 								// 	image = "url(" + image + ")";
 								// }else
-								if (this.props.tab.url.indexOf("chrome://") !== 0 && this.props.tab.url.indexOf("about:") !== 0) {
+								if (!!this.props.tab.url && this.props.tab.url.indexOf("chrome://") !== 0 && this.props.tab.url.indexOf("about:") !== 0) {
 									// chrome screenshots / only for active tabs; needs <all_urls>
 									// if(!!browser.tabs.captureVisibleTab && this.props.tab.highlighted) {
 									// 	console.log("tabsCapture");
@@ -195,7 +195,9 @@ Tab = function (_React$Component) {_inherits(Tab, _React$Component);
 									//}
 								} else {
 									favIcons = ["bookmarks", "chrome", "crashes", "downloads", "extensions", "flags", "history", "settings"];
-									iconName = this.props.tab.url.slice(9).match(/^\w+/g);
+									iconUrl = this.props.tab.url || "";
+									iconName = "";
+									if (iconUrl.length > 9) iconName = iconUrl.slice(9).match(/^\w+/g);
 									image = !iconName || favIcons.indexOf(iconName[0]) < 0 ? "" : "url(../images/chrome/" + iconName[0] + ".png)";
 								}
 								this.setState({

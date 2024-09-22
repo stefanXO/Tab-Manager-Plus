@@ -52,7 +52,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 			if (typeof localStorage["sessionsFeature"] === "undefined") localStorage["sessionsFeature"] = "0";
 			if (typeof localStorage["hideWindows"] === "undefined") localStorage["hideWindows"] = "0";
 			if (typeof localStorage["filter-tabs"] === "undefined") localStorage["filter-tabs"] = "0";
-			if (typeof localStorage["version"] === "undefined") localStorage["version"] = "5.2.0";
+			if (typeof localStorage["version"] === "undefined") localStorage["version"] = "5.2.1";
 
 			layout = localStorage["layout"];
 			tabLimit = JSON.parse(localStorage["tabLimit"]);
@@ -170,8 +170,8 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 			this.update();
 		} }, { key: "hoverHandler", value: function hoverHandler(
 		tab) {
-			this.setState({ topText: tab.title });
-			this.setState({ bottomText: tab.url });
+			this.setState({ topText: tab.title || "" });
+			this.setState({ bottomText: tab.url || "" });
 			// clearTimeout(this.state.closeTimeout);
 			// this.state.closeTimeout = setTimeout(function () {
 			//  window.close();
@@ -188,7 +188,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 		} }, { key: "hoverIcon", value: function hoverIcon(
 		e) {
 			var text = "";
-			if (e && e.target && e.target.title) {
+			if (e && e.target && !!e.target.title) {
 				text = e.target.title;
 			}
 			var bottom = " ";
@@ -809,7 +809,10 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 				}
 				for (var id in idList) {
 					var tab = this.state.tabsbyid[id];
-					var tabSearchTerm = (tab.title + tab.url).toLowerCase();
+					var tabSearchTerm;
+					if (!!tab.title) tabSearchTerm = tab.title;
+					if (!!tab.url) tabSearchTerm += " " + tab.url;
+					tabSearchTerm = tabSearchTerm.toLowerCase();
 					var match = false;
 					if (searchType == "normal") {
 						match = tabSearchTerm.indexOf(e.target.value.toLowerCase()) >= 0;
