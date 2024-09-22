@@ -1,3 +1,7 @@
+5.3.0
+=====
+- Fix: White page crash when tab had no hostname / title
+
 5.2.0
 =====
 - Improves search! Searching for "google mail" will highlight tabs that have both words included #107
@@ -22,7 +26,7 @@
 =====
 - Fix: Pressing "enter" or "return" when only one tab is selected, should focus that tab properly in Firefox
 - Reduce options that would be restored in sessions, to limit conflicts
-- Make inputs selectable in Firefox! You can now select text again in title, search and option inputs, etc. 
+- Make inputs selectable in Firefox! You can now select text again in title, search and option inputs, etc.
 
 5.1.5
 =====
