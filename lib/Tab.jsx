@@ -179,7 +179,7 @@ class Tab extends React.Component {
 		// 	image = await browser.tabs.captureTab(this.props.tab.id);
 		// 	image = "url(" + image + ")";
 		// }else
-		if (this.props.tab.url.indexOf("chrome://") !== 0 && this.props.tab.url.indexOf("about:") !== 0) {
+		if (!!this.props.tab.url && this.props.tab.url.indexOf("chrome://") !== 0 && this.props.tab.url.indexOf("about:") !== 0) {
 			// chrome screenshots / only for active tabs; needs <all_urls>
 			// if(!!browser.tabs.captureVisibleTab && this.props.tab.highlighted) {
 			// 	console.log("tabsCapture");
@@ -195,7 +195,7 @@ class Tab extends React.Component {
 			//}
 		} else {
 			var favIcons = ["bookmarks", "chrome", "crashes", "downloads", "extensions", "flags", "history", "settings"];
-			var iconName = this.props.tab.url.slice(9).match(/^\w+/g);
+			var iconName = this.props.tab.url?.slice(9).match(/^\w+/g);
 			image = !iconName || favIcons.indexOf(iconName[0]) < 0 ? "" : "url(../images/chrome/" + iconName[0] + ".png)";
 		}
 		this.setState({
