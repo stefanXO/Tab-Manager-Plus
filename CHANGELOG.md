@@ -1,3 +1,7 @@
+next
+=====
+- Fix: Make sure session tabs are fully restored before closing the popup
+
 5.3.0
 =====
 - Fix: Move to manifest v3
