@@ -1,4 +1,4 @@
-5.3.0
+5.2.1
 =====
 - Fix: White page crash when tab had no hostname / title
 

@@ -1,6 +1,6 @@
 {
   "name": "tab-manager",
-  "version": "5.2.0",
+  "version": "5.2.1",
   "description": "This is an extended version of the old Tab Manager Google Chrome extension. Should work on both Chrome and Firefox. Malware free, with a new view type and many new features.",
   "main": "index.js",
   "directories": {
