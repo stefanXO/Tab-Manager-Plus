@@ -2,7 +2,7 @@
 	"name": "Tab Manager Plus for Chrome",
 	"short_name": "Tab Manager+",
 	"version": "5.2.0",
-	"manifest_version": 2,
+	"manifest_version": 3,
 	"offline_enabled": true,
 	"description": "Quickly find open tabs, see all windows in one view, find duplicates and limit tabs per window. The best Tab Manager for Chrome.",
 	"author": "stefanXO",
@@ -23,10 +23,9 @@
 	],
 	"incognito":"spanning",
 	"background": {
-		"scripts": ["vendor/babel-polyfill.js", "vendor/browser-polyfill.min.js","outlib/background.js"],
-		"persistent": true
+		"service_worker": "outlib/service_worker.js"
 	},
-	"browser_action": {
+	"action": {
 		"default_icon": {
 			"16": "images/browsers16.png",
 			"48": "images/browsers48.png",
@@ -39,7 +38,7 @@
 		"page": "options.html"
 	},
 	"commands": {
-		"_execute_browser_action": {
+		"_execute_action": {
 			"suggested_key": {
 				"default": "Ctrl+Shift+M",
 				"windows": "Ctrl+Shift+M",
