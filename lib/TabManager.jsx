@@ -170,7 +170,7 @@ class TabManager extends React.Component {
 		this.update();
 	}
 	hoverHandler(tab) {
-		this.setState({ topText: tab.title });
+		this.setState({ topText: tab.title || "" });
 		this.setState({ bottomText: tab.url || "" });
 		// clearTimeout(this.state.closeTimeout);
 		// this.state.closeTimeout = setTimeout(function () {
@@ -188,7 +188,7 @@ class TabManager extends React.Component {
 	}
 	hoverIcon(e) {
 		var text = "";
-		if(e && e.target && e.target.title) {
+		if(e && e.target && !!e.target.title) {
 			text = e.target.title;
 		}
 		var bottom = " ";
