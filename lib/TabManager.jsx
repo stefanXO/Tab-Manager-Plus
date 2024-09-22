@@ -682,15 +682,13 @@ class TabManager extends React.Component {
 		if (count == 0) {
 			await browser.windows.create({});
 		} else if (count == 1) {
-			var backgroundPage = await browser.runtime.getBackgroundPage();
 			if (navigator.userAgent.search("Firefox") > -1) {
-				backgroundPage.focusOnTabAndWindowDelayed(tabs[0]);
+				browser.runtime.sendMessage({command: "focus_on_tab_and_window_delayed", tab: tabs[0]});
 			}else{
-				backgroundPage.focusOnTabAndWindow(tabs[0]);
+				browser.runtime.sendMessage({command: "focus_on_tab_and_window", tab: tabs[0]});
 			}
 		} else {
-			var backgroundPage = await browser.runtime.getBackgroundPage();
-			backgroundPage.createWindowWithTabs(tabs);
+			browser.runtime.sendMessage({command: "create_window_with_tabs", tabs: tabs});
 		}
 		if (!!window.inPopup) window.close();
 	}
@@ -1537,8 +1535,7 @@ class TabManager extends React.Component {
 		this.state.badge = !this.state.badge;
 		localStorage["badge"] = this.state.badge ? "1" : "0";
 		this.badgeText();
-		var backgroundPage = await browser.runtime.getBackgroundPage();
-		backgroundPage.updateTabCount();
+		browser.runtime.sendMessage({command: "update_tab_count"});
 		this.forceUpdate();
 	}
 	badgeText() {
