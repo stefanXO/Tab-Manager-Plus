@@ -3,17 +3,17 @@
 var browser = browser || chrome;var
 
 TabManager = function (_React$Component) {_inherits(TabManager, _React$Component);
-	function TabManager(props) {_classCallCheck(this, TabManager);
+	function TabManager(props) {_classCallCheck(this, TabManager);var _this7 = _possibleConstructorReturn(this, (TabManager.__proto__ || Object.getPrototypeOf(TabManager)).call(this,
+		props));
 
-		//this.update();
-		var _this7 = _possibleConstructorReturn(this, (TabManager.__proto__ || Object.getPrototypeOf(TabManager)).call(this, props));
+
 		if (navigator.userAgent.search("Firefox") > -1) {
 		} else {
 			var check = browser.permissions.contains({ permissions: ["system.display"] });
 			check.then(
 			function (result) {
 				if (result) {
-					// The extension has the permissions.
+
 				} else {
 					localStorage["hideWindows"] = "0";
 					this.state.hideWindows = false;
@@ -52,7 +52,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 			if (typeof localStorage["sessionsFeature"] === "undefined") localStorage["sessionsFeature"] = "0";
 			if (typeof localStorage["hideWindows"] === "undefined") localStorage["hideWindows"] = "0";
 			if (typeof localStorage["filter-tabs"] === "undefined") localStorage["filter-tabs"] = "0";
-			if (typeof localStorage["version"] === "undefined") localStorage["version"] = "5.2.0";
+			if (typeof localStorage["version"] === "undefined") localStorage["version"] = "5.3.0";
 
 			layout = localStorage["layout"];
 			tabLimit = JSON.parse(localStorage["tabLimit"]);
@@ -76,9 +76,9 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 			document.body.className = "";
 		}
 
-		// var closeTimeout = setTimeout(function () {
-		//  window.close();
-		// }, 100000);
+
+
+
 		var closeTimeout;
 		var resetTimeout;
 
@@ -170,12 +170,12 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 			this.update();
 		} }, { key: "hoverHandler", value: function hoverHandler(
 		tab) {
-			this.setState({ topText: tab.title });
-			this.setState({ bottomText: tab.url });
-			// clearTimeout(this.state.closeTimeout);
-			// this.state.closeTimeout = setTimeout(function () {
-			//  window.close();
-			// }, 100000);
+			this.setState({ topText: tab.title || "" });
+			this.setState({ bottomText: tab.url || "" });
+
+
+
+
 			clearTimeout(this.state.resetTimeout);
 			this.state.resetTimeout = setTimeout(
 			function () {
@@ -184,11 +184,11 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 			}.bind(this),
 			15000);
 
-			//this.update();
+
 		} }, { key: "hoverIcon", value: function hoverIcon(
 		e) {
 			var text = "";
-			if (e && e.target && e.target.title) {
+			if (e && e.target && !!e.target.title) {
 				text = e.target.title;
 			}
 			var bottom = " ";
@@ -199,7 +199,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 			}
 			this.setState({ topText: text });
 			this.setState({ bottomText: bottom });
-			//this.update();
+
 			this.forceUpdate();
 		} }, { key: "render", value: function render()
 		{
@@ -217,8 +217,8 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 
 			if (this.state.sessionsFeature) {
 				if (this.state.sessions.length > 0) haveSess = true;
-				// disable session window if we have filtering enabled
-				// and filter active
+
+
 				if (haveSess && this.state.filterTabs) {
 					if (this.state.searchLen > 0 || Object.keys(this.state.hiddenTabs).length > 0) {
 						haveSess = false;
@@ -536,12 +536,12 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 				}
 			}, 1000);
 
-			// box.select();
-			// box.focus();
-		} }, { key: "sessionSync", value: function () {var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {var values, sessions, key, sess;return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:_context.next = 2;return (
+
+
+		} }, { key: "sessionSync", value: function () {var _ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee() {var values, sessions, key, sess;return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:_context.next = 2;return (
 
 									browser.storage.local.get(null));case 2:values = _context.sent;
-								// console.log(values);
+
 								sessions = [];
 								for (key in values) {
 									sess = values[key];
@@ -589,7 +589,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 			}
 			console.log("colorsActive", active, windowId, this.state.colorsActive);
 			this.forceUpdate();
-		} }, { key: "update", value: function () {var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {var windows, tabCount, i, window, j, tab, id;return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:_context2.next = 2;return (
+		} }, { key: "update", value: function () {var _ref2 = _asyncToGenerator(regeneratorRuntime.mark(function _callee2() {var windows, tabCount, i, window, j, tab, id;return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:_context2.next = 2;return (
 
 									browser.windows.getAll({ populate: true }));case 2:windows = _context2.sent;
 								windows.sort(function (a, b) {
@@ -628,11 +628,11 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 								}
 								this.state.tabCount = tabCount;
 								this.setState({
-									tabCount: tabCount });
+									tabCount: tabCount });case 13:case "end":return _context2.stop();}}}, _callee2, this);}));function update() {return _ref2.apply(this, arguments);}return update;}() }, { key: "deleteTabs", value: function () {var _ref3 = _asyncToGenerator(regeneratorRuntime.mark(function _callee3() {var _this2, tabs, i, t;return regeneratorRuntime.wrap(function _callee3$(_context3) {while (1) {switch (_context3.prev = _context3.next) {case 0:
 
-								//this.state.searchLen = 0;
-								// this.forceUpdate();
-							case 13:case "end":return _context2.stop();}}}, _callee2, this);}));function update() {return _ref2.apply(this, arguments);}return update;}() }, { key: "deleteTabs", value: function () {var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3() {var _this2, tabs, i, t;return regeneratorRuntime.wrap(function _callee3$(_context3) {while (1) {switch (_context3.prev = _context3.next) {case 0:
+
+
+
 
 								_this2 = this;
 								tabs = Object.keys(this.state.selection).map(function (id) {
@@ -652,7 +652,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 
 		tabId) {
 			browser.tabs.remove(tabId);
-		} }, { key: "discardTabs", value: function () {var _ref4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4() {var tabs, i;return regeneratorRuntime.wrap(function _callee4$(_context4) {while (1) {switch (_context4.prev = _context4.next) {case 0:
+		} }, { key: "discardTabs", value: function () {var _ref4 = _asyncToGenerator(regeneratorRuntime.mark(function _callee4() {var tabs, i;return regeneratorRuntime.wrap(function _callee4$(_context4) {while (1) {switch (_context4.prev = _context4.next) {case 0:
 
 								tabs = Object.keys(this.state.selection).map(function (id) {
 									return parseInt(id);
@@ -671,7 +671,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 
 		tabId) {
 			browser.tabs.discard(tabId);
-		} }, { key: "addWindow", value: function () {var _ref5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5() {var _this3, count, tabs, backgroundPage;return regeneratorRuntime.wrap(function _callee5$(_context5) {while (1) {switch (_context5.prev = _context5.next) {case 0:
+		} }, { key: "addWindow", value: function () {var _ref5 = _asyncToGenerator(regeneratorRuntime.mark(function _callee5() {var _this3, count, tabs;return regeneratorRuntime.wrap(function _callee5$(_context5) {while (1) {switch (_context5.prev = _context5.next) {case 0:
 
 								_this3 = this;
 								count = Object.keys(this.state.selection).length;
@@ -680,19 +680,17 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 								});if (!(
 
 								count == 0)) {_context5.next = 8;break;}_context5.next = 6;return (
-									browser.windows.create({}));case 6:_context5.next = 19;break;case 8:if (!(
-								count == 1)) {_context5.next = 15;break;}_context5.next = 11;return (
-									browser.runtime.getBackgroundPage());case 11:backgroundPage = _context5.sent;
-								if (navigator.userAgent.search("Firefox") > -1) {
-									backgroundPage.focusOnTabAndWindowDelayed(tabs[0]);
+									browser.windows.create({}));case 6:_context5.next = 9;break;case 8:
+								if (count == 1) {
+									if (navigator.userAgent.search("Firefox") > -1) {
+										browser.runtime.sendMessage({ command: "focus_on_tab_and_window_delayed", tab: tabs[0] });
+									} else {
+										browser.runtime.sendMessage({ command: "focus_on_tab_and_window", tab: tabs[0] });
+									}
 								} else {
-									backgroundPage.focusOnTabAndWindow(tabs[0]);
-								}_context5.next = 19;break;case 15:_context5.next = 17;return (
-
-									browser.runtime.getBackgroundPage());case 17:backgroundPage = _context5.sent;
-								backgroundPage.createWindowWithTabs(tabs);case 19:
-
-								if (!!window.inPopup) window.close();case 20:case "end":return _context5.stop();}}}, _callee5, this);}));function addWindow() {return _ref5.apply(this, arguments);}return addWindow;}() }, { key: "pinTabs", value: function () {var _ref6 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6() {var _this4, tabs, i, t;return regeneratorRuntime.wrap(function _callee6$(_context6) {while (1) {switch (_context6.prev = _context6.next) {case 0:
+									browser.runtime.sendMessage({ command: "create_window_with_tabs", tabs: tabs });
+								}case 9:
+								if (!!window.inPopup) window.close();case 10:case "end":return _context5.stop();}}}, _callee5, this);}));function addWindow() {return _ref5.apply(this, arguments);}return addWindow;}() }, { key: "pinTabs", value: function () {var _ref6 = _asyncToGenerator(regeneratorRuntime.mark(function _callee6() {var _this4, tabs, i, t;return regeneratorRuntime.wrap(function _callee6$(_context6) {while (1) {switch (_context6.prev = _context6.next) {case 0:
 
 
 								_this4 = this;
@@ -809,7 +807,10 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 				}
 				for (var id in idList) {
 					var tab = this.state.tabsbyid[id];
-					var tabSearchTerm = (tab.title + tab.url).toLowerCase();
+					var tabSearchTerm;
+					if (!!tab.title) tabSearchTerm = tab.title;
+					if (!!tab.url) tabSearchTerm += " " + tab.url;
+					tabSearchTerm = tabSearchTerm.toLowerCase();
 					var match = false;
 					if (searchType == "normal") {
 						match = tabSearchTerm.indexOf(e.target.value.toLowerCase()) >= 0;
@@ -881,12 +882,12 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 
 		} }, { key: "checkKey", value: function checkKey(
 		e) {
-			// enter
+
 			if (e.keyCode == 13) this.addWindow();
-			// escape key
+
 			if (e.keyCode == 27) {
 				if (this.state.searchLen > 0 || Object.keys(this.state.selection).length > 0) {
-					// stop popup from closing if we have search text or selection active
+
 					e.nativeEvent.preventDefault();
 					e.nativeEvent.stopPropagation();
 				}
@@ -895,7 +896,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 				this.refs.searchbox.value = "";
 				this.clearSelection();
 			}
-			// any typed keys
+
 			if (
 			e.keyCode >= 48 && e.keyCode <= 57 ||
 			e.keyCode >= 65 && e.keyCode <= 90 ||
@@ -911,13 +912,13 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 					}
 				}
 			}
-			// arrow keys
-			/*
-   	left arrow  37
-   	up arrow  38
-   	right arrow 39
-   	down arrow  40
-   */
+
+
+
+
+
+
+
 			if (e.keyCode >= 37 && e.keyCode <= 40) {
 				if (document.activeElement != this.refs.windowcontainer && document.activeElement != this.refs.searchbox) {
 					this.refs.windowcontainer.focus();
@@ -951,24 +952,24 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 							var last = false;
 							if (selectedTabs.length == 1) {
 								selectedTab = selectedTabs[0];
-								// console.log("one tab", selectedTab);
+
 							} else if (selectedTabs.length > 1) {
 								if (this.state.lastSelect) {
 									selectedTab = this.state.lastSelect;
-									// console.log("more tabs, last", selectedTab);
+
 								} else {
 									selectedTab = selectedTabs[0];
-									// console.log("more tabs, first", selectedTab);
+
 								}
 							} else if (selectedTabs.length == 0 && this.state.lastSelect) {
 								selectedTab = this.state.lastSelect;
-								// console.log("no tabs, last", selectedTab);
+
 							}
 							if (this.state.lastDirection) {
 								if (goRight && this.state.lastDirection == "goRight") {
 								} else if (goLeft && this.state.lastDirection == "goLeft") {
 								} else if (selectedTabs.length > 1) {
-									// console.log("turned back, last", this.state.lastSelect, selectedTab);
+
 									this.select(this.state.lastSelect);
 									this.state.lastDirection = false;
 									found = true;
@@ -992,7 +993,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 													found = true;
 													break;
 												} else if (selectedTab == _t.id) {
-													// console.log("select next one", selectedNext);
+
 													if (goRight) {
 														selectedNext = true;
 													} else if (prev) {
@@ -1008,7 +1009,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 													break;
 												}
 												prev = _t.id;
-												// console.log(_t, _t.id == selectedTab);
+
 											}} catch (err) {_didIteratorError5 = true;_iteratorError5 = err;} finally {try {if (!_iteratorNormalCompletion5 && _iterator5.return) {_iterator5.return();}} finally {if (_didIteratorError5) {throw _iteratorError5;}}}
 									}
 								}} catch (err) {_didIteratorError3 = true;_iteratorError3 = err;} finally {try {if (!_iteratorNormalCompletion3 && _iterator3.return) {_iterator3.return();}} finally {if (_didIteratorError3) {throw _iteratorError3;}}}var _iteratorNormalCompletion4 = true;var _didIteratorError4 = false;var _iteratorError4 = undefined;try {
@@ -1039,7 +1040,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 													break;
 												}
 												prev = _t.id;
-												// console.log(_t, _t.id == selectedTab);
+
 											}} catch (err) {_didIteratorError6 = true;_iteratorError6 = err;} finally {try {if (!_iteratorNormalCompletion6 && _iterator6.return) {_iterator6.return();}} finally {if (_didIteratorError6) {throw _iteratorError6;}}}
 									}
 								}} catch (err) {_didIteratorError4 = true;_iteratorError4 = err;} finally {try {if (!_iteratorNormalCompletion4 && _iterator4.return) {_iterator4.return();}} finally {if (_didIteratorError4) {throw _iteratorError4;}}}
@@ -1069,7 +1070,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 							var i = -1;
 							if (selectedTabs.length == 1) {
 								selectedTab = selectedTabs[0];
-								// console.log(selectedTab);
+
 							}var _iteratorNormalCompletion7 = true;var _didIteratorError7 = false;var _iteratorError7 = undefined;try {
 								for (var _iterator7 = this.state.windows[Symbol.iterator](), _step7; !(_iteratorNormalCompletion7 = (_step7 = _iterator7.next()).done); _iteratorNormalCompletion7 = true) {var _w = _step7.value;
 									i = 0;
@@ -1085,25 +1086,25 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 													break;
 												} else if (selectedTab == _t.id) {
 													tabPosition = i;
-													// console.log("found tab", _w.id, _t.id, selectedTab, i);
+
 													if (goDown) {
-														// console.log("select next window ", selectedNext, tabPosition);
+
 														selectedNext = true;
 														break;
 													} else if (prev) {
-														// console.log("select prev window ", prev, tabPosition);
+
 														this.selectWindowTab(prev, tabPosition);
 														found = true;
 														break;
 													}
 												} else if (selectedNext) {
-													// console.log("selecting next window ", _w.id, tabPosition);
+
 													this.selectWindowTab(_w.id, tabPosition);
 													found = true;
 													break;
 												}
 
-												// console.log(_t, _t.id == selectedTab);
+
 											}} catch (err) {_didIteratorError9 = true;_iteratorError9 = err;} finally {try {if (!_iteratorNormalCompletion9 && _iterator9.return) {_iterator9.return();}} finally {if (_didIteratorError9) {throw _iteratorError9;}}}
 										prev = _w.id;
 									}
@@ -1122,38 +1123,38 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 													break;
 												} else if (selectedTab == _t.id) {
 													tabPosition = i;
-													// console.log("found tab", _w.id, _t.id, selectedTab, i);
+
 													if (goDown) {
-														// console.log("select next window ", selectedNext, tabPosition);
+
 														selectedNext = true;
 														break;
 													} else if (prev) {
-														// console.log("select prev window ", prev, tabPosition);
+
 														this.selectWindowTab(prev, tabPosition);
 														found = true;
 														break;
 													}
 												} else if (selectedNext) {
-													// console.log("selecting next window ", _w.id, tabPosition);
+
 													this.selectWindowTab(_w.id, tabPosition);
 													found = true;
 													break;
 												}
-												// console.log(_t, _t.id == selectedTab);
+
 											}} catch (err) {_didIteratorError10 = true;_iteratorError10 = err;} finally {try {if (!_iteratorNormalCompletion10 && _iterator10.return) {_iterator10.return();}} finally {if (_didIteratorError10) {throw _iteratorError10;}}}
 										prev = _w.id;
 									}
-								}
-								// console.log(found, goDown, first);
-							} catch (err) {_didIteratorError8 = true;_iteratorError8 = err;} finally {try {if (!_iteratorNormalCompletion8 && _iterator8.return) {_iterator8.return();}} finally {if (_didIteratorError8) {throw _iteratorError8;}}}if (!found && goDown && first) {
-								// console.log("go first", first);
+								}} catch (err) {_didIteratorError8 = true;_iteratorError8 = err;} finally {try {if (!_iteratorNormalCompletion8 && _iterator8.return) {_iterator8.return();}} finally {if (_didIteratorError8) {throw _iteratorError8;}}}
+
+							if (!found && goDown && first) {
+
 								this.state.selection = {};
 								this.selectWindowTab(first, tabPosition);
 								found = true;
 							}
-							// console.log(found, goUp, last);
+
 							if (!found && goUp && last) {
-								// console.log("go last", last);
+
 								this.state.selection = {};
 								this.selectWindowTab(last, tabPosition);
 								found = true;
@@ -1162,7 +1163,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 					}
 				}
 			}
-			// page up / page down
+
 			if (e.keyCode == 33 || e.keyCode == 34) {
 				if (document.activeElement != this.refs.windowcontainer) {
 					this.refs.windowcontainer.focus();
@@ -1309,7 +1310,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 				}
 
 				if (activate) {
-					// find closest selected item that's not connected
+
 					var leftSibling = 0;
 					var rightSibling = tabs.length - 1;
 					for (var i = 0; i < rangeIndex1; i++) {
@@ -1330,7 +1331,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 						rangeIndex2 = leftSibling;
 					}
 				} else {
-					// find furthest selected item that's connected
+
 					var leftSibling = rangeIndex1;
 					var rightSibling = rangeIndex1;
 					for (var i = rangeIndex1; i > 0; i--) {
@@ -1402,7 +1403,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 				this.state.lastSelect = id;
 			}
 			this.forceUpdate();
-		} }, { key: "drop", value: function () {var _ref7 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(
+		} }, { key: "drop", value: function () {var _ref7 = _asyncToGenerator(regeneratorRuntime.mark(function _callee7(
 			id, before) {var _this5, tab, tabs, index, i, t;return regeneratorRuntime.wrap(function _callee7$(_context7) {while (1) {switch (_context7.prev = _context7.next) {case 0:
 								_this5 = this;
 								tab = this.state.tabsbyid[id];
@@ -1419,7 +1420,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 								this.setState({
 									selection: {} });
 
-								this.update();case 16:case "end":return _context7.stop();}}}, _callee7, this);}));function drop(_x, _x2) {return _ref7.apply(this, arguments);}return drop;}() }, { key: "dropWindow", value: function () {var _ref8 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(
+								this.update();case 16:case "end":return _context7.stop();}}}, _callee7, this);}));function drop(_x, _x2) {return _ref7.apply(this, arguments);}return drop;}() }, { key: "dropWindow", value: function () {var _ref8 = _asyncToGenerator(regeneratorRuntime.mark(function _callee8(
 
 			windowId) {var _this6, tabs, i, t;return regeneratorRuntime.wrap(function _callee8$(_context8) {while (1) {switch (_context8.prev = _context8.next) {case 0:
 								_this6 = this;
@@ -1529,14 +1530,13 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 			this.setState({
 				bottomText: "Adds 'Open a new tab' and 'Close this window' option to each window. Default : on" });
 
-		} }, { key: "toggleBadge", value: function () {var _ref9 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9() {var backgroundPage;return regeneratorRuntime.wrap(function _callee9$(_context9) {while (1) {switch (_context9.prev = _context9.next) {case 0:
+		} }, { key: "toggleBadge", value: function () {var _ref9 = _asyncToGenerator(regeneratorRuntime.mark(function _callee9() {return regeneratorRuntime.wrap(function _callee9$(_context9) {while (1) {switch (_context9.prev = _context9.next) {case 0:
 
 								this.state.badge = !this.state.badge;
 								localStorage["badge"] = this.state.badge ? "1" : "0";
-								this.badgeText();_context9.next = 5;return (
-									browser.runtime.getBackgroundPage());case 5:backgroundPage = _context9.sent;
-								backgroundPage.updateTabCount();
-								this.forceUpdate();case 8:case "end":return _context9.stop();}}}, _callee9, this);}));function toggleBadge() {return _ref9.apply(this, arguments);}return toggleBadge;}() }, { key: "badgeText", value: function badgeText()
+								this.badgeText();
+								browser.runtime.sendMessage({ command: "update_tab_count" });
+								this.forceUpdate();case 5:case "end":return _context9.stop();}}}, _callee9, this);}));function toggleBadge() {return _ref9.apply(this, arguments);}return toggleBadge;}() }, { key: "badgeText", value: function badgeText()
 
 		{
 			this.setState({
@@ -1574,7 +1574,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 			var exportName = "tab-manager-plus-backup";
 			var today = new Date();
 			var y = today.getFullYear();
-			// JavaScript months are 0-based.
+
 			var m = ("0" + (today.getMonth() + 1)).slice(-2);
 			var d = ("0" + today.getDate()).slice(-2);
 			var h = ("0" + today.getHours()).slice(-2);
@@ -1585,7 +1585,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 			var downloadAnchorNode = document.createElement("a");
 			downloadAnchorNode.setAttribute("href", dataStr);
 			downloadAnchorNode.setAttribute("download", exportName + ".json");
-			document.body.appendChild(downloadAnchorNode); // required for firefox
+			document.body.appendChild(downloadAnchorNode);
 			downloadAnchorNode.click();
 			downloadAnchorNode.remove();
 			this.exportSessionsText();
@@ -1604,7 +1604,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 				}
 			}
 			try {
-				var inputField = evt.target; // #session_import
+				var inputField = evt.target;
 				var files = evt.target.files;
 				if (!files.length) {
 					alert("No file selected!");
@@ -1614,7 +1614,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 				var file = files[0];
 				var reader = new FileReader();
 				var self = this;
-				reader.onload = function () {var _ref10 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(event) {var backupFile, success, i, newSession, obj, value;return regeneratorRuntime.wrap(function _callee10$(_context10) {while (1) {switch (_context10.prev = _context10.next) {case 0:
+				reader.onload = function () {var _ref10 = _asyncToGenerator(regeneratorRuntime.mark(function _callee10(event) {var backupFile, success, i, newSession, obj, value;return regeneratorRuntime.wrap(function _callee10$(_context10) {while (1) {switch (_context10.prev = _context10.next) {case 0:
 
 
 										try {
@@ -1623,20 +1623,20 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 											console.error(err);
 											window.alert(err);
 											_this8.setState({ bottomText: "Error: Could not read the backup file!" });
-										} //console.log('FILE CONTENT', event.target.result);
-										if (!(!!backupFile && backupFile.length > 0)) {_context10.next = 18;break;}
+										}if (!(
+										!!backupFile && backupFile.length > 0)) {_context10.next = 18;break;}
 										success = backupFile.length;
 										i = 0;case 4:if (!(i < backupFile.length)) {_context10.next = 15;break;}
 										newSession = backupFile[i];if (!(
 										newSession.windowsInfo && newSession.tabs && newSession.id)) {_context10.next = 12;break;}
 										obj = {};
-										obj[newSession.id] = newSession;
-										//this.state.sessions.push(obj);
-										_context10.next = 11;return browser.storage.local.set(obj).catch(function (err) {
-											console.log(err);
-											console.error(err.message);
-											success--;
-										});case 11:value = _context10.sent;case 12:i++;_context10.next = 4;break;case 15:
+										obj[newSession.id] = newSession;_context10.next = 11;return (
+
+											browser.storage.local.set(obj).catch(function (err) {
+												console.log(err);
+												console.error(err.message);
+												success--;
+											}));case 11:value = _context10.sent;case 12:i++;_context10.next = 4;break;case 15:
 
 
 
@@ -1659,7 +1659,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 			this.setState({
 				bottomText: "Allows you to restore your saved windows from an external backup" });
 
-		} }, { key: "toggleHide", value: function () {var _ref11 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11() {var granted;return regeneratorRuntime.wrap(function _callee11$(_context11) {while (1) {switch (_context11.prev = _context11.next) {case 0:_context11.next = 2;return (
+		} }, { key: "toggleHide", value: function () {var _ref11 = _asyncToGenerator(regeneratorRuntime.mark(function _callee11() {var granted;return regeneratorRuntime.wrap(function _callee11$(_context11) {while (1) {switch (_context11.prev = _context11.next) {case 0:_context11.next = 2;return (
 
 									browser.permissions.request({ permissions: ["system.display"] }));case 2:granted = _context11.sent;
 								if (granted) {

@@ -1,11 +1,11 @@
 "use strict";var _createClass = function () {function defineProperties(target, props) {for (var i = 0; i < props.length; i++) {var descriptor = props[i];descriptor.enumerable = descriptor.enumerable || false;descriptor.configurable = true;if ("value" in descriptor) descriptor.writable = true;Object.defineProperty(target, descriptor.key, descriptor);}}return function (Constructor, protoProps, staticProps) {if (protoProps) defineProperties(Constructor.prototype, protoProps);if (staticProps) defineProperties(Constructor, staticProps);return Constructor;};}();function _asyncToGenerator(fn) {return function () {var gen = fn.apply(this, arguments);return new Promise(function (resolve, reject) {function step(key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {return Promise.resolve(value).then(function (value) {step("next", value);}, function (err) {step("throw", err);});}}return step("next");});};}function _classCallCheck(instance, Constructor) {if (!(instance instanceof Constructor)) {throw new TypeError("Cannot call a class as a function");}}function _possibleConstructorReturn(self, call) {if (!self) {throw new ReferenceError("this hasn't been initialised - super() hasn't been called");}return call && (typeof call === "object" || typeof call === "function") ? call : self;}function _inherits(subClass, superClass) {if (typeof superClass !== "function" && superClass !== null) {throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);}subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } });if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;}var
 
 Session = function (_React$Component) {_inherits(Session, _React$Component);
-	function Session(props) {_classCallCheck(this, Session);
+	function Session(props) {_classCallCheck(this, Session);var _this3 = _possibleConstructorReturn(this, (Session.__proto__ || Object.getPrototypeOf(Session)).call(this,
+		props));
 
-		//console.log(this.props.window);
-		//console.log(this.props.window.name);
-		var _this3 = _possibleConstructorReturn(this, (Session.__proto__ || Object.getPrototypeOf(Session)).call(this, props));var name = _this3.props.window.name;
+
+		var name = _this3.props.window.name;
 		_this3.state = {
 			windowTitles: [],
 			name: name,
@@ -123,19 +123,19 @@ Session = function (_React$Component) {_inherits(Session, _React$Component);
 			}
 		} }, { key: "shouldComponentUpdate", value: function shouldComponentUpdate(
 		nextProps, nextState) {
-			//console.log("should update?", nextProps, nextState);
+
 			return true;
 		} }, { key: "stop", value: function stop(
 		e) {
 			e.stopPropagation();
-		} }, { key: "windowClick", value: function () {var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(
+		} }, { key: "windowClick", value: function () {var _ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(
 			e) {var _this2, customName, whitelistWindow, whitelistTab, filteredWindow, newWindow, emptyTab, i, newTab, tabCreated, names;return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:
 								_this2 = this;
 								e.stopPropagation();
 								console.log("source window", this.props.window);
-								// chrome.runtime.getBackgroundPage(function callback(tabs, backgroundPage) {
-								// 	backgroundPage.createWindowWithTabs(tabs);
-								// }.bind(null, this.props.window.tabs));
+
+
+
 
 								customName = false;
 								if (this.props.window && this.props.window.name && this.props.window.customName) {
@@ -221,31 +221,31 @@ Session = function (_React$Component) {_inherits(Session, _React$Component);
 									setTimeout(function () {
 										this.props.scrollTo("window", newWindow.id);
 									}.bind(this), 250);
-								}
+								}case 32:case "end":return _context.stop();}}}, _callee, this);}));function windowClick(_x) {return _ref.apply(this, arguments);}return windowClick;}() }, { key: "close", value: function () {var _ref2 = _asyncToGenerator(regeneratorRuntime.mark(function _callee2(
 
-								// , function (tabs, w) {
-								// 	browser.tabs.create(first.id, { pinned: first.pinned });
-								// 	if (t.length > 0) {
-								// 		browser.tabs.move(t, { windowId: w.id, index: -1 }, function (tab) {
-								// 			browser.tabs.update(tab.id, { pinned: tab.pinned });
-								// 		});
-								// 	}
-								// 	browser.windows.update(w.id, { focused: true });
-								// }.bind(null, this.props.window.tabs));
-								// browser.windows.update(this.props.window.windowsInfo.id, {
-								// 	"focused": true },
-								// function (a) {this.props.parentUpdate();}.bind(this));
-							case 32:case "end":return _context.stop();}}}, _callee, this);}));function windowClick(_x) {return _ref.apply(this, arguments);}return windowClick;}() }, { key: "close", value: function () {var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(
+
+
+
+
+
+
+
+
+
+
+
+
+
 			e) {var value;return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:
 								e.stopPropagation();_context2.next = 3;return (
 									browser.storage.local.remove(this.props.window.id));case 3:value = _context2.sent;
 								console.log(value);
-								this.props.parentUpdate();
-								// browser.windows.remove(this.props.window.windowsInfo.id);
-							case 6:case "end":return _context2.stop();}}}, _callee2, this);}));function close(_x2) {return _ref2.apply(this, arguments);}return close;}() }, { key: "maximize", value: function maximize(
+								this.props.parentUpdate();case 6:case "end":return _context2.stop();}}}, _callee2, this);}));function close(_x2) {return _ref2.apply(this, arguments);}return close;}() }, { key: "maximize", value: function maximize(
+
+
 		e) {
 			e.stopPropagation();
-			// browser.windows.update(this.props.window.windowsInfo.id, {
-			// 	"state": "normal" },
-			// function (a) {this.props.parentUpdate();}.bind(this));
+
+
+
 		} }]);return Session;}(React.Component);

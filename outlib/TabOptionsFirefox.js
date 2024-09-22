@@ -6,7 +6,7 @@ TabOptions = function (_React$Component) {_inherits(TabOptions, _React$Component
 		_this.state = {};return _this;
 	}_createClass(TabOptions, [{ key: "logo", value: function logo()
 		{
-			var logo = [React.createElement("img", { src: "images/browsers.svg", style: { maxWidth: "3rem" } }), React.createElement("h2", null, "Tab Manager Plus ", "5.2.0")];
+			var logo = [React.createElement("img", { src: "images/browsers.svg", style: { maxWidth: "3rem" } }), React.createElement("h2", null, "Tab Manager Plus ", "5.3.0")];
 
 			return (
 				React.createElement("div", { className: "logo-options" },
@@ -335,11 +335,11 @@ TabOptions = function (_React$Component) {_inherits(TabOptions, _React$Component
 		} }, { key: "openIncognitoOptions", value: function openIncognitoOptions()
 		{
 			browser.runtime.openOptionsPage();
-			// browser.tabs.create({ url: 'about:addons' });
+
 		} }, { key: "openShortcuts", value: function openShortcuts()
 		{
 			browser.runtime.openOptionsPage();
-			//browser.tabs.create({ url: 'about:addons' });
+
 		} }, { key: "licenses", value: function licenses()
 		{
 			var licenses = [];
@@ -386,7 +386,7 @@ TabOptions = function (_React$Component) {_inherits(TabOptions, _React$Component
 			children.push(this.logo());
 			children.push(this.optionsSection());
 			children.push(React.createElement("div", { className: "clearfix" }));
-			//children.push(React.createElement('h4', {}, this.props.getTip()));
+
 			children.push(this.licenses());
 
 			return (

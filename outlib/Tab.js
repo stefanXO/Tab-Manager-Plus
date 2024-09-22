@@ -49,7 +49,7 @@ Tab = function (_React$Component) {_inherits(Tab, _React$Component);
 
 				children.push(
 				React.createElement("div", { key: "tab-title-" + this.props.tab.id, className: "tabtitle" },
-					this.props.tab.title));
+					this.props.tab.title || ""));
 
 
 			}
@@ -108,38 +108,38 @@ Tab = function (_React$Component) {_inherits(Tab, _React$Component);
 			if (e.button === 0) return;
 			if (!this.props.drag) return;
 			this.click(e);
-		} }, { key: "click", value: function () {var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(
-			e) {var tabId, windowId, backgroundPage;return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:if (
+		} }, { key: "click", value: function () {var _ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(
+			e) {var tabId, windowId;return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:if (
 								this.props.drag) {_context.next = 2;break;}return _context.abrupt("return");case 2:
 								this.stopProp(e);
 
 								tabId = this.props.tab.id;
-								windowId = this.props.window.id;if (!(
+								windowId = this.props.window.id;
 
-								e.button === 1)) {_context.next = 9;break;}
-								this.props.middleClick(tabId);_context.next = 19;break;case 9:if (!(
-								e.button === 2 || e.nativeEvent.metaKey || e.nativeEvent.altKey || e.nativeEvent.shiftKey || e.nativeEvent.ctrlKey)) {_context.next = 14;break;}
-								e.preventDefault();
-								if (e.button === 2 && (e.nativeEvent.metaKey || e.nativeEvent.altKey || e.nativeEvent.shiftKey || e.nativeEvent.ctrlKey)) {
-									this.props.selectTo(tabId);
+								if (e.button === 1) {
+									this.props.middleClick(tabId);
+								} else if (e.button === 2 || e.nativeEvent.metaKey || e.nativeEvent.altKey || e.nativeEvent.shiftKey || e.nativeEvent.ctrlKey) {
+									e.preventDefault();
+									if (e.button === 2 && (e.nativeEvent.metaKey || e.nativeEvent.altKey || e.nativeEvent.shiftKey || e.nativeEvent.ctrlKey)) {
+										this.props.selectTo(tabId);
+									} else {
+										this.props.select(tabId);
+									}
 								} else {
-									this.props.select(tabId);
-								}_context.next = 19;break;case 14:_context.next = 16;return (
+									if (navigator.userAgent.search("Firefox") > -1) {
+										browser.runtime.sendMessage({ command: "focus_on_tab_and_window_delayed", tab: { id: tabId, windowId: windowId } });
+									} else {
+										browser.runtime.sendMessage({ command: "focus_on_tab_and_window", tab: { id: tabId, windowId: windowId } });
+									}
 
-									browser.runtime.getBackgroundPage());case 16:backgroundPage = _context.sent;
-								if (navigator.userAgent.search("Firefox") > -1) {
-									backgroundPage.focusOnTabAndWindowDelayed({ id: tabId, windowId: windowId });
-								} else {
-									backgroundPage.focusOnTabAndWindow({ id: tabId, windowId: windowId });
-								}
-								if (!!window.inPopup) window.close();case 19:return _context.abrupt("return",
-
-								false);case 20:case "end":return _context.stop();}}}, _callee, this);}));function click(_x) {return _ref.apply(this, arguments);}return click;}() }, { key: "dragStart", value: function dragStart(
+									if (!!window.inPopup) window.close();
+								}return _context.abrupt("return",
+								false);case 7:case "end":return _context.stop();}}}, _callee, this);}));function click(_x) {return _ref.apply(this, arguments);}return click;}() }, { key: "dragStart", value: function dragStart(
 
 		e) {
 			if (!!this.props.drag) {
 				e.dataTransfer.setData("Text", this.props.tab.id);
-				e.dataTransfer.setData("text/uri-list", this.props.tab.url);
+				e.dataTransfer.setData("text/uri-list", this.props.tab.url || "");
 				this.props.drag(e, this.props.tab.id);
 			} else {
 				return false;
@@ -170,32 +170,34 @@ Tab = function (_React$Component) {_inherits(Tab, _React$Component);
 			} else {
 				return false;
 			}
-		} }, { key: "resolveFavIconUrl", value: function () {var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {var image, favIcons, iconName;return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:
+		} }, { key: "resolveFavIconUrl", value: function () {var _ref2 = _asyncToGenerator(regeneratorRuntime.mark(function _callee2() {var image, favIcons, iconUrl, iconName;return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:
 
 
-								// firefox screenshots; needs <all_urls>
-								// if(!!browser.tabs.captureTab) {
-								// 	console.log("tabs captureTab");
-								// 	image = await browser.tabs.captureTab(this.props.tab.id);
-								// 	image = "url(" + image + ")";
-								// }else
-								if (this.props.tab.url.indexOf("chrome://") !== 0 && this.props.tab.url.indexOf("about:") !== 0) {
-									// chrome screenshots / only for active tabs; needs <all_urls>
-									// if(!!browser.tabs.captureVisibleTab && this.props.tab.highlighted) {
-									// 	console.log("tabsCapture");
-									// 	try {
-									// 		image = await browser.tabs.captureVisibleTab( this.props.window.id, {} );
-									// 		//console.log(image);
-									// 	} catch ( e ) {
-									// 		console.log(e.message);
-									// 	}
-									// 	image = "url(" + image + ")";
-									// }else{
+
+
+
+
+
+
+								if (!!this.props.tab.url && this.props.tab.url.indexOf("chrome://") !== 0 && this.props.tab.url.indexOf("about:") !== 0) {
+
+
+
+
+
+
+
+
+
+
+
 									image = this.props.tab.favIconUrl ? "url(" + this.props.tab.favIconUrl + ")" : "";
-									//}
+
 								} else {
 									favIcons = ["bookmarks", "chrome", "crashes", "downloads", "extensions", "flags", "history", "settings"];
-									iconName = this.props.tab.url.slice(9).match(/^\w+/g);
+									iconUrl = this.props.tab.url || "";
+									iconName = "";
+									if (iconUrl.length > 9) iconName = iconUrl.slice(9).match(/^\w+/g);
 									image = !iconName || favIcons.indexOf(iconName[0]) < 0 ? "" : "url(../images/chrome/" + iconName[0] + ".png)";
 								}
 								this.setState({

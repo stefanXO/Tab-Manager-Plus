@@ -343,17 +343,22 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 							this.state.windowTitles = [];
 							this.state.tabs = tabs.length + this.props.window.id * 99;
 							for (var i = 0; i < tabs.length; i++) {
+
 								if (!!tabs[i].props && !!tabs[i].props.tab && !!tabs[i].props.tab.url) {
 									var url = new URL(tabs[i].props.tab.url);
-									var protocol = url.protocol;
-									var hostname = url.hostname;
-									if (protocol.indexOf("chrome-extension") > -1) {
-										hostname = tabs[i].props.tab.title;
+									var protocol = url.protocol || "";
+									var hostname = url.hostname || "";
+									if (protocol.indexOf("view-source") > -1 && !!url.pathname) {
+										url = new URL(url.pathname);
+										hostname = url.hostname || "source";
+									} else if (protocol.indexOf("chrome-extension") > -1) {
+										hostname = tabs[i].props.tab.title || "extension";
 									} else if (protocol.indexOf("about") > -1) {
-										hostname = tabs[i].props.tab.title;
+										hostname = tabs[i].props.tab.title || "about";
 									} else if (hostname.indexOf("mail.google") > -1) {
 										hostname = "gmail";
 									} else {
+										if (!hostname) hostname = "";
 										hostname = hostname.replace("www.", "");
 										var regex_var = new RegExp(/(\.[^\.]{0,2})(\.[^\.]{0,2})(\.*$)|(\.[^\.]*)(\.*$)/);
 										hostname = hostname.
@@ -361,13 +366,28 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 										split(".").
 										pop();
 									}
-									if (hostname.length > 18) {
-										hostname = tabs[i].props.tab.title;
+
+									if (!!hostname && hostname.length > 18) {
+										hostname = tabs[i].props.tab.title || "";
+
+										while (hostname.length > 18 && hostname.indexOf("—") > -1) {
+											hostname = hostname.split("—");
+											hostname.pop();
+											hostname = hostname.join("—");
+										}
+
+										while (hostname.length > 18 && hostname.indexOf("-") > -1) {
+											hostname = hostname.split("-");
+											hostname.pop();
+											hostname = hostname.join("-");
+										}
+
 										while (hostname.length > 18 && hostname.indexOf(" ") > -1) {
 											hostname = hostname.split(" ");
 											hostname.pop();
 											hostname = hostname.join(" ");
 										}
+
 									}
 									this.state.windowTitles.push(hostname);
 								}
@@ -464,24 +484,26 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 			this.props.dropWindow(this.props.window.id);
 		} }, { key: "checkKey", value: function checkKey(
 		e) {
-			// close popup when enter or escape have been pressed
+
 			if (e.keyCode == 13 || e.keyCode == 27) {
 				this.stopProp(e);
 				this.closePopup();
 			}
-		} }, { key: "windowClick", value: function () {var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(
-			e) {var backgroundPage, windowId;return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:
-								this.stopProp(e);_context.next = 3;return (
-									browser.runtime.getBackgroundPage());case 3:backgroundPage = _context.sent;
+		} }, { key: "windowClick", value: function () {var _ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(
+			e) {var windowId;return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:
+								this.stopProp(e);
+
 								windowId = this.props.window.id;
+
 								if (navigator.userAgent.search("Firefox") > -1) {
-									backgroundPage.focusOnWindowDelayed(windowId);
+									browser.runtime.sendMessage({ command: "focus_on_window_delayed", window_id: windowId });
 								} else {
-									backgroundPage.focusOnWindow(windowId);
+									browser.runtime.sendMessage({ command: "focus_on_window", window_id: windowId });
 								}
+
 								this.props.parentUpdate();
 								if (!!window.inPopup) window.close();return _context.abrupt("return",
-								false);case 9:case "end":return _context.stop();}}}, _callee, this);}));function windowClick(_x) {return _ref.apply(this, arguments);}return windowClick;}() }, { key: "selectToFromTab", value: function selectToFromTab(
+								false);case 6:case "end":return _context.stop();}}}, _callee, this);}));function windowClick(_x) {return _ref.apply(this, arguments);}return windowClick;}() }, { key: "selectToFromTab", value: function selectToFromTab(
 
 		tabId) {
 			if (tabId) this.props.selectTo(tabId, this.props.tabs);
@@ -496,7 +518,7 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 				v = c == "x" ? r : r & 0x3 | 0x8;
 				return v.toString(16);
 			});
-		} }, { key: "save", value: function () {var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(
+		} }, { key: "save", value: function () {var _ref2 = _asyncToGenerator(regeneratorRuntime.mark(function _callee2(
 			e) {var sessionName, session, queryInfo, tabs, tabkey, newTab, obj, value;return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:
 								this.stopProp(e);
 
@@ -518,7 +540,7 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 								}
 
 								queryInfo = {};
-								//queryInfo.currentWindow = true;
+
 								queryInfo.windowId = this.props.window.id;
 								console.log(queryInfo);_context2.next = 11;return (
 
@@ -550,14 +572,14 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 
 								setTimeout(function () {
 									this.props.scrollTo("session", session.id);
-								}.bind(this), 250);case 37:case "end":return _context2.stop();}}}, _callee2, this);}));function save(_x2) {return _ref2.apply(this, arguments);}return save;}() }, { key: "minimize", value: function () {var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3(
+								}.bind(this), 250);case 37:case "end":return _context2.stop();}}}, _callee2, this);}));function save(_x2) {return _ref2.apply(this, arguments);}return save;}() }, { key: "minimize", value: function () {var _ref3 = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(
 
 			e) {return regeneratorRuntime.wrap(function _callee3$(_context3) {while (1) {switch (_context3.prev = _context3.next) {case 0:
 								this.stopProp(e);_context3.next = 3;return (
 									browser.windows.update(this.props.window.id, {
 										state: "minimized" }));case 3:
 
-								this.props.parentUpdate();case 4:case "end":return _context3.stop();}}}, _callee3, this);}));function minimize(_x3) {return _ref3.apply(this, arguments);}return minimize;}() }, { key: "maximize", value: function () {var _ref4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4(
+								this.props.parentUpdate();case 4:case "end":return _context3.stop();}}}, _callee3, this);}));function minimize(_x3) {return _ref3.apply(this, arguments);}return minimize;}() }, { key: "maximize", value: function () {var _ref4 = _asyncToGenerator(regeneratorRuntime.mark(function _callee4(
 
 			e) {return regeneratorRuntime.wrap(function _callee4$(_context4) {while (1) {switch (_context4.prev = _context4.next) {case 0:
 								this.stopProp(e);_context4.next = 3;return (
@@ -580,6 +602,7 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 		} }, { key: "changeColors", value: function changeColors(
 		a) {
 			this.setState(a);
+
 			var colors = localStorage["windowColors"];
 			if (!!colors) {
 				colors = JSON.parse(colors);
@@ -595,9 +618,9 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 				colorActive: !this.state.colorActive });
 
 			this.props.parentUpdate();
-		} }, { key: "changeName", value: function () {var _ref5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5(
+		} }, { key: "changeName", value: function () {var _ref5 = _asyncToGenerator(regeneratorRuntime.mark(function _callee5(
 			e) {var name, names;return regeneratorRuntime.wrap(function _callee5$(_context5) {while (1) {switch (_context5.prev = _context5.next) {case 0:
-								// this.setState(a);
+
 								name = "";
 								if (e && e.target && e.target.value) name = e.target.value;
 
