@@ -602,7 +602,7 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 		} }, { key: "changeColors", value: function changeColors(
 		a) {
 			this.setState(a);
-
+			this.props.toggleColors(!this.state.colorActive, this.props.window.id);
 			var colors = localStorage["windowColors"];
 			if (!!colors) {
 				colors = JSON.parse(colors);

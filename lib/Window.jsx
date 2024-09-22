@@ -602,6 +602,7 @@ class Window extends React.Component {
 	}
 	changeColors(a) {
 		this.setState(a);
+		this.props.toggleColors(!this.state.colorActive, this.props.window.id);
 		var colors = localStorage["windowColors"];
 		if (!!colors) {
 			colors = JSON.parse(colors);

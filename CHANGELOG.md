@@ -4,6 +4,7 @@ next
 - Fix: Moving many tabs could stop early because of popup closing in the meantime
 - Fix: Closing many tabs could stop early because of popup closing in the meantime
 - Fix: Discarding many tabs could stop early because of popup closing in the meantime
+- Fix: Selecting a color for a window would hide all other windows until the next open
 
 5.3.0
 =====
