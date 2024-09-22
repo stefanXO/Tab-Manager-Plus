@@ -654,18 +654,12 @@ class TabManager extends React.Component {
 		browser.tabs.remove(tabId);
 	}
 	async discardTabs() {
+		var _this2 = this;
 		var tabs = Object.keys(this.state.selection).map(function(id) {
-			return parseInt(id);
+			return _this2.state.tabsbyid[id];
 		});
 		if (tabs.length) {
-			for (var i = 0; i < tabs.length; i++) {
-					if(!this.state.tabsbyid[tabs[i]].discarded) {
-					browser.tabs.discard(tabs[i]).catch(function(e) {
-						console.error(e);
-						console.log(e.message);
-					});
-				}
-			}
+			browser.runtime.sendMessage({command: "discard_tabs", tabs: tabs});
 		}
 		this.clearSelection();
 	}
