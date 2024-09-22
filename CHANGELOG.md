@@ -1,3 +1,7 @@
+5.2.2
+=====
+- Fix: Avoid non-Firefox permissions checks
+
 5.2.1
 =====
 - Fix: White page crash when tab had no hostname / title
