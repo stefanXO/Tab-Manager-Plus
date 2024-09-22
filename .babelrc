@@ -1,15 +1,16 @@
 {
   "presets": [
     "es2015",
-    "es2017",
+    "es2016",
     "react"
   ],
   "compact": false,
   "retainLines": true,
   "sourceType": "script",
   "plugins": [
+
     ["inline-replace-variables", {
-      "__VERSION__": "5.2.0"
+      "__VERSION__": "5.3.0"
     }]
   ]
 }
