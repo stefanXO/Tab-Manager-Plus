@@ -492,13 +492,15 @@ class Window extends React.Component {
 	}
 	async windowClick(e) {
 		this.stopProp(e);
-		var backgroundPage = await browser.runtime.getBackgroundPage();
+
 		var windowId = this.props.window.id;
+
 		if (navigator.userAgent.search("Firefox") > -1) {
-			backgroundPage.focusOnWindowDelayed(windowId);
-		}else{
-			backgroundPage.focusOnWindow(windowId);
+			browser.runtime.sendMessage({command: "focus_on_window_delayed", window_id: windowId});
+		} else {
+			browser.runtime.sendMessage({command: "focus_on_window", window_id: windowId});
 		}
+
 		this.props.parentUpdate();
 		if (!!window.inPopup) window.close();
 		return false;
