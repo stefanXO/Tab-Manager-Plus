@@ -7,6 +7,7 @@ next
 - Fix: Selecting a color for a window would hide all other windows until the next open
 - Fix: Windows that were saved out of bounds of the current monitor, could not be restored
 - Fix: Windows that were too big for the current monitor, would not be restored
+- Fix: Don't animate scrolling if animations are disabled
 
 5.3.0
 =====

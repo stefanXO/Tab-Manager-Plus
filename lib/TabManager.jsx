@@ -522,6 +522,9 @@ class TabManager extends React.Component {
 
 		this.refs.root.focus();
 		this.focusRoot();
+
+		var _this = this;
+
 		setTimeout(function() {
 			var scrollArea = document.getElementsByClassName("window-container")[0];
 			var activeWindow = document.getElementsByClassName("activeWindow");
@@ -530,7 +533,8 @@ class TabManager extends React.Component {
 				if (!!activeTab && activeTab.length > 0) {
 					if (!!scrollArea && scrollArea.scrollTop > 0) {
 					} else {
-						activeTab[0].scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+						var animations = _this.toBoolean(localStorage["animations"]);
+						activeTab[0].scrollIntoView({ behavior: animations ? "smooth" : "instant", block: "center", inline: "nearest" });
 					}
 				}
 			}
@@ -1180,7 +1184,7 @@ class TabManager extends React.Component {
 		var els = document.getElementById(what + "-" + id);
 		if (!!els) {
 			if (!this.elVisible(els)) {
-				els.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+				els.scrollIntoView({ behavior: this.state.animations ? "smooth" : "instant", block: "center", inline: "nearest" });
 			}
 		}
 	}
