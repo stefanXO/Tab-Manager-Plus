@@ -49,7 +49,7 @@ class Tab extends React.Component {
 			);
 			children.push(
 				<div key={"tab-title-" + this.props.tab.id} className="tabtitle">
-					{this.props.tab.title}
+					{this.props.tab.title || ""}
 				</div>
 			);
 		}
