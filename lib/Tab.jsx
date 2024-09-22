@@ -195,7 +195,9 @@ class Tab extends React.Component {
 			//}
 		} else {
 			var favIcons = ["bookmarks", "chrome", "crashes", "downloads", "extensions", "flags", "history", "settings"];
-			var iconName = this.props.tab.url?.slice(9).match(/^\w+/g);
+			var iconUrl = this.props.tab.url || "";
+			var iconName = "";
+			if (iconUrl.length > 9) iconName = iconUrl.slice(9).match(/^\w+/g);
 			image = !iconName || favIcons.indexOf(iconName[0]) < 0 ? "" : "url(../images/chrome/" + iconName[0] + ".png)";
 		}
 		this.setState({
