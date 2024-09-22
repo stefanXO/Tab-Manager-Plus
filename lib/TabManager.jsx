@@ -1427,11 +1427,9 @@ class TabManager extends React.Component {
 		var tabs = Object.keys(this.state.selection).map(function(id) {
 			return _this6.state.tabsbyid[id];
 		});
-		for (var i = 0; i < tabs.length; i++) {
-			var t = tabs[i];
-			await browser.tabs.move(t.id, { windowId: windowId, index: -1 });
-			await browser.tabs.update(t.id, { pinned: t.pinned });
-		}
+
+		browser.runtime.sendMessage({command: "move_tabs_to_window", window_id: windowId, tabs: tabs});
+
 		this.setState({
 			selection: {}
 		});
