@@ -8,6 +8,7 @@ next
 - Fix: Windows that were saved out of bounds of the current monitor, could not be restored
 - Fix: Windows that were too big for the current monitor, would not be restored
 - Fix: Don't animate scrolling if animations are disabled
+- Fix: Dragging tabs would sometimes drop them in the wrong location, now they will be added to the closest tab in the new window
 
 5.3.0
 =====
