@@ -84,6 +84,7 @@ class Window extends React.Component {
 					drag={_this.props.drag}
 					drop={_this.props.drop}
 					dropWindow={_this.props.dropWindow}
+					parentUpdate={_this.forceUpdate.bind(_this)}
 					ref={"tab" + tab.id}
 					id={"tab-" + tab.id}
 				/>
