@@ -45,7 +45,7 @@ class Tab extends React.Component {
 					key={"tab-icon-" + this.props.tab.id}
 					className="iconoverlay "
 					style={{
-						backgroundImage: this.state.favIcon
+						backgroundImage: "url(" + this.state.favIcon + ")"
 					}}
 				/>
 			);
@@ -77,7 +77,7 @@ class Tab extends React.Component {
 			style:
 				(this.props.layout == "vertical"
 					? { }
-					: { backgroundImage: this.state.favIcon }
+					: { backgroundImage: "url(" + this.state.favIcon + ")" }
 				)
 			,
 			id: this.props.id,
@@ -182,7 +182,9 @@ class Tab extends React.Component {
 		// 	image = await browser.tabs.captureTab(this.props.tab.id);
 		// 	image = "url(" + image + ")";
 		// }else
-		if (!!this.props.tab.url && this.props.tab.url.indexOf("chrome://") !== 0 && this.props.tab.url.indexOf("about:") !== 0) {
+		if (navigator.userAgent.search("Firefox") == -1) {
+			image = "chrome-extension://" + chrome.runtime.id + "/_favicon/?pageUrl=" + encodeURIComponent(this.props.tab.url) + "&size=64";
+		} else if (!!this.props.tab.url && this.props.tab.url.indexOf("chrome://") !== 0 && this.props.tab.url.indexOf("about:") !== 0) {
 			// chrome screenshots / only for active tabs; needs <all_urls>
 			// if(!!browser.tabs.captureVisibleTab && this.props.tab.highlighted) {
 			// 	console.log("tabsCapture");
@@ -194,14 +196,14 @@ class Tab extends React.Component {
 			// 	}
 			// 	image = "url(" + image + ")";
 			// }else{
-			image = this.props.tab.favIconUrl ? "url(" + this.props.tab.favIconUrl + ")" : "";
+			image = this.props.tab.favIconUrl ? "" + this.props.tab.favIconUrl + "" : "";
 			//}
 		} else {
 			var favIcons = ["bookmarks", "chrome", "crashes", "downloads", "extensions", "flags", "history", "settings"];
 			var iconUrl = this.props.tab.url || "";
 			var iconName = "";
 			if (iconUrl.length > 9) iconName = iconUrl.slice(9).match(/^\w+/g);
-			image = !iconName || favIcons.indexOf(iconName[0]) < 0 ? "" : "url(../images/chrome/" + iconName[0] + ".png)";
+			image = !iconName || favIcons.indexOf(iconName[0]) < 0 ? "" : "../images/chrome/" + iconName[0] + ".png";
 		}
 		this.setState({
 			favIcon: image
