@@ -1287,7 +1287,6 @@ class TabManager extends React.Component {
 
 		var rangeIndex1;
 		var rangeIndex2;
-		var selectedTabs = [];
 		for (var i = 0; i < tabs.length; i++) {
 			if (tabs[i].id == id) {
 				rangeIndex1 = i;
