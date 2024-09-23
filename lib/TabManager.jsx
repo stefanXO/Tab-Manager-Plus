@@ -1188,16 +1188,22 @@ class TabManager extends React.Component {
 			}
 		}
 	}
-	changelayout() {
-		if (this.state.layout == "blocks") {
-			localStorage["layout"] = this.state.layout = "blocks-big";
-		} else if (this.state.layout == "blocks-big") {
-			localStorage["layout"] = this.state.layout = "horizontal";
-		} else if (this.state.layout == "horizontal") {
-			localStorage["layout"] = this.state.layout = "vertical";
+	changelayout(layout) {
+		var newLayout;
+		if (layout && typeof (layout) == "string") {
+			newLayout = layout;
 		} else {
-			localStorage["layout"] = this.state.layout = "blocks";
+			if (this.state.layout == "blocks") {
+				newLayout = this.state.layout = "blocks-big";
+			} else if (this.state.layout == "blocks-big") {
+				newLayout = this.state.layout = "horizontal";
+			} else if (this.state.layout == "horizontal") {
+				newLayout = this.state.layout = "vertical";
+			} else {
+				newLayout = this.state.layout = "blocks";
+			}
 		}
+		localStorage["layout"] = this.state.layout = newLayout;
 		this.setState({ topText: "Switched to " + this.readablelayout(this.state.layout) + " view" });
 		this.setState({ bottomText: " " });
 		this.forceUpdate();
