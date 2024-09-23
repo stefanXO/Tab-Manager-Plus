@@ -28,10 +28,11 @@ class Session extends React.Component {
 			var tabId = tab.id * tab.id * tab.id * 100;
 			var isHidden = !!_this.props.hiddenTabs[tabId] && _this.props.filterTabs;
 			var isSelected = !!_this.props.selection[tabId];
-			tab.id = tabId;
+			tab.id = tab.index;
 			hideWindow &= isHidden;
 			return (
 				<Tab
+					id={"sessiontab_" + _this.props.window.id + "_" + tab.index}
 					key={"sessiontab_" + _this.props.window.id + "_" + tab.index}
 					window={_this.props.window}
 					layout={_this.props.layout}
@@ -43,7 +44,6 @@ class Session extends React.Component {
 					searchActive={_this.props.searchActive}
 					select={_this.props.select}
 					ref={"sessiontab" + tabId}
-					id={"sessiontab-" + tab.id}
 				/>
 			);
 		});
