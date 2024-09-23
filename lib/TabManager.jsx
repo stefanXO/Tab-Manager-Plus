@@ -240,7 +240,7 @@ class TabManager extends React.Component {
 				ref="root"
 				tabIndex={0}
 			>
-				<div className={"window-container " + this.state.layout + " " + (this.state.optionsActive ? "hidden" : "")} ref="windowcontainer" tabIndex={2}>
+				{!this.state.optionsActive && <div className={"window-container " + this.state.layout} ref="windowcontainer" tabIndex={2}>
 					{this.state.windows.map(function(window) {
 						if (window.state == "minimized") return;
 						if (!!this.state.colorsActive && this.state.colorsActive !== window.id) return;
@@ -346,8 +346,8 @@ class TabManager extends React.Component {
 								);
 							}.bind(this))
 						: false}
-				</div>
-				<div className={"options-container " + (this.state.optionsActive ? "" : "hidden")} ref="options-container">
+				</div>}
+				{this.state.optionsActive && <div className={"options-container"} ref="options-container">
 					<TabOptions
 						compact={this.state.compact}
 						dark={this.state.dark}
@@ -391,7 +391,7 @@ class TabManager extends React.Component {
 						tabActionsText={this.tabActionsText}
 						getTip={this.getTip}
 					/>
-				</div>
+				</div>}
 				<div className="window top" ref="tophover">
 					<div className="icon windowaction donate" title="Donate a Coffee" onClick={this.donate} onMouseEnter={this.hoverIcon} />
 					<div
@@ -411,7 +411,7 @@ class TabManager extends React.Component {
 					/>
 					<input type="text" disabled={true} className="taburl" ref="topboxurl" placeholder={this.getTip()} value={this.state.bottomText} />
 				</div>
-				<div className={"window searchbox " + (this.state.optionsActive || !!this.state.colorsActive ? "hidden" : "")}>
+				{!this.state.optionsActive && !this.state.colorsActive && <div className={"window searchbox"}>
 					<table>
 						<tbody>
 							<tr>
@@ -494,7 +494,7 @@ class TabManager extends React.Component {
 							</tr>
 						</tbody>
 					</table>
-				</div>
+				</div>}
 				<div className="window placeholder" />
 			</div>
 		);
