@@ -645,6 +645,7 @@ class Window extends React.Component {
 		colors[this.props.window.id] = a.color;
 		localStorage["windowColors"] = JSON.stringify(colors);
 		this.state.color = a.color || "default";
+		this.closePopup();
 	}
 	closePopup() {
 		this.props.toggleColors(!this.state.colorActive, this.props.window.id);
