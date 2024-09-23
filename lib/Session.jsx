@@ -147,8 +147,8 @@ class Session extends React.Component {
 			window.close();
 		}else{
 			setTimeout(function() {
-				this.props.scrollTo("window", newWindow.id);
-			}.bind(this), 250);
+				this.props.scrollTo("window", browser.windows.WINDOW_ID_CURRENT);
+			}.bind(this), 500);
 		}
 
 		// , function (tabs, w) {
