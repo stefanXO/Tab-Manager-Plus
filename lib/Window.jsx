@@ -325,7 +325,7 @@ class Window extends React.Component {
 			}
 
 			if (this.props.windowTitles) {
-				if (name) {
+				if (!!name) {
 					tabs.unshift(
 						<h3
 							key={"window-" + this.props.window.id + "-windowTitle"}
@@ -446,7 +446,7 @@ class Window extends React.Component {
 						" " +
 						(focused ? "activeWindow" : "") +
 						" " +
-						color +
+						this.state.color +
 						" " +
 						(this.props.layout.indexOf("blocks") > -1 ? "block" : "") +
 						" " +
