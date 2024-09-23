@@ -1509,8 +1509,10 @@ class TabManager extends React.Component {
 		this.darkText();
 		if (this.state.dark) {
 			document.body.className = "dark";
+			document.documentElement.className = "dark";
 		} else {
 			document.body.className = "";
+			document.documentElement.className = "";
 		}
 		this.forceUpdate();
 	}
