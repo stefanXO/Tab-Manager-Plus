@@ -25,7 +25,8 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 			windowTitles: [],
 			color: color,
 			name: name,
-			tabs: 0 };
+			tabs: 0,
+			hover: false };
 
 
 		_this2.addTab = _this2.addTab.bind(_this2);
@@ -36,13 +37,16 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 		_this2.close = _this2.close.bind(_this2);
 		_this2.colors = _this2.colors.bind(_this2);
 		_this2.dragOver = _this2.dragOver.bind(_this2);
+		_this2.dragLeave = _this2.dragLeave.bind(_this2);
 		_this2.drop = _this2.drop.bind(_this2);
 		_this2.maximize = _this2.maximize.bind(_this2);
 		_this2.minimize = _this2.minimize.bind(_this2);
 		_this2.save = _this2.save.bind(_this2);
 		_this2.stop = _this2.stop.bind(_this2);
 		_this2.windowClick = _this2.windowClick.bind(_this2);
-		_this2.selectToFromTab = _this2.selectToFromTab.bind(_this2);return _this2;
+		_this2.selectToFromTab = _this2.selectToFromTab.bind(_this2);
+		_this2.hoverWindow = _this2.hoverWindow.bind(_this2);
+		_this2.hoverWindowOut = _this2.hoverWindowOut.bind(_this2);return _this2;
 	}_createClass(Window, [{ key: "render", value: function render()
 
 		{
@@ -81,9 +85,12 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 						searchActive: _this.props.searchActive,
 						select: _this.props.select,
 						selectTo: _this.selectToFromTab,
+						draggable: true,
 						drag: _this.props.drag,
 						drop: _this.props.drop,
 						dropWindow: _this.props.dropWindow,
+						dragFavicon: _this.props.dragFavicon,
+						parentUpdate: _this.forceUpdate.bind(_this),
 						ref: "tab" + tab.id,
 						id: "tab-" + tab.id }));
 
@@ -325,7 +332,7 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 				}
 
 				if (this.props.windowTitles) {
-					if (name) {
+					if (!!name) {
 						tabs.unshift(
 						React.createElement("h3", {
 								key: "window-" + this.props.window.id + "-windowTitle",
@@ -446,7 +453,7 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 							" " + (
 							focused ? "activeWindow" : "") +
 							" " +
-							color +
+							this.state.color +
 							" " + (
 							this.props.layout.indexOf("blocks") > -1 ? "block" : "") +
 							" " +
@@ -456,10 +463,13 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 							" " + (
 							focused ? " focused" : ""),
 
+							onDragEnter: this.dragOver,
 							onDragOver: this.dragOver,
+							onDragLeave: this.dragLeave,
 							onClick: this.windowClick,
-							title: "Focus this window\nWill select this window with " + tabs.length + " tabs",
-							onMouseEnter: this.props.hoverIcon,
+							title: "",
+							onMouseEnter: this.hoverWindow.bind(null, tabs),
+							onMouseLeave: this.hoverWindowOut,
 							onDrop: this.drop },
 
 						React.createElement("div", { className: "windowcontainer", title: "Focus this window\nWill select this window with " + tabs.length + " tabs" }, children)));
@@ -477,11 +487,56 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 			browser.tabs.create({ windowId: this.props.window.id });
 		} }, { key: "dragOver", value: function dragOver(
 		e) {
+			this.state.hover = true;
 			this.stopProp(e);
+		} }, { key: "dragLeave", value: function dragLeave(
+		e) {
+			this.state.hover = false;
+			e.nativeEvent.preventDefault();
 		} }, { key: "drop", value: function drop(
 		e) {
+			var distance = 1000000;
+			var closestTab = null;
+			var closestRef = null;
+
+			for (var i = 0; i < this.props.tabs.length; i++) {
+				var tab = this.props.tabs[i];
+				var tabRef = this.refs["tab" + tab.id].tabRef.current;
+				var tabRect = tabRef.getBoundingClientRect();
+				var x = e.nativeEvent.clientX;
+				var y = e.nativeEvent.clientY;
+				var dx = tabRect.x - x;
+				var dy = tabRect.y - y;
+				var d = Math.sqrt(dx * dx + dy * dy);
+				if (d < distance) {
+					distance = d;
+					closestTab = tab.id;
+					closestRef = tabRef;
+				}
+			}
+
 			this.stopProp(e);
-			this.props.dropWindow(this.props.window.id);
+
+			if (closestTab != null) {
+				var before = null;
+				var boundingRect = closestRef.getBoundingClientRect();
+				if (this.props.layout == "vertical") {
+					before = e.nativeEvent.clientY < boundingRect.top ? true : false;
+				} else {
+					before = e.nativeEvent.clientX < boundingRect.left ? true : false;
+				}
+				this.props.drop(closestTab, before);
+			} else {
+				this.props.dropWindow(this.props.window.id);
+			}
+		} }, { key: "hoverWindow", value: function hoverWindow(
+		tabs, e) {
+			this.state.hover = true;
+			this.props.hoverIcon("Focus this window\nWill select this window with " + tabs.length + " tabs");
+
+		} }, { key: "hoverWindowOut", value: function hoverWindowOut(
+		e) {
+			this.state.hover = false;
 		} }, { key: "checkKey", value: function checkKey(
 		e) {
 
@@ -572,7 +627,7 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 
 								setTimeout(function () {
 									this.props.scrollTo("session", session.id);
-								}.bind(this), 250);case 37:case "end":return _context2.stop();}}}, _callee2, this);}));function save(_x2) {return _ref2.apply(this, arguments);}return save;}() }, { key: "minimize", value: function () {var _ref3 = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(
+								}.bind(this), 150);case 37:case "end":return _context2.stop();}}}, _callee2, this);}));function save(_x2) {return _ref2.apply(this, arguments);}return save;}() }, { key: "minimize", value: function () {var _ref3 = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(
 
 			e) {return regeneratorRuntime.wrap(function _callee3$(_context3) {while (1) {switch (_context3.prev = _context3.next) {case 0:
 								this.stopProp(e);_context3.next = 3;return (
@@ -611,6 +666,8 @@ Window = function (_React$Component) {_inherits(Window, _React$Component);
 			}
 			colors[this.props.window.id] = a.color;
 			localStorage["windowColors"] = JSON.stringify(colors);
+			this.state.color = a.color || "default";
+			this.closePopup();
 		} }, { key: "closePopup", value: function closePopup()
 		{
 			this.props.toggleColors(!this.state.colorActive, this.props.window.id);

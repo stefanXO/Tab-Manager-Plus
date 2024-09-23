@@ -8488,7 +8488,7 @@ var removeLocalStorage = function () {var _ref3 = _asyncToGenerator(regeneratorR
 							browser.windows.update(w.id, { focused: true }));case 62:case "end":return _context5.stop();}}}, _callee5, this, [[18, 47, 51, 59], [52,, 54, 58]]);}));return function createWindowWithTabs(_x5, _x6) {return _ref5.apply(this, arguments);};}();var createWindowWithSessionTabs = function () {var _ref6 = _asyncToGenerator(regeneratorRuntime.mark(
 
 
-	function _callee6(window) {var customName, whitelistWindow, whitelistTab, filteredWindow, newWindow, emptyTab, i, newTab, tabCreated, names;return regeneratorRuntime.wrap(function _callee6$(_context6) {while (1) {switch (_context6.prev = _context6.next) {case 0:
+	function _callee6(window, tabId) {var customName, whitelistWindow, whitelistTab, filteredWindow, newWindow, emptyTab, i, newTab, tabCreated, names;return regeneratorRuntime.wrap(function _callee6$(_context6) {while (1) {switch (_context6.prev = _context6.next) {case 0:
 
 						customName = false;
 						if (window && window.name && window.customName) {
@@ -8501,10 +8501,10 @@ var removeLocalStorage = function () {var _ref3 = _asyncToGenerator(regeneratorR
 							whitelistWindow = ["left", "top", "width", "height", "incognito", "type"];
 						}
 
-						whitelistTab = ["url", "active", "selected", "pinned"];
+						whitelistTab = ["url", "active", "selected", "pinned", "index"];
 
 						if (navigator.userAgent.search("Firefox") > -1) {
-							whitelistTab = ["url", "active", "pinned"];
+							whitelistTab = ["url", "active", "pinned", "index"];
 						}
 
 						filteredWindow = Object.keys(window.windowsInfo).
@@ -8513,27 +8513,27 @@ var removeLocalStorage = function () {var _ref3 = _asyncToGenerator(regeneratorR
 						}).
 						reduce(function (obj, key) {
 							obj[key] = window.windowsInfo[key];
-							if (key == "left" || key == "top") {
-								if (obj[key] < 0) obj[key] = 0;
-								if (obj[key] > 800) obj[key] = 0;
-							}
-							if (key == "width" || key == "height") {
-								if (obj[key] > 800) obj[key] = 800;
-							}
-
 							return obj;
 						}, {});
-						console.log("filtered window", filteredWindow);_context6.next = 10;return (
+
+						if (filteredWindow.left < 0 || filteredWindow.left > 800) filteredWindow.left = 0;
+						if (filteredWindow.top < 0 || filteredWindow.top > 600) filteredWindow.top = 0;
+						if (filteredWindow.width > 800) filteredWindow.width = 800;
+						if (filteredWindow.height > 600) filteredWindow.height = 600;
+
+						filteredWindow.type = "normal";_context6.next = 14;return (
+
+
 
 							browser.windows.create(filteredWindow).catch(function (error) {
 								console.error(error);
 								console.log(error);
 								console.log(error.message);
-							}));case 10:newWindow = _context6.sent;
+							}));case 14:newWindow = _context6.sent;
 
 						emptyTab = newWindow.tabs[0].id;
 
-						i = 0;case 13:if (!(i < window.tabs.length)) {_context6.next = 31;break;}
+						i = 0;case 17:if (!(i < window.tabs.length)) {_context6.next = 36;break;}
 						newTab = Object.keys(window.tabs[i]).
 						filter(function (key) {
 							return whitelistTab.includes(key);
@@ -8541,24 +8541,28 @@ var removeLocalStorage = function () {var _ref3 = _asyncToGenerator(regeneratorR
 						reduce(function (obj, key) {
 							obj[key] = window.tabs[i][key];
 							return obj;
-						}, {});
-						console.log("source tab", newTab);
+						}, {});if (!(
+
+						tabId != null && tabId != newTab.index)) {_context6.next = 21;break;}return _context6.abrupt("continue", 33);case 21:
+
+
+						newTab.windowId = newWindow.id;
+
 						if (navigator.userAgent.search("Firefox") > -1) {
 							if (!!newTab.url && newTab.url.search("about:") > -1) {
 								console.log("filtered by about: url", newTab.url);
 								newTab.url = "";
 							}
-						}
-						newTab.windowId = newWindow.id;_context6.prev = 18;_context6.next = 21;return (
+						}_context6.prev = 23;_context6.next = 26;return (
 
 							browser.tabs.create(newTab).catch(function (error) {
 								console.error(error);
 								console.log(error);
 								console.log(error.message);
-							}));case 21:tabCreated = _context6.sent;_context6.next = 28;break;case 24:_context6.prev = 24;_context6.t0 = _context6["catch"](18);
+							}));case 26:tabCreated = _context6.sent;_context6.next = 33;break;case 29:_context6.prev = 29;_context6.t0 = _context6["catch"](23);
 
 						console.log("couldn't restore tab");
-						console.error(_context6.t0);case 28:i++;_context6.next = 13;break;case 31:_context6.next = 33;return (
+						console.error(_context6.t0);case 33:i++;_context6.next = 17;break;case 36:_context6.next = 38;return (
 
 
 
@@ -8566,20 +8570,20 @@ var removeLocalStorage = function () {var _ref3 = _asyncToGenerator(regeneratorR
 								console.error(error);
 								console.log(error);
 								console.log(error.message);
-							}));case 33:if (!
+							}));case 38:if (!
 
-						customName) {_context6.next = 41;break;}_context6.next = 36;return (
-							getLocalStorage("windowNames"));case 36:names = _context6.sent;
+						customName) {_context6.next = 46;break;}_context6.next = 41;return (
+							getLocalStorage("windowNames"));case 41:names = _context6.sent;
 						if (!!names) {
 							names = JSON.parse(names);
 						} else {
 							names = {};
 						}
-						names[newWindow.id] = customName || "";_context6.next = 41;return (
-							setLocalStorage("windowNames", JSON.stringify(names)));case 41:_context6.next = 43;return (
+						names[newWindow.id] = customName || "";_context6.next = 46;return (
+							setLocalStorage("windowNames", JSON.stringify(names)));case 46:_context6.next = 48;return (
 
 
-							browser.windows.update(newWindow.id, { focused: true }));case 43:case "end":return _context6.stop();}}}, _callee6, this, [[18, 24]]);}));return function createWindowWithSessionTabs(_x7) {return _ref6.apply(this, arguments);};}();var focusOnTabAndWindow = function () {var _ref7 = _asyncToGenerator(regeneratorRuntime.mark(
+							browser.windows.update(newWindow.id, { focused: true }));case 48:case "end":return _context6.stop();}}}, _callee6, this, [[23, 29]]);}));return function createWindowWithSessionTabs(_x7, _x8) {return _ref6.apply(this, arguments);};}();var focusOnTabAndWindow = function () {var _ref7 = _asyncToGenerator(regeneratorRuntime.mark(
 
 
 
@@ -8600,7 +8604,7 @@ var removeLocalStorage = function () {var _ref3 = _asyncToGenerator(regeneratorR
 							browser.tabs.update(tabId, { active: true }).then(function (tabId, windowId) {
 								tabActiveChanged({ tabId: tabId, windowId: windowId });
 							}.bind(this, tabId, windowId));
-						}.bind(this, tabId, windowId));case 3:case "end":return _context7.stop();}}}, _callee7, this);}));return function focusOnTabAndWindow(_x8) {return _ref7.apply(this, arguments);};}();var updateTabCount = function () {var _ref8 = _asyncToGenerator(regeneratorRuntime.mark(
+						}.bind(this, tabId, windowId));case 3:case "end":return _context7.stop();}}}, _callee7, this);}));return function focusOnTabAndWindow(_x9) {return _ref7.apply(this, arguments);};}();var updateTabCount = function () {var _ref8 = _asyncToGenerator(regeneratorRuntime.mark(
 
 
 
@@ -8681,7 +8685,7 @@ var removeLocalStorage = function () {var _ref3 = _asyncToGenerator(regeneratorR
 
 
 
-						updateTabCountDebounce();case 17:case "end":return _context9.stop();}}}, _callee9, this);}));return function tabAdded(_x9) {return _ref9.apply(this, arguments);};}();var openSidebar = function () {var _ref10 = _asyncToGenerator(regeneratorRuntime.mark(
+						updateTabCountDebounce();case 17:case "end":return _context9.stop();}}}, _callee9, this);}));return function tabAdded(_x10) {return _ref9.apply(this, arguments);};}();var openSidebar = function () {var _ref10 = _asyncToGenerator(regeneratorRuntime.mark(
 
 
 
@@ -9090,9 +9094,9 @@ var removeLocalStorage = function () {var _ref3 = _asyncToGenerator(regeneratorR
 														browser.windows.update(windows[i].id, { "state": "minimized" }));case 32:i--;_context16.next = 27;break;case 35:
 
 
-													;case 36:case "end":return _context16.stop();}}}, _callee16, this, [[4, 8, 12, 20], [13,, 15, 19]]);}));return function (_x11, _x12) {return _ref17.apply(this, arguments);};}().
+													;case 36:case "end":return _context16.stop();}}}, _callee16, this, [[4, 8, 12, 20], [13,, 15, 19]]);}));return function (_x12, _x13) {return _ref17.apply(this, arguments);};}().
 							bind(null, windowId));
-						}case 20:case "end":return _context17.stop();}}}, _callee17, this);}));return function hideWindows(_x10) {return _ref16.apply(this, arguments);};}();var windowActive = function () {var _ref18 = _asyncToGenerator(regeneratorRuntime.mark(
+						}case 20:case "end":return _context17.stop();}}}, _callee17, this);}));return function hideWindows(_x11) {return _ref16.apply(this, arguments);};}();var windowActive = function () {var _ref18 = _asyncToGenerator(regeneratorRuntime.mark(
 
 
 
@@ -9122,7 +9126,7 @@ var removeLocalStorage = function () {var _ref3 = _asyncToGenerator(regeneratorR
 
 						if (windows.indexOf(windowId) > -1) windows.splice(windows.indexOf(windowId), 1);
 						windows.unshift(windowId);_context18.next = 13;return (
-							setLocalStorage("windowAge", JSON.stringify(windows)));case 13:case "end":return _context18.stop();}}}, _callee18, this);}));return function windowActive(_x13) {return _ref18.apply(this, arguments);};}();var cleanUp = function () {var _ref20 = _asyncToGenerator(regeneratorRuntime.mark(
+							setLocalStorage("windowAge", JSON.stringify(windows)));case 13:case "end":return _context18.stop();}}}, _callee18, this);}));return function windowActive(_x14) {return _ref18.apply(this, arguments);};}();var cleanUp = function () {var _ref20 = _asyncToGenerator(regeneratorRuntime.mark(
 
 
 
@@ -9244,7 +9248,7 @@ var removeLocalStorage = function () {var _ref3 = _asyncToGenerator(regeneratorR
 							}
 						}_context20.next = 47;break;case 43:_context20.prev = 43;_context20.t1 = _context20["catch"](39);_didIteratorError4 = true;_iteratorError4 = _context20.t1;case 47:_context20.prev = 47;_context20.prev = 48;if (!_iteratorNormalCompletion4 && _iterator4.return) {_iterator4.return();}case 50:_context20.prev = 50;if (!_didIteratorError4) {_context20.next = 53;break;}throw _iteratorError4;case 53:return _context20.finish(50);case 54:return _context20.finish(47);case 55:_context20.next = 57;return (
 
-							setLocalStorage("windowNames", JSON.stringify(names)));case 57:case "end":return _context20.stop();}}}, _callee20, this, [[7, 11, 15, 23], [16,, 18, 22], [39, 43, 47, 55], [48,, 50, 54]]);}));return function cleanUp() {return _ref20.apply(this, arguments);};}();function _asyncToGenerator(fn) {return function () {var gen = fn.apply(this, arguments);return new Promise(function (resolve, reject) {function step(key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {return Promise.resolve(value).then(function (value) {step("next", value);}, function (err) {step("throw", err);});}}return step("next");});};}var browser = browser || chrome;var globalTabsActive = [];var globalDisplayInfo = [];var globalLocalStorageAvailable = true;browser.runtime.onStartup.addListener(_asyncToGenerator(regeneratorRuntime.mark(function _callee() {return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:console.log(" ON STARTUP ");_context.next = 3;return checkLocalStorageAvailable();case 3:case "end":return _context.stop();}}}, _callee, this);})));function focusOnTabAndWindowDelayed(tab) {var tab = JSON.parse(JSON.stringify(tab));setTimeout(focusOnTabAndWindow.bind(this, tab), 125);}function focusOnWindowDelayed(windowId) {setTimeout(focusOnWindow.bind(this, windowId), 125);}function focusOnWindow(windowId) {browser.windows.update(windowId, { focused: true });}var updateTabCountDebounce = debounce(updateTabCount, 250);function tabRemoved() {updateTabCountDebounce();}function tabActiveChanged(tab) {if (!!tab && !!tab.tabId) {if (!globalTabsActive) globalTabsActive = [];if (!!globalTabsActive && globalTabsActive.length > 0) {var lastActive = globalTabsActive[globalTabsActive.length - 1];if (!!lastActive && lastActive.tabId == tab.tabId && lastActive.windowId == tab.windowId) {return;}}while (globalTabsActive.length > 20) {globalTabsActive.shift();}for (var i = globalTabsActive.length - 1; i >= 0; i--) {if (globalTabsActive[i].tabId == tab.tabId) {globalTabsActive.splice(i, 1);}};globalTabsActive.push(tab);}updateTabCountDebounce();}function debounce(func, wait, immediate) {var timeout;return function () {var context = this,args = arguments;var later = function later() {timeout = null;if (!immediate) func.apply(context, args);};var callNow = immediate && !timeout;clearTimeout(timeout);timeout = setTimeout(later, wait);if (callNow) func.apply(context, args);};};function localStorageAvailable() {return globalLocalStorageAvailable;}function windowFocus(windowId) {try {if (!!windowId) {windowActive(windowId);hideWindows(windowId);}} catch (e) {}}function windowCreated(window) {try {if (!!window && !!window.id) {windowActive(window.id);}} catch (e) {}}function windowRemoved(windowId) {try {if (!!windowId) {windowActive(windowId);}} catch (e) {}}function is_in_bounds(object, bounds) {var C = object,B = bounds;if (C.left >= B.left && C.left <= B.left + B.width) {if (C.top >= B.top && C.top <= B.top + B.height) {return true;}}return false;};browser.commands.onCommand.addListener(function (command) {if (command == "switch_to_previous_active_tab") {if (!!globalTabsActive && globalTabsActive.length > 1) {focusOnTabAndWindow(globalTabsActive[globalTabsActive.length - 2]);}}});browser.runtime.onMessage.addListener(function (request, sender, sendResponse) {switch (request.command) {case "reload_popup_controls":setupPopup();break;case "update_tab_count":updateTabCount();break;case "discard_tabs":discardTabs(request.tabs);break;case "move_tabs_to_window":moveTabsToWindow(request.window_id, request.tabs);break;case "focus_on_tab_and_window":focusOnTabAndWindow(request.tab);break;case "focus_on_tab_and_window_delayed":focusOnTabAndWindowDelayed(request.tab);break;case "focus_on_window":focusOnWindow(request.window_id);break;case "focus_on_window_delayed":focusOnWindowDelayed(request.window_id);break;case "create_window_with_tabs":createWindowWithTabs(request.tabs);break;case "create_window_with_session_tabs":createWindowWithSessionTabs(request.window);break;case "close_tabs":closeTabs(request.tabs);break;}});_asyncToGenerator(regeneratorRuntime.mark(function _callee19() {var windows, i;return regeneratorRuntime.wrap(function _callee19$(_context19) {while (1) {switch (_context19.prev = _context19.next) {case 0:_context19.next = 2;return checkLocalStorageAvailable();case 2:_context19.next = 4;return browser.windows.getAll({ populate: true });case 4:windows = _context19.sent;_context19.next = 7;return setLocalStorage("windowAge", JSON.stringify([]));case 7:if (!!windows && windows.length > 0) {windows.sort(function (a, b) {if (a.id < b.id) return 1;if (a.id > b.id) return -1;return 0;});for (i = 0; i < windows.length; i++) {if (!!windows[i].id) windowActive(windows[i].id);};}case 8:case "end":return _context19.stop();}}}, _callee19, this);}))();
+							setLocalStorage("windowNames", JSON.stringify(names)));case 57:case "end":return _context20.stop();}}}, _callee20, this, [[7, 11, 15, 23], [16,, 18, 22], [39, 43, 47, 55], [48,, 50, 54]]);}));return function cleanUp() {return _ref20.apply(this, arguments);};}();function _asyncToGenerator(fn) {return function () {var gen = fn.apply(this, arguments);return new Promise(function (resolve, reject) {function step(key, arg) {try {var info = gen[key](arg);var value = info.value;} catch (error) {reject(error);return;}if (info.done) {resolve(value);} else {return Promise.resolve(value).then(function (value) {step("next", value);}, function (err) {step("throw", err);});}}return step("next");});};}var browser = browser || chrome;var globalTabsActive = [];var globalDisplayInfo = [];var globalLocalStorageAvailable = true;browser.runtime.onStartup.addListener(_asyncToGenerator(regeneratorRuntime.mark(function _callee() {return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:console.log(" ON STARTUP ");_context.next = 3;return checkLocalStorageAvailable();case 3:case "end":return _context.stop();}}}, _callee, this);})));function focusOnTabAndWindowDelayed(tab) {var tab = JSON.parse(JSON.stringify(tab));setTimeout(focusOnTabAndWindow.bind(this, tab), 125);}function focusOnWindowDelayed(windowId) {setTimeout(focusOnWindow.bind(this, windowId), 125);}function focusOnWindow(windowId) {browser.windows.update(windowId, { focused: true });}var updateTabCountDebounce = debounce(updateTabCount, 250);function tabRemoved() {updateTabCountDebounce();}function tabActiveChanged(tab) {if (!!tab && !!tab.tabId) {if (!globalTabsActive) globalTabsActive = [];if (!!globalTabsActive && globalTabsActive.length > 0) {var lastActive = globalTabsActive[globalTabsActive.length - 1];if (!!lastActive && lastActive.tabId == tab.tabId && lastActive.windowId == tab.windowId) {return;}}while (globalTabsActive.length > 20) {globalTabsActive.shift();}for (var i = globalTabsActive.length - 1; i >= 0; i--) {if (globalTabsActive[i].tabId == tab.tabId) {globalTabsActive.splice(i, 1);}};globalTabsActive.push(tab);}updateTabCountDebounce();}function debounce(func, wait, immediate) {var timeout;return function () {var context = this,args = arguments;var later = function later() {timeout = null;if (!immediate) func.apply(context, args);};var callNow = immediate && !timeout;clearTimeout(timeout);timeout = setTimeout(later, wait);if (callNow) func.apply(context, args);};};function localStorageAvailable() {return globalLocalStorageAvailable;}function windowFocus(windowId) {try {if (!!windowId) {windowActive(windowId);hideWindows(windowId);}} catch (e) {}}function windowCreated(window) {try {if (!!window && !!window.id) {windowActive(window.id);}} catch (e) {}}function windowRemoved(windowId) {try {if (!!windowId) {windowActive(windowId);}} catch (e) {}}function is_in_bounds(object, bounds) {var C = object,B = bounds;if (C.left >= B.left && C.left <= B.left + B.width) {if (C.top >= B.top && C.top <= B.top + B.height) {return true;}}return false;};browser.commands.onCommand.addListener(function (command) {if (command == "switch_to_previous_active_tab") {if (!!globalTabsActive && globalTabsActive.length > 1) {focusOnTabAndWindow(globalTabsActive[globalTabsActive.length - 2]);}}});browser.runtime.onMessage.addListener(function (request, sender, sendResponse) {switch (request.command) {case "reload_popup_controls":setupPopup();break;case "update_tab_count":updateTabCount();break;case "discard_tabs":discardTabs(request.tabs);break;case "move_tabs_to_window":moveTabsToWindow(request.window_id, request.tabs);break;case "focus_on_tab_and_window":focusOnTabAndWindow(request.tab);break;case "focus_on_tab_and_window_delayed":focusOnTabAndWindowDelayed(request.tab);break;case "focus_on_window":focusOnWindow(request.window_id);break;case "focus_on_window_delayed":focusOnWindowDelayed(request.window_id);break;case "create_window_with_tabs":createWindowWithTabs(request.tabs);break;case "create_window_with_session_tabs":createWindowWithSessionTabs(request.window, request.tab_id);break;case "close_tabs":closeTabs(request.tabs);break;}});_asyncToGenerator(regeneratorRuntime.mark(function _callee19() {var windows, i;return regeneratorRuntime.wrap(function _callee19$(_context19) {while (1) {switch (_context19.prev = _context19.next) {case 0:_context19.next = 2;return checkLocalStorageAvailable();case 2:_context19.next = 4;return browser.windows.getAll({ populate: true });case 4:windows = _context19.sent;_context19.next = 7;return setLocalStorage("windowAge", JSON.stringify([]));case 7:if (!!windows && windows.length > 0) {windows.sort(function (a, b) {if (a.id < b.id) return 1;if (a.id > b.id) return -1;return 0;});for (i = 0; i < windows.length; i++) {if (!!windows[i].id) windowActive(windows[i].id);};}case 8:case "end":return _context19.stop();}}}, _callee19, this);}))();
 
 
 setInterval(setupListeners, 300000);

@@ -52,7 +52,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 			if (typeof localStorage["sessionsFeature"] === "undefined") localStorage["sessionsFeature"] = "0";
 			if (typeof localStorage["hideWindows"] === "undefined") localStorage["hideWindows"] = "0";
 			if (typeof localStorage["filter-tabs"] === "undefined") localStorage["filter-tabs"] = "0";
-			if (typeof localStorage["version"] === "undefined") localStorage["version"] = "5.3.0";
+			if (typeof localStorage["version"] === "undefined") localStorage["version"] = "5.3.1";
 
 			layout = localStorage["layout"];
 			tabLimit = JSON.parse(localStorage["tabLimit"]);
@@ -115,6 +115,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 			optionsActive: !!_this7.props.optionsActive,
 			filterTabs: filterTabs,
 			dupTabs: false,
+			dragFavicon: "",
 			colorsActive: false };
 
 
@@ -187,9 +188,16 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 
 		} }, { key: "hoverIcon", value: function hoverIcon(
 		e) {
+			if (e && e.nativeEvent) {
+				e.nativeEvent.preventDefault();
+				e.nativeEvent.stopPropagation();
+			}
+
 			var text = "";
 			if (e && e.target && !!e.target.title) {
 				text = e.target.title;
+			} else if (typeof e == "string") {
+				text = e;
 			}
 			var bottom = " ";
 			if (text.indexOf("\n") > -1) {
@@ -240,7 +248,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 						ref: "root",
 						tabIndex: 0 },
 
-					React.createElement("div", { className: "window-container " + this.state.layout + " " + (this.state.optionsActive ? "hidden" : ""), ref: "windowcontainer", tabIndex: 2 },
+					!this.state.optionsActive && React.createElement("div", { className: "window-container " + this.state.layout, ref: "windowcontainer", tabIndex: 2 },
 						this.state.windows.map(function (window) {
 							if (window.state == "minimized") return;
 							if (!!this.state.colorsActive && this.state.colorsActive !== window.id) return;
@@ -265,11 +273,13 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 									tabMiddleClick: _this.deleteTab.bind(_this),
 									select: _this.select.bind(_this),
 									selectTo: _this.selectTo.bind(_this),
+									draggable: true,
 									drag: _this.drag.bind(_this),
 									drop: _this.drop.bind(_this),
 									dropWindow: _this.dropWindow.bind(_this),
 									windowTitles: _this.state.windowTitles,
 									lastOpenWindow: _this.state.lastOpenWindow,
+									dragFavicon: _this.dragFavicon.bind(_this),
 									ref: "window" + window.id }));
 
 
@@ -303,11 +313,13 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 									tabMiddleClick: _this.deleteTab.bind(_this),
 									select: _this.select.bind(_this),
 									selectTo: _this.selectTo.bind(_this),
+									draggable: true,
 									drag: _this.drag.bind(_this),
 									drop: _this.drop.bind(_this),
 									dropWindow: _this.dropWindow.bind(_this),
 									windowTitles: _this.state.windowTitles,
 									lastOpenWindow: _this.state.lastOpenWindow,
+									dragFavicon: _this.dragFavicon.bind(_this),
 									ref: "window" + window.id }));
 
 
@@ -347,7 +359,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 						}.bind(this)) :
 						false),
 
-					React.createElement("div", { className: "options-container " + (this.state.optionsActive ? "" : "hidden"), ref: "options-container" },
+					this.state.optionsActive && React.createElement("div", { className: "options-container", ref: "options-container" },
 						React.createElement(TabOptions, {
 							compact: this.state.compact,
 							dark: this.state.dark,
@@ -411,7 +423,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 
 						React.createElement("input", { type: "text", disabled: true, className: "taburl", ref: "topboxurl", placeholder: this.getTip(), value: this.state.bottomText })),
 
-					React.createElement("div", { className: "window searchbox " + (this.state.optionsActive || !!this.state.colorsActive ? "hidden" : "") },
+					!this.state.optionsActive && !this.state.colorsActive && React.createElement("div", { className: "window searchbox" },
 						React.createElement("table", null,
 							React.createElement("tbody", null,
 								React.createElement("tr", null,
@@ -568,6 +580,13 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 			}.bind(this),
 			500);
 
+		} }, { key: "dragFavicon", value: function dragFavicon(
+		val) {
+			if (!val) {
+				return this.state.dragFavicon;
+			} else {
+				this.state.dragFavicon = val;
+			}
 		} }, { key: "rateExtension", value: function rateExtension()
 		{
 			if (navigator.userAgent.search("Firefox") > -1) {
@@ -850,7 +869,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 			var matchtext = "";
 			if (matches == 0 && searchLen > 0) {
 				this.setState({
-					topText: "No matches for '" + e.target.value + "'",
+					topText: "No matches for '" + searchQuery + "'",
 					bottomText: "" });
 
 			} else if (matches == 0) {
@@ -860,12 +879,12 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 
 			} else if (matches > 1) {
 				this.setState({
-					topText: Object.keys(this.state.selection).length + " matches for '" + e.target.value + "'",
+					topText: Object.keys(this.state.selection).length + " matches for '" + searchQuery + "'",
 					bottomText: "Press enter to move them to a new window" });
 
 			} else if (matches == 1) {
 				this.setState({
-					topText: Object.keys(this.state.selection).length + " match for '" + e.target.value + "'",
+					topText: Object.keys(this.state.selection).length + " match for '" + searchQuery + "'",
 					bottomText: "Press enter to switch to the tab" });
 
 			}
@@ -1187,17 +1206,23 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 					els.scrollIntoView({ behavior: this.state.animations ? "smooth" : "instant", block: "center", inline: "nearest" });
 				}
 			}
-		} }, { key: "changelayout", value: function changelayout()
-		{
-			if (this.state.layout == "blocks") {
-				localStorage["layout"] = this.state.layout = "blocks-big";
-			} else if (this.state.layout == "blocks-big") {
-				localStorage["layout"] = this.state.layout = "horizontal";
-			} else if (this.state.layout == "horizontal") {
-				localStorage["layout"] = this.state.layout = "vertical";
+		} }, { key: "changelayout", value: function changelayout(
+		layout) {
+			var newLayout;
+			if (layout && typeof layout == "string") {
+				newLayout = layout;
 			} else {
-				localStorage["layout"] = this.state.layout = "blocks";
+				if (this.state.layout == "blocks") {
+					newLayout = this.state.layout = "blocks-big";
+				} else if (this.state.layout == "blocks-big") {
+					newLayout = this.state.layout = "horizontal";
+				} else if (this.state.layout == "horizontal") {
+					newLayout = this.state.layout = "vertical";
+				} else {
+					newLayout = this.state.layout = "blocks";
+				}
 			}
+			localStorage["layout"] = this.state.layout = newLayout;
 			this.setState({ topText: "Switched to " + this.readablelayout(this.state.layout) + " view" });
 			this.setState({ bottomText: " " });
 			this.forceUpdate();
@@ -1281,7 +1306,6 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 
 			var rangeIndex1;
 			var rangeIndex2;
-			var selectedTabs = [];
 			for (var i = 0; i < tabs.length; i++) {
 				if (tabs[i].id == id) {
 					rangeIndex1 = i;
@@ -1504,8 +1528,10 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 			this.darkText();
 			if (this.state.dark) {
 				document.body.className = "dark";
+				document.documentElement.className = "dark";
 			} else {
 				document.body.className = "";
+				document.documentElement.className = "";
 			}
 			this.forceUpdate();
 		} }, { key: "darkText", value: function darkText()
