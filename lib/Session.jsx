@@ -14,7 +14,9 @@ class Session extends React.Component {
 
 		this.stop = this.stop.bind(this);
 		this.windowClick = this.windowClick.bind(this);
+		this.windowTabClick = this.windowTabClick.bind(this);
 		this.close = this.close.bind(this);
+		this.openTab = this.openTab.bind(this);
 		this.maximize = this.maximize.bind(this);
 
 	}
@@ -39,6 +41,8 @@ class Session extends React.Component {
 					tab={tab}
 					selected={isSelected}
 					hidden={isHidden}
+					draggable={false}
+					click={_this.openTab}
 					middleClick={_this.props.tabMiddleClick}
 					hoverHandler={_this.props.hoverHandler}
 					searchActive={_this.props.searchActive}
@@ -50,8 +54,8 @@ class Session extends React.Component {
 		if (!hideWindow) {
 			if (!!this.props.tabactions) {
 				tabs.push(
-					<div className="newliner" />,
-					<div className="window-actions">
+					<div key={"sessionnl_" + _this.props.window.id} className="newliner" />,
+					<div key={"sessionwa_" + _this.props.window.id} className="window-actions">
 						<div
 							className={"icon tabaction restore " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
 							title={"Restore this saved window\nWill restore " + tabs.length + " tabs. Please note : The tabs will be restored without their history."}
@@ -88,7 +92,7 @@ class Session extends React.Component {
 			for (var j = 0; j < tabs.length; j++) {
 				children.push(tabs[j]);
 				if ((j + 1) % tabsperrow == 0 && j && this.props.layout.indexOf("blocks") > -1) {
-					children.push(<div className="newliner" />);
+					children.push(<div key={"sessionnl_" + _this.props.window.id + "_" + j} className="newliner" />);
 				}
 			}
 			var focused = false;
@@ -129,7 +133,17 @@ class Session extends React.Component {
 	stop(e) {
 		e.stopPropagation();
 	}
+	async windowTabClick(e) {
+		e.stopPropagation();
+	}
 	async windowClick(e) {
+		this.restoreSession(e, null);
+	}
+	async openTab(e, index) {
+		console.log(index);
+		this.restoreSession(e, index);
+	}
+	async restoreSession(e, tabId) {
 		var _this2 = this;
 		e.stopPropagation();
 		console.log("source window", this.props.window);
@@ -137,7 +151,7 @@ class Session extends React.Component {
 		// 	backgroundPage.createWindowWithTabs(tabs);
 		// }.bind(null, this.props.window.tabs));
 
-		browser.runtime.sendMessage({command: "create_window_with_session_tabs", window: this.props.window});
+		browser.runtime.sendMessage({command: "create_window_with_session_tabs", window: this.props.window, tab_id: tabId});
 
 
 

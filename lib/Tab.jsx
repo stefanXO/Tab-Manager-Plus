@@ -4,10 +4,13 @@ class Tab extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {
-			favIcon: ""
+			favIcon: "",
+			dragFavIcon: "",
+			hovered: false
 		};
 
 		this.onHover = this.onHover.bind(this);
+		this.onHoverOut = this.onHoverOut.bind(this);
 		this.onMouseDown = this.onMouseDown.bind(this);
 		this.click = this.click.bind(this);
 		this.dragStart = this.dragStart.bind(this);
@@ -21,6 +24,7 @@ class Tab extends React.Component {
 	}
 	componentWillMount() {
 		this.resolveFavIconUrl();
+		setTimeout(this.resolveFavIconUrl, 2500);
 	}
 	render() {
 		var children = [];
@@ -85,10 +89,11 @@ class Tab extends React.Component {
 			onClick: this.click,
 			onMouseDown: this.onMouseDown,
 			onMouseEnter: this.onHover,
+			onMouseOut: this.onHoverOut,
 			ref: this.tabRef
 		};
 
-		if (!!this.props.drag) {
+		if (!!this.props.draggable) {
 			tabDom["onDragStart"] = this.dragStart;
 			tabDom["onDragOver"] = this.dragOver;
 			tabDom["onDragLeave"] = this.dragOut;
@@ -104,16 +109,19 @@ class Tab extends React.Component {
 		);
 	}
 	onHover(e) {
+		this.setState({hover: true});
 		this.props.hoverHandler(this.props.tab);
 		this.resolveFavIconUrl();
 	}
+	onHoverOut(e) {
+		this.setState({hover: false});
+	}
 	onMouseDown(e) {
 		if (e.button === 0) return;
-		if (!this.props.drag) return;
+		if (!this.props.draggable) return;
 		this.click(e);
 	}
 	async click(e) {
-		if (!this.props.drag) return;
 		this.stopProp(e);
 
 		var tabId = this.props.tab.id;
@@ -129,10 +137,20 @@ class Tab extends React.Component {
 				this.props.select(tabId);
 			}
 		} else {
-			if (navigator.userAgent.search("Firefox") > -1) {
-				browser.runtime.sendMessage({command: "focus_on_tab_and_window_delayed", tab: { id: tabId, windowId: windowId }});
+			if (!!this.props.click) {
+				this.props.click(e, this.props.tab.id);
 			} else {
-				browser.runtime.sendMessage({command: "focus_on_tab_and_window", tab: { id: tabId, windowId: windowId }});
+				if (navigator.userAgent.search("Firefox") > -1) {
+					browser.runtime.sendMessage({
+						command: "focus_on_tab_and_window_delayed",
+						tab: {id: tabId, windowId: windowId}
+					});
+				} else {
+					browser.runtime.sendMessage({
+						command: "focus_on_tab_and_window",
+						tab: {id: tabId, windowId: windowId}
+					});
+				}
 			}
 
 			if (!!window.inPopup) window.close();
@@ -140,39 +158,53 @@ class Tab extends React.Component {
 		return false;
 	}
 	dragStart(e) {
-		if (!!this.props.drag) {
-			e.dataTransfer.setData("Text", this.props.tab.id);
-			e.dataTransfer.setData("text/uri-list", this.props.tab.url || "");
-			this.props.drag(e, this.props.tab.id);
-		} else {
-			return false;
-		}
+		if (!this.props.draggable) return false;
+		if (!this.props.drag) return false;
+
+		this.state.dragFavIcon = "";
+		this.props.dragFavicon(this.state.favIcon);
+		e.dataTransfer.setData("Text", this.props.tab.id);
+		e.dataTransfer.setData("text/uri-list", this.props.tab.url || "");
+		this.props.drag(e, this.props.tab.id);
 	}
 	dragOver(e) {
-		this.stopProp(e);
-		if (!this.props.drag) return;
+		if (!this.props.draggable) return false;
+		if (!this.props.drag) return false;
+
+		this.state.dragFavIcon = this.props.dragFavicon();
+
 		var before = this.state.draggingOver;
 		if (this.props.layout == "vertical") {
 			this.state.draggingOver = e.nativeEvent.offsetY > ReactDOM.findDOMNode(this).clientHeight / 2 ? "bottom" : "top";
 		} else {
 			this.state.draggingOver = e.nativeEvent.offsetX > ReactDOM.findDOMNode(this).clientWidth / 2 ? "right" : "left";
 		}
-		if (before != this.state.draggingOver) this.forceUpdate();
+		if (before != this.state.draggingOver) {
+			this.forceUpdate();
+			this.props.parentUpdate();
+		}
 	}
 	dragOut() {
+		if (!this.props.draggable) return false;
 		if (!this.props.drag) return;
+		this.state.dragFavIcon = "";
 		delete this.state.draggingOver;
 		this.forceUpdate();
+		this.props.parentUpdate();
 	}
 	drop(e) {
-		if (!!this.props.drop) {
-			this.stopProp(e);
-			var before = this.state.draggingOver == "top" || this.state.draggingOver == "left";
-			delete this.state.draggingOver;
-			this.props.drop(this.props.tab.id, before);
-		} else {
-			return false;
-		}
+		if (!this.props.draggable) return false;
+		if (!this.props.drag) return false;
+		if (!this.props.drop) return;
+
+		this.state.dragFavIcon = "";
+		this.stopProp(e);
+		var before = this.state.draggingOver == "top" || this.state.draggingOver == "left";
+		delete this.state.draggingOver;
+
+		this.props.drop(this.props.tab.id, before);
+		this.forceUpdate();
+		this.props.parentUpdate();
 	}
 	async resolveFavIconUrl() {
 		var image;

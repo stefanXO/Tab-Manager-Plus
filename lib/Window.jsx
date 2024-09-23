@@ -25,7 +25,8 @@ class Window extends React.Component {
 			windowTitles: [],
 			color: color,
 			name: name,
-			tabs: 0
+			tabs: 0,
+			hover: false
 		};
 
 		this.addTab = this.addTab.bind(this);
@@ -36,6 +37,7 @@ class Window extends React.Component {
 		this.close = this.close.bind(this);
 		this.colors = this.colors.bind(this);
 		this.dragOver = this.dragOver.bind(this);
+		this.dragLeave = this.dragLeave.bind(this);
 		this.drop = this.drop.bind(this);
 		this.maximize = this.maximize.bind(this);
 		this.minimize = this.minimize.bind(this);
@@ -43,6 +45,8 @@ class Window extends React.Component {
 		this.stop = this.stop.bind(this);
 		this.windowClick = this.windowClick.bind(this);
 		this.selectToFromTab = this.selectToFromTab.bind(this);
+		this.hoverWindow = this.hoverWindow.bind(this);
+		this.hoverWindowOut = this.hoverWindowOut.bind(this);
 	}
 
 	render() {
@@ -81,9 +85,11 @@ class Window extends React.Component {
 					searchActive={_this.props.searchActive}
 					select={_this.props.select}
 					selectTo={_this.selectToFromTab}
+					draggable={true}
 					drag={_this.props.drag}
 					drop={_this.props.drop}
 					dropWindow={_this.props.dropWindow}
+					dragFavicon={_this.props.dragFavicon}
 					parentUpdate={_this.forceUpdate.bind(_this)}
 					ref={"tab" + tab.id}
 					id={"tab-" + tab.id}
@@ -457,10 +463,13 @@ class Window extends React.Component {
 						" " +
 						(focused ? " focused" : "")
 					}
+					onDragEnter={this.dragOver}
 					onDragOver={this.dragOver}
+					onDragLeave={this.dragLeave}
 					onClick={this.windowClick}
-					title={"Focus this window\nWill select this window with " + tabs.length + " tabs"}
-					onMouseEnter={this.props.hoverIcon}
+					title={""}
+					onMouseEnter={this.hoverWindow.bind(null, tabs)}
+					onMouseLeave={this.hoverWindowOut}
 					onDrop={this.drop}
 				>
 					<div className="windowcontainer" title={"Focus this window\nWill select this window with " + tabs.length + " tabs"}>{children}</div>
@@ -478,7 +487,12 @@ class Window extends React.Component {
 		browser.tabs.create({ windowId: this.props.window.id });
 	}
 	dragOver(e) {
+		this.state.hover = true;
 		this.stopProp(e);
+	}
+	dragLeave(e) {
+		this.state.hover = false;
+		e.nativeEvent.preventDefault();
 	}
 	drop(e) {
 		var distance = 1000000;
@@ -515,6 +529,14 @@ class Window extends React.Component {
 		} else {
 			this.props.dropWindow(this.props.window.id);
 		}
+	}
+	hoverWindow(tabs, e) {
+		this.state.hover = true;
+		this.props.hoverIcon("Focus this window\nWill select this window with " + tabs.length + " tabs");
+		// this.props.hoverIcon(e);
+	}
+	hoverWindowOut(e) {
+		this.state.hover = false;
 	}
 	checkKey(e) {
 		// close popup when enter or escape have been pressed

@@ -115,6 +115,7 @@ class TabManager extends React.Component {
 			optionsActive: !!this.props.optionsActive,
 			filterTabs: filterTabs,
 			dupTabs: false,
+			dragFavicon: "",
 			colorsActive: false
 		};
 
@@ -187,9 +188,16 @@ class TabManager extends React.Component {
 		//this.update();
 	}
 	hoverIcon(e) {
+		if (e && e.nativeEvent) {
+			e.nativeEvent.preventDefault();
+			e.nativeEvent.stopPropagation();
+		}
+
 		var text = "";
 		if(e && e.target && !!e.target.title) {
 			text = e.target.title;
+		} else if (typeof (e) == "string") {
+			text = e;
 		}
 		var bottom = " ";
 		if (text.indexOf("\n") > -1) {
@@ -265,11 +273,13 @@ class TabManager extends React.Component {
 								tabMiddleClick={_this.deleteTab.bind(_this)}
 								select={_this.select.bind(_this)}
 								selectTo={_this.selectTo.bind(_this)}
+								draggable={true}
 								drag={_this.drag.bind(_this)}
 								drop={_this.drop.bind(_this)}
 								dropWindow={_this.dropWindow.bind(_this)}
 								windowTitles={_this.state.windowTitles}
 								lastOpenWindow={_this.state.lastOpenWindow}
+								dragFavicon={_this.dragFavicon.bind(_this)}
 								ref={"window" + window.id}
 							/>
 						);
@@ -303,11 +313,13 @@ class TabManager extends React.Component {
 								tabMiddleClick={_this.deleteTab.bind(_this)}
 								select={_this.select.bind(_this)}
 								selectTo={_this.selectTo.bind(_this)}
+								draggable={true}
 								drag={_this.drag.bind(_this)}
 								drop={_this.drop.bind(_this)}
 								dropWindow={_this.dropWindow.bind(_this)}
 								windowTitles={_this.state.windowTitles}
 								lastOpenWindow={_this.state.lastOpenWindow}
+								dragFavicon={_this.dragFavicon.bind(_this)}
 								ref={"window" + window.id}
 							/>
 						);
@@ -568,6 +580,13 @@ class TabManager extends React.Component {
 			}.bind(this),
 			500
 		);
+	}
+	dragFavicon(val) {
+		if (!val) {
+			return this.state.dragFavicon;
+		} else {
+			this.state.dragFavicon = val;
+		}
 	}
 	rateExtension() {
 		if (navigator.userAgent.search("Firefox") > -1) {
