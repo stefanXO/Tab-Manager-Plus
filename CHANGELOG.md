@@ -1,5 +1,7 @@
 next
 =====
+- You can now open single tabs from your saved sessions
+- Fix: Sometimes favicons would not load properly
 - Fix: Make sure session tabs are fully restored before closing the popup
 - Fix: Moving many tabs could stop early because of popup closing in the meantime
 - Fix: Closing many tabs could stop early because of popup closing in the meantime
