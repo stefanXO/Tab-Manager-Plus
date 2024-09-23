@@ -850,7 +850,7 @@ class TabManager extends React.Component {
 		var matchtext = "";
 		if (matches == 0 && searchLen > 0) {
 			this.setState({
-				topText: "No matches for '" + e.target.value + "'",
+				topText: "No matches for '" + searchQuery + "'",
 				bottomText: ""
 			});
 		} else if (matches == 0) {
@@ -860,12 +860,12 @@ class TabManager extends React.Component {
 			});
 		} else if (matches > 1) {
 			this.setState({
-				topText: Object.keys(this.state.selection).length + " matches for '" + e.target.value + "'",
+				topText: Object.keys(this.state.selection).length + " matches for '" + searchQuery + "'",
 				bottomText: "Press enter to move them to a new window"
 			});
 		} else if (matches == 1) {
 			this.setState({
-				topText: Object.keys(this.state.selection).length + " match for '" + e.target.value + "'",
+				topText: Object.keys(this.state.selection).length + " match for '" + searchQuery + "'",
 				bottomText: "Press enter to switch to the tab"
 			});
 		}
