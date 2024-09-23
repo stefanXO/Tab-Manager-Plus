@@ -16,6 +16,8 @@ class Tab extends React.Component {
 		this.drop = this.drop.bind(this);
 		this.resolveFavIconUrl = this.resolveFavIconUrl.bind(this);
 
+		this.tabRef = React.createRef();
+
 	}
 	componentWillMount() {
 		this.resolveFavIconUrl();
@@ -82,7 +84,8 @@ class Tab extends React.Component {
 			title: this.props.tab.title,
 			onClick: this.click,
 			onMouseDown: this.onMouseDown,
-			onMouseEnter: this.onHover
+			onMouseEnter: this.onHover,
+			ref: this.tabRef
 		};
 
 		if (!!this.props.drag) {

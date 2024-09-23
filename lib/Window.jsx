@@ -480,8 +480,40 @@ class Window extends React.Component {
 		this.stopProp(e);
 	}
 	drop(e) {
+		var distance = 1000000;
+		var closestTab = null;
+		var closestRef = null;
+
+		for (var i = 0; i < this.props.tabs.length; i++) {
+			var tab = this.props.tabs[i];
+			var tabRef = this.refs["tab" + tab.id].tabRef.current;
+			var tabRect = tabRef.getBoundingClientRect();
+			var x = e.nativeEvent.clientX;
+			var y = e.nativeEvent.clientY;
+			var dx = tabRect.x - x;
+			var dy = tabRect.y - y;
+			var d = Math.sqrt(dx * dx + dy * dy);
+			if (d < distance) {
+				distance = d;
+				closestTab = tab.id;
+				closestRef = tabRef;
+			}
+		}
+
 		this.stopProp(e);
-		this.props.dropWindow(this.props.window.id);
+
+		if (closestTab != null) {
+			var before = null;
+			var boundingRect = closestRef.getBoundingClientRect();
+			if (this.props.layout == "vertical") {
+				before = e.nativeEvent.clientY < boundingRect.top ? true : false;
+			} else {
+				before = e.nativeEvent.clientX < boundingRect.left ? true : false;
+			}
+			this.props.drop(closestTab, before);
+		} else {
+			this.props.dropWindow(this.props.window.id);
+		}
 	}
 	checkKey(e) {
 		// close popup when enter or escape have been pressed
