@@ -565,11 +565,10 @@ class TabManager extends React.Component {
 				}
 			}
 		}
-		var runTabUpdateDebounced = debounce(runTabUpdate, 500);
 
 		browser.tabs.onCreated.addListener(runUpdate);
 		browser.tabs.onUpdated.addListener(runUpdate);
-		browser.tabs.onUpdated.addListener(runTabUpdateDebounced);
+		browser.tabs.onUpdated.addListener(runTabUpdate);
 		browser.tabs.onMoved.addListener(runUpdate);
 		browser.tabs.onRemoved.addListener(runUpdate);
 		browser.tabs.onReplaced.addListener(runUpdate);
