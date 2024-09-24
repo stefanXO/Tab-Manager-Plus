@@ -15,7 +15,7 @@ class TabManager extends React.Component {
 					if (result) {
 						// The extension has the permissions.
 					} else {
-						localStorage["hideWindows"] = "0";
+						setLocalStorage("hideWindows", false);
 						this.state.hideWindows = false;
 					}
 				}.bind(this)
@@ -37,48 +37,6 @@ class TabManager extends React.Component {
 		var tabWidth = 800;
 		var tabHeight = 600;
 
-		if (this.localStorageAvailable()) {
-			if (!localStorage["layout"]) localStorage["layout"] = "blocks";
-			if (typeof localStorage["tabLimit"] === "undefined") localStorage["tabLimit"] = "0";
-			if (typeof localStorage["openInOwnTab"] === "undefined") localStorage["openInOwnTab"] = "0";
-			if (typeof localStorage["tabWidth"] === "undefined") localStorage["tabWidth"] = "800";
-			if (typeof localStorage["tabHeight"] === "undefined") localStorage["tabHeight"] = "600";
-			if (typeof localStorage["animations"] === "undefined") localStorage["animations"] = "1";
-			if (typeof localStorage["windowTitles"] === "undefined") localStorage["windowTitles"] = "1";
-			if (typeof localStorage["compact"] === "undefined") localStorage["compact"] = "0";
-			if (typeof localStorage["dark"] === "undefined") localStorage["dark"] = "0";
-			if (typeof localStorage["tabactions"] === "undefined") localStorage["tabactions"] = "1";
-			if (typeof localStorage["badge"] === "undefined") localStorage["badge"] = "1";
-			if (typeof localStorage["sessionsFeature"] === "undefined") localStorage["sessionsFeature"] = "0";
-			if (typeof localStorage["hideWindows"] === "undefined") localStorage["hideWindows"] = "0";
-			if (typeof localStorage["filter-tabs"] === "undefined") localStorage["filter-tabs"] = "0";
-			if (typeof localStorage["version"] === "undefined") localStorage["version"] = __VERSION__;
-
-			layout = localStorage["layout"];
-			tabLimit = JSON.parse(localStorage["tabLimit"]);
-			tabWidth = JSON.parse(localStorage["tabWidth"]);
-			tabHeight = JSON.parse(localStorage["tabHeight"]);
-			openInOwnTab = this.toBoolean(localStorage["openInOwnTab"]);
-			animations = this.toBoolean(localStorage["animations"]);
-			windowTitles = this.toBoolean(localStorage["windowTitles"]);
-			compact = this.toBoolean(localStorage["compact"]);
-			dark = this.toBoolean(localStorage["dark"]);
-			tabactions = this.toBoolean(localStorage["tabactions"]);
-			badge = this.toBoolean(localStorage["badge"]);
-			sessionsFeature = this.toBoolean(localStorage["sessionsFeature"]);
-			hideWindows = this.toBoolean(localStorage["hideWindows"]);
-			filterTabs = this.toBoolean(localStorage["filter-tabs"]);
-		}
-
-		if (dark) {
-			document.body.className = "dark";
-		} else {
-			document.body.className = "";
-		}
-
-		// var closeTimeout = setTimeout(function () {
-		//  window.close();
-		// }, 100000);
 		var closeTimeout;
 		var resetTimeout;
 
@@ -167,9 +125,86 @@ class TabManager extends React.Component {
 		this.windowTitlesText = this.windowTitlesText.bind(this);
 
 	}
-	componentWillMount() {
+	UNSAFE_componentWillMount() {
 		this.update();
 	}
+
+	async loadStorage() {
+		var layout = "blocks";
+		var animations = true;
+		var windowTitles = true;
+		var compact = false;
+		var dark = false;
+		var tabactions = true;
+		var badge = true;
+		var sessionsFeature = false;
+		var hideWindows = false;
+		var filterTabs = false;
+		var tabLimit = 0;
+		var openInOwnTab = false;
+		var tabWidth = 800;
+		var tabHeight = 600;
+
+		var storage = await browser.storage.local.get(null);
+
+		if (!storage["layout"]) storage["layout"] = "blocks";
+		if (typeof storage["tabLimit"] === "undefined") storage["tabLimit"] = 0;
+		if (typeof storage["tabWidth"] === "undefined") storage["tabWidth"] = 800;
+		if (typeof storage["tabHeight"] === "undefined") storage["tabHeight"] = 600;
+
+		if (typeof storage["animations"] === "undefined") storage["animations"] = true;
+		if (typeof storage["windowTitles"] === "undefined") storage["windowTitles"] = true;
+		if (typeof storage["tabactions"] === "undefined") storage["tabactions"] = true;
+		if (typeof storage["badge"] === "undefined") storage["badge"] = true;
+
+		if (typeof storage["openInOwnTab"] === "undefined") storage["openInOwnTab"] = false;
+		if (typeof storage["compact"] === "undefined") storage["compact"] = false;
+		if (typeof storage["dark"] === "undefined") storage["dark"] = false;
+		if (typeof storage["sessionsFeature"] === "undefined") storage["sessionsFeature"] = false;
+		if (typeof storage["hideWindows"] === "undefined") storage["hideWindows"] = false;
+		if (typeof storage["filter-tabs"] === "undefined") storage["filter-tabs"] = false;
+
+		if (typeof storage["version"] === "undefined") storage["version"] = __VERSION__;
+
+		layout = storage["layout"];
+		tabLimit = storage["tabLimit"];
+		tabWidth = storage["tabWidth"];
+		tabHeight = storage["tabHeight"];
+		openInOwnTab = storage["openInOwnTab"];
+		animations = storage["animations"];
+		windowTitles = storage["windowTitles"];
+		compact = storage["compact"];
+		dark = storage["dark"];
+		tabactions = storage["tabactions"];
+		badge = storage["badge"];
+		sessionsFeature = storage["sessionsFeature"];
+		hideWindows = storage["hideWindows"];
+		filterTabs = storage["filter-tabs"];
+
+		if (dark) {
+			document.body.className = "dark";
+		} else {
+			document.body.className = "";
+		}
+
+		this.setState({
+			layout: layout,
+			animations: animations,
+			windowTitles: windowTitles,
+			tabLimit: tabLimit,
+			openInOwnTab: openInOwnTab,
+			tabWidth: tabWidth,
+			tabHeight: tabHeight,
+			compact: compact,
+			dark: dark,
+			tabactions: tabactions,
+			badge: badge,
+			hideWindows: hideWindows,
+			sessionsFeature: sessionsFeature,
+			filterTabs: filterTabs
+		});
+	}
+
 	hoverHandler(tab) {
 		this.setState({ topText: tab.title || "" });
 		this.setState({ bottomText: tab.url || "" });
@@ -511,7 +546,12 @@ class TabManager extends React.Component {
 			</div>
 		);
 	}
-	componentDidMount() {
+
+	async componentDidMount()
+	{
+		await this.loadStorage();
+
+		var _this = this;
 
 		var runUpdate = debounce(this.update, 250);
 		runUpdate = runUpdate.bind(this);
@@ -537,7 +577,7 @@ class TabManager extends React.Component {
 
 		var _this = this;
 
-		setTimeout(function() {
+		setTimeout(async function() {
 			var scrollArea = document.getElementsByClassName("window-container")[0];
 			var activeWindow = document.getElementsByClassName("activeWindow");
 			if (!!activeWindow && activeWindow.length > 0) {
@@ -545,7 +585,7 @@ class TabManager extends React.Component {
 				if (!!activeTab && activeTab.length > 0) {
 					if (!!scrollArea && scrollArea.scrollTop > 0) {
 					} else {
-						var animations = _this.toBoolean(localStorage["animations"]);
+						var animations = await getLocalStorage("animations", false);
 						activeTab[0].scrollIntoView({ behavior: animations ? "smooth" : "instant", block: "center", inline: "nearest" });
 					}
 				}
@@ -556,7 +596,7 @@ class TabManager extends React.Component {
 		// box.focus();
 	}
 	async sessionSync() {
-		var values = await browser.storage.local.get(null);
+		var values = await getLocalStorage('sessions', {});
 		// console.log(values);
 		var sessions = [];
 		for (var key in values) {
@@ -613,15 +653,14 @@ class TabManager extends React.Component {
 		console.log("colorsActive", active, windowId, this.state.colorsActive);
 		this.forceUpdate();
 	}
+
 	async update() {
 		var windows = await browser.windows.getAll({ populate: true });
+		var sort_windows = await getLocalStorage("windowAge", []);
+
 		windows.sort(function(a, b) {
-			var windows = [];
-			if (!!localStorage["windowAge"]) {
-				windows = JSON.parse(localStorage["windowAge"]);
-			}
-			var aSort = windows.indexOf(a.id);
-			var bSort = windows.indexOf(b.id);
+			var aSort = sort_windows.indexOf(a.id);
+			var bSort = sort_windows.indexOf(b.id);
 			if (a.state == "minimized" && b.state != "minimized") return 1;
 			if (b.state == "minimized" && a.state != "minimized") return -1;
 			if (aSort < bSort) return -1;
@@ -1207,7 +1246,7 @@ class TabManager extends React.Component {
 			}
 		}
 	}
-	changelayout(layout) {
+	async changelayout(layout) {
 		var newLayout;
 		if (layout && typeof (layout) == "string") {
 			newLayout = layout;
@@ -1222,9 +1261,15 @@ class TabManager extends React.Component {
 				newLayout = this.state.layout = "blocks";
 			}
 		}
-		localStorage["layout"] = this.state.layout = newLayout;
-		this.setState({ topText: "Switched to " + this.readablelayout(this.state.layout) + " view" });
-		this.setState({ bottomText: " " });
+		this.state.layout = newLayout;
+		await setLocalStorage("layout", newLayout);
+
+		this.setState({
+			layout: newLayout,
+			topText: "Switched to " + this.readablelayout(this.state.layout) + " view",
+			bottomText: " "
+		});
+
 		this.forceUpdate();
 	}
 	nextlayout() {
@@ -1454,9 +1499,9 @@ class TabManager extends React.Component {
 			selection: {}
 		});
 	}
-	changeTabLimit(e) {
+	async changeTabLimit(e) {
 		this.state.tabLimit = e.target.value;
-		localStorage["tabLimit"] = JSON.stringify(this.state.tabLimit);
+		await setLocalStorage("tabLimit", this.state.tabLimit);
 		this.tabLimitText();
 		this.forceUpdate();
 	}
@@ -1465,9 +1510,9 @@ class TabManager extends React.Component {
 			bottomText: "Limit the number of tabs per window. Will move new tabs into a new window instead. 0 to turn off"
 		});
 	}
-	changeTabWidth(e) {
+	async changeTabWidth(e) {
 		this.state.tabWidth = e.target.value;
-		localStorage["tabWidth"] = JSON.stringify(this.state.tabWidth);
+		await setLocalStorage("tabWidth", this.state.tabWidth);
 		document.body.style.width = this.state.tabWidth + "px";
 		this.tabWidthText();
 		this.forceUpdate();
@@ -1477,9 +1522,9 @@ class TabManager extends React.Component {
 			bottomText: "Change the width of this window. 800 by default."
 		});
 	}
-	changeTabHeight(e) {
+	async changeTabHeight(e) {
 		this.state.tabHeight = e.target.value;
-		localStorage["tabHeight"] = JSON.stringify(this.state.tabHeight);
+		await setLocalStorage("tabHeight", this.state.tabHeight);
 		document.body.style.height = this.state.tabHeight + "px";
 		this.tabHeightText();
 		this.forceUpdate();
@@ -1489,9 +1534,9 @@ class TabManager extends React.Component {
 			bottomText: "Change the height of this window. 600 by default."
 		});
 	}
-	toggleAnimations() {
+	async toggleAnimations() {
 		this.state.animations = !this.state.animations;
-		localStorage["animations"] = this.state.animations ? "1" : "0";
+		await setLocalStorage("animations", this.state.animations);
 		this.animationsText();
 		this.forceUpdate();
 	}
@@ -1500,9 +1545,9 @@ class TabManager extends React.Component {
 			bottomText: "Enables/disables animations. Default : on"
 		});
 	}
-	toggleWindowTitles() {
+	async toggleWindowTitles() {
 		this.state.windowTitles = !this.state.windowTitles;
-		localStorage["windowTitles"] = this.state.windowTitles ? "1" : "0";
+		await setLocalStorage("windowTitles", this.state.windowTitles);
 		this.windowTitlesText();
 		this.forceUpdate();
 	}
@@ -1511,9 +1556,9 @@ class TabManager extends React.Component {
 			bottomText: "Enables/disables window titles. Default : on"
 		});
 	}
-	toggleCompact() {
+	async toggleCompact() {
 		this.state.compact = !this.state.compact;
-		localStorage["compact"] = this.state.compact ? "1" : "0";
+		await setLocalStorage("compact", this.state.compact);
 		this.compactText();
 		this.forceUpdate();
 	}
@@ -1522,9 +1567,9 @@ class TabManager extends React.Component {
 			bottomText: "Compact mode is a more compressed layout. Default : off"
 		});
 	}
-	toggleDark() {
+	async toggleDark() {
 		this.state.dark = !this.state.dark;
-		localStorage["dark"] = this.state.dark ? "1" : "0";
+		await setLocalStorage("dark", this.state.dark);
 		this.darkText();
 		if (this.state.dark) {
 			document.body.className = "dark";
@@ -1540,9 +1585,9 @@ class TabManager extends React.Component {
 			bottomText: "Dark mode inverts the layout - better on the eyes. Default : off"
 		});
 	}
-	toggleTabActions() {
+	async toggleTabActions() {
 		this.state.tabactions = !this.state.tabactions;
-		localStorage["tabactions"] = this.state.tabactions ? "1" : "0";
+		await setLocalStorage("tabactions", this.state.tabactions);
 		this.tabActionsText();
 		this.forceUpdate();
 	}
@@ -1553,7 +1598,7 @@ class TabManager extends React.Component {
 	}
 	async toggleBadge() {
 		this.state.badge = !this.state.badge;
-		localStorage["badge"] = this.state.badge ? "1" : "0";
+		await setLocalStorage("badge", this.state.badge);
 		this.badgeText();
 		browser.runtime.sendMessage({command: "update_tab_count"});
 		this.forceUpdate();
@@ -1563,9 +1608,9 @@ class TabManager extends React.Component {
 			bottomText: "Shows the number of open tabs on the Tab Manager icon. Default : on"
 		});
 	}
-	toggleOpenInOwnTab() {
+	async toggleOpenInOwnTab() {
 		this.state.openInOwnTab = !this.state.openInOwnTab;
-		localStorage["openInOwnTab"] = this.state.openInOwnTab ? "1" : "0";
+		await setLocalStorage("openInOwnTab", this.state.openInOwnTab);
 		this.openInOwnTabText();
 		browser.runtime.sendMessage({ command: "reload_popup_controls" });
 		this.forceUpdate();
@@ -1575,9 +1620,9 @@ class TabManager extends React.Component {
 			bottomText: "Open the Tab Manager by default in own tab, or as a popup?"
 		});
 	}
-	toggleSessions() {
+	async toggleSessions() {
 		this.state.sessionsFeature = !this.state.sessionsFeature;
-		localStorage["sessionsFeature"] = this.state.sessionsFeature ? "1" : "0";
+		await setLocalStorage("sessionsFeature", this.state.sessionsFeature);
 		this.sessionsText();
 		this.forceUpdate();
 	}
@@ -1649,10 +1694,11 @@ class TabManager extends React.Component {
 					for (var i = 0; i < backupFile.length; i++) {
 						var newSession = backupFile[i];
 						if (newSession.windowsInfo && newSession.tabs && newSession.id) {
-							var obj = {};
-							obj[newSession.id] = newSession;
+							var sessions = await getLocalStorage('sessions', {});
+							sessions[newSession.id] = newSession;
 							//this.state.sessions.push(obj);
-							var value = await browser.storage.local.set(obj).catch(function(err) {
+
+							var value = await setLocalStorage('sessions', sessions).catch(function(err) {
 								console.log(err);
 								console.error(err.message);
 								success--;
@@ -1693,7 +1739,7 @@ class TabManager extends React.Component {
 			}
 		}
 
-		localStorage["hideWindows"] = this.state.hideWindows ? "1" : "0";
+		await setLocalStorage("hideWindows", this.state.hideWindows);
 		this.hideText();
 		this.forceUpdate();
 	}
@@ -1702,9 +1748,9 @@ class TabManager extends React.Component {
 			bottomText: "Automatically minimizes inactive chrome windows. Default : off"
 		});
 	}
-	toggleFilterMismatchedTabs() {
+	async toggleFilterMismatchedTabs() {
 		this.state.filterTabs = !this.state.filterTabs;
-		localStorage["filter-tabs"] = this.state.filterTabs ? "1" : "0";
+		await setLocalStorage("filter-tabs", this.state.filterTabs);
 		this.forceUpdate();
 	}
 	getTip() {
