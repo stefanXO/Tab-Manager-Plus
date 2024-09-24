@@ -22,9 +22,6 @@
 	"optional_permissions": [
 		"system.display"
 	],
-	"content_security_policy": {
-		"extension_pages": "script-src 'self'; object-src 'self'; img-src chrome://favicon;"
-	},
 	"incognito":"spanning",
 	"background": {
 		"service_worker": "outlib/service_worker.js"
