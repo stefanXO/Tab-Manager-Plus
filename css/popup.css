@@ -190,7 +190,7 @@ h1,h2,h3,h4,h5,h6 {
 }
 .animations .window.blocks-big .tab:hover {
 	transform: scale(1.1);
-	filter: none; 
+	filter: none;
 }
 .animations .window.blocks-big .tab.search-active{
 	transform: scale(0.9);
@@ -284,11 +284,11 @@ h1,h2,h3,h4,h5,h6 {
 }
 .animations .tab {
 	transform: scale(1);
-	filter: none; 
+	filter: none;
 }
 .animations .tab:hover {
 	transform: scale(1.4);
-	filter: none; 
+	filter: none;
 }
 .animations.compact .tab:hover {
 	transform: scale(1.1);
@@ -578,16 +578,37 @@ h1,h2,h3,h4,h5,h6 {
 	width: calc(100% - 1rem);
 	margin: 0.6rem 0.5rem;
 }
-@media only screen and (min-width: 800px) {
+@media only screen and (min-width: 1001px) {
 	.window.vertical {
-		max-width: 31%;
+		width: calc(48% - 10px);
 		float: left;
 		margin: 10px;
 	}
 }
-@media only screen and (min-width: 1280px) {
+@media only screen and (min-width: 1501px) {
 	.window.vertical {
-		max-width: 25%;
+		width: calc(32% - 10px);
+		float: left;
+		margin: 10px;
+	}
+}
+@media only screen and (min-width: 2001px) {
+	.window.vertical {
+		width: calc(24% - 10px);
+		float: left;
+		margin: 10px;
+	}
+}
+@media only screen and (min-width: 2501px) {
+	.window.vertical {
+		width: calc(19% - 10px);
+		float: left;
+		margin: 10px;
+	}
+}
+@media only screen and (min-width: 3001px) {
+	.window.vertical {
+		width: calc(16% - 10px);
 		float: left;
 		margin: 10px;
 	}
@@ -821,7 +842,7 @@ h1,h2,h3,h4,h5,h6 {
 	clear: both;
 }
 .hrDiv {
-	width: 100%; height: 8px; border-bottom: 1px solid black; text-align: center; 
+	width: 100%; height: 8px; border-bottom: 1px solid black; text-align: center;
 }
 .hrSpan {
 	font-size: 12px; background-color: #F3F5F6; color: #555; padding: 0 10px;
