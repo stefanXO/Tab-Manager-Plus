@@ -24,17 +24,14 @@ setTimeout(loadApp, 3000);
 setTimeout(loadApp, 5000);
 setTimeout(loadApp, 15000);
 
-function loadApp() {
+async function loadApp() {
 	if (!!window.loaded) return;
 	if (window.inPopup) {
-		if (!!localStorage["tabHeight"]) {
-			var height = JSON.parse(localStorage["tabHeight"]);
-			document.body.style.height = height + "px";
-		}
-
-		if (!!localStorage["tabWidth"]) {
-			var width = JSON.parse(localStorage["tabWidth"]);
+		var height = await getLocalStorage("tabHeight", 0);
+		var width = await getLocalStorage("tabWidth", 0);
+		if (height > 0 && width > 0) {
 			document.body.style.width = width + "px";
+			document.body.style.height = height + "px";
 		}
 
 		var root = document.getElementById("root");
