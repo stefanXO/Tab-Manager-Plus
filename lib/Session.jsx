@@ -180,7 +180,15 @@ class Session extends React.Component {
 	}
 	async close(e) {
 		e.stopPropagation();
-		var value = await browser.storage.local.remove(this.props.window.id);
+
+		var sessions = await getLocalStorage('sessions', {});
+		delete sessions[this.props.window.id];
+
+		var value = await setLocalStorage('sessions', sessions).catch(function (err) {
+			console.log(err);
+			console.error(err.message);
+		});
+
 		console.log(value);
 		this.props.parentUpdate();
 		// browser.windows.remove(this.props.window.windowsInfo.id);
