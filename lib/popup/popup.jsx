@@ -1,4 +1,5 @@
 "use strict";
+
 window.loaded = false;
 if (window.location.search.indexOf("?popup") > -1) {
 	window.inPopup = true;
@@ -26,9 +27,11 @@ setTimeout(loadApp, 15000);
 
 async function loadApp() {
 	if (!!window.loaded) return;
+	var height = await getLocalStorage("tabHeight", 0);
+	var width = await getLocalStorage("tabWidth", 0);
+	console.log(height, width);
 	if (window.inPopup) {
-		var height = await getLocalStorage("tabHeight", 0);
-		var width = await getLocalStorage("tabWidth", 0);
+
 		if (height > 0 && width > 0) {
 			document.body.style.width = width + "px";
 			document.body.style.height = height + "px";
