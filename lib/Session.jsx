@@ -6,9 +6,11 @@ class Session extends React.Component {
 		//console.log(this.props.window);
 		//console.log(this.props.window.name);
 		var name = this.props.window.name;
+		var color = this.props.window.color || "default";
 		this.state = {
 			windowTitles: [],
 			name: name,
+			color: color,
 			tabs: 0
 		};
 
@@ -22,7 +24,8 @@ class Session extends React.Component {
 	}
 	render() {
 		var _this = this;
-		var name = this.props.window.name;
+		var name = this.state.name;
+		var color = this.state.color;
 		var hideWindow = true;
 		var titleAdded = false;
 		var tabsperrow = this.props.layout.indexOf("blocks") > -1 ? Math.ceil(Math.sqrt(this.props.tabs.length + 2)) : this.props.layout == "vertical" ? 1 : 15;
@@ -112,6 +115,8 @@ class Session extends React.Component {
 						(this.props.layout.indexOf("blocks") > -1 ? "block" : "") +
 						" " +
 						this.props.layout +
+						" " +
+						this.state.color +
 						" " +
 						(this.props.window.windowsInfo.incognito ? " incognito" : "") +
 						" " +
