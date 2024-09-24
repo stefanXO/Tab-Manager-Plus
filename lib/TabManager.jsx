@@ -1767,35 +1767,6 @@ class TabManager extends React.Component {
 
 		return "Tip: " + tips[Math.floor(Math.random() * tips.length)];
 	}
-	toBoolean(str) {
-		if (typeof str === "undefined" || str === null) {
-			return false;
-		} else if (typeof str === "string") {
-			switch (str.toLowerCase()) {
-				case "false":
-				case "no":
-				case "0":
-				case "":
-					return false;
-				default:
-					return true;
-			}
-		} else if (typeof str === "number") {
-			return str !== 0;
-		} else {
-			return true;
-		}
-	}
-	localStorageAvailable() {
-		var test = "test";
-		try {
-			localStorage.setItem(test, test);
-			localStorage.removeItem(test);
-			return true;
-		} catch (e) {
-			return false;
-		}
-	}
 	isInViewport(element, ofElement) {
 		var rect = element.getBoundingClientRect();
 		return rect.top >= 0 && rect.left >= 0 && rect.bottom <= ofElement.height && rect.right <= ofElement.width;
