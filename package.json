@@ -9,7 +9,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "watch": "npx babel --watch lib --out-dir outlib",
-    "build": "babel lib --out-dir outlib && cat ./vendor/babel-polyfill.js > outlib/service_worker.js && echo. >> outlib/service_worker.js && cat ./vendor/browser-polyfill.min.js >> outlib/service_worker.js && echo. >> outlib/service_worker.js && cat ./outlib/local.js >> outlib/service_worker.js && echo. >> outlib/service_worker.js && cat ./outlib/background.js >> outlib/service_worker.js"
+    "build": "babel lib --out-dir outlib"
   },
   "repository": {
     "type": "git",
