@@ -1,1 +1,2 @@
-"use strict";window.changelogPage = true;
+"use strict";
+window.changelogPage = true;

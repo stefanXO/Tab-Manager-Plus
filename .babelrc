@@ -6,7 +6,7 @@
   ],
   "comments": false,
   "compact": false,
-  "retainLines": true,
+  "retainLines": false,
   "sourceType": "script",
   "plugins": [
     "transform-async-to-generator",

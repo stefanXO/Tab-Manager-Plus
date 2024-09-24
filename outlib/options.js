@@ -1,1 +1,2 @@
-"use strict";window.optionPage = true;
+"use strict";
+window.optionPage = true;
