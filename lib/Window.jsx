@@ -614,11 +614,11 @@ class Window extends React.Component {
 		session.windowsInfo = await browser.windows.get(this.props.window.id);
 
 		console.log(session);
-		var obj = {};
-		obj[session.id] = session;
-		console.log(obj);
 
-		var value = await browser.storage.local.set(obj).catch(function(err) {
+		var sessions = await getLocalStorage('sessions', {});
+		sessions[session.id] = session;
+
+		var value = await setLocalStorage('sessions', sessions).catch(function(err) {
 			console.log(err);
 			console.error(err.message);
 		});
