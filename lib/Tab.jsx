@@ -219,7 +219,7 @@ class Tab extends React.Component {
 		// 	image = "url(" + image + ")";
 		// }else
 		if (navigator.userAgent.search("Firefox") == -1) {
-			image = "chrome-extension://" + chrome.runtime.id + "/_favicon/?pageUrl=" + encodeURIComponent(this.props.tab.url) + "&size=64";
+			image = "chrome-extension://" + chrome.runtime.id + "/_favicon/?pageUrl=" + encodeURIComponent(this.props.tab.url) + "&size=64&" + Date.now();
 		} else if (!!this.props.tab.url && this.props.tab.url.indexOf("chrome://") !== 0 && this.props.tab.url.indexOf("about:") !== 0) {
 			// chrome screenshots / only for active tabs; needs <all_urls>
 			// if(!!browser.tabs.captureVisibleTab && this.props.tab.highlighted) {
