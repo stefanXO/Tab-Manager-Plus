@@ -568,6 +568,18 @@ class TabManager extends React.Component {
 		browser.windows.onCreated.addListener(runUpdate);
 		browser.windows.onRemoved.addListener(runUpdate);
 
+		browser.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+			console.log(request.command);
+			switch (request.command) {
+				case "refresh_windows":
+					for (var window_id of request.window_ids) {
+						_this.refs["window" + window_id].checkSettings();
+					}
+					break;
+			}
+		});
+
+
 		browser.storage.onChanged.addListener(this.sessionSync);
 
 		this.sessionSync();
