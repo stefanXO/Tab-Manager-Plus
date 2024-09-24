@@ -3,28 +3,12 @@
 class Window extends React.Component {
 	constructor(props) {
 		super(props);
-		var colors = localStorage["windowColors"];
-		if (!!colors) {
-			colors = JSON.parse(colors);
-		} else {
-			colors = {};
-		}
-		var color = colors[this.props.window.id] || "default";
-		var names = localStorage["windowNames"];
-		if (!!names) {
-			names = JSON.parse(names);
-		} else {
-			names = {};
-		}
-		var name = names[this.props.window.id] || "";
-		if(!!this.props.window.titlePreface) {
-			name = this.props.window.titlePreface;
-		}
+
 		this.state = {
 			colorActive: false,
 			windowTitles: [],
-			color: color,
-			name: name,
+			color: "default",
+			name: "",
 			tabs: 0,
 			hover: false
 		};
@@ -47,24 +31,41 @@ class Window extends React.Component {
 		this.selectToFromTab = this.selectToFromTab.bind(this);
 		this.hoverWindow = this.hoverWindow.bind(this);
 		this.hoverWindowOut = this.hoverWindowOut.bind(this);
+		this.checkSettings = this.checkSettings.bind(this);
+	}
+
+	async componentDidMount() {
+		await this.checkSettings();
+	}
+
+	async checkSettings() {
+		var colors = await getLocalStorage("windowColors", {});
+		var color = colors[this.props.window.id] || "default";
+
+		var name = "";
+		if (!!this.props.window.titlePreface) {
+			name = this.props.window.titlePreface;
+		} else {
+			var names = await getLocalStorage("windowNames", {});
+			if (typeof names !== 'object') {
+				await setLocalStorage("windowNames", {});
+				names = {};
+			}
+			name = names[this.props.window.id] || "";
+		}
+
+		this.setState({
+			color: color,
+			name: name
+		});
 	}
 
 	render() {
 		var _this = this;
-		var colors = localStorage["windowColors"];
-		if (!!colors) {
-			colors = JSON.parse(colors);
-		} else {
-			colors = {};
-		}
-		var color = colors[this.props.window.id] || "default";
-		var names = localStorage["windowNames"];
-		if (!!names) {
-			names = JSON.parse(names);
-		} else {
-			names = {};
-		}
-		var name = names[this.props.window.id] || "";
+
+		var color = this.state.color;
+		var name = this.state.name;
+
 		var hideWindow = true;
 		var titleAdded = false;
 		var tabsperrow = this.props.layout.indexOf("blocks") > -1 ? Math.ceil(Math.sqrt(this.props.tabs.length + 2)) : this.props.layout == "vertical" ? 1 : 15;
