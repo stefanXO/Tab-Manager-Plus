@@ -1,1 +1,0 @@
-{"version":3,"sources":["../lib/options.js"],"names":["window","optionPage"],"mappings":"AAAA;AAAaA,OAAOC,UAAP,GAAoB,IAApB","file":"options.js","sourcesContent":["\"use strict\";window.optionPage = true;\n\n"]}

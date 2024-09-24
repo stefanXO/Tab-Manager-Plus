@@ -15,74 +15,69 @@ var loadApp = function () {
 						return _context.abrupt("return");
 
 					case 2:
-						if (!window.inPopup) {
-							_context.next = 14;
-							break;
-						}
-
-						_context.next = 5;
+						_context.next = 4;
 						return getLocalStorage("tabHeight", 0);
 
-					case 5:
+					case 4:
 						height = _context.sent;
-						_context.next = 8;
+						_context.next = 7;
 						return getLocalStorage("tabWidth", 0);
 
-					case 8:
+					case 7:
 						width = _context.sent;
 
-						if (height > 0 && width > 0) {
-							document.body.style.width = width + "px";
-							document.body.style.height = height + "px";
-						}
+						console.log(height, width);
+						if (window.inPopup) {
 
-						root = document.getElementById("root");
-
-						if (root != null) {
-							height = document.body.style.height.split("px")[0];
-
-							height = parseInt(height) || 0;
-							if (height < 300) {
-								height = 400;
-								document.body.style.minHeight = height + "px";
-							} else {
-								height++;
-								if (height > 600) height = 600;
-								document.body.style.minHeight = height + "px";
+							if (height > 0 && width > 0) {
+								document.body.style.width = width + "px";
+								document.body.style.height = height + "px";
 							}
-						}
-						_context.next = 23;
-						break;
 
-					case 14:
-						if (window.inPanel) {
-							document.documentElement.style.maxHeight = "auto";
-							document.documentElement.style.maxWidth = "auto";
-							document.body.style.maxHeight = "auto";
-							document.body.style.maxWidth = "auto";
-						}
-						document.documentElement.style.maxHeight = "100%";
-						document.documentElement.style.maxWidth = "100%";
-						document.documentElement.style.height = "100%";
-						document.documentElement.style.width = "100%";
-						document.body.style.maxHeight = "100%";
-						document.body.style.maxWidth = "100%";
-						document.body.style.height = "100%";
-						document.body.style.width = "100%";
+							root = document.getElementById("root");
 
-					case 23:
+							if (root != null) {
+								height = document.body.style.height.split("px")[0];
+
+								height = parseInt(height) || 0;
+								if (height < 300) {
+									height = 400;
+									document.body.style.minHeight = height + "px";
+								} else {
+									height++;
+									if (height > 600) height = 600;
+									document.body.style.minHeight = height + "px";
+								}
+							}
+						} else {
+							if (window.inPanel) {
+								document.documentElement.style.maxHeight = "auto";
+								document.documentElement.style.maxWidth = "auto";
+								document.body.style.maxHeight = "auto";
+								document.body.style.maxWidth = "auto";
+							}
+							document.documentElement.style.maxHeight = "100%";
+							document.documentElement.style.maxWidth = "100%";
+							document.documentElement.style.height = "100%";
+							document.documentElement.style.width = "100%";
+							document.body.style.maxHeight = "100%";
+							document.body.style.maxWidth = "100%";
+							document.body.style.height = "100%";
+							document.body.style.width = "100%";
+						}
+
 						if (!window.loaded) {
-							_context.next = 25;
+							_context.next = 12;
 							break;
 						}
 
 						return _context.abrupt("return");
 
-					case 25:
+					case 12:
 						window.loaded = true;
 						ReactDOM.render(React.createElement(TabManager, { optionsActive: !!window.optionPage }), document.getElementById("TMP"));
 
-					case 27:
+					case 14:
 					case "end":
 						return _context.stop();
 				}
