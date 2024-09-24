@@ -655,18 +655,22 @@ class Window extends React.Component {
 			}
 		}.bind(this), 150);
 	}
-	changeColors(a) {
+	async changeColors(a) {
 		this.setState(a);
 		this.props.toggleColors(!this.state.colorActive, this.props.window.id);
-		var colors = localStorage["windowColors"];
-		if (!!colors) {
-			colors = JSON.parse(colors);
-		} else {
-			colors = {};
-		}
-		colors[this.props.window.id] = a.color;
-		localStorage["windowColors"] = JSON.stringify(colors);
-		this.state.color = a.color || "default";
+
+		var color = a.color || "default";
+
+		browser.runtime.sendMessage({
+			command: "set_window_color",
+			window_id: this.props.window.id,
+			color: color
+		});
+
+		this.state.color = color;
+		this.setState({
+			color: color
+		});
 		this.closePopup();
 	}
 	closePopup() {
@@ -681,24 +685,23 @@ class Window extends React.Component {
 		var name = "";
 		if(e && e.target && e.target.value) name = e.target.value;
 
-		var names = localStorage["windowNames"];
-		if (!!names) {
-			names = JSON.parse(names);
-		} else {
-			names = {};
-		}
-		names[this.props.window.id] = name;
-		localStorage["windowNames"] = JSON.stringify(names);
+		browser.runtime.sendMessage({
+			command: "set_window_name",
+			window_id: this.props.window.id,
+			name: name
+		});
+
+		this.state.name = name;
 		this.setState({
 			name: name
 		});
 		if (navigator.userAgent.search("Firefox") > -1) {
 			if(!!name) {
-				browser.windows.update(this.props.window.id, {
+				await browser.windows.update(this.props.window.id, {
 					titlePreface: name + " - "
 				});
 			}else{
-				browser.windows.update(this.props.window.id, {
+				await browser.windows.update(this.props.window.id, {
 					titlePreface: name
 				});
 			}
