@@ -580,12 +580,15 @@ class Window extends React.Component {
 
 		console.log("session name", this.state.name);
 		var sessionName = this.state.name || this.topEntries(this.state.windowTitles).join("");
+		var sessionColor = this.state.color || "default";
+
 		console.log("session name", sessionName);
 
 		var session = {
 			tabs: [],
 			windowsInfo: {},
 			name: sessionName,
+			color: sessionColor,
 			date: Date.now(),
 			sessionStartTime: Date.now(),
 			id: this.uuidv4()
