@@ -18,14 +18,19 @@ Tab = function (_React$Component) {_inherits(Tab, _React$Component);
 		_this.dragOut = _this.dragOut.bind(_this);
 		_this.drop = _this.drop.bind(_this);
 		_this.resolveFavIconUrl = _this.resolveFavIconUrl.bind(_this);
+		_this.checkSettings = _this.checkSettings.bind(_this);
 
 		_this.tabRef = React.createRef();return _this;
+	}_createClass(Tab, [{ key: "componentDidMount", value: function () {var _ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee() {return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:_context.next = 2;return (
 
-	}_createClass(Tab, [{ key: "componentWillMount", value: function componentWillMount()
-		{
-			this.resolveFavIconUrl();
-			setTimeout(this.resolveFavIconUrl, 2500);
-		} }, { key: "render", value: function render()
+
+									this.checkSettings());case 2:case "end":return _context.stop();}}}, _callee, this);}));function componentDidMount() {return _ref.apply(this, arguments);}return componentDidMount;}() }, { key: "checkSettings", value: function () {var _ref2 = _asyncToGenerator(regeneratorRuntime.mark(function _callee2() {return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:_context2.next = 2;return (
+
+
+
+									this.resolveFavIconUrl());case 2:case "end":return _context2.stop();}}}, _callee2, this);}));function checkSettings() {return _ref2.apply(this, arguments);}return checkSettings;}() }, { key: "render", value: function render()
+
+
 		{
 			var children = [];
 			if (this.props.layout == "vertical") {
@@ -111,7 +116,6 @@ Tab = function (_React$Component) {_inherits(Tab, _React$Component);
 		e) {
 			this.setState({ hover: true });
 			this.props.hoverHandler(this.props.tab);
-			this.resolveFavIconUrl();
 		} }, { key: "onHoverOut", value: function onHoverOut(
 		e) {
 			this.setState({ hover: false });
@@ -120,8 +124,8 @@ Tab = function (_React$Component) {_inherits(Tab, _React$Component);
 			if (e.button === 0) return;
 			if (!this.props.draggable) return;
 			this.click(e);
-		} }, { key: "click", value: function () {var _ref = _asyncToGenerator(regeneratorRuntime.mark(function _callee(
-			e) {var tabId, windowId;return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:
+		} }, { key: "click", value: function () {var _ref3 = _asyncToGenerator(regeneratorRuntime.mark(function _callee3(
+			e) {var tabId, windowId;return regeneratorRuntime.wrap(function _callee3$(_context3) {while (1) {switch (_context3.prev = _context3.next) {case 0:
 								this.stopProp(e);
 
 								tabId = this.props.tab.id;
@@ -154,8 +158,8 @@ Tab = function (_React$Component) {_inherits(Tab, _React$Component);
 									}
 
 									if (!!window.inPopup) window.close();
-								}return _context.abrupt("return",
-								false);case 5:case "end":return _context.stop();}}}, _callee, this);}));function click(_x) {return _ref.apply(this, arguments);}return click;}() }, { key: "dragStart", value: function dragStart(
+								}return _context3.abrupt("return",
+								false);case 5:case "end":return _context3.stop();}}}, _callee3, this);}));function click(_x) {return _ref3.apply(this, arguments);}return click;}() }, { key: "dragStart", value: function dragStart(
 
 		e) {
 			if (!this.props.draggable) return false;
@@ -205,7 +209,7 @@ Tab = function (_React$Component) {_inherits(Tab, _React$Component);
 			this.props.drop(this.props.tab.id, before);
 			this.forceUpdate();
 			this.props.parentUpdate();
-		} }, { key: "resolveFavIconUrl", value: function () {var _ref2 = _asyncToGenerator(regeneratorRuntime.mark(function _callee2() {var image, favIcons, iconUrl, iconName;return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:
+		} }, { key: "resolveFavIconUrl", value: function () {var _ref4 = _asyncToGenerator(regeneratorRuntime.mark(function _callee4() {var image, favIcons, iconUrl, iconName;return regeneratorRuntime.wrap(function _callee4$(_context4) {while (1) {switch (_context4.prev = _context4.next) {case 0:
 
 
 
@@ -214,8 +218,8 @@ Tab = function (_React$Component) {_inherits(Tab, _React$Component);
 
 
 
-								if (navigator.userAgent.search("Firefox") == -1) {
-									image = "chrome-extension://" + chrome.runtime.id + "/_favicon/?pageUrl=" + encodeURIComponent(this.props.tab.url) + "&size=64";
+								if (!!this.props.tab.url && navigator.userAgent.search("Firefox") == -1) {
+									image = "chrome-extension://" + chrome.runtime.id + "/_favicon/?pageUrl=" + encodeURIComponent(this.props.tab.url) + "&size=64&" + Date.now();
 								} else if (!!this.props.tab.url && this.props.tab.url.indexOf("chrome://") !== 0 && this.props.tab.url.indexOf("about:") !== 0) {
 
 
@@ -238,7 +242,7 @@ Tab = function (_React$Component) {_inherits(Tab, _React$Component);
 									image = !iconName || favIcons.indexOf(iconName[0]) < 0 ? "" : "../images/chrome/" + iconName[0] + ".png";
 								}
 								this.setState({
-									favIcon: image });case 2:case "end":return _context2.stop();}}}, _callee2, this);}));function resolveFavIconUrl() {return _ref2.apply(this, arguments);}return resolveFavIconUrl;}() }, { key: "stopProp", value: function stopProp(
+									favIcon: image });case 2:case "end":return _context4.stop();}}}, _callee4, this);}));function resolveFavIconUrl() {return _ref4.apply(this, arguments);}return resolveFavIconUrl;}() }, { key: "stopProp", value: function stopProp(
 
 
 		e) {

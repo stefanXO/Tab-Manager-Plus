@@ -6,9 +6,11 @@ Session = function (_React$Component) {_inherits(Session, _React$Component);
 
 
 		var name = _this3.props.window.name;
+		var color = _this3.props.window.color || "default";
 		_this3.state = {
 			windowTitles: [],
 			name: name,
+			color: color,
 			tabs: 0 };
 
 
@@ -22,7 +24,8 @@ Session = function (_React$Component) {_inherits(Session, _React$Component);
 	}_createClass(Session, [{ key: "render", value: function render()
 		{
 			var _this = this;
-			var name = this.props.window.name;
+			var name = this.state.name;
+			var color = this.state.color;
 			var hideWindow = true;
 			var titleAdded = false;
 			var tabsperrow = this.props.layout.indexOf("blocks") > -1 ? Math.ceil(Math.sqrt(this.props.tabs.length + 2)) : this.props.layout == "vertical" ? 1 : 15;
@@ -112,6 +115,8 @@ Session = function (_React$Component) {_inherits(Session, _React$Component);
 							this.props.layout.indexOf("blocks") > -1 ? "block" : "") +
 							" " +
 							this.props.layout +
+							" " +
+							this.state.color +
 							" " + (
 							this.props.window.windowsInfo.incognito ? " incognito" : "") +
 							" " + (
@@ -178,11 +183,19 @@ Session = function (_React$Component) {_inherits(Session, _React$Component);
 
 
 
-			e) {var value;return regeneratorRuntime.wrap(function _callee5$(_context5) {while (1) {switch (_context5.prev = _context5.next) {case 0:
+			e) {var sessions, value;return regeneratorRuntime.wrap(function _callee5$(_context5) {while (1) {switch (_context5.prev = _context5.next) {case 0:
 								e.stopPropagation();_context5.next = 3;return (
-									browser.storage.local.remove(this.props.window.id));case 3:value = _context5.sent;
+
+									getLocalStorage('sessions', {}));case 3:sessions = _context5.sent;
+								delete sessions[this.props.window.id];_context5.next = 7;return (
+
+									setLocalStorage('sessions', sessions).catch(function (err) {
+										console.log(err);
+										console.error(err.message);
+									}));case 7:value = _context5.sent;
+
 								console.log(value);
-								this.props.parentUpdate();case 6:case "end":return _context5.stop();}}}, _callee5, this);}));function close(_x7) {return _ref5.apply(this, arguments);}return close;}() }, { key: "maximize", value: function maximize(
+								this.props.parentUpdate();case 10:case "end":return _context5.stop();}}}, _callee5, this);}));function close(_x7) {return _ref5.apply(this, arguments);}return close;}() }, { key: "maximize", value: function maximize(
 
 
 		e) {
