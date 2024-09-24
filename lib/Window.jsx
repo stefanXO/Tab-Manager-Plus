@@ -100,8 +100,8 @@ class Window extends React.Component {
 		if (!hideWindow) {
 			if (!!this.props.tabactions) {
 				tabs.push(
-					<div className="newliner" />,
-					<div className="window-actions">
+					<div key={"windownl_" + _this.props.window.id} className="newliner" />,
+					<div key={"windowactions_" + this.props.window.id} className="window-actions">
 						{this.props.sessionsFeature ? (
 							<div
 								className={"icon tabaction save " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
@@ -154,7 +154,7 @@ class Window extends React.Component {
 			}
 			if (this.state.colorActive) {
 				tabs.push(
-					<div className={"window-colors " + (this.state.colorActive ? "" : "hidden")} onClick={this.stop} onKeyDown={this.checkKey}>
+					<div key={"windowcolors_" + _this.props.window.id} className={"window-colors " + (this.state.colorActive ? "" : "hidden")} onClick={this.stop} onKeyDown={this.checkKey}>
 						<h2 className="window-x" onClick={this.closePopup}>
 							x
 						</h2>
@@ -435,7 +435,7 @@ class Window extends React.Component {
 					children.push(tabs[j]);
 				}
 				if ((z + 1) % tabsperrow == 0 && z && this.props.layout.indexOf("blocks") > -1) {
-					children.push(<div className="newliner" />);
+					children.push(<div className="newliner" key={"windownlz_" + _this.props.window.id + "_" + z} />);
 				}
 			}
 			var focused = false;
@@ -473,7 +473,7 @@ class Window extends React.Component {
 					onMouseLeave={this.hoverWindowOut}
 					onDrop={this.drop}
 				>
-					<div className="windowcontainer" title={"Focus this window\nWill select this window with " + tabs.length + " tabs"}>{children}</div>
+					<div key={"windowcontainer_" + this.props.window.id} className="windowcontainer" title={"Focus this window\nWill select this window with " + tabs.length + " tabs"}>{children}</div>
 				</div>
 			);
 		} else {
