@@ -563,9 +563,9 @@ class Window extends React.Component {
 	selectToFromTab(tabId) {
 		if(tabId) this.props.selectTo(tabId, this.props.tabs);
 	}
-	close(e) {
+	async close(e) {
 		this.stopProp(e);
-		browser.windows.remove(this.props.window.id);
+		await browser.windows.remove(this.props.window.id);
 	}
 	uuidv4() {
 		return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
