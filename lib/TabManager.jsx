@@ -573,6 +573,7 @@ class TabManager extends React.Component {
 			switch (request.command) {
 				case "refresh_windows":
 					for (var window_id of request.window_ids) {
+						if (!_this.refs["window" + window_id]) continue;
 						_this.refs["window" + window_id].checkSettings();
 					}
 					break;
