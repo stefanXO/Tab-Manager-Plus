@@ -556,8 +556,20 @@ class TabManager extends React.Component {
 		var runUpdate = debounce(this.update, 250);
 		runUpdate = runUpdate.bind(this);
 
+		var runTabUpdate = (tabid, changeinfo, tab) => {
+			if (!!_this.refs["window" + tab.windowId]) {
+				var window = _this.refs["window" + tab.windowId];
+				if (!!window.refs["tab" + tabid]) {
+					var tab = window.refs["tab" + tabid];
+					tab.checkSettings();
+				}
+			}
+		}
+		var runTabUpdateDebounced = debounce(runTabUpdate, 500);
+
 		browser.tabs.onCreated.addListener(runUpdate);
 		browser.tabs.onUpdated.addListener(runUpdate);
+		browser.tabs.onUpdated.addListener(runTabUpdateDebounced);
 		browser.tabs.onMoved.addListener(runUpdate);
 		browser.tabs.onRemoved.addListener(runUpdate);
 		browser.tabs.onReplaced.addListener(runUpdate);

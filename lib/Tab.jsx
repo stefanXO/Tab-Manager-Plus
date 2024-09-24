@@ -18,14 +18,19 @@ class Tab extends React.Component {
 		this.dragOut = this.dragOut.bind(this);
 		this.drop = this.drop.bind(this);
 		this.resolveFavIconUrl = this.resolveFavIconUrl.bind(this);
+		this.checkSettings = this.checkSettings.bind(this);
 
 		this.tabRef = React.createRef();
+	}
 
+	async componentDidMount() {
+		await this.checkSettings();
 	}
-	componentDidMount() {
-		this.resolveFavIconUrl();
-		//setTimeout(this.resolveFavIconUrl, 2500);
+
+	async checkSettings() {
+		await this.resolveFavIconUrl();
 	}
+
 	render() {
 		var children = [];
 		if (this.props.layout == "vertical") {
@@ -111,7 +116,6 @@ class Tab extends React.Component {
 	onHover(e) {
 		this.setState({hover: true});
 		this.props.hoverHandler(this.props.tab);
-		this.resolveFavIconUrl();
 	}
 	onHoverOut(e) {
 		this.setState({hover: false});
