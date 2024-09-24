@@ -1060,3 +1060,4 @@ var Window = function (_React$Component) {
 
 	return Window;
 }(React.Component);
+//# sourceMappingURL=Window.js.map

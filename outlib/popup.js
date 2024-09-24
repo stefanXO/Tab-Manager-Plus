@@ -125,3 +125,4 @@ setTimeout(loadApp, 15000);
 window.addEventListener("contextmenu", function (e) {
 	e.preventDefault();
 });
+//# sourceMappingURL=popup.js.map

@@ -314,3 +314,4 @@ var Session = function (_React$Component) {
 
 	return Session;
 }(React.Component);
+//# sourceMappingURL=Session.js.map

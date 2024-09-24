@@ -77,3 +77,4 @@ var removeLocalStorage = function () {
 		return _ref3.apply(this, arguments);
 	};
 }();
+//# sourceMappingURL=local.js.map

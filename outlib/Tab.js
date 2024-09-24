@@ -340,3 +340,4 @@ var Tab = function (_React$Component) {
 
 	return Tab;
 }(React.Component);
+//# sourceMappingURL=Tab.js.map

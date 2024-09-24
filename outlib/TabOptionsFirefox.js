@@ -696,3 +696,4 @@ var TabOptions = function (_React$Component) {
 
 	return TabOptions;
 }(React.Component);
+//# sourceMappingURL=TabOptionsFirefox.js.map

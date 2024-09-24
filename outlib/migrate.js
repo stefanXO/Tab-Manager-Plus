@@ -133,3 +133,4 @@ function toBoolean(str) {
 		return true;
 	}
 }
+//# sourceMappingURL=migrate.js.map

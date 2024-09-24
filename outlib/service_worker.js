@@ -2070,3 +2070,4 @@ _asyncToGenerator(regeneratorRuntime.mark(function _callee29() {
 setInterval(setupListeners, 300000);
 
 setupListeners();
+//# sourceMappingURL=service_worker.js.map

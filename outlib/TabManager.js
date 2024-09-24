@@ -2894,3 +2894,4 @@ var maybePluralize = function maybePluralize(count, noun) {
 	var suffix = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 's';
 	return count + " " + noun + (count !== 1 ? suffix : '');
 };
+//# sourceMappingURL=TabManager.js.map

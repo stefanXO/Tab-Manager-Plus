@@ -8,6 +8,7 @@
   "compact": false,
   "retainLines": false,
   "sourceType": "script",
+  "sourceMaps": true,
   "plugins": [
     "transform-async-to-generator",
     ["inline-replace-variables", {
