@@ -22,9 +22,9 @@ class Tab extends React.Component {
 		this.tabRef = React.createRef();
 
 	}
-	componentWillMount() {
+	componentDidMount() {
 		this.resolveFavIconUrl();
-		setTimeout(this.resolveFavIconUrl, 2500);
+		//setTimeout(this.resolveFavIconUrl, 2500);
 	}
 	render() {
 		var children = [];
