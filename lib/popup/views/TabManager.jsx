@@ -623,7 +623,8 @@ class TabManager extends React.Component {
 		var values = await getLocalStorage('sessions', {});
 		// console.log(values);
 		var sessions = [];
-		for (let sess of values) {
+		for (let key in values) {
+			let sess = values[key];
 			if (sess.id && sess.tabs && sess.windowsInfo) {
 				sessions.push(sess);
 			}
