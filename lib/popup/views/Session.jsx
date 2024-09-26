@@ -28,7 +28,7 @@ class Session extends React.Component {
 		var color = this.state.color;
 		var hideWindow = true;
 		var titleAdded = false;
-		var tabsperrow = this.props.layout.indexOf("blocks") > -1 ? Math.ceil(Math.sqrt(this.props.tabs.length + 2)) : this.props.layout == "vertical" ? 1 : 15;
+		var tabsperrow = this.props.layout.indexOf("blocks") > -1 ? Math.ceil(Math.sqrt(this.props.tabs.length + 2)) : this.props.layout === "vertical" ? 1 : 15;
 		var tabs = this.props.tabs.map(function(tab) {
 			var tabId = tab.id * tab.id * tab.id * 100;
 			var isHidden = !!_this.props.hiddenTabs[tabId] && _this.props.filterTabs;
@@ -94,12 +94,12 @@ class Session extends React.Component {
 			}
 			for (var j = 0; j < tabs.length; j++) {
 				children.push(tabs[j]);
-				if ((j + 1) % tabsperrow == 0 && j && this.props.layout.indexOf("blocks") > -1) {
+				if ((j + 1) % tabsperrow === 0 && j && this.props.layout.indexOf("blocks") > -1) {
 					children.push(<div key={"sessionnl_" + _this.props.window.id + "_" + j} className="newliner" />);
 				}
 			}
 			var focused = false;
-			if (this.props.window.windowsInfo.focused || this.props.lastOpenWindow == this.props.window.windowsInfo.id) {
+			if (this.props.window.windowsInfo.focused || this.props.lastOpenWindow === this.props.window.windowsInfo.id) {
 				focused = true;
 			}
 			return (
@@ -149,7 +149,6 @@ class Session extends React.Component {
 		this.restoreSession(e, index);
 	}
 	async restoreSession(e, tabId) {
-		var _this2 = this;
 		e.stopPropagation();
 		console.log("source window", this.props.window);
 		// chrome.runtime.getBackgroundPage(function callback(tabs, backgroundPage) {
