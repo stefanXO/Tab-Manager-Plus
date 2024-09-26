@@ -1,19 +1,11 @@
 "use strict";
 
 window.loaded = false;
-if (window.location.search.indexOf("?popup") > -1) {
-	window.inPopup = true;
-} else {
-	window.inPopup = false;
-}
-if (window.location.search.indexOf("?panel") > -1) {
-	window.inPanel = true;
-} else {
-	window.inPanel = false;
-}
-window.onload = function() {
-	window.requestAnimationFrame(loadApp);
-};
+window.inPopup = window.location.search.indexOf("?popup") > -1;
+window.inPanel = window.location.search.indexOf("?panel") > -1;
+
+window.onload = () => window.requestAnimationFrame(loadApp);
+
 setTimeout(loadApp, 75);
 setTimeout(loadApp, 125);
 setTimeout(loadApp, 250);
@@ -39,15 +31,15 @@ async function loadApp() {
 
 		var root = document.getElementById("root");
 		if (root != null) {
-			var height = document.body.style.height.split("px")[0];
-			height = parseInt(height) || 0;
-			if (height < 300) {
-				height = 400;
-				document.body.style.minHeight = height + "px";
+			var _height = document.body.style.height.split("px")[0];
+			_height = parseInt(_height) || 0;
+			if (_height < 300) {
+				_height = 400;
+				document.body.style.minHeight = _height + "px";
 			} else {
-				height++;
-				if (height > 600) height = 600;
-				document.body.style.minHeight = height + "px";
+				_height++;
+				if (_height > 600) _height = 600;
+				document.body.style.minHeight = _height + "px";
 			}
 		}
 	} else {
@@ -69,7 +61,7 @@ async function loadApp() {
 
 	if (!!window.loaded) return;
 	window.loaded = true;
-	ReactDOM.render(<TabManager optionsActive={!!window.optionPage} />, document.getElementById("TMP"));
+	ReactDOM.render(<TabManager optionsActive={!!window.optionPage}/>, document.getElementById("TMP"));
 }
 
 window.addEventListener("contextmenu", function (e) {e.preventDefault();});
