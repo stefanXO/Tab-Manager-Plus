@@ -1001,10 +1001,10 @@ class TabManager extends React.Component {
 			}
 
 			if (document.activeElement !== this.refs.searchbox || !this.refs.searchbox.value) {
-				var goLeft = e.keyCode === 37;
-				var goRight = e.keyCode === 39;
-				var goUp = e.keyCode === 38;
-				var goDown = e.keyCode === 40;
+				let goLeft = e.keyCode === 37;
+				let goRight = e.keyCode === 39;
+				let goUp = e.keyCode === 38;
+				let goDown = e.keyCode === 40;
 				if (this.state.layout === "vertical") {
 					goLeft = e.keyCode === 38;
 					goRight = e.keyCode === 40;
@@ -1015,17 +1015,17 @@ class TabManager extends React.Component {
 					e.nativeEvent.preventDefault();
 					e.nativeEvent.stopPropagation();
 				}
-				var altKey = e.nativeEvent.metaKey || e.nativeEvent.altKey || e.nativeEvent.shiftKey || e.nativeEvent.ctrlKey;
+				const altKey = e.nativeEvent.metaKey || e.nativeEvent.altKey || e.nativeEvent.shiftKey || e.nativeEvent.ctrlKey;
 				if (goLeft || goRight) {
-					var selectedTabs = Object.keys(this.state.selection);
+					let selectedTabs = Object.keys(this.state.selection);
 					if (!altKey && selectedTabs.length > 1) {
 					} else {
-						var found = false;
-						var selectedNext = false;
-						var selectedTab = false;
-						var first = false;
-						var prev = false;
-						var last = false;
+						let found = false;
+						let selectedNext = false;
+						let selectedTab = false;
+						let first = false;
+						let prev = false;
+						let last = false;
 						if (selectedTabs.length === 1) {
 							selectedTab = selectedTabs[0];
 							// console.log("one tab", selectedTab);
@@ -1057,10 +1057,10 @@ class TabManager extends React.Component {
 							if (goRight) this.state.lastDirection = "goRight";
 							if (goLeft) this.state.lastDirection = "goLeft";
 						}
-						for (var _w of this.state.windows) {
+						for (const _w of this.state.windows) {
 							if (found) break;
 							if (_w.state !== "minimized") {
-								for (var _t of _w.tabs) {
+								for (const _t of _w.tabs) {
 									last = _t.id;
 									if (!first) first = _t.id;
 									if (!selectedTab) {
@@ -1089,10 +1089,10 @@ class TabManager extends React.Component {
 								}
 							}
 						}
-						for (var _w of this.state.windows) {
+						for (const _w of this.state.windows) {
 							if (found) break;
 							if (_w.state === "minimized") {
-								for (var _t of _w.tabs) {
+								for (const _t of _w.tabs) {
 									last = _t.id;
 									if (!first) first = _t.id;
 									if (!selectedTab) {
@@ -1133,27 +1133,27 @@ class TabManager extends React.Component {
 					}
 				}
 				if (goUp || goDown) {
-					var selectedTabs = Object.keys(this.state.selection);
+					let selectedTabs = Object.keys(this.state.selection);
 					if (selectedTabs.length > 1) {
 					} else {
-						var found = false;
-						var selectedNext = false;
-						var selectedTab = -1;
-						var first = false;
-						var prev = false;
-						var last = false;
-						var tabPosition = -1;
-						var i = -1;
+						let found = false;
+						let selectedNext = false;
+						let selectedTab = -1;
+						let first = false;
+						let prev = false;
+						let last = false;
+						let tabPosition = -1;
+						let i = -1;
 						if (selectedTabs.length === 1) {
 							selectedTab = selectedTabs[0];
 							// console.log(selectedTab);
 						}
-						for (var _w of this.state.windows) {
+						for (const _w of this.state.windows) {
 							i = 0;
 							if (found) break;
 							if (_w.state !== "minimized") {
 								if (!first) first = _w.id;
-								for (var _t of _w.tabs) {
+								for (const _t of _w.tabs) {
 									i++;
 									last = _w.id;
 									if (!selectedTab) {
@@ -1180,17 +1180,17 @@ class TabManager extends React.Component {
 										break;
 									}
 
-									// console.log(_t, _t.id == selectedTab);
+									// console.log(_t, _t.id === selectedTab);
 								}
 								prev = _w.id;
 							}
 						}
-						for (var _w of this.state.windows) {
+						for (const _w of this.state.windows) {
 							i = 0;
 							if (found) break;
 							if (_w.state === "minimized") {
 								if (!first) first = _w.id;
-								for (var _t of _w.tabs) {
+								for (const _t of _w.tabs) {
 									i++;
 									last = _w.id;
 									if (!selectedTab) {
@@ -1248,10 +1248,10 @@ class TabManager extends React.Component {
 	}
 	selectWindowTab(windowId, tabPosition) {
 		if (!tabPosition || tabPosition < 1) tabPosition = 1;
-		for (var _w of this.state.windows) {
+		for (let _w of this.state.windows) {
 			if (_w.id !== windowId) continue;
-			var i = 0;
-			for (var _t of _w.tabs) {
+			let i = 0;
+			for (let _t of _w.tabs) {
 				i++;
 				if ((_w.tabs.length >= tabPosition && tabPosition === i) || (_w.tabs.length < tabPosition && _w.tabs.length === i)) {
 					this.state.selection = {};
@@ -1373,7 +1373,7 @@ class TabManager extends React.Component {
 
 		var rangeIndex1;
 		var rangeIndex2;
-		for (var i = 0; i < tabs.length; i++) {
+		for (let i = 0; i < tabs.length; i++) {
 			if (tabs[i].id === id) {
 				rangeIndex1 = i;
 			}
@@ -1387,7 +1387,7 @@ class TabManager extends React.Component {
 		}
 		if (!rangeIndex2) {
 			var neighbours = [];
-			for (var i = 0; i < tabs.length; i++) {
+			for (let i = 0; i < tabs.length; i++) {
 				var tabId = tabs[i].id;
 				if (tabId !== id) {
 					if (this.state.selection[tabId]) {
@@ -1398,20 +1398,20 @@ class TabManager extends React.Component {
 
 			if (activate) {
 				// find closest selected item that's not connected
-				var leftSibling = 0;
-				var rightSibling = tabs.length - 1;
-				for (var i = 0; i < rangeIndex1; i++) {
+				let leftSibling = 0;
+				let rightSibling = tabs.length - 1;
+				for (let i = 0; i < rangeIndex1; i++) {
 					if (neighbours.indexOf(i) > -1) {
 						leftSibling = i;
 					}
 				}
-				for (var i = tabs.length - 1; i > rangeIndex1; i--) {
+				for (let i = tabs.length - 1; i > rangeIndex1; i--) {
 					if (neighbours.indexOf(i) > -1) {
 						rightSibling = i;
 					}
 				}
-				var diff1 = rangeIndex1 - leftSibling;
-				var diff2 = rightSibling - rangeIndex1;
+				let diff1 = rangeIndex1 - leftSibling;
+				let diff2 = rightSibling - rangeIndex1;
 				if (diff1 > diff2) {
 					rangeIndex2 = rightSibling;
 				} else {
@@ -1419,20 +1419,20 @@ class TabManager extends React.Component {
 				}
 			} else {
 				// find furthest selected item that's connected
-				var leftSibling = rangeIndex1;
-				var rightSibling = rangeIndex1;
-				for (var i = rangeIndex1; i > 0; i--) {
+				let leftSibling = rangeIndex1;
+				let rightSibling = rangeIndex1;
+				for (let i = rangeIndex1; i > 0; i--) {
 					if (neighbours.indexOf(i) > -1) {
 						leftSibling = i;
 					}
 				}
-				for (var i = rangeIndex1; i < tabs.length; i++) {
+				for (let i = rangeIndex1; i < tabs.length; i++) {
 					if (neighbours.indexOf(i) > -1) {
 						rightSibling = i;
 					}
 				}
-				var diff1 = rangeIndex1 - leftSibling;
-				var diff2 = rightSibling - rangeIndex1;
+				let diff1 = rangeIndex1 - leftSibling;
+				let diff2 = rightSibling - rangeIndex1;
 				if (diff1 > diff2) {
 					rangeIndex2 = leftSibling;
 				} else {
@@ -1451,13 +1451,13 @@ class TabManager extends React.Component {
 			rangeIndex2 = r2;
 		}
 
-		for (var i = 0; i < tabs.length; i++) {
+		for (let i = 0; i < tabs.length; i++) {
 			if (i >= rangeIndex1 && i <= rangeIndex2) {
-				var tabId = tabs[i].id;
+				var _tab_id = tabs[i].id;
 				if (activate) {
-					this.state.selection[tabId] = true;
+					this.state.selection[_tab_id] = true;
 				} else {
-					delete this.state.selection[tabId];
+					delete this.state.selection[_tab_id];
 				}
 			}
 		}
@@ -1499,7 +1499,7 @@ class TabManager extends React.Component {
 		});
 		var index = tab.index + (before ? 0 : 1);
 
-		for (var i = 0; i < tabs.length; i++) {
+		for (let i = 0; i < tabs.length; i++) {
 			var t = tabs[i];
 			await browser.tabs.move(t.id, { windowId: tab.windowId, index: index });
 			await browser.tabs.update(t.id, { pinned: t.pinned });
@@ -1713,14 +1713,14 @@ class TabManager extends React.Component {
 				}
 				if (!!backupFile && backupFile.length > 0) {
 					var success = backupFile.length;
-					for (var i = 0; i < backupFile.length; i++) {
+					for (let i = 0; i < backupFile.length; i++) {
 						var newSession = backupFile[i];
 						if (newSession.windowsInfo && newSession.tabs && newSession.id) {
-							var sessions = await getLocalStorage('sessions', {});
+							let sessions = await getLocalStorage('sessions', {});
 							sessions[newSession.id] = newSession;
 							//this.state.sessions.push(obj);
 
-							var value = await setLocalStorage('sessions', sessions).catch(function(err) {
+							await setLocalStorage('sessions', sessions).catch(function(err) {
 								console.log(err);
 								console.error(err.message);
 								success--;
