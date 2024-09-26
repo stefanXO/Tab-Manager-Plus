@@ -928,6 +928,7 @@ class TabManager extends React.Component {
 		this.state.searchLen = searchLen;
 		var matches = Object.keys(this.state.selection).length;
 		// var matchtext = "";
+		if (matches === 0 && searchLen > 0) {
 			this.setState({
 				topText: "No matches for '" + searchQuery + "'",
 				bottomText: ""
