@@ -147,24 +147,26 @@ class TabManager extends React.Component {
 
 		var storage = await browser.storage.local.get(null);
 
-		if (!storage["layout"]) storage["layout"] = "blocks";
-		if (typeof storage["tabLimit"] === "undefined") storage["tabLimit"] = 0;
-		if (typeof storage["tabWidth"] === "undefined") storage["tabWidth"] = 800;
-		if (typeof storage["tabHeight"] === "undefined") storage["tabHeight"] = 600;
+		if (!storage["layout"]) storage["layout"] = layout;
+		if (typeof storage["tabLimit"] === "undefined") storage["tabLimit"] = tabLimit;
+		if (typeof storage["tabWidth"] === "undefined") storage["tabWidth"] = tabWidth;
+		if (typeof storage["tabHeight"] === "undefined") storage["tabHeight"] = tabHeight;
 
-		if (typeof storage["animations"] === "undefined") storage["animations"] = true;
-		if (typeof storage["windowTitles"] === "undefined") storage["windowTitles"] = true;
-		if (typeof storage["tabactions"] === "undefined") storage["tabactions"] = true;
-		if (typeof storage["badge"] === "undefined") storage["badge"] = true;
+		if (typeof storage["animations"] === "undefined") storage["animations"] = animations;
+		if (typeof storage["windowTitles"] === "undefined") storage["windowTitles"] = windowTitles;
+		if (typeof storage["tabactions"] === "undefined") storage["tabactions"] = tabactions;
+		if (typeof storage["badge"] === "undefined") storage["badge"] = badge;
 
-		if (typeof storage["openInOwnTab"] === "undefined") storage["openInOwnTab"] = false;
-		if (typeof storage["compact"] === "undefined") storage["compact"] = false;
-		if (typeof storage["dark"] === "undefined") storage["dark"] = false;
-		if (typeof storage["sessionsFeature"] === "undefined") storage["sessionsFeature"] = false;
-		if (typeof storage["hideWindows"] === "undefined") storage["hideWindows"] = false;
-		if (typeof storage["filter-tabs"] === "undefined") storage["filter-tabs"] = false;
+		if (typeof storage["openInOwnTab"] === "undefined") storage["openInOwnTab"] = openInOwnTab;
+		if (typeof storage["compact"] === "undefined") storage["compact"] = compact;
+		if (typeof storage["dark"] === "undefined") storage["dark"] = dark;
+		if (typeof storage["sessionsFeature"] === "undefined") storage["sessionsFeature"] = sessionsFeature;
+		if (typeof storage["hideWindows"] === "undefined") storage["hideWindows"] = hideWindows;
+		if (typeof storage["filter-tabs"] === "undefined") storage["filter-tabs"] = filterTabs;
 
-		if (typeof storage["version"] === "undefined") storage["version"] = __VERSION__;
+		storage["version"] = __VERSION__;
+
+		await browser.storage.local.set(storage);
 
 		layout = storage["layout"];
 		tabLimit = storage["tabLimit"];
