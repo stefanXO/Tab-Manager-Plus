@@ -1,6 +1,6 @@
 "use strict";
 
-class Window extends React.Component {
+export class Window extends React.Component {
 	constructor(props) {
 		super(props);
 
@@ -42,7 +42,7 @@ class Window extends React.Component {
 		var colors = await getLocalStorage("windowColors", {});
 		var color = colors[this.props.window.id] || "default";
 
-		var name = "";
+		var name;
 		if (!!this.props.window.titlePreface) {
 			name = this.props.window.titlePreface;
 		} else {
@@ -63,12 +63,12 @@ class Window extends React.Component {
 	render() {
 		var _this = this;
 
-		var color = this.state.color;
+		var color = this.state.color || "default";
 		var name = this.state.name;
 
 		var hideWindow = true;
 		var titleAdded = false;
-		var tabsperrow = this.props.layout.indexOf("blocks") > -1 ? Math.ceil(Math.sqrt(this.props.tabs.length + 2)) : this.props.layout == "vertical" ? 1 : 15;
+		var tabsperrow = this.props.layout.indexOf("blocks") > -1 ? Math.ceil(Math.sqrt(this.props.tabs.length + 2)) : this.props.layout === "vertical" ? 1 : 15;
 		var tabs = this.props.tabs.map(function(tab) {
 			var isHidden = !!_this.props.hiddenTabs[tab.id] && _this.props.filterTabs;
 			var isSelected = !!_this.props.selection[tab.id];
@@ -113,9 +113,7 @@ class Window extends React.Component {
 								onClick={this.save}
 								onMouseEnter={this.props.hoverIcon}
 							/>
-						) : (
-							false
-						)}
+						) : false}
 						<div
 							className={"icon tabaction add " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
 							title="Open a new tab"
@@ -128,7 +126,7 @@ class Window extends React.Component {
 							onClick={this.colors}
 							onMouseEnter={this.props.hoverIcon}
 						/>
-						{this.props.window.state == "minimized" ? (
+						{this.props.window.state === "minimized" ? (
 							<div
 								className={"icon tabaction maximize " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
 								title={"Maximize this window\nWill maximize " + tabs.length + " tabs"}
@@ -347,7 +345,7 @@ class Window extends React.Component {
 					);
 					titleAdded = true;
 				} else {
-					if (this.state.windowTitles.length == 0 || this.state.tabs != tabs.length + this.props.window.id * 99) {
+					if (this.state.windowTitles.length === 0 || this.state.tabs !== tabs.length + this.props.window.id * 99) {
 						this.state.windowTitles = [];
 						this.state.tabs = tabs.length + this.props.window.id * 99;
 						for (var i = 0; i < tabs.length; i++) {
@@ -434,12 +432,12 @@ class Window extends React.Component {
 					z++;
 					children.push(tabs[j]);
 				}
-				if ((z + 1) % tabsperrow == 0 && z && this.props.layout.indexOf("blocks") > -1) {
+				if ((z + 1) % tabsperrow === 0 && z && this.props.layout.indexOf("blocks") > -1) {
 					children.push(<div className="newliner" key={"windownlz_" + _this.props.window.id + "_" + z} />);
 				}
 			}
 			var focused = false;
-			if (this.props.window.focused || this.props.lastOpenWindow == this.props.window.id) {
+			if (this.props.window.focused || this.props.lastOpenWindow === this.props.window.id) {
 				focused = true;
 			}
 			return (
@@ -454,7 +452,7 @@ class Window extends React.Component {
 						" " +
 						(focused ? "activeWindow" : "") +
 						" " +
-						this.state.color +
+						color +
 						" " +
 						(this.props.layout.indexOf("blocks") > -1 ? "block" : "") +
 						" " +
@@ -519,29 +517,29 @@ class Window extends React.Component {
 		this.stopProp(e);
 
 		if (closestTab != null) {
-			var before = null;
+			var before;
 			var boundingRect = closestRef.getBoundingClientRect();
-			if (this.props.layout == "vertical") {
-				before = e.nativeEvent.clientY < boundingRect.top ? true : false;
+			if (this.props.layout === "vertical") {
+				before = e.nativeEvent.clientY < boundingRect.top;
 			} else {
-				before = e.nativeEvent.clientX < boundingRect.left ? true : false;
+				before = e.nativeEvent.clientX < boundingRect.left;
 			}
 			this.props.drop(closestTab, before);
 		} else {
 			this.props.dropWindow(this.props.window.id);
 		}
 	}
-	hoverWindow(tabs, e) {
+	hoverWindow(tabs, _) {
 		this.state.hover = true;
 		this.props.hoverIcon("Focus this window\nWill select this window with " + tabs.length + " tabs");
 		// this.props.hoverIcon(e);
 	}
-	hoverWindowOut(e) {
+	hoverWindowOut(_) {
 		this.state.hover = false;
 	}
 	checkKey(e) {
 		// close popup when enter or escape have been pressed
-		if (e.keyCode == 13 || e.keyCode == 27) {
+		if (e.keyCode === 13 || e.keyCode === 27) {
 			this.stopProp(e);
 			this.closePopup();
 		}
@@ -571,7 +569,7 @@ class Window extends React.Component {
 	uuidv4() {
 		return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
 			var r = (Math.random() * 16) | 0,
-				v = c == "x" ? r : (r & 0x3) | 0x8;
+				v = c === "x" ? r : (r & 0x3) | 0x8;
 			return v.toString(16);
 		});
 	}
@@ -721,7 +719,7 @@ class Window extends React.Component {
 		});
 
 		var more = 0;
-		if (sorted.length == 3) {
+		if (sorted.length === 3) {
 		} else {
 			while (sorted.length > 2) {
 				sorted.pop();
