@@ -218,7 +218,7 @@ class Tab extends React.Component {
 		// 	image = await browser.tabs.captureTab(this.props.tab.id);
 		// 	image = "url(" + image + ")";
 		// }else
-		if (!!this.props.tab.url && navigator.userAgent.search("Firefox") == -1) {
+		if (!!this.props.tab.url && navigator.userAgent.search("Firefox") === -1) {
 			image = "chrome-extension://" + chrome.runtime.id + "/_favicon/?pageUrl=" + encodeURIComponent(this.props.tab.url) + "&size=64&" + Date.now();
 		} else if (!!this.props.tab.url && this.props.tab.url.indexOf("chrome://") !== 0 && this.props.tab.url.indexOf("about:") !== 0) {
 			// chrome screenshots / only for active tabs; needs <all_urls>
