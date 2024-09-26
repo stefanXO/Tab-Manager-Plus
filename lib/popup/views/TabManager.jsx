@@ -256,7 +256,7 @@ class TabManager extends React.Component {
 		var haveMin = false;
 		var haveSess = false;
 
-		for (var i = this.state.windows.length - 1; i >= 0; i--) {
+		for (let i = this.state.windows.length - 1; i >= 0; i--) {
 			if (this.state.windows[i].state === "minimized") haveMin = true;
 		}
 
@@ -585,7 +585,7 @@ class TabManager extends React.Component {
 			console.log(request.command);
 			switch (request.command) {
 				case "refresh_windows":
-					for (var window_id of request.window_ids) {
+					for (let window_id of request.window_ids) {
 						if (!_this.refs["window" + window_id]) continue;
 						_this.refs["window" + window_id].checkSettings();
 					}
@@ -623,10 +623,9 @@ class TabManager extends React.Component {
 		var values = await getLocalStorage('sessions', {});
 		// console.log(values);
 		var sessions = [];
-		for (var key in values) {
-			var sess = values[key];
+		for (let sess of values) {
 			if (sess.id && sess.tabs && sess.windowsInfo) {
-				sessions.push(values[key]);
+				sessions.push(sess);
 			}
 		}
 		this.state.sessions = sessions;
@@ -696,17 +695,16 @@ class TabManager extends React.Component {
 		this.state.windows = windows;
 		this.state.windowsbyid = {};
 		this.state.tabsbyid = {};
-		var tabCount = 0;
-		for (var i = 0; i < windows.length; i++) {
-			var window = windows[i];
+		let tabCount = 0;
+
+		for (const window of windows) {
 			this.state.windowsbyid[window.id] = window;
-			for (var j = 0; j < window.tabs.length; j++) {
-				var tab = window.tabs[j];
+			for (const tab of window.tabs) {
 				this.state.tabsbyid[tab.id] = tab;
 				tabCount++;
 			}
 		}
-		for (var id in this.state.selection) {
+		for (const id in this.state.selection) {
 			if (!this.state.tabsbyid[id]) {
 				delete this.state.selection[id];
 				this.state.lastSelect = id;
@@ -781,7 +779,7 @@ class TabManager extends React.Component {
 			});
 		if (tabs.length) {
 			if (tabs[0].pinned) tabs.reverse();
-			for (var i = 0; i < tabs.length; i++) {
+			for (let i = 0; i < tabs.length; i++) {
 				await browser.tabs.update(tabs[i].id, { pinned: !tabs[0].pinned });
 			}
 		} else {
@@ -805,9 +803,9 @@ class TabManager extends React.Component {
 		var hiddenCount = this.state.hiddenCount || 0;
 		var idList = this.state.tabsbyid;
 		var dup = [];
-		for (var id in idList) {
+		for (const id in idList) {
 			var tab = this.state.tabsbyid[id];
-			for (var id2 in idList) {
+			for (const id2 in idList) {
 				if (id === id2) continue;
 				var tab2 = this.state.tabsbyid[id2];
 				if (tab.url === tab2.url) {
@@ -816,20 +814,20 @@ class TabManager extends React.Component {
 				}
 			}
 		}
-		for (var id in dup) {
+		for (const dupItem of dup) {
 			this.state.searchLen++;
-			hiddenCount -= this.state.hiddenTabs[dup[id]] || 0;
-			this.state.selection[dup[id]] = true;
-			delete this.state.hiddenTabs[dup[id]];
-			this.state.lastSelect = dup[id];
+			hiddenCount -= this.state.hiddenTabs[dupItem] || 0;
+			this.state.selection[dupItem] = true;
+			delete this.state.hiddenTabs[dupItem];
+			this.state.lastSelect = dupItem;
 		}
-		for (var id in idList) {
-			var tab = this.state.tabsbyid[id];
-			if (dup.indexOf(id) === -1) {
-				hiddenCount += 1 - (this.state.hiddenTabs[id] || 0);
-				this.state.hiddenTabs[id] = true;
-				delete this.state.selection[id];
-				this.state.lastSelect = id;
+		for (const tab_id in idList) {
+			// var tab = this.state.tabsbyid[tab_id];
+			if (dup.indexOf(tab_id) === -1) {
+				hiddenCount += 1 - (this.state.hiddenTabs[tab_id] || 0);
+				this.state.hiddenTabs[tab_id] = true;
+				delete this.state.selection[tab_id];
+				this.state.lastSelect = tab_id;
 			}
 		}
 		if (dup.length === 0) {
@@ -883,7 +881,7 @@ class TabManager extends React.Component {
 					idList = this.state.selection;
 				}
 			}
-			for (var id in idList) {
+			for (const id in idList) {
 				var tab = this.state.tabsbyid[id];
 				var tabSearchTerm;
 				if (!!tab.title) tabSearchTerm = tab.title;
@@ -893,7 +891,7 @@ class TabManager extends React.Component {
 				if(searchType === "normal") {
 					match = (tabSearchTerm.indexOf(e.target.value.toLowerCase()) >= 0);
 				}else if(searchType === "OR") {
-					for (var searchOR of searchTerms) {
+					for (let searchOR of searchTerms) {
 						searchOR = searchOR.trim().toLowerCase();
 						if(tabSearchTerm.indexOf(searchOR) >= 0) {
 							match = true;
@@ -902,7 +900,7 @@ class TabManager extends React.Component {
 					}
 				}else if(searchType === "AND") {
 					var andMatch = true;
-					for (var searchAND of searchTerms) {
+					for (let searchAND of searchTerms) {
 						searchAND = searchAND.trim().toLowerCase();
 						if(tabSearchTerm.indexOf(searchAND) >= 0) {
 
