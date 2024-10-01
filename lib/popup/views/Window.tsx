@@ -1,7 +1,14 @@
 "use strict";
 
-export class Window extends React.Component {
-	constructor(props) {
+import {getLocalStorage, setLocalStorage, getLocalStorageMap} from "@helpers/storage";
+import {Tab} from "@views";
+import * as S from "@strings";
+import * as React from "react";
+import * as browser from 'webextension-polyfill';
+import {ICommand, IWindow, IWindowState, ISavedSession} from '@types';
+
+export class Window extends React.Component<IWindow, IWindowState> {
+	constructor(props : IWindow) {
 		super(props);
 
 		this.state = {
@@ -9,8 +16,10 @@ export class Window extends React.Component {
 			windowTitles: [],
 			color: "default",
 			name: "",
+			auto_name: "",
 			tabs: 0,
-			hover: false
+			hover: false,
+			dirty: false
 		};
 
 		this.addTab = this.addTab.bind(this);
@@ -36,43 +45,157 @@ export class Window extends React.Component {
 
 	async componentDidMount() {
 		await this.checkSettings();
+		await this.update();
 	}
 
-	async checkSettings() {
-		var colors = await getLocalStorage("windowColors", {});
-		var color = colors[this.props.window.id] || "default";
-
-		var name;
-		if (!!this.props.window.titlePreface) {
-			name = this.props.window.titlePreface;
-		} else {
-			var names = await getLocalStorage("windowNames", {});
-			if (typeof names !== 'object') {
-				await setLocalStorage("windowNames", {});
-				names = {};
-			}
-			name = names[this.props.window.id] || "";
+	async componentDidUpdate(prevProps, prevState) {
+		if (this.state.dirty) {
+			await this.update();
+			this.setState({ dirty: false });
 		}
+	}
+
+
+	async checkSettings() {
+		let colors = await getLocalStorageMap<number, string>(S.windowColors);
+		let color = colors.get(this.props.window.id) || "default";
 
 		this.setState({
-			color: color,
-			name: name
+			color: color
 		});
 	}
 
+	async update() {
+		let name : string;
+		if (!!this.props.window.title) {
+			name = this.props.window.title;
+		} else {
+			let names : Map<number, string> = await getLocalStorageMap<number, string>(S.windowNames);
+			name = names.get(this.props.window.id) || "";
+		}
+
+		if (!!name) {
+			if (name !== this.state.name) {
+				this.setState({
+					name: name
+				});
+			}
+			return;
+		}
+
+		let _window_titles = this.state.windowTitles;
+		let _tabs = this.state.tabs;
+		let tabs = await browser.tabs.query({ windowId: this.props.window.id });
+		if (tabs.length == 0) return;
+
+		if (_window_titles.length === 0 || this.state.tabs !== tabs.length + this.props.window.id * 99) {
+			_window_titles.length = 0;
+			_tabs = tabs.length + this.props.window.id * 99;
+
+			for (let i = 0; i < tabs.length; i++) {
+				const _tab = tabs[i];
+				if (!!_tab && (!!_tab.url || !!_tab.pendingUrl)) {
+					let url : URL;
+					if (!!_tab.pendingUrl) {
+						url = new URL(_tab.pendingUrl);
+					} else if (!!_tab.url) {
+						url = new URL(_tab.url);
+					}
+
+					// force refresh once we've loaded tabs
+					if (_tab.status == "loading") _tabs--;
+
+					let protocol = url.protocol || "";
+					let hostname = url.hostname || "";
+					if (protocol.indexOf("view-source") > -1 && !!url.pathname) {
+						url = new URL(url.pathname);
+						hostname = url.hostname || "source";
+					} else if (protocol.indexOf("chrome-extension") > -1) {
+						hostname = _tab.title || "extension";
+					} else if (protocol.indexOf("about") > -1) {
+						hostname = _tab.title || "about";
+					} else if (hostname.indexOf("mail.google") > -1) {
+						hostname = "gmail";
+					} else {
+						if (!hostname) hostname = "";
+						hostname = hostname.replace("www.", "");
+						if (!isIpAddress(hostname)) {
+							let regex_var = new RegExp(/(\.[^\.]{0,2})(\.[^\.]{0,2})(\.*$)|(\.[^\.]*)(\.*$)/);
+							hostname = hostname
+								.replace(regex_var, "")
+								.split(".")
+								.pop();
+						} else {
+							if (!!_tab.title) {
+								hostname = _tab.title;
+							} else {
+								let ip = hostname.split(".");
+								hostname = ip[0] + "." + ip[1] + ".*.*";
+							}
+						}
+					}
+
+					if (!hostname || hostname.length > 7) {
+						let title = _tab.title || "";
+
+						const separators = /\s[—|•-]\s/; // Define separators here
+
+						do {
+							let titles = title.split(separators);
+							let first = titles[0];
+							let last = titles[titles.length - 1];
+							if (slugify(first) == slugify(hostname) || slugify_no_space(first) == slugify_no_space(hostname) || slugify_no_space(first).startsWith(slugify_no_space(hostname).substring(0, 3)) || slugify_no_space(hostname).startsWith(slugify_no_space(first).substring(0, 3))) {
+								title = first;
+							} else if (slugify(last) == slugify(hostname) || slugify_no_space(last) == slugify_no_space(hostname) || slugify_no_space(last).startsWith(slugify_no_space(hostname).substring(0, 3)) || slugify_no_space(hostname).startsWith(slugify_no_space(last).substring(0, 3))) {
+								title = last;
+							} else {
+								titles.sort((a : string, b : string) => a.length - b.length);
+								titles.pop();
+								title = titles.join("-");
+							}
+						} while (title.length > hostname.length && separators.test(title))
+
+						if (!hostname || (!!title && title.length < 23)) {
+							hostname = title;
+						}
+
+						// while (hostname.length > 21 && hostname.indexOf(" ") > -1) {
+						// 	let hostnames = hostname.split(" ");
+						// 	hostnames.pop();
+						// 	hostname = hostnames.join(" ");
+						// }
+
+					}
+
+					_window_titles.push(hostname);
+				}
+			}
+
+			this.setState({
+				tabs: _tabs
+			})
+		}
+
+		if (_window_titles.length > 0) {
+			name = this.topEntries(this.state.windowTitles).join("");
+			this.setState({
+				auto_name: name
+			});
+		}
+	}
+
 	render() {
-		var _this = this;
+		let _this = this;
 
-		var color = this.state.color || "default";
-		var name = this.state.name;
+		let color = this.state.color || "default";
 
-		var hideWindow = true;
-		var titleAdded = false;
-		var tabsperrow = this.props.layout.indexOf("blocks") > -1 ? Math.ceil(Math.sqrt(this.props.tabs.length + 2)) : this.props.layout === "vertical" ? 1 : 15;
-		var tabs = this.props.tabs.map(function(tab) {
-			var isHidden = !!_this.props.hiddenTabs[tab.id] && _this.props.filterTabs;
-			var isSelected = !!_this.props.selection[tab.id];
-			hideWindow &= isHidden;
+		let hideWindow = true;
+		let titleAdded = false;
+		let tabsperrow = this.props.layout.indexOf("blocks") > -1 ? Math.ceil(Math.sqrt(this.props.tabs.length + 2)) : this.props.layout === "vertical" ? 1 : 15;
+		let tabs = this.props.tabs.map(function(tab) {
+			let isHidden : boolean = _this.props.hiddenTabs.has(tab.id) && _this.props.filterTabs;
+			let isSelected : boolean = _this.props.selection.has(tab.id);
+			if (!isHidden) hideWindow = false;
 			return (
 				<Tab
 					key={"windowtab_" + _this.props.window.id + "_" + tab.id}
@@ -162,8 +285,8 @@ export class Window extends React.Component {
 							type="text"
 							onChange={this.changeName}
 							value={this.state.name}
-							placeholder={this.state.windowTitles ? this.topEntries(this.state.windowTitles).join("") : "Name window..."}
-							tabIndex="1"
+							placeholder={this.state.auto_name ?? "Name window..."}
+							tabIndex={1}
 							ref="namebox"
 							onKeyDown={this.checkKey}
 						/>
@@ -331,112 +454,41 @@ export class Window extends React.Component {
 			}
 
 			if (this.props.windowTitles) {
-				if (!!name) {
-					tabs.unshift(
-						<h3
-							key={"window-" + this.props.window.id + "-windowTitle"}
-							className="editName center windowTitle"
-							onClick={this.colors}
-							title="Change the name of this window"
-							onMouseEnter={this.props.hoverIcon}
-						>
-							{name}
-						</h3>
-					);
-					titleAdded = true;
-				} else {
-					if (this.state.windowTitles.length === 0 || this.state.tabs !== tabs.length + this.props.window.id * 99) {
-						this.state.windowTitles = [];
-						this.state.tabs = tabs.length + this.props.window.id * 99;
-						for (var i = 0; i < tabs.length; i++) {
-
-							if (!!tabs[i].props && !!tabs[i].props.tab && !!tabs[i].props.tab.url) {
-								var url = new URL(tabs[i].props.tab.url);
-								var protocol = url.protocol || "";
-								var hostname = url.hostname || "";
-								if (protocol.indexOf("view-source") > -1 && !!url.pathname) {
-									url = new URL(url.pathname);
-									hostname = url.hostname || "source";
-								} else if (protocol.indexOf("chrome-extension") > -1) {
-									hostname = tabs[i].props.tab.title || "extension";
-								} else if (protocol.indexOf("about") > -1) {
-									hostname = tabs[i].props.tab.title || "about";
-								} else if (hostname.indexOf("mail.google") > -1) {
-									hostname = "gmail";
-								} else {
-									if (!hostname) hostname = "";
-									hostname = hostname.replace("www.", "");
-									var regex_var = new RegExp(/(\.[^\.]{0,2})(\.[^\.]{0,2})(\.*$)|(\.[^\.]*)(\.*$)/);
-									hostname = hostname
-										.replace(regex_var, "")
-										.split(".")
-										.pop();
-								}
-
-								if (!!hostname && hostname.length > 18) {
-									hostname = tabs[i].props.tab.title || "";
-
-									while (hostname.length > 18 && hostname.indexOf("—") > -1) {
-										hostname = hostname.split("—");
-										hostname.pop();
-										hostname = hostname.join("—");
-									}
-
-									while (hostname.length > 18 && hostname.indexOf("-") > -1) {
-										hostname = hostname.split("-");
-										hostname.pop();
-										hostname = hostname.join("-");
-									}
-
-									while (hostname.length > 18 && hostname.indexOf(" ") > -1) {
-										hostname = hostname.split(" ");
-										hostname.pop();
-										hostname = hostname.join(" ");
-									}
-
-								}
-								this.state.windowTitles.push(hostname);
-							}
-						}
-					}
-
-					if (this.state.windowTitles.length > 0) {
-						tabs.unshift(
-							<h3
-								key={"window-" + this.props.window.id + "-windowTitle"}
-								className="editName center windowTitle"
-								onClick={this.colors}
-								title="Change the name of this window"
-								onMouseEnter={this.props.hoverIcon}
-							>
-								{this.topEntries(this.state.windowTitles).join("")}
-							</h3>
-						);
-						titleAdded = true;
-					}
-				}
+				titleAdded = true;
+				tabs.unshift(
+					<h3
+						key={"window-" + this.props.window.id + "-windowTitle"}
+						className="editName center windowTitle"
+						onClick={this.colors}
+						title="Change the name of this window"
+						onMouseEnter={this.props.hoverIcon}
+					>
+						{this.props.window.incognito ? "🕵" : ""}
+						{!!this.state.name ? this.state.name : this.state.auto_name}
+					</h3>
+				);
 			}
 
 			if (tabsperrow < 5) {
 				tabsperrow = 5;
 			}
-			var children = [];
+			let children = [];
 			if (!!titleAdded) {
 				children.push(tabs.shift());
 			}
-			var z = -1;
-			for (var j = 0; j < tabs.length; j++) {
-				var tab = tabs[j].props.tab;
-				var isHidden = !!tab && !!tab.id && !!this.props.hiddenTabs[tab.id] && this.props.filterTabs;
-				if(!isHidden) {
-					z++;
-					children.push(tabs[j]);
-				}
+			let z = -1;
+			for (let j = 0; j < tabs.length; j++) {
+				let tab = tabs[j].props.tab;
+				let isHidden = !!tab && !!tab.id && this.props.hiddenTabs.has(tab.id) && this.props.filterTabs;
+				if(isHidden) continue;
+				z++;
+				children.push(tabs[j]);
+
 				if ((z + 1) % tabsperrow === 0 && z && this.props.layout.indexOf("blocks") > -1) {
 					children.push(<div className="newliner" key={"windownlz_" + _this.props.window.id + "_" + z} />);
 				}
 			}
-			var focused = false;
+			let focused = false;
 			if (this.props.window.focused || this.props.lastOpenWindow === this.props.window.id) {
 				focused = true;
 			}
@@ -486,27 +538,27 @@ export class Window extends React.Component {
 		browser.tabs.create({ windowId: this.props.window.id });
 	}
 	dragOver(e) {
-		this.state.hover = true;
+		this.setState({hover: true});
 		this.stopProp(e);
 	}
 	dragLeave(e) {
-		this.state.hover = false;
+		this.setState({hover: false});
 		e.nativeEvent.preventDefault();
 	}
 	drop(e) {
-		var distance = 1000000;
-		var closestTab = null;
-		var closestRef = null;
+		let distance = 1000000;
+		let closestTab = null;
+		let closestRef = null;
 
-		for (var i = 0; i < this.props.tabs.length; i++) {
-			var tab = this.props.tabs[i];
-			var tabRef = this.refs["tab" + tab.id].tabRef.current;
-			var tabRect = tabRef.getBoundingClientRect();
-			var x = e.nativeEvent.clientX;
-			var y = e.nativeEvent.clientY;
-			var dx = tabRect.x - x;
-			var dy = tabRect.y - y;
-			var d = Math.sqrt(dx * dx + dy * dy);
+		for (let i = 0; i < this.props.tabs.length; i++) {
+			let tab = this.props.tabs[i];
+			let tabRef = (this.refs["tab" + tab.id] as Tab).state.tabRef.current;
+			let tabRect = tabRef.getBoundingClientRect();
+			let x = e.nativeEvent.clientX;
+			let y = e.nativeEvent.clientY;
+			let dx = tabRect.x - x;
+			let dy = tabRect.y - y;
+			let d = Math.sqrt(dx * dx + dy * dy);
 			if (d < distance) {
 				distance = d;
 				closestTab = tab.id;
@@ -517,8 +569,8 @@ export class Window extends React.Component {
 		this.stopProp(e);
 
 		if (closestTab != null) {
-			var before;
-			var boundingRect = closestRef.getBoundingClientRect();
+			let before : boolean;
+			let boundingRect = closestRef.getBoundingClientRect();
 			if (this.props.layout === "vertical") {
 				before = e.nativeEvent.clientY < boundingRect.top;
 			} else {
@@ -530,37 +582,37 @@ export class Window extends React.Component {
 		}
 	}
 	hoverWindow(tabs, _) {
-		this.state.hover = true;
+		this.setState({ hover: true });
 		this.props.hoverIcon("Focus this window\nWill select this window with " + tabs.length + " tabs");
 		// this.props.hoverIcon(e);
 	}
 	hoverWindowOut(_) {
-		this.state.hover = false;
+		this.setState({ hover: false });
 	}
-	checkKey(e) {
+	async checkKey(e) {
 		// close popup when enter or escape have been pressed
 		if (e.keyCode === 13 || e.keyCode === 27) {
 			this.stopProp(e);
-			this.closePopup();
+			await this.closePopup();
 		}
 	}
 	async windowClick(e) {
 		this.stopProp(e);
 
-		var windowId = this.props.window.id;
+		let windowId = this.props.window.id;
 
 		if (navigator.userAgent.search("Firefox") > -1) {
-			browser.runtime.sendMessage({command: "focus_on_window_delayed", window_id: windowId});
+			browser.runtime.sendMessage<ICommand>({command: S.focus_on_window_delayed, window_id: windowId});
 		} else {
-			browser.runtime.sendMessage({command: "focus_on_window", window_id: windowId});
+			browser.runtime.sendMessage<ICommand>({command: S.focus_on_window, window_id: windowId});
 		}
 
 		this.props.parentUpdate();
 		if (!!window.inPopup) window.close();
 		return false;
 	}
-	selectToFromTab(tabId) {
-		if(tabId) this.props.selectTo(tabId, this.props.tabs);
+	selectToFromTab(tabId : number) {
+		if (!!tabId) this.props.selectTo(tabId, this.props.tabs);
 	}
 	async close(e) {
 		this.stopProp(e);
@@ -568,7 +620,7 @@ export class Window extends React.Component {
 	}
 	uuidv4() {
 		return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
-			var r = (Math.random() * 16) | 0,
+			let r = (Math.random() * 16) | 0,
 				v = c === "x" ? r : (r & 0x3) | 0x8;
 			return v.toString(16);
 		});
@@ -577,35 +629,35 @@ export class Window extends React.Component {
 		this.stopProp(e);
 
 		console.log("session name", this.state.name);
-		var sessionName = this.state.name || this.topEntries(this.state.windowTitles).join("");
-		var sessionColor = this.state.color || "default";
+		let sessionName = this.state.name || this.topEntries(this.state.windowTitles).join("");
+		let sessionColor = this.state.color || "default";
 
 		console.log("session name", sessionName);
 
-		var session = {
+		let session : ISavedSession = {
 			tabs: [],
-			windowsInfo: {},
+			windowsInfo: null,
 			name: sessionName,
+			customName: !!this.state.name,
 			color: sessionColor,
 			date: Date.now(),
 			sessionStartTime: Date.now(),
+			incognito: this.props.window.incognito,
 			id: this.uuidv4()
 		};
 
-		if (this.state.name) {
-			session.customName = true;
-		}
-
-		var queryInfo = {};
+		let queryInfo : browser.Tabs.QueryQueryInfoType = {
+			windowId: this.props.window.id
+		};
 		//queryInfo.currentWindow = true;
-		queryInfo.windowId = this.props.window.id;
+
 		console.log(queryInfo);
 
-		var tabs = await browser.tabs.query(queryInfo);
+		let tabs : browser.Tabs.Tab[] = await browser.tabs.query(queryInfo);
 		console.log(tabs);
-		for (var tabkey in tabs) {
+		for (let tabkey in tabs) {
 			if (navigator.userAgent.search("Firefox") > -1) {
-				var newTab = tabs[tabkey];
+				let newTab = tabs[tabkey];
 				if (!!newTab.url && newTab.url.search("about:") > -1) {
 					continue;
 				}
@@ -617,10 +669,10 @@ export class Window extends React.Component {
 
 		console.log(session);
 
-		var sessions = await getLocalStorage('sessions', {});
+		let sessions = await getLocalStorage('sessions', {});
 		sessions[session.id] = session;
 
-		var value = await setLocalStorage('sessions', sessions).catch(function(err) {
+		let value = await setLocalStorage('sessions', sessions).catch(function(err) {
 			console.log(err);
 			console.error(err.message);
 		});
@@ -661,39 +713,36 @@ export class Window extends React.Component {
 		this.setState(a);
 		this.props.toggleColors(!this.state.colorActive, this.props.window.id);
 
-		var color = a.color || "default";
+		let color = a.color || "default";
 
-		browser.runtime.sendMessage({
-			command: "set_window_color",
+		browser.runtime.sendMessage<ICommand>({
+			command: S.set_window_color,
 			window_id: this.props.window.id,
 			color: color
 		});
 
-		this.state.color = color;
-		this.setState({
-			color: color
-		});
-		this.closePopup();
+		this.setState({ color: color });
+		await this.closePopup();
 	}
-	closePopup() {
+	async closePopup() {
 		this.props.toggleColors(!this.state.colorActive, this.props.window.id);
 		this.setState({
 			colorActive: !this.state.colorActive
 		});
+		await this.update();
 		this.props.parentUpdate();
 	}
 	async changeName(e) {
 		// this.setState(a);
-		var name = "";
+		let name = "";
 		if(e && e.target && e.target.value) name = e.target.value;
 
-		browser.runtime.sendMessage({
-			command: "set_window_name",
+		browser.runtime.sendMessage<ICommand>({
+			command: S.set_window_name,
 			window_id: this.props.window.id,
 			name: name
 		});
 
-		this.state.name = name;
 		this.setState({
 			name: name
 		});
@@ -709,16 +758,16 @@ export class Window extends React.Component {
 			}
 		}
 	}
-	topEntries(arr) {
-		var cnts = arr.reduce(function(obj, val) {
+	topEntries(arr : string[]) : string[] {
+		let cnts = arr.reduce(function(obj, val) {
 			obj[val] = (obj[val] || 0) + 1;
 			return obj;
 		}, {});
-		var sorted = Object.keys(cnts).sort(function(a, b) {
+		let sorted = Object.keys(cnts).sort(function(a, b) {
 			return cnts[b] - cnts[a];
 		});
 
-		var more = 0;
+		let more = 0;
 		if (sorted.length === 3) {
 		} else {
 			while (sorted.length > 2) {
@@ -726,7 +775,7 @@ export class Window extends React.Component {
 				more++;
 			}
 		}
-		for (var i = 0; i < sorted.length; i++) {
+		for (let i = 0; i < sorted.length; i++) {
 			if (i > 0) {
 				sorted[i] = ", " + sorted[i];
 			}
@@ -746,4 +795,37 @@ export class Window extends React.Component {
 			e.stopPropagation();
 		}
 	}
+}
+
+function slugify(text) {
+	return text
+		.toString()
+		.toLowerCase()
+		.replace(/\s+/g, "-") // Replace spaces with -
+		.replace(/[^\w-]+/g, "") // Remove all non-word chars
+		.replace(/--+/g, "-") // Replace multiple - with single -
+		.replace(/^-+/, "") // Trim - from start of text
+		.replace(/-+$/, ""); // Trim - from end of text
+}
+
+function slugify_no_space(text) {
+	return text
+		.toString()
+		.toLowerCase()
+		.replace(/\s+/g, "") // Replace spaces with -
+		.replace(/[^\w-]+/g, "") // Remove all non-word chars
+		.replace(/--+/g, "-") // Replace multiple - with single -
+		.replace(/^-+/, "") // Trim - from start of text
+		.replace(/-+$/, ""); // Trim - from end of text
+}
+
+// Function to check if the string is an IP address (IPv4 or IPv6)
+function isIpAddress(input) {
+	// Regex for IPv4: 0-255.0-255.0-255.0-255
+	const ipv4Regex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+
+	// Regex for IPv6: Matches standard IPv6 formatting (8 groups of 4 hex digits)
+	const ipv6Regex = /^([a-fA-F0-9]{1,4}:){7}[a-fA-F0-9]{1,4}$/;
+
+	return ipv4Regex.test(input) || ipv6Regex.test(input);
 }
