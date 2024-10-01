@@ -12,12 +12,14 @@ declare global {
 		inPopup: boolean;
 		inPanel: boolean;
 		optionPage: boolean;
+		extensionVersion: string;
 	}
 }
 
 window.loaded = false;
 window.inPopup = window.location.search.indexOf("?popup") > -1;
 window.inPanel = window.location.search.indexOf("?panel") > -1;
+window.extensionVersion = process.env.VERSION;
 
 window.onload = () => window.requestAnimationFrame(loadApp);
 
@@ -34,8 +36,8 @@ setTimeout(loadApp, 15000);
 
 async function loadApp() {
 	if (!!window.loaded) return;
-	var height = await getLocalStorage("tabHeight", 0);
-	var width = await getLocalStorage("tabWidth", 0);
+	let height : number = await getLocalStorage("tabHeight", 800);
+	let width : number = await getLocalStorage("tabWidth", 600);
 	console.log(height, width);
 	if (window.inPopup) {
 

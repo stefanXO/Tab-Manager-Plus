@@ -7,7 +7,7 @@ await esbuild.build({
 	target: 'chrome88',
 	outfile: 'dist/popup/popup.js',
 	define: {
-		__VERSION__: '"' + process.env.npm_package_version + '"',
+		'process.env.VERSION': '"' + process.env.npm_package_version + '"',
 		'process.env.NODE_ENV': '"production"'
 	}
 })
@@ -19,7 +19,7 @@ await esbuild.build({
 	target: 'chrome88',
 	outfile: 'dist/service_worker/service_worker.js',
 	define: {
-		__VERSION__: '"' + process.env.npm_package_version + '"',
+		'process.env.VERSION': '"' + process.env.npm_package_version + '"',
 		'process.env.NODE_ENV': '"production"'
 	},
 })
@@ -31,7 +31,7 @@ await esbuild.build({
 	target: 'chrome88',
 	outfile: 'dist/popup/options.js',
 	define: {
-		__VERSION__: '"' + process.env.npm_package_version + '"',
+		'process.env.VERSION': '"' + process.env.npm_package_version + '"',
 		'process.env.NODE_ENV': '"production"'
 	}
 })

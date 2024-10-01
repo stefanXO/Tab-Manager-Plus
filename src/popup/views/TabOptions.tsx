@@ -14,7 +14,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 			<div className="logo-options" key="logo">
 				<div className="logo-box">
 					<img src="images/browsers.svg" style={{maxWidth: "3rem"}} alt="Tab Manager Plus"/>
-					<h2 key="title">Tab Manager Plus {"__VERSION__"}</h2>
+					<h2 key="title">Tab Manager Plus {window.extensionVersion}</h2>
 				</div>
 			</div>
 		);

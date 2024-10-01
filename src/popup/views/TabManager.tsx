@@ -163,7 +163,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		if (typeof storage["hideWindows"] === "undefined") storage["hideWindows"] = hideWindows;
 		if (typeof storage["filter-tabs"] === "undefined") storage["filter-tabs"] = filterTabs;
 
-		storage["version"] = "__VERSION__";
+		storage["version"] = window.extensionVersion;
 
 		await browser.storage.local.set(storage);
 
