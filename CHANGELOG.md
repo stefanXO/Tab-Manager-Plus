@@ -1,4 +1,4 @@
-next
+6.0.0
 =====
 - You can now open single tabs from your saved sessions
 - Fix: Sometimes favicons would not load properly
