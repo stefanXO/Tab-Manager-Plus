@@ -2,7 +2,7 @@
 // be triggered. The function will be called after it stops being called for
 // N milliseconds. If `immediate` is passed, trigger the function on the
 // leading edge, instead of the trailing.
-export function debounce(func, wait, immediate) {
+export function debounce(func, wait, immediate = false) {
 	var timeout;
 	return function () {
 		var context = this, args = arguments;
@@ -32,7 +32,7 @@ export function isInViewport(element, ofElement) {
 	return rect.top >= 0 && rect.left >= 0 && rect.bottom <= ofElement.height && rect.right <= ofElement.width;
 }
 
-export function stringHashcode(string) {
+export function stringHashcode(string) : number {
 	var hash = 0;
 	for (var i = 0; i < string.length; i++) {
 		var code = string.charCodeAt(i);
