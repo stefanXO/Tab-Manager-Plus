@@ -1,12 +1,19 @@
 "use strict";
 
-class Tab extends React.Component {
+import * as S from "@strings";
+import * as React from "react";
+import * as browser from 'webextension-polyfill';
+import {ICommand, ITab, ITabState} from '@types';
+
+export class Tab extends React.Component<ITab, ITabState> {
 	constructor(props) {
 		super(props);
 		this.state = {
 			favIcon: "",
 			dragFavIcon: "",
-			hovered: false
+			draggingOver: "",
+			hovered: false,
+			tabRef: React.createRef()
 		};
 
 		this.onHover = this.onHover.bind(this);
@@ -19,8 +26,6 @@ class Tab extends React.Component {
 		this.drop = this.drop.bind(this);
 		this.resolveFavIconUrl = this.resolveFavIconUrl.bind(this);
 		this.checkSettings = this.checkSettings.bind(this);
-
-		this.tabRef = React.createRef();
 	}
 
 	async componentDidMount() {
@@ -32,8 +37,8 @@ class Tab extends React.Component {
 	}
 
 	render() {
-		var children = [];
-		if (this.props.layout == "vertical") {
+		const children = [];
+		if (this.props.layout === "vertical") {
 			children.push(
 				<div key={"tab-pinned-" + this.props.tab.id} className={"tab-pinned " + (!this.props.tab.pinned ? "hidden" : "")}>
 					Pinned
@@ -54,7 +59,7 @@ class Tab extends React.Component {
 					key={"tab-icon-" + this.props.tab.id}
 					className="iconoverlay "
 					style={{
-						backgroundImage: "url(" + this.state.favIcon + ")"
+						backgroundImage: !!this.state.favIcon ? "url(" + this.state.favIcon + ")" : ""
 					}}
 				/>
 			);
@@ -75,18 +80,18 @@ class Tab extends React.Component {
 				((this.props.tab.mutedInfo && this.props.tab.mutedInfo.muted) ? "muted " : "") +
 				(this.props.tab.audible ? "audible " : "") +
 				(this.props.tab.discarded ? "discarded " : "") +
-				(this.props.layout == "vertical" ? "full " : "") +
+				(this.props.layout === "vertical" ? "full " : "") +
 				(this.props.tab.incognito ? "incognito " : "") +
-				(this.state.draggingOver || "") +
+				(this.state.draggingOver) +
 				(this.props.searchActive ? "search-active " : "") +
 				" tab-" +
 				this.props.tab.id +
 				" " +
-				(this.props.layout == "vertical" ? "vertical " : "blocks "),
+				(this.props.layout === "vertical" ? "vertical " : "blocks "),
 			style:
-				(this.props.layout == "vertical"
+				(this.props.layout === "vertical"
 					? { }
-					: { backgroundImage: "url(" + this.state.favIcon + ")" }
+					: { backgroundImage: !!this.state.favIcon ? "url(" + this.state.favIcon + ")" : "" }
 				)
 			,
 			id: this.props.id,
@@ -95,7 +100,7 @@ class Tab extends React.Component {
 			onMouseDown: this.onMouseDown,
 			onMouseEnter: this.onHover,
 			onMouseOut: this.onHoverOut,
-			ref: this.tabRef
+			ref: this.state.tabRef
 		};
 
 		if (!!this.props.draggable) {
@@ -114,21 +119,21 @@ class Tab extends React.Component {
 		);
 	}
 	onHover(e) {
-		this.setState({hover: true});
+		this.setState({hovered: true});
 		this.props.hoverHandler(this.props.tab);
 	}
 	onHoverOut(e) {
-		this.setState({hover: false});
+		this.setState({hovered: false});
 	}
-	onMouseDown(e) {
+	async onMouseDown(e : React.MouseEvent<HTMLDivElement>) {
 		if (e.button === 0) return;
 		if (!this.props.draggable) return;
-		this.click(e);
+		await this.click(e);
 	}
-	async click(e) {
+	async click(e : React.MouseEvent<HTMLDivElement>) {
 		this.stopProp(e);
 
-		var tabId = this.props.tab.id;
+		var tabId : number = this.props.tab.id;
 		var windowId = this.props.window.id;
 
 		if (e.button === 1) {
@@ -145,14 +150,14 @@ class Tab extends React.Component {
 				this.props.click(e, this.props.tab.id);
 			} else {
 				if (navigator.userAgent.search("Firefox") > -1) {
-					browser.runtime.sendMessage({
-						command: "focus_on_tab_and_window_delayed",
-						tab: {id: tabId, windowId: windowId}
+					browser.runtime.sendMessage<ICommand>({
+						command: S.focus_on_tab_and_window_delayed,
+						saved_tab: {tabId: tabId, windowId: windowId}
 					});
 				} else {
-					browser.runtime.sendMessage({
-						command: "focus_on_tab_and_window",
-						tab: {id: tabId, windowId: windowId}
+					browser.runtime.sendMessage<ICommand>({
+						command: S.focus_on_tab_and_window,
+						saved_tab: {tabId: tabId, windowId: windowId}
 					});
 				}
 			}
@@ -161,29 +166,38 @@ class Tab extends React.Component {
 		}
 		return false;
 	}
-	dragStart(e) {
+	dragStart(e : React.DragEvent<HTMLDivElement>) {
 		if (!this.props.draggable) return false;
 		if (!this.props.drag) return false;
 
-		this.state.dragFavIcon = "";
+		this.setState({
+			dragFavIcon: ""
+		});
 		this.props.dragFavicon(this.state.favIcon);
-		e.dataTransfer.setData("Text", this.props.tab.id);
+		e.dataTransfer.setData("Text", this.props.tab.id.toString());
 		e.dataTransfer.setData("text/uri-list", this.props.tab.url || "");
 		this.props.drag(e, this.props.tab.id);
 	}
-	dragOver(e) {
+	dragOver(e : React.DragEvent<HTMLDivElement>) {
 		if (!this.props.draggable) return false;
 		if (!this.props.drag) return false;
 
-		this.state.dragFavIcon = this.props.dragFavicon();
+		let favicon = this.props.dragFavicon();
+		let draggingover;
 
 		var before = this.state.draggingOver;
-		if (this.props.layout == "vertical") {
-			this.state.draggingOver = e.nativeEvent.offsetY > ReactDOM.findDOMNode(this).clientHeight / 2 ? "bottom" : "top";
+		if (this.props.layout === "vertical") {
+			draggingover = e.nativeEvent.offsetY > this.state.tabRef.current.clientHeight / 2 ? "bottom" : "top";
 		} else {
-			this.state.draggingOver = e.nativeEvent.offsetX > ReactDOM.findDOMNode(this).clientWidth / 2 ? "right" : "left";
+			draggingover = e.nativeEvent.offsetX > this.state.tabRef.current.clientWidth / 2 ? "right" : "left";
 		}
-		if (before != this.state.draggingOver) {
+
+		this.setState({
+			draggingOver: draggingover,
+			dragFavIcon: favicon
+		});
+
+		if (before !== this.state.draggingOver) {
 			this.forceUpdate();
 			this.props.parentUpdate();
 		}
@@ -191,55 +205,55 @@ class Tab extends React.Component {
 	dragOut() {
 		if (!this.props.draggable) return false;
 		if (!this.props.drag) return;
-		this.state.dragFavIcon = "";
-		delete this.state.draggingOver;
+
+		this.setState({
+			dragFavIcon: "",
+			draggingOver: ""
+		});
 		this.forceUpdate();
 		this.props.parentUpdate();
 	}
-	drop(e) {
+	drop(e : React.DragEvent<HTMLDivElement>) {
 		if (!this.props.draggable) return false;
 		if (!this.props.drag) return false;
 		if (!this.props.drop) return;
 
-		this.state.dragFavIcon = "";
 		this.stopProp(e);
-		var before = this.state.draggingOver == "top" || this.state.draggingOver == "left";
-		delete this.state.draggingOver;
+
+		var before = this.state.draggingOver === "top" || this.state.draggingOver === "left";
+
+		this.setState({
+			draggingOver: "",
+			dragFavIcon: ""
+		});
 
 		this.props.drop(this.props.tab.id, before);
 		this.forceUpdate();
 		this.props.parentUpdate();
 	}
 	async resolveFavIconUrl() {
-		var image;
+		let image : string;
 		// firefox screenshots; needs <all_urls>
 		// if(!!browser.tabs.captureTab) {
 		// 	console.log("tabs captureTab");
 		// 	image = await browser.tabs.captureTab(this.props.tab.id);
 		// 	image = "url(" + image + ")";
 		// }else
-		if (!!this.props.tab.url && navigator.userAgent.search("Firefox") === -1) {
-			image = "chrome-extension://" + chrome.runtime.id + "/_favicon/?pageUrl=" + encodeURIComponent(this.props.tab.url) + "&size=64&" + Date.now();
-		} else if (!!this.props.tab.url && this.props.tab.url.indexOf("chrome://") !== 0 && this.props.tab.url.indexOf("about:") !== 0) {
-			// chrome screenshots / only for active tabs; needs <all_urls>
-			// if(!!browser.tabs.captureVisibleTab && this.props.tab.highlighted) {
-			// 	console.log("tabsCapture");
-			// 	try {
-			// 		image = await browser.tabs.captureVisibleTab( this.props.window.id, {} );
-			// 		//console.log(image);
-			// 	} catch ( e ) {
-			// 		console.log(e.message);
-			// 	}
-			// 	image = "url(" + image + ")";
-			// }else{
-			image = this.props.tab.favIconUrl ? "" + this.props.tab.favIconUrl + "" : "";
-			//}
-		} else {
-			var favIcons = ["bookmarks", "chrome", "crashes", "downloads", "extensions", "flags", "history", "settings"];
-			var iconUrl = this.props.tab.url || "";
-			var iconName = "";
-			if (iconUrl.length > 9) iconName = iconUrl.slice(9).match(/^\w+/g);
-			image = !iconName || favIcons.indexOf(iconName[0]) < 0 ? "" : "../images/chrome/" + iconName[0] + ".png";
+
+		var _url : string = this.props.tab.url || this.props.tab.pendingUrl || "";
+
+		if (!!_url && navigator.userAgent.search("Firefox") === -1) {
+			image = "chrome-extension://" + chrome.runtime.id + "/_favicon/?pageUrl=" + encodeURIComponent(_url) + "&size=64"; // &" + Date.now();
+		} else if (!!_url && _url.indexOf("chrome://") !== 0 && _url.indexOf("about:") !== 0) {
+			 image = this.props.tab.favIconUrl ? "" + this.props.tab.favIconUrl + "" : "";
+		 } else {
+			const favIcons = ["bookmarks", "chrome", "crashes", "downloads", "extensions", "flags", "history", "settings"];
+			let iconUrl = _url;
+			if (iconUrl.length > 9) {
+				let iconName = iconUrl.slice(9).match(/^\w+/g);
+				console.log(iconName);
+				image = !iconName || favIcons.indexOf(iconName[0]) < 0 ? "" : "../images/chrome/" + iconName[0] + ".png";
+			}
 		}
 		this.setState({
 			favIcon: image
