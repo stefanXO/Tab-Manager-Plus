@@ -1,6 +1,14 @@
-﻿var browser = browser || chrome;
+﻿"use strict";
 
-async function setupWindowListeners() {
+import {cleanupDebounce} from "@background/tracking";
+import {getLocalStorage, getLocalStorageMap, setLocalStorage, setLocalStorageMap} from "@helpers/storage";
+import {is_in_bounds, stringHashcode} from "@helpers/utils";
+import {setWindowColor, setWindowName} from "@background/actions";
+import * as S from "@strings";
+import * as browser from 'webextension-polyfill';
+import {ISavedSession} from "@types";
+
+export async function setupWindowListeners() {
 	browser.windows.onFocusChanged.removeListener(windowFocus);
 	browser.windows.onCreated.removeListener(windowCreated);
 	browser.windows.onRemoved.removeListener(windowRemoved);
@@ -10,7 +18,7 @@ async function setupWindowListeners() {
 	browser.windows.onRemoved.addListener(windowRemoved);
 }
 
-export async function createWindowWithTabs(tabs, isIncognito) {
+export async function createWindowWithTabs(tabs, isIncognito = false) {
 	var pinnedIndex = 0;
 	var firstTab = tabs.shift();
 	var t = [];
@@ -31,16 +39,23 @@ export async function createWindowWithTabs(tabs, isIncognito) {
 			i++;
 			var oldTab = await browser.tabs.get(oldTabId);
 			var tabPinned = oldTab.pinned;
-			var movedTabs = [];
+			var movedTabs : browser.Tabs.Tab | browser.Tabs.Tab[] = [];
 			if (!tabPinned) {
 				movedTabs = await browser.tabs.move(oldTabId, {windowId: w.id, index: -1});
 			} else {
 				movedTabs = await browser.tabs.move(oldTabId, {windowId: w.id, index: pinnedIndex++});
 			}
-			if (movedTabs.length > 0) {
-				var newTab = movedTabs[0];
+
+			let firstTab : browser.Tabs.Tab;
+			if (Array.isArray(movedTabs)) {
+				firstTab = movedTabs[0];
+			} else {
+				firstTab = movedTabs;
+			}
+
+			if (!!firstTab) {
 				if (tabPinned) {
-					await browser.tabs.update(newTab.id, {pinned: tabPinned});
+					await browser.tabs.update(firstTab.id, {pinned: tabPinned});
 				}
 			}
 		}
@@ -48,15 +63,15 @@ export async function createWindowWithTabs(tabs, isIncognito) {
 	await browser.windows.update(w.id, {focused: true});
 }
 
-export async function createWindowWithSessionTabs(window, tabId) {
+export async function createWindowWithSessionTabs(session: ISavedSession, tabId: number) {
 
-	var customName = false;
-	if (window && window.name && window.customName) {
-		customName = window.name;
+	var customName : string;
+	if (session && session.name && session.customName) {
+		customName = session.name;
 	}
 	var color = "default";
-	if (window && window.color) {
-		color = window.color;
+	if (session && session.color) {
+		color = session.color;
 	}
 
 	var whitelistWindow = ["left", "top", "width", "height", "incognito", "type"];
@@ -71,12 +86,12 @@ export async function createWindowWithSessionTabs(window, tabId) {
 		whitelistTab = ["url", "active", "pinned", "index"];
 	}
 
-	var filteredWindow = Object.keys(window.windowsInfo)
+	var filteredWindow : browser.Windows.CreateCreateDataType = Object.keys(session.windowsInfo)
 		.filter(function (key) {
 			return whitelistWindow.includes(key);
 		})
 		.reduce(function (obj, key) {
-			obj[key] = window.windowsInfo[key];
+			obj[key] = session.windowsInfo[key];
 			return obj;
 		}, {});
 
@@ -89,37 +104,41 @@ export async function createWindowWithSessionTabs(window, tabId) {
 
 	// console.log("filtered window", filteredWindow);
 
-	var newWindow = await browser.windows.create(filteredWindow).catch(function (error) {
+	const newWindow = await browser.windows.create(filteredWindow).catch(function (error) {
 		console.error(error);
 		console.log(error);
 		console.log(error.message);
 	});
 
-	var emptyTab = newWindow.tabs[0].id;
+	if (!newWindow) return;
 
-	for (let i = 0; i < window.tabs.length; i++) {
-		var newTab = Object.keys(window.tabs[i])
+	let emptyTab = newWindow.tabs[0].id;
+
+	for (let i = 0; i < session.tabs.length; i++) {
+		let newTab = Object.keys(session.tabs[i])
 			.filter(function (key) {
 				return whitelistTab.includes(key);
 			})
 			.reduce(function (obj, key) {
-				obj[key] = window.tabs[i][key];
+				obj[key] = session.tabs[i][key];
 				return obj;
 			}, {});
 
-		if (tabId != null && tabId !== newTab.index) {
+		var fTab : browser.Tabs.Tab = newTab as browser.Tabs.Tab;
+
+		if (tabId != null && tabId !== fTab.index) {
 			continue;
 		}
-		newTab.windowId = newWindow.id;
+		fTab.windowId = newWindow.id;
 
 		if (navigator.userAgent.search("Firefox") > -1) {
-			if (!!newTab.url && newTab.url.search("about:") > -1) {
-				console.log("filtered by about: url", newTab.url);
-				newTab.url = "";
+			if (!!fTab.url && fTab.url.search("about:") > -1) {
+				console.log("filtered by about: url", fTab.url);
+				fTab.url = "";
 			}
 		}
 		try {
-			await browser.tabs.create(newTab).catch(function (error) {
+			await browser.tabs.create(fTab).catch(function (error) {
 				console.error(error);
 				console.log(error);
 				console.log(error.message);
@@ -138,85 +157,75 @@ export async function createWindowWithSessionTabs(window, tabId) {
 
 	if (customName) {
 		console.log("setting name");
-		setWindowName(newWindow.id, customName);
+		await setWindowName(newWindow.id, customName);
 	}
 
 	if (color !== "default") {
 		console.log("setting color");
-		setWindowColor(newWindow.id, color);
+		await setWindowColor(newWindow.id, color);
 	}
 
 	await browser.windows.update(newWindow.id, {focused: true});
 }
 
-export function focusOnWindowDelayed(windowId) {
+export function focusOnWindowDelayed(windowId: number) {
 	setTimeout(focusOnWindow.bind(this, windowId), 125);
 }
 
-export async function focusOnWindow(windowId) {
+export async function focusOnWindow(windowId : number) {
 	await browser.windows.update(windowId, {focused: true});
 }
 
-async function hideWindows(windowId) {
+async function hideWindows(windowId : number) {
 	if (navigator.userAgent.search("Firefox") > -1) return;
 	if (!windowId || windowId < 0) return;
 
-	var hideWindows = await getLocalStorage("hideWindows", false);
-	if (!hideWindows) return;
+	let hide_windows = await getLocalStorage("hideWindows", false);
+	if (!hide_windows) return;
 
-	var result = await browser.permissions.contains({permissions: ['system.display']});
-	if (result) {
-		// The extension has the permissions.
-		chrome.system.display.getInfo(async function (windowId, displaylayouts) {
-			var globalDisplayInfo = context.globalDisplayInfo;
-			globalDisplayInfo.clear();
-			var _iteratorNormalCompletion = true;
-			var _didIteratorError = false;
-			var _iteratorError = undefined;
-			try {
-				for (let _iterator = displaylayouts[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-					var displaylayout = _step.value;
-					globalDisplayInfo.push(displaylayout.bounds);
-				}
-			} catch (err) {
-				_didIteratorError = true;
-				_iteratorError = err;
-			} finally {
-				try {
-					if (!_iteratorNormalCompletion && _iterator.return) {
-						_iterator.return();
-					}
-				} finally {
-					if (_didIteratorError) {
-						throw _iteratorError;
-					}
-				}
-			}
-			var windows = await browser.windows.getAll({populate: true});
-			var monitor = -1;
-			for (let i = windows.length - 1; i >= 0; i--) {
-				if (windows[i].id === windowId) {
-					for (let a in globalDisplayInfo) {
-						var result = is_in_bounds(windows[i], globalDisplayInfo[a]);
-						if (result) {
-							monitor = a;
-						}
-					}
-				}
-			}
+	let has_permission = await browser.permissions.contains({permissions: ['system.display']});
+	if (!has_permission) return;
 
-			for (let i = windows.length - 1; i >= 0; i--) {
-				if (windows[i].id !== windowId) {
-					if (is_in_bounds(windows[i], globalDisplayInfo[monitor])) {
-						await browser.windows.update(windows[i].id, {"state": "minimized"});
-					}
+	let displaylayouts = await chrome.system.display.getInfo();
+	let monitor_bounds = [];
+
+	try {
+		for (let displaylayout of displaylayouts) {
+			monitor_bounds.push(displaylayout.bounds);
+		}
+	} catch (err) {
+		console.error(err);
+		return;
+	}
+
+	let windows = await browser.windows.getAll({populate: true});
+	let monitor = null;
+
+	for (let window of windows) {
+		if (window.id === windowId) {
+			for (let bounds_index in monitor_bounds) {
+				let _monitor = monitor_bounds[bounds_index];
+				let _is_in_bounds = is_in_bounds(window, _monitor);
+				if (_is_in_bounds) {
+					monitor = _monitor;
+					break;
 				}
 			}
-		}.bind(null, windowId));
+		}
+	}
+
+	if (monitor == null) return;
+
+	for (let window of windows) {
+		if (window.id !== windowId) {
+			if (is_in_bounds(window, monitor)) {
+				await browser.windows.update(window.id, {"state": "minimized"});
+			}
+		}
 	}
 }
 
-export async function windowActive(windowId) {
+export async function windowActive(windowId : number) {
 	if (windowId < 0) return;
 
 	var windows = [];
@@ -277,39 +286,38 @@ async function windowRemoved(windowId) {
 	// console.log("onRemoved", windowId);
 }
 
-export async function checkWindow(windowId) {
+export async function checkWindow(windowId : number) {
 	if (!windowId) return;
 
-	var storage = await browser.storage.local.get(['windowNames', 'windowColors', 'windowHashes']);
-
-	var names = storage.windowNames || {};
-	var colors = storage.windowColors || {};
-	var hashes = storage.windowHashes || {};
+	const colors: Map<number, string> = await getLocalStorageMap<number, string>(S.windowColors);
+	const names: Map<number, string> = await getLocalStorageMap<number, string>(S.windowNames);
 
 	if (!names[windowId] && !colors[windowId]) return;
 
+	const hashes: Map<number, number> = await getLocalStorageMap<number, number>(S.windowHashes);
+
 	try {
-		var window = await browser.windows.get(windowId, {populate: true});
+		const window = await browser.windows.get(windowId, {populate: true});
 
 		let newHash = hashcode(window);
-		hashes[windowId] = newHash;
-		await setLocalStorage('windowHashes', hashes);
+		hashes.set(windowId, newHash);
+		await setLocalStorageMap(S.windowHashes, hashes);
 	} catch (e) {
 		console.log(e);
 	}
 }
 
-export function hashcode(window) {
-	var urls = [];
+export function hashcode(window) : number {
+	let urls = [];
 	for (let i = 0; i < window.tabs.length; i++) {
 		if (!window.tabs[i].url) continue;
 		urls.push(window.tabs[i].url);
 	}
 	urls.sort();
 
-	var hash = 0;
+	let hash = 0;
 	for (let i = 0; i < urls.length; i++) {
-		var code = stringHashcode(urls[i]);
+		const code = stringHashcode(urls[i]);
 		hash = ((hash << 5) - hash) + code;
 		hash = hash & hash; // Convert to 32bit integer
 	}
