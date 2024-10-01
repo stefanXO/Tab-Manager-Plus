@@ -1,1 +1,0 @@
-{"version":3,"sources":["../../lib/popup/changelog.js"],"names":["window","changelogPage"],"mappings":"AAAA;;AACAA,OAAOC,aAAP,GAAuB,IAAvB","file":"changelog.js","sourcesContent":["\"use strict\";\nwindow.changelogPage = true;"]}

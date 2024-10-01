@@ -1,4 +1,6 @@
 "use strict";
-
-window.optionPage = true;
+(() => {
+  // lib/popup/options.js
+  window.optionPage = true;
+})();
 //# sourceMappingURL=options.js.map

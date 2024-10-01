@@ -1,1 +1,7 @@
-{"version":3,"sources":["../../lib/popup/options.js"],"names":["window","optionPage"],"mappings":"AAAA;;AACAA,OAAOC,UAAP,GAAoB,IAApB","file":"options.js","sourcesContent":["\"use strict\";\nwindow.optionPage = true;"]}
+{
+  "version": 3,
+  "sources": ["../../lib/popup/options.js"],
+  "sourcesContent": ["\"use strict\";\nwindow.optionPage = true;"],
+  "mappings": ";;;AACA,SAAO,aAAa;",
+  "names": []
+}
