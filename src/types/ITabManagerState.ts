@@ -1,5 +1,5 @@
 ﻿import * as browser from "webextension-polyfill";
-import {ISavedSession} from "@views/Session";
+import {ISavedSession} from "@types";
 
 export interface ITabManagerState {
 	tabCount: number,

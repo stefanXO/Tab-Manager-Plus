@@ -1,4 +1,4 @@
-﻿import {ISavedSession} from "@views/Session";
+﻿import {ISavedSession} from "@types";
 import * as browser from "webextension-polyfill";
 
 export interface ICommand
