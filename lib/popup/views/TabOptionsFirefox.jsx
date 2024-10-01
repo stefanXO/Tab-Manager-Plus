@@ -1,6 +1,8 @@
 "use strict";
 
-class TabOptions extends React.Component {
+var browser = browser || chrome;
+
+export class TabOptions extends React.Component {
 	constructor(props) {
 		super(props);
 		this.state = {};
