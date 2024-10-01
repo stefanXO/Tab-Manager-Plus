@@ -1,44 +1,36 @@
-"use strict";
+import {getLocalStorage, setLocalStorage} from "@helpers/storage";
+import {debounce, maybePluralize} from "@helpers/utils";
+import {Window, Session, TabOptions, Tab} from "@views";
+import * as React from "react";
+import * as S from "@strings";
+import * as browser from 'webextension-polyfill';
+import {ICommand, ITabManager, ITabManagerState, ISavedSession} from "@types";
 
-var browser = browser || chrome;
+const {setTimeout, clearTimeout} = window
 
-class TabManager extends React.Component {
+export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	constructor(props) {
 		super(props);
 		//this.update();
 
-		if (navigator.userAgent.search("Firefox") > -1) {
-		} else {
-			var check = browser.permissions.contains({ permissions: ["system.display"] });
-			check.then(
-				function(result) {
-					if (result) {
-						// The extension has the permissions.
-					} else {
-						setLocalStorage("hideWindows", false);
-						this.state.hideWindows = false;
-					}
-				}.bind(this)
-			);
-		}
+		let layout = "blocks";
+		let animations = true;
+		let windowTitles = true;
+		let compact = false;
+		let dark = false;
+		let tabactions = true;
+		let badge = true;
+		let sessionsFeature = false;
+		let hideWindows = false;
+		let filterTabs = false;
+		let tabLimit = 0;
+		let openInOwnTab = false;
+		let tabWidth = 800;
+		let tabHeight = 600;
 
-		var layout = "blocks";
-		var animations = true;
-		var windowTitles = true;
-		var compact = false;
-		var dark = false;
-		var tabactions = true;
-		var badge = true;
-		var sessionsFeature = false;
-		var hideWindows = false;
-		var filterTabs = false;
-		var tabLimit = 0;
-		var openInOwnTab = false;
-		var tabWidth = 800;
-		var tabHeight = 600;
+		let resetTimeout = -1;
 
-		var closeTimeout;
-		var resetTimeout;
+		// var closeTimeout;
 
 		this.state = {
 			layout: layout,
@@ -57,24 +49,27 @@ class TabManager extends React.Component {
 			lastOpenWindow: -1,
 			windows: [],
 			sessions: [],
-			selection: {},
-			lastSelect: false,
-			hiddenTabs: {},
-			tabsbyid: {},
-			windowsbyid: {},
-			closeTimeout: closeTimeout,
+			selection: new Set(),
+			lastSelect: 0,
+			hiddenTabs: new Set(),
+			tabsbyid: new Map(),
+			windowsbyid: new Map(),
 			resetTimeout: resetTimeout,
 			height: 600,
 			hasScrollBar: false,
 			focusUpdates: 0,
 			topText: "",
 			bottomText: "",
-			lastDirection: false,
+			lastDirection: "",
 			optionsActive: !!this.props.optionsActive,
 			filterTabs: filterTabs,
 			dupTabs: false,
 			dragFavicon: "",
-			colorsActive: false
+			colorsActive: 0,
+
+			tabCount: 0,
+			hiddenCount: 0,
+			searchLen: 0
 		};
 
 		this.addWindow = this.addWindow.bind(this);
@@ -123,7 +118,11 @@ class TabManager extends React.Component {
 		this.toggleWindowTitles = this.toggleWindowTitles.bind(this);
 		this.update = this.update.bind(this);
 		this.windowTitlesText = this.windowTitlesText.bind(this);
-
+		this.onTabDetached = this.onTabDetached.bind(this);
+		this.onTabAttached = this.onTabAttached.bind(this);
+		this.onTabRemoved = this.onTabRemoved.bind(this);
+		this.onTabCreated = this.onTabCreated.bind(this);
+		this.dirtyWindow = this.dirtyWindow.bind(this);
 	}
 	UNSAFE_componentWillMount() {
 		this.update();
@@ -164,24 +163,24 @@ class TabManager extends React.Component {
 		if (typeof storage["hideWindows"] === "undefined") storage["hideWindows"] = hideWindows;
 		if (typeof storage["filter-tabs"] === "undefined") storage["filter-tabs"] = filterTabs;
 
-		storage["version"] = __VERSION__;
+		storage["version"] = "__VERSION__";
 
 		await browser.storage.local.set(storage);
 
-		layout = storage["layout"];
-		tabLimit = storage["tabLimit"];
-		tabWidth = storage["tabWidth"];
-		tabHeight = storage["tabHeight"];
-		openInOwnTab = storage["openInOwnTab"];
-		animations = storage["animations"];
-		windowTitles = storage["windowTitles"];
-		compact = storage["compact"];
-		dark = storage["dark"];
-		tabactions = storage["tabactions"];
-		badge = storage["badge"];
-		sessionsFeature = storage["sessionsFeature"];
-		hideWindows = storage["hideWindows"];
-		filterTabs = storage["filter-tabs"];
+		layout = storage["layout"] as string;
+		tabLimit = storage["tabLimit"] as number;
+		tabWidth = storage["tabWidth"] as number;
+		tabHeight = storage["tabHeight"] as number;
+		openInOwnTab = storage["openInOwnTab"] as boolean;
+		animations = storage["animations"] as boolean;
+		windowTitles = storage["windowTitles"] as boolean;
+		compact = storage["compact"] as boolean;
+		dark = storage["dark"] as boolean;
+		tabactions = storage["tabactions"] as boolean;
+		badge = storage["badge"] as boolean;
+		sessionsFeature = storage["sessionsFeature"] as boolean;
+		hideWindows = storage["hideWindows"] as boolean;
+		filterTabs = storage["filter-tabs"] as boolean;
 
 		if (dark) {
 			document.body.className = "dark";
@@ -207,35 +206,40 @@ class TabManager extends React.Component {
 		});
 	}
 
-	hoverHandler(tab) {
+	hoverHandler(tab : browser.Tabs.Tab) {
 		this.setState({ topText: tab.title || "" });
-		this.setState({ bottomText: tab.url || "" });
+		this.setState({ bottomText: tab.url || tab.pendingUrl || "" });
 		// clearTimeout(this.state.closeTimeout);
 		// this.state.closeTimeout = setTimeout(function () {
 		//  window.close();
 		// }, 100000);
-		clearTimeout(this.state.resetTimeout);
-		this.state.resetTimeout = setTimeout(
+		var _reset_timeout = this.state.resetTimeout;
+		clearTimeout(_reset_timeout);
+		_reset_timeout = setTimeout(
 			function() {
 				this.setState({ topText: "", bottomText: "" });
 				this.update();
 			}.bind(this),
 			15000
 		);
+		this.setState({resetTimeout: _reset_timeout});
 		//this.update();
 	}
-	hoverIcon(e) {
-		if (e && e.nativeEvent) {
-			e.nativeEvent.preventDefault();
-			e.nativeEvent.stopPropagation();
+	hoverIcon(e : React.MouseEvent<HTMLDivElement> | string) {
+		var text = "";
+		if (typeof (e) === "string") {
+			text = e;
+		} else {
+			if (e && e.nativeEvent) {
+				e.nativeEvent.preventDefault();
+				e.nativeEvent.stopPropagation();
+			}
+
+			if (e && e.target && !!(e.target as HTMLDivElement).title) {
+				text = (e.target as HTMLDivElement).title;
+			}
 		}
 
-		var text = "";
-		if(e && e.target && !!e.target.title) {
-			text = e.target.title;
-		} else if (typeof (e) === "string") {
-			text = e;
-		}
 		var bottom = " ";
 		if (text.indexOf("\n") > -1) {
 			var a = text.split("\n");
@@ -248,13 +252,13 @@ class TabManager extends React.Component {
 		this.forceUpdate();
 	}
 	render() {
-		var _this = this;
+		let _this = this;
 
-		// var hiddenCount = this.state.hiddenCount || 0;
-		var tabCount = this.state.tabCount || 0;
+		// let hiddenCount = this.state.hiddenCount || 0;
+		let tabCount = this.state.tabCount;
 
-		var haveMin = false;
-		var haveSess = false;
+		let haveMin = false;
+		let haveSess = false;
 
 		for (let i = this.state.windows.length - 1; i >= 0; i--) {
 			if (this.state.windows[i].state === "minimized") haveMin = true;
@@ -265,7 +269,7 @@ class TabManager extends React.Component {
 			// disable session window if we have filtering enabled
 			// and filter active
 			if (haveSess && this.state.filterTabs) {
-				if (this.state.searchLen > 0 || Object.keys(this.state.hiddenTabs).length > 0) {
+				if (this.state.searchLen > 0 || this.state.hiddenTabs.size > 0) {
 					haveSess = false;
 				}
 			}
@@ -286,7 +290,7 @@ class TabManager extends React.Component {
 				tabIndex={0}
 			>
 				{!this.state.optionsActive && <div className={"window-container " + this.state.layout} ref="windowcontainer" tabIndex={2}>
-					{this.state.windows.map(function(window) {
+					{this.state.windows.map(function(window : browser.Windows.Window) {
 						if (window.state === "minimized") return;
 						if (!!this.state.colorsActive && this.state.colorsActive !== window.id) return;
 						return (
@@ -367,12 +371,12 @@ class TabManager extends React.Component {
 						</div>
 					</div>
 					{haveSess
-						? this.state.sessions.map(function(window) {
+						? this.state.sessions.map(function(window : ISavedSession) {
 								if (!!this.state.colorsActive && this.state.colorsActive !== window.id) return;
 								return (
 									<Session
 										key={"session" + window.id}
-										window={window}
+										session={window}
 										tabs={window.tabs}
 										incognito={window.incognito}
 										layout={_this.state.layout}
@@ -390,6 +394,7 @@ class TabManager extends React.Component {
 										select={_this.select.bind(_this)}
 										windowTitles={_this.state.windowTitles}
 										lastOpenWindow={_this.state.lastOpenWindow}
+										draggable={false}
 										ref={"session" + window.id}
 									/>
 								);
@@ -465,7 +470,7 @@ class TabManager extends React.Component {
 						<tbody>
 							<tr>
 								<td className="one">
-									<input className="searchBoxInput" type="text" placeholder="Start typing to search tabs..." tabIndex="1" onChange={this.search} ref="searchbox" />
+									<input className="searchBoxInput" type="text" placeholder="Start typing to search tabs..." tabIndex={1} onChange={this.search} ref="searchbox" />
 								</td>
 								<td className="two">
 									<div
@@ -477,8 +482,8 @@ class TabManager extends React.Component {
 									<div
 										className="icon windowaction trash"
 										title={
-											Object.keys(this.state.selection).length > 0
-												? "Close selected tabs\nWill close " + maybePluralize(Object.keys(this.state.selection).length, 'tab')
+											this.state.selection.size > 0
+												? "Close selected tabs\nWill close " + maybePluralize(this.state.selection.size, 'tab')
 												: "Close current Tab"
 										}
 										onClick={this.deleteTabs}
@@ -487,12 +492,12 @@ class TabManager extends React.Component {
 									<div
 										className="icon windowaction discard"
 										title={
-											Object.keys(this.state.selection).length > 0
-												? "Discard selected tabs\nWill discard " + maybePluralize(Object.keys(this.state.selection).length, 'tab') + " - freeing memory"
+											this.state.selection.size > 0
+												? "Discard selected tabs\nWill discard " + maybePluralize(this.state.selection.size, 'tab') + " - freeing memory"
 												: "Select tabs to discard them and free memory"
 										}
 										style={
-											Object.keys(this.state.selection).length > 0
+											this.state.selection.size > 0
 												? {}
 												: { opacity: 0.25 }
 										}
@@ -502,8 +507,8 @@ class TabManager extends React.Component {
 									<div
 										className="icon windowaction pin"
 										title={
-											Object.keys(this.state.selection).length > 0
-												? "Pin selected tabs\nWill pin " + maybePluralize(Object.keys(this.state.selection).length, 'tab')
+											this.state.selection.size > 0
+												? "Pin selected tabs\nWill pin " + maybePluralize(this.state.selection.size, 'tab')
 												: "Pin current Tab"
 										}
 										onClick={this.pinTabs}
@@ -517,7 +522,7 @@ class TabManager extends React.Component {
 											(this.state.searchLen > 0
 												? "\n" +
 													(this.state.filterTabs ? "Will reveal " : "Will hide ") +
-													maybePluralize((Object.keys(this.state.tabsbyid).length - Object.keys(this.state.selection).length), 'tab')
+													maybePluralize((this.state.tabsbyid.size - this.state.selection.size), 'tab')
 												: "")
 										}
 										onClick={this.toggleFilterMismatchedTabs}
@@ -526,8 +531,8 @@ class TabManager extends React.Component {
 									<div
 										className="icon windowaction new"
 										title={
-											Object.keys(this.state.selection).length > 0
-												? "Move tabs to new window\nWill move " + maybePluralize(Object.keys(this.state.selection).length, 'selected tab') + " to it"
+											this.state.selection.size > 0
+												? "Move tabs to new window\nWill move " + maybePluralize(this.state.selection.size, 'selected tab') + " to it"
 												: "Open new empty window"
 										}
 										onClick={this.addWindow}
@@ -553,17 +558,30 @@ class TabManager extends React.Component {
 	{
 		await this.loadStorage();
 
-		var _this = this;
+		if (navigator.userAgent.search("Firefox") > -1) {
+		} else {
+			let result = await browser.permissions.contains({permissions: ["system.display"]});
+			if (!result) {
+				setLocalStorage("hideWindows", false);
+				this.setState({
+					hideWindows: false
+				});
+			}
+		}
 
-		var runUpdate = debounce(this.update, 250);
+		let _this = this;
+
+		let runUpdate = debounce(this.update, 250);
 		runUpdate = runUpdate.bind(this);
 
-		var runTabUpdate = (tabid, changeinfo, tab) => {
+		var runTabUpdate = async (tabid, changeinfo, tab) => {
+			this.dirtyWindow(tab.windowId);
+
 			if (!!_this.refs["window" + tab.windowId]) {
-				var window = _this.refs["window" + tab.windowId];
+				var window = _this.refs["window" + tab.windowId] as Window;
 				if (!!window.refs["tab" + tabid]) {
-					var _tabref = window.refs["tab" + tabid];
-					_tabref.checkSettings();
+					var _tabref = window.refs["tab" + tabid] as Tab;
+					await _tabref.checkSettings();
 				}
 			}
 		}
@@ -576,18 +594,27 @@ class TabManager extends React.Component {
 		browser.tabs.onReplaced.addListener(runUpdate);
 		browser.tabs.onDetached.addListener(runUpdate);
 		browser.tabs.onAttached.addListener(runUpdate);
+
+		browser.tabs.onCreated.addListener(this.onTabCreated);
+		browser.tabs.onDetached.addListener(this.onTabDetached);
+		browser.tabs.onAttached.addListener(this.onTabAttached);
+		browser.tabs.onRemoved.addListener(this.onTabRemoved);
+
 		browser.tabs.onActivated.addListener(runUpdate);
 		browser.windows.onFocusChanged.addListener(runUpdate);
 		browser.windows.onCreated.addListener(runUpdate);
 		browser.windows.onRemoved.addListener(runUpdate);
 
-		browser.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+		browser.runtime.onMessage.addListener(async function (message, sender, sendResponse) {
+			const request = message as ICommand;
+
 			console.log(request.command);
 			switch (request.command) {
-				case "refresh_windows":
-					for (let window_id of request.window_ids) {
+				case S.refresh_windows:
+					let window_ids : number[] = request.window_ids;
+					for (let window_id of window_ids) {
 						if (!_this.refs["window" + window_id]) continue;
-						_this.refs["window" + window_id].checkSettings();
+						(_this.refs["window" + window_id] as Window).checkSettings();
 					}
 					break;
 			}
@@ -596,9 +623,9 @@ class TabManager extends React.Component {
 
 		browser.storage.onChanged.addListener(this.sessionSync);
 
-		this.sessionSync();
+		await this.sessionSync();
 
-		this.refs.root.focus();
+		(this.refs.root as HTMLElement).focus();
 		this.focusRoot();
 
 		setTimeout(async function() {
@@ -620,20 +647,22 @@ class TabManager extends React.Component {
 		// box.focus();
 	}
 	async sessionSync() {
-		var values = await getLocalStorage('sessions', {});
-		// console.log(values);
-		var sessions = [];
+		let values = await getLocalStorage('sessions', {});
+		//console.log(values);
+		let sessions : ISavedSession[] = [];
 		for (let key in values) {
 			let sess = values[key];
 			if (sess.id && sess.tabs && sess.windowsInfo) {
 				sessions.push(sess);
 			}
 		}
-		this.state.sessions = sessions;
-		this.update();
+		this.setState({
+			sessions: sessions
+		});
+		await this.update();
 	}
 	focusRoot() {
-		this.state.focusUpdates++;
+		this.setState({ focusUpdates: (this.state.focusUpdates + 1) });
 		setTimeout(
 			function() {
 				if (document.activeElement === document.body) {
@@ -645,11 +674,12 @@ class TabManager extends React.Component {
 			500
 		);
 	}
-	dragFavicon(val) {
-		if (!val) {
+	dragFavicon(icon : string) : string {
+		if (!icon) {
 			return this.state.dragFavicon;
 		} else {
-			this.state.dragFavicon = val;
+			this.setState({ dragFavicon: icon });
+			return icon;
 		}
 	}
 	rateExtension() {
@@ -665,22 +695,44 @@ class TabManager extends React.Component {
 		this.forceUpdate();
 	}
 	toggleOptions() {
-		this.state.optionsActive = !this.state.optionsActive;
+		this.setState({ optionsActive: !this.state.optionsActive });
 		this.forceUpdate();
 	}
-	toggleColors(active, windowId) {
-		if(!!active) {
-			this.state.colorsActive = windowId;
-		}else{
-			this.state.colorsActive = false;
-		}
+	toggleColors(active : boolean, windowId : number) {
+		this.setState({
+			colorsActive: !!active ? windowId : 0
+		})
 		console.log("colorsActive", active, windowId, this.state.colorsActive);
 		this.forceUpdate();
 	}
 
+	onTabCreated(tab : browser.Tabs.Tab) {
+		this.dirtyWindow(tab.windowId);
+	}
+
+	onTabRemoved(tabId : number, removeInfo : browser.Tabs.OnRemovedRemoveInfoType) {
+		this.dirtyWindow(removeInfo.windowId);
+	}
+
+	onTabDetached(tabId : number, detachInfo : browser.Tabs.OnDetachedDetachInfoType) {
+		const windowId = detachInfo.oldWindowId;
+		this.dirtyWindow(windowId);
+	}
+
+	onTabAttached(tabId : number, attachInfo: browser.Tabs.OnAttachedAttachInfoType) {
+		const windowId = attachInfo.newWindowId;
+		this.dirtyWindow(windowId);
+	}
+
+	dirtyWindow(windowId : number) {
+		const window = this.refs['window' + windowId] as Window;
+		if (!window) return;
+		window.setState({dirty: true});
+	}
+
 	async update() {
-		var windows = await browser.windows.getAll({ populate: true });
-		var sort_windows = await getLocalStorage("windowAge", []);
+		const windows : browser.Windows.Window[] = await browser.windows.getAll({ populate: true });
+		const sort_windows = await getLocalStorage("windowAge", []);
 
 		windows.sort(function(a, b) {
 			var aSort = sort_windows.indexOf(a.id);
@@ -692,26 +744,29 @@ class TabManager extends React.Component {
 			return 0;
 		});
 
-		this.state.lastOpenWindow = windows[0].id;
-		this.state.windows = windows;
-		this.state.windowsbyid = {};
-		this.state.tabsbyid = {};
+		this.state.windowsbyid.clear();
+		this.state.tabsbyid.clear();
+
+		this.setState({
+			lastOpenWindow: windows[0].id,
+			windows: windows
+		});
+
 		let tabCount = 0;
 
 		for (const window of windows) {
-			this.state.windowsbyid[window.id] = window;
+			this.state.windowsbyid.set(window.id, window);
 			for (const tab of window.tabs) {
-				this.state.tabsbyid[tab.id] = tab;
+				this.state.tabsbyid.set(tab.id, tab);
 				tabCount++;
 			}
 		}
-		for (const id in this.state.selection) {
-			if (!this.state.tabsbyid[id]) {
-				delete this.state.selection[id];
-				this.state.lastSelect = id;
+		for (let id of this.state.selection.keys()) {
+			if (!this.state.tabsbyid.has(id)) {
+				this.state.selection.delete(id);
+				this.setState({lastSelect: id});
 			}
 		}
-		this.state.tabCount = tabCount;
 		this.setState({
 			tabCount: tabCount
 		});
@@ -719,30 +774,30 @@ class TabManager extends React.Component {
 		// this.forceUpdate();
 	}
 	async deleteTabs() {
-		var _this = this;
-		var tabs = Object.keys(this.state.selection).map(function(id) {
-			return _this.state.tabsbyid[id];
+		const _this = this;
+		const tabs: browser.Tabs.Tab[] = [...this.state.selection.keys()].map(function(id) {
+			return _this.state.tabsbyid.get(id);
 		});
 		if (tabs.length) {
-			browser.runtime.sendMessage({command: "close_tabs", tabs: tabs});
+			browser.runtime.sendMessage<ICommand>({command: S.close_tabs, tabs: tabs});
 		} else {
-			var t = await browser.tabs.query({ currentWindow: true, active: true });
+			const t = await browser.tabs.query({ currentWindow: true, active: true });
 			if (t && t.length > 0) {
 				await browser.tabs.remove(t[0].id);
 			}
 		}
 		this.forceUpdate();
 	}
-	deleteTab(tabId) {
+	deleteTab(tabId : number) {
 		browser.tabs.remove(tabId);
 	}
 	async discardTabs() {
-		var _this = this;
-		var tabs = Object.keys(this.state.selection).map(function(id) {
-			return _this.state.tabsbyid[id];
+		const _this = this;
+		const tabs : browser.Tabs.Tab[] = [...this.state.selection.keys()].map(function(id) {
+			return _this.state.tabsbyid.get(id);
 		});
 		if (tabs.length) {
-			browser.runtime.sendMessage({command: "discard_tabs", tabs: tabs});
+			browser.runtime.sendMessage<ICommand>({command: S.discard_tabs, tabs: tabs});
 		}
 		this.clearSelection();
 	}
@@ -750,30 +805,43 @@ class TabManager extends React.Component {
 		browser.tabs.discard(tabId);
 	}
 	async addWindow() {
-		var _this = this;
-		var count = Object.keys(this.state.selection).length;
-		var tabs = Object.keys(this.state.selection).map(function(id) {
-			return _this.state.tabsbyid[id];
+		const _this = this;
+		const count = this.state.selection.size;
+		const tabs : browser.Tabs.Tab[] = [...this.state.selection.keys()].map(function(id) {
+			return _this.state.tabsbyid.get(id);
+		});
+
+		const incognito_tabs = tabs.filter(function(tab) {
+			return tab.incognito;
+		});
+
+		const normal_tabs = tabs.filter(function(tab) {
+			return !tab.incognito;
 		});
 
 		if (count === 0) {
 			await browser.windows.create({});
 		} else if (count === 1) {
 			if (navigator.userAgent.search("Firefox") > -1) {
-				browser.runtime.sendMessage({command: "focus_on_tab_and_window_delayed", tab: tabs[0]});
+				await browser.runtime.sendMessage<ICommand>({command: S.focus_on_tab_and_window_delayed, tab: tabs[0]});
 			}else{
-				browser.runtime.sendMessage({command: "focus_on_tab_and_window", tab: tabs[0]});
+				await browser.runtime.sendMessage<ICommand>({command: S.focus_on_tab_and_window, tab: tabs[0]});
 			}
 		} else {
-			browser.runtime.sendMessage({command: "create_window_with_tabs", tabs: tabs});
+			if (normal_tabs.length > 0) {
+				await browser.runtime.sendMessage<ICommand>({command: S.create_window_with_tabs, tabs: normal_tabs, incognito: false});
+			}
+			if (incognito_tabs.length > 0) {
+				await browser.runtime.sendMessage<ICommand>({command: S.create_window_with_tabs, tabs: incognito_tabs, incognito: true});
+			}
 		}
 		if (!!window.inPopup) window.close();
 	}
 	async pinTabs() {
-		var _this = this;
-		var tabs = Object.keys(this.state.selection)
+		const _this = this;
+		const tabs : browser.Tabs.Tab[] = [...this.state.selection.keys()]
 			.map(function(id) {
-				return _this.state.tabsbyid[id];
+				return _this.state.tabsbyid.get(id);
 			})
 			.sort(function(a, b) {
 				return a.index - b.index;
@@ -784,31 +852,38 @@ class TabManager extends React.Component {
 				await browser.tabs.update(tabs[i].id, { pinned: !tabs[0].pinned });
 			}
 		} else {
-			var t = await browser.tabs.query({ currentWindow: true, active: true });
+			const t = await browser.tabs.query({ currentWindow: true, active: true });
 			if (t && t.length > 0) {
 				await browser.tabs.update(t[0].id, { pinned: !t[0].pinned });
 			}
 		}
 	}
 	highlightDuplicates(e) {
-		this.state.selection = {};
-		this.state.hiddenTabs = {};
-		this.state.searchLen = 0;
-		this.state.dupTabs = !this.state.dupTabs;
-		this.refs.searchbox.value = "";
-		if (!this.state.dupTabs) {
-			this.state.hiddenCount = 0;
+		this.state.selection.clear();
+		this.state.hiddenTabs.clear();
+
+		let searchLen = 0;
+		const dupTabs = !this.state.dupTabs;
+
+		(this.refs.searchbox as HTMLInputElement).value = "";
+
+		if (!dupTabs) {
+			this.setState({
+				hiddenCount: 0,
+				dupTabs: dupTabs,
+				searchLen: searchLen
+			});
 			this.forceUpdate();
 			return;
 		}
-		var hiddenCount = this.state.hiddenCount || 0;
-		var idList = this.state.tabsbyid;
-		var dup = [];
-		for (const id in idList) {
-			var tab = this.state.tabsbyid[id];
-			for (const id2 in idList) {
+		let hiddenCount = this.state.hiddenCount || 0;
+		const idList : number[] = [...this.state.tabsbyid.keys()];
+		const dup = [];
+		for (const id of idList) {
+			var tab = this.state.tabsbyid.get(id);
+			for (const id2 of idList) {
 				if (id === id2) continue;
-				var tab2 = this.state.tabsbyid[id2];
+				var tab2 = this.state.tabsbyid.get(id2);
 				if (tab.url === tab2.url) {
 					dup.push(id);
 					break;
@@ -816,19 +891,23 @@ class TabManager extends React.Component {
 			}
 		}
 		for (const dupItem of dup) {
-			this.state.searchLen++;
-			hiddenCount -= this.state.hiddenTabs[dupItem] || 0;
-			this.state.selection[dupItem] = true;
-			delete this.state.hiddenTabs[dupItem];
-			this.state.lastSelect = dupItem;
+			searchLen++;
+			hiddenCount -= this.state.hiddenTabs.has(dupItem) ? 1 : 0;
+			this.state.selection.add(dupItem);
+			this.state.hiddenTabs.delete(dupItem);
+			this.setState({
+				lastSelect: dupItem
+			});
 		}
-		for (const tab_id in idList) {
-			// var tab = this.state.tabsbyid[tab_id];
+		for (const tab_id of idList) {
+			// var tab = this.state.tabsbyid.get(tab_id);
 			if (dup.indexOf(tab_id) === -1) {
-				hiddenCount += 1 - (this.state.hiddenTabs[tab_id] || 0);
-				this.state.hiddenTabs[tab_id] = true;
-				delete this.state.selection[tab_id];
-				this.state.lastSelect = tab_id;
+				hiddenCount += 1 - (this.state.hiddenTabs.has(tab_id) ? 1 : 0);
+				this.state.hiddenTabs.add(tab_id);
+				this.state.selection.delete(tab_id);
+				this.setState({
+					lastSelect: tab_id
+				});
 			}
 		}
 		if (dup.length === 0) {
@@ -842,16 +921,23 @@ class TabManager extends React.Component {
 				bottomText: "Press enter to move them to a new window"
 			});
 		}
-		this.state.hiddenCount = hiddenCount;
+		this.setState({
+			hiddenCount: hiddenCount
+		});
+		this.setState({
+			searchLen: searchLen,
+			dupTabs: dupTabs
+		});
+
 		this.forceUpdate();
 	}
 	search(e) {
-		var hiddenCount = this.state.hiddenCount || 0;
-		var searchQuery = e.target.value || "";
-		var searchLen = searchQuery.length;
+		let hiddenCount = this.state.hiddenCount || 0;
+		const searchQuery = e.target.value || "";
+		const searchLen = searchQuery.length;
 
-		var searchType = "normal";
-		var searchTerms = [];
+		let searchType = "normal";
+		let searchTerms = [];
 		if(searchQuery.indexOf(" ") === -1) {
 			searchType = "normal";
 		}else if(searchQuery.indexOf(" OR ") > -1) {
@@ -866,29 +952,29 @@ class TabManager extends React.Component {
 		}
 
 		if (!searchLen) {
-			this.state.selection = {};
-			this.state.hiddenTabs = {};
+			this.state.selection.clear();
+			this.state.hiddenTabs.clear();
 			hiddenCount = 0;
 		} else {
-			var idList;
-			var lastSearchLen = this.state.searchLen;
-			idList = this.state.tabsbyid;
+			let idList : number[];
+			const lastSearchLen = this.state.searchLen;
+			idList = [ ...this.state.tabsbyid.keys() ];
 			if(searchType === "normal") {
 				if (!lastSearchLen) {
-					idList = this.state.tabsbyid;
+					idList = [ ...this.state.tabsbyid.keys() ];
 				} else if (lastSearchLen > searchLen) {
-					idList = this.state.hiddenTabs;
+					idList = [ ...this.state.hiddenTabs.keys() ];
 				} else if (lastSearchLen < searchLen) {
-					idList = this.state.selection;
+					idList = [ ...this.state.selection.keys() ];
 				}
 			}
-			for (const id in idList) {
-				var tab = this.state.tabsbyid[id];
-				var tabSearchTerm;
+			for (const id of idList) {
+				const tab = this.state.tabsbyid.get(id);
+				let tabSearchTerm;
 				if (!!tab.title) tabSearchTerm = tab.title;
 				if (!!tab.url) tabSearchTerm += " " + tab.url;
 				tabSearchTerm = tabSearchTerm.toLowerCase();
-				var match = false;
+				let match = false;
 				if(searchType === "normal") {
 					match = (tabSearchTerm.indexOf(e.target.value.toLowerCase()) >= 0);
 				}else if(searchType === "OR") {
@@ -900,7 +986,7 @@ class TabManager extends React.Component {
 						}
 					}
 				}else if(searchType === "AND") {
-					var andMatch = true;
+					let andMatch = true;
 					for (let searchAND of searchTerms) {
 						searchAND = searchAND.trim().toLowerCase();
 						if(tabSearchTerm.indexOf(searchAND) >= 0) {
@@ -913,21 +999,26 @@ class TabManager extends React.Component {
 					match = andMatch;
 				}
 				if (match) {
-					hiddenCount -= this.state.hiddenTabs[id] || 0;
-					this.state.selection[id] = true;
-					delete this.state.hiddenTabs[id];
-					this.state.lastSelect = id;
+					hiddenCount -= this.state.hiddenTabs.has(id) ? 1 : 0;
+					this.state.selection.add(id);
+					this.state.hiddenTabs.delete(id);
 				} else {
-					hiddenCount += 1 - (this.state.hiddenTabs[id] || 0);
-					this.state.hiddenTabs[id] = true;
-					delete this.state.selection[id];
-					this.state.lastSelect = id;
+					hiddenCount += 1 - (this.state.hiddenTabs.has(id) ? 1 : 0);
+					this.state.hiddenTabs.add(id);
+					this.state.selection.delete(id);
 				}
+				this.setState({
+					lastSelect: id
+				});
 			}
 		}
-		this.state.hiddenCount = hiddenCount;
-		this.state.searchLen = searchLen;
-		var matches = Object.keys(this.state.selection).length;
+
+		this.setState({
+			hiddenCount: hiddenCount,
+			searchLen: searchLen
+		})
+
+		const matches = this.state.selection.size;
 		// var matchtext = "";
 		if (matches === 0 && searchLen > 0) {
 			this.setState({
@@ -941,21 +1032,21 @@ class TabManager extends React.Component {
 			});
 		} else if (matches > 1) {
 			this.setState({
-				topText: Object.keys(this.state.selection).length + " matches for '" + searchQuery + "'",
+				topText: this.state.selection.size + " matches for '" + searchQuery + "'",
 				bottomText: "Press enter to move them to a new window"
 			});
 		} else if (matches === 1) {
 			this.setState({
-				topText: Object.keys(this.state.selection).length + " match for '" + searchQuery + "'",
+				topText: this.state.selection.size + " match for '" + searchQuery + "'",
 				bottomText: "Press enter to switch to the tab"
 			});
 		}
 		this.forceUpdate();
 	}
 	clearSelection() {
-		this.state.selection = {};
+		this.state.selection.clear();
 		this.setState({
-			lastSelect: false
+			lastSelect: 0
 		});
 	}
 	checkKey(e) {
@@ -963,14 +1054,18 @@ class TabManager extends React.Component {
 		if (e.keyCode === 13) this.addWindow();
 		// escape key
 		if (e.keyCode === 27) {
-			if(this.state.searchLen > 0 || Object.keys(this.state.selection).length > 0) {
+			if(this.state.searchLen > 0 || this.state.selection.size > 0) {
 				// stop popup from closing if we have search text or selection active
 				e.nativeEvent.preventDefault();
 				e.nativeEvent.stopPropagation();
 			}
-			this.state.hiddenTabs = {};
-			this.state.searchLen = 0;
-			this.refs.searchbox.value = "";
+
+			this.state.hiddenTabs.clear();
+			this.setState({
+				searchLen: 0
+			});
+
+			(this.refs.searchbox as HTMLInputElement).value = "";
 			this.clearSelection();
 		}
 		// any typed keys
@@ -984,8 +1079,11 @@ class TabManager extends React.Component {
 			e.keyCode === 32
 		) {
 			if (document.activeElement !== this.refs.searchbox) {
-				if (document.activeElement.type !== "text" && document.activeElement.type !== "input") {
-					this.refs.searchbox.focus();
+				var activeInputElement = document.activeElement as HTMLInputElement;
+				console.log(activeInputElement);
+				console.log(this.refs.searchbox);
+				if (activeInputElement.type !== "text" && activeInputElement.type !== "input") {
+					(this.refs.searchbox as HTMLElement)?.focus();
 				}
 			}
 		}
@@ -998,10 +1096,12 @@ class TabManager extends React.Component {
 		*/
 		if (e.keyCode >= 37 && e.keyCode <= 40) {
 			if (document.activeElement !== this.refs.windowcontainer && document.activeElement !== this.refs.searchbox) {
-				this.refs.windowcontainer.focus();
+				console.log(activeInputElement);
+				console.log(this.refs.windowcontainer);
+				(this.refs.windowcontainer as HTMLElement)?.focus();
 			}
 
-			if (document.activeElement !== this.refs.searchbox || !this.refs.searchbox.value) {
+			if (document.activeElement !== this.refs.searchbox || !((this.refs.searchbox as HTMLInputElement).value)) {
 				let goLeft = e.keyCode === 37;
 				let goRight = e.keyCode === 39;
 				let goUp = e.keyCode === 38;
@@ -1018,45 +1118,49 @@ class TabManager extends React.Component {
 				}
 				const altKey = e.nativeEvent.metaKey || e.nativeEvent.altKey || e.nativeEvent.shiftKey || e.nativeEvent.ctrlKey;
 				if (goLeft || goRight) {
-					let selectedTabs = Object.keys(this.state.selection);
+					let selectedTabs = [...this.state.selection.keys()];
 					if (!altKey && selectedTabs.length > 1) {
 					} else {
 						let found = false;
 						let selectedNext = false;
-						let selectedTab = false;
-						let first = false;
-						let prev = false;
-						let last = false;
+						let selectedTab = 0;
+						let first = 0;
+						let prev = 0;
+						let last = 0;
 						if (selectedTabs.length === 1) {
 							selectedTab = selectedTabs[0];
 							// console.log("one tab", selectedTab);
 						} else if (selectedTabs.length > 1) {
-							if (this.state.lastSelect) {
+							if (!!this.state.lastSelect) {
 								selectedTab = this.state.lastSelect;
 								// console.log("more tabs, last", selectedTab);
 							} else {
 								selectedTab = selectedTabs[0];
 								// console.log("more tabs, first", selectedTab);
 							}
-						} else if (selectedTabs.length === 0 && this.state.lastSelect) {
+						} else if (selectedTabs.length === 0 && !!this.state.lastSelect) {
 							selectedTab = this.state.lastSelect;
 							// console.log("no tabs, last", selectedTab);
 						}
-						if (this.state.lastDirection) {
+						if (!!this.state.lastDirection) {
 							if (goRight && this.state.lastDirection === "goRight") {
 							} else if (goLeft && this.state.lastDirection === "goLeft") {
 							} else if (selectedTabs.length > 1) {
 								// console.log("turned back, last", this.state.lastSelect, selectedTab);
 								this.select(this.state.lastSelect);
-								this.state.lastDirection = false;
+								this.setState({
+									lastDirection: ""
+								});
 								found = true;
 							} else {
-								this.state.lastDirection = false;
+								this.setState({
+									lastDirection: ""
+								});
 							}
 						}
 						if (!this.state.lastDirection) {
-							if (goRight) this.state.lastDirection = "goRight";
-							if (goLeft) this.state.lastDirection = "goLeft";
+							if (goRight) this.setState({ lastDirection: "goRight" });
+							if (goLeft) this.setState({ lastDirection: "goLeft" });
 						}
 						for (const _w of this.state.windows) {
 							if (found) break;
@@ -1065,7 +1169,7 @@ class TabManager extends React.Component {
 									last = _t.id;
 									if (!first) first = _t.id;
 									if (!selectedTab) {
-										if (!altKey) this.state.selection = {};
+										if (!altKey) this.state.selection.clear();
 										this.select(_t.id);
 										found = true;
 										break;
@@ -1073,14 +1177,14 @@ class TabManager extends React.Component {
 										// console.log("select next one", selectedNext);
 										if (goRight) {
 											selectedNext = true;
-										} else if (prev) {
-											if (!altKey) this.state.selection = {};
+										} else if (!!prev) {
+											if (!altKey) this.state.selection.clear();
 											this.select(prev);
 											found = true;
 											break;
 										}
 									} else if (selectedNext) {
-										if (!altKey) this.state.selection = {};
+										if (!altKey) this.state.selection.clear();
 										this.select(_t.id);
 										found = true;
 										break;
@@ -1097,21 +1201,21 @@ class TabManager extends React.Component {
 									last = _t.id;
 									if (!first) first = _t.id;
 									if (!selectedTab) {
-										if (!altKey) this.state.selection = {};
+										if (!altKey) this.state.selection.clear();
 										this.select(_t.id);
 										found = true;
 										break;
 									} else if (selectedTab === _t.id) {
 										if (goRight) {
 											selectedNext = true;
-										} else if (prev) {
-											if (!altKey) this.state.selection = {};
+										} else if (!!prev) {
+											if (!altKey) this.state.selection.clear();
 											this.select(prev);
 											found = true;
 											break;
 										}
 									} else if (selectedNext) {
-										if (!altKey) this.state.selection = {};
+										if (!altKey) this.state.selection.clear();
 										this.select(_t.id);
 										found = true;
 										break;
@@ -1121,28 +1225,28 @@ class TabManager extends React.Component {
 								}
 							}
 						}
-						if (!found && goRight && first) {
-							if (!altKey) this.state.selection = {};
+						if (!found && goRight && !!first) {
+							if (!altKey) this.state.selection.clear();
 							this.select(first);
 							found = true;
 						}
-						if (!found && goLeft && last) {
-							if (!altKey) this.state.selection = {};
+						if (!found && goLeft && !!last) {
+							if (!altKey) this.state.selection.clear();
 							this.select(last);
 							found = true;
 						}
 					}
 				}
 				if (goUp || goDown) {
-					let selectedTabs = Object.keys(this.state.selection);
+					let selectedTabs = [...this.state.selection.keys()];
 					if (selectedTabs.length > 1) {
 					} else {
 						let found = false;
 						let selectedNext = false;
 						let selectedTab = -1;
-						let first = false;
-						let prev = false;
-						let last = false;
+						let first = 0;
+						let prev = 0;
+						let last = 0;
 						let tabPosition = -1;
 						let i = -1;
 						if (selectedTabs.length === 1) {
@@ -1168,7 +1272,7 @@ class TabManager extends React.Component {
 											// console.log("select next window ", selectedNext, tabPosition);
 											selectedNext = true;
 											break;
-										} else if (prev) {
+										} else if (!!prev) {
 											// console.log("select prev window ", prev, tabPosition);
 											this.selectWindowTab(prev, tabPosition);
 											found = true;
@@ -1205,7 +1309,7 @@ class TabManager extends React.Component {
 											// console.log("select next window ", selectedNext, tabPosition);
 											selectedNext = true;
 											break;
-										} else if (prev) {
+										} else if (!!prev) {
 											// console.log("select prev window ", prev, tabPosition);
 											this.selectWindowTab(prev, tabPosition);
 											found = true;
@@ -1223,16 +1327,16 @@ class TabManager extends React.Component {
 							}
 						}
 						// console.log(found, goDown, first);
-						if (!found && goDown && first) {
+						if (!found && goDown && !!first) {
 							// console.log("go first", first);
-							this.state.selection = {};
+							this.state.selection.clear();
 							this.selectWindowTab(first, tabPosition);
 							found = true;
 						}
 						// console.log(found, goUp, last);
-						if (!found && goUp && last) {
+						if (!found && goUp && !!last) {
 							// console.log("go last", last);
-							this.state.selection = {};
+							this.state.selection.clear();
 							this.selectWindowTab(last, tabPosition);
 							found = true;
 						}
@@ -1242,8 +1346,8 @@ class TabManager extends React.Component {
 		}
 		// page up / page down
 		if (e.keyCode === 33 || e.keyCode === 34) {
-			if (document.activeElement !== this.refs.windowcontainer) {
-				this.refs.windowcontainer.focus();
+			if (document.activeElement != this.refs.windowcontainer) {
+				(this.refs.windowcontainer as HTMLElement).focus();
 			}
 		}
 	}
@@ -1255,13 +1359,13 @@ class TabManager extends React.Component {
 			for (let _t of _w.tabs) {
 				i++;
 				if ((_w.tabs.length >= tabPosition && tabPosition === i) || (_w.tabs.length < tabPosition && _w.tabs.length === i)) {
-					this.state.selection = {};
+					this.state.selection.clear();
 					this.select(_t.id);
 				}
 			}
 		}
 	}
-	scrollTo(what, id) {
+	scrollTo(what : string, id : number) {
 		var els = document.getElementById(what + "-" + id);
 		if (!!els) {
 			if (!this.elVisible(els)) {
@@ -1274,17 +1378,8 @@ class TabManager extends React.Component {
 		if (layout && typeof (layout) === "string") {
 			newLayout = layout;
 		} else {
-			if (this.state.layout === "blocks") {
-				newLayout = this.state.layout = "blocks-big";
-			} else if (this.state.layout === "blocks-big") {
-				newLayout = this.state.layout = "horizontal";
-			} else if (this.state.layout === "horizontal") {
-				newLayout = this.state.layout = "vertical";
-			} else {
-				newLayout = this.state.layout = "blocks";
-			}
+			newLayout = this.nextlayout();
 		}
-		this.state.layout = newLayout;
 		await setLocalStorage("layout", newLayout);
 
 		this.setState({
@@ -1296,46 +1391,49 @@ class TabManager extends React.Component {
 		this.forceUpdate();
 	}
 	nextlayout() {
-		if (this.state.layout === "blocks") {
-			return "blocks-big";
-		} else if (this.state.layout === "blocks-big") {
-			return "horizontal";
-		} else if (this.state.layout === "horizontal") {
-			return "vertical";
-		} else {
-			return "blocks";
+		switch (this.state.layout) {
+			case "blocks":
+				return "blocks-big";
+			case "blocks-big":
+				return "horizontal";
+			case "horizontal":
+				return "vertical";
+			default:
+				return "blocks";
 		}
 	}
 	readablelayout(layout) {
-		if (layout === "blocks") {
-			return "Block";
-		} else if (layout === "blocks-big") {
-			return "Big Block";
-		} else if (layout === "horizontal") {
-			return "Horizontal";
-		} else {
-			return "Vertical";
+		switch (layout) {
+			case "blocks":
+				return "Block";
+			case "blocks-big":
+				return "Big Block";
+			case "horizontal":
+				return "Horizontal";
+			default:
+				return "Vertical";
 		}
 	}
-	select(id) {
-		if (this.state.selection[id]) {
-			delete this.state.selection[id];
+	select(id : number) {
+		if (this.state.selection.has(id)) {
+			this.state.selection.delete(id);
 			this.setState({
 				lastSelect: id
 			});
 		} else {
-			this.state.selection[id] = true;
+			this.state.selection.add(id);
 			this.setState({
 				lastSelect: id
 			});
 		}
 		this.scrollTo('tab', id);
-		var tab = this.state.tabsbyid[id];
-		if(this.refs['window' + tab.windowId] && this.refs['window' + tab.windowId].refs['tab' + id]) {
-			this.refs['window' + tab.windowId].refs['tab' + id].resolveFavIconUrl();
+		var tab = this.state.tabsbyid.get(id);
+		if(!!this.refs['window' + tab.windowId] && !!(this.refs['window' + tab.windowId] as Window).refs['tab' + id]) {
+			((this.refs['window' + tab.windowId] as Window).refs['tab' + id] as Tab).resolveFavIconUrl();
 		}
 
-		var selected = Object.keys(this.state.selection).length;
+		console.log(this.state.selection);
+		var selected = this.state.selection.size;
 		if (selected === 0) {
 			this.setState({
 				topText: "No tabs selected",
@@ -1353,27 +1451,27 @@ class TabManager extends React.Component {
 			});
 		}
 	}
-	selectTo(id, tabs) {
-		var activate = false;
-		var lastSelect = this.state.lastSelect;
+	selectTo(id : number, tabs : browser.Tabs.Tab[]) {
+		let activate = false;
+		const lastSelect = this.state.lastSelect;
 		if (id === lastSelect) {
 			this.select(id);
 			return;
 		}
 		if (!!lastSelect) {
-			if (this.state.selection[lastSelect]) {
+			if (this.state.selection.has(lastSelect)) {
 				activate = true;
 			}
 		} else {
-			if (this.state.selection[id]) {
+			if (this.state.selection.has(id)) {
 				activate = false;
 			} else {
 				activate = true;
 			}
 		}
 
-		var rangeIndex1;
-		var rangeIndex2;
+		let rangeIndex1 : number;
+		let rangeIndex2 : number;
 		for (let i = 0; i < tabs.length; i++) {
 			if (tabs[i].id === id) {
 				rangeIndex1 = i;
@@ -1387,11 +1485,11 @@ class TabManager extends React.Component {
 			return;
 		}
 		if (!rangeIndex2) {
-			var neighbours = [];
+			const neighbours = [];
 			for (let i = 0; i < tabs.length; i++) {
-				var tabId = tabs[i].id;
+				const tabId = tabs[i].id;
 				if (tabId !== id) {
-					if (this.state.selection[tabId]) {
+					if (this.state.selection.has(tabId)) {
 						neighbours.push(tabId);
 					}
 				}
@@ -1446,26 +1544,26 @@ class TabManager extends React.Component {
 			lastSelect: tabs[rangeIndex2].id
 		});
 		if (rangeIndex2 < rangeIndex1) {
-			var r1 = rangeIndex2;
-			var r2 = rangeIndex1;
+			let r1 = rangeIndex2;
+			let r2 = rangeIndex1;
 			rangeIndex1 = r1;
 			rangeIndex2 = r2;
 		}
 
 		for (let i = 0; i < tabs.length; i++) {
 			if (i >= rangeIndex1 && i <= rangeIndex2) {
-				var _tab_id = tabs[i].id;
+				const _tab_id = tabs[i].id;
 				if (activate) {
-					this.state.selection[_tab_id] = true;
+					this.state.selection.add(_tab_id);
 				} else {
-					delete this.state.selection[_tab_id];
+					this.state.selection.delete(_tab_id);
 				}
 			}
 		}
 
 		this.scrollTo('tab', this.state.lastSelect);
 
-		var selected = Object.keys(this.state.selection).length;
+		const selected = this.state.selection.size;
 		if (selected === 0) {
 			this.setState({
 				topText: "No tabs selected",
@@ -1484,47 +1582,47 @@ class TabManager extends React.Component {
 		}
 		this.forceUpdate();
 	}
-	drag(e, id) {
-		if (!this.state.selection[id]) {
-			this.state.selection = {};
-			this.state.selection[id] = true;
-			this.state.lastSelect = id;
+	drag(e : React.DragEvent<HTMLDivElement>, id : number) {
+		if (!this.state.selection.has(id)) {
+			this.state.selection.add(id);
+			this.setState({
+				lastSelect: id
+			});
 		}
 		this.forceUpdate();
 	}
-	async drop(id, before) {
-		var _this5 = this;
-		var tab = this.state.tabsbyid[id];
-		var tabs = Object.keys(this.state.selection).map(function(id) {
-			return _this5.state.tabsbyid[id];
+	async drop(id : number, before : boolean) {
+		var _this = this;
+		var tab : browser.Tabs.Tab = this.state.tabsbyid.get(id);
+		var tabs : browser.Tabs.Tab[] = [...this.state.selection.keys()].map(function(id) {
+			return _this.state.tabsbyid.get(id);
 		});
 		var index = tab.index + (before ? 0 : 1);
 
 		for (let i = 0; i < tabs.length; i++) {
-			var t = tabs[i];
+			const t : browser.Tabs.Tab = tabs[i];
 			await browser.tabs.move(t.id, { windowId: tab.windowId, index: index });
 			await browser.tabs.update(t.id, { pinned: t.pinned });
 		}
-		this.setState({
-			selection: {}
-		});
+		this.state.selection.clear();
 		this.update();
 	}
-	async dropWindow(windowId) {
-		var _this6 = this;
-		var tabs = Object.keys(this.state.selection).map(function(id) {
-			return _this6.state.tabsbyid[id];
+	async dropWindow(windowId : number) {
+		var _this = this;
+		var tabs : browser.Tabs.Tab[] = [...this.state.selection.keys()].map(function(id) {
+			return _this.state.tabsbyid.get(id);
 		});
 
-		browser.runtime.sendMessage({command: "move_tabs_to_window", window_id: windowId, tabs: tabs});
+		browser.runtime.sendMessage<ICommand>({command: S.move_tabs_to_window, window_id: windowId, tabs: tabs});
 
-		this.setState({
-			selection: {}
-		});
+		this.state.selection.clear();
 	}
-	async changeTabLimit(e) {
-		this.state.tabLimit = e.target.value;
-		await setLocalStorage("tabLimit", this.state.tabLimit);
+	async changeTabLimit(e : React.ChangeEvent<HTMLInputElement>) {
+		var _tab_limit = parseInt(e.target.value);
+		this.setState({
+			tabLimit: _tab_limit
+		});
+		await setLocalStorage("tabLimit", _tab_limit);
 		this.tabLimitText();
 		this.forceUpdate();
 	}
@@ -1533,10 +1631,13 @@ class TabManager extends React.Component {
 			bottomText: "Limit the number of tabs per window. Will move new tabs into a new window instead. 0 to turn off"
 		});
 	}
-	async changeTabWidth(e) {
-		this.state.tabWidth = e.target.value;
-		await setLocalStorage("tabWidth", this.state.tabWidth);
-		document.body.style.width = this.state.tabWidth + "px";
+	async changeTabWidth(e : React.ChangeEvent<HTMLInputElement>) {
+		var _tab_width = parseInt(e.target.value);
+		this.setState({
+			tabWidth: _tab_width
+		});
+		await setLocalStorage("tabWidth", _tab_width);
+		document.body.style.width = _tab_width + "px";
 		this.tabWidthText();
 		this.forceUpdate();
 	}
@@ -1545,10 +1646,13 @@ class TabManager extends React.Component {
 			bottomText: "Change the width of this window. 800 by default."
 		});
 	}
-	async changeTabHeight(e) {
-		this.state.tabHeight = e.target.value;
-		await setLocalStorage("tabHeight", this.state.tabHeight);
-		document.body.style.height = this.state.tabHeight + "px";
+	async changeTabHeight(e : React.ChangeEvent<HTMLInputElement>) {
+		var _tab_height = parseInt(e.target.value);
+		this.setState({
+			tabHeight: _tab_height
+		});
+		await setLocalStorage("tabHeight", _tab_height);
+		document.body.style.height = _tab_height + "px";
 		this.tabHeightText();
 		this.forceUpdate();
 	}
@@ -1558,8 +1662,9 @@ class TabManager extends React.Component {
 		});
 	}
 	async toggleAnimations() {
-		this.state.animations = !this.state.animations;
-		await setLocalStorage("animations", this.state.animations);
+		var _animations = !this.state.animations;
+		this.setState({ animations: _animations });
+		await setLocalStorage("animations", _animations);
 		this.animationsText();
 		this.forceUpdate();
 	}
@@ -1569,8 +1674,9 @@ class TabManager extends React.Component {
 		});
 	}
 	async toggleWindowTitles() {
-		this.state.windowTitles = !this.state.windowTitles;
-		await setLocalStorage("windowTitles", this.state.windowTitles);
+		var _window_titles = !this.state.windowTitles;
+		this.setState({windowTitles: _window_titles});
+		await setLocalStorage("windowTitles", _window_titles);
 		this.windowTitlesText();
 		this.forceUpdate();
 	}
@@ -1580,8 +1686,9 @@ class TabManager extends React.Component {
 		});
 	}
 	async toggleCompact() {
-		this.state.compact = !this.state.compact;
-		await setLocalStorage("compact", this.state.compact);
+		var _compact = !this.state.compact;
+		this.setState({compact: _compact});
+		await setLocalStorage("compact", _compact);
 		this.compactText();
 		this.forceUpdate();
 	}
@@ -1591,10 +1698,12 @@ class TabManager extends React.Component {
 		});
 	}
 	async toggleDark() {
-		this.state.dark = !this.state.dark;
-		await setLocalStorage("dark", this.state.dark);
+		var _dark = !this.state.dark;
+		this.setState({dark: _dark});
+		await setLocalStorage("dark", _dark);
+
 		this.darkText();
-		if (this.state.dark) {
+		if (_dark) {
 			document.body.className = "dark";
 			document.documentElement.className = "dark";
 		} else {
@@ -1609,8 +1718,9 @@ class TabManager extends React.Component {
 		});
 	}
 	async toggleTabActions() {
-		this.state.tabactions = !this.state.tabactions;
-		await setLocalStorage("tabactions", this.state.tabactions);
+		var _tabactions = !this.state.tabactions;
+		this.setState({tabactions: _tabactions});
+		await setLocalStorage("tabactions", _tabactions);
 		this.tabActionsText();
 		this.forceUpdate();
 	}
@@ -1620,10 +1730,11 @@ class TabManager extends React.Component {
 		});
 	}
 	async toggleBadge() {
-		this.state.badge = !this.state.badge;
-		await setLocalStorage("badge", this.state.badge);
+		var _badge = !this.state.badge;
+		this.setState({badge: _badge});
+		await setLocalStorage("badge", _badge);
 		this.badgeText();
-		browser.runtime.sendMessage({command: "update_tab_count"});
+		browser.runtime.sendMessage<ICommand>({command: S.update_tab_count});
 		this.forceUpdate();
 	}
 	badgeText() {
@@ -1632,10 +1743,11 @@ class TabManager extends React.Component {
 		});
 	}
 	async toggleOpenInOwnTab() {
-		this.state.openInOwnTab = !this.state.openInOwnTab;
-		await setLocalStorage("openInOwnTab", this.state.openInOwnTab);
+		var _openInOwnTab = !this.state.openInOwnTab;
+		this.setState({openInOwnTab: _openInOwnTab});
+		await setLocalStorage("openInOwnTab", _openInOwnTab);
 		this.openInOwnTabText();
-		browser.runtime.sendMessage({ command: "reload_popup_controls" });
+		browser.runtime.sendMessage<ICommand>({ command: S.reload_popup_controls });
 		this.forceUpdate();
 	}
 	openInOwnTabText() {
@@ -1644,8 +1756,9 @@ class TabManager extends React.Component {
 		});
 	}
 	async toggleSessions() {
-		this.state.sessionsFeature = !this.state.sessionsFeature;
-		await setLocalStorage("sessionsFeature", this.state.sessionsFeature);
+		var _sessionsFeature = !this.state.sessionsFeature;
+		this.setState({sessionsFeature: _sessionsFeature});
+		await setLocalStorage("sessionsFeature", _sessionsFeature);
 		this.sessionsText();
 		this.forceUpdate();
 	}
@@ -1684,7 +1797,7 @@ class TabManager extends React.Component {
 			bottomText: "Allows you to export your saved windows to an external backup"
 		});
 	}
-	importSessions(evt) {
+	importSessions(evt : React.ChangeEvent<HTMLInputElement>) {
 		if (navigator.userAgent.search("Firefox") > -1) {
 			if(window.inPopup) {
 				window.alert("Due to a Firefox bug session import does not work in the popup. Please use the options screen or open Tab Manager Plus in its' own tab");
@@ -1706,7 +1819,7 @@ class TabManager extends React.Component {
 				//console.log('FILE CONTENT', event.target.result);
 				var backupFile;
 				try {
-					backupFile = JSON.parse(event.target.result);
+					backupFile = JSON.parse(event.target.result.toString());
 				} catch (err) {
 					console.error(err);
 					window.alert(err);
@@ -1751,18 +1864,22 @@ class TabManager extends React.Component {
 	}
 	async toggleHide() {
 
+		var _hide_windows = this.state.hideWindows;
 		if (navigator.userAgent.search("Firefox") > -1) {
-			this.state.hideWindows = false;
+			_hide_windows = false;
 		} else {
-			var granted = await browser.permissions.request({ permissions: ["system.display"] });
+			var granted = await chrome.permissions.request({ permissions: ["system.display"] });
 			if (granted) {
-				this.state.hideWindows = !this.state.hideWindows;
+				_hide_windows = !_hide_windows;
 			} else {
-				this.state.hideWindows = false;
+				_hide_windows = false;
 			}
 		}
 
-		await setLocalStorage("hideWindows", this.state.hideWindows);
+		await setLocalStorage("hideWindows", _hide_windows);
+		this.setState({
+			hideWindows: _hide_windows
+		});
 		this.hideText();
 		this.forceUpdate();
 	}
@@ -1772,8 +1889,11 @@ class TabManager extends React.Component {
 		});
 	}
 	async toggleFilterMismatchedTabs() {
-		this.state.filterTabs = !this.state.filterTabs;
-		await setLocalStorage("filter-tabs", this.state.filterTabs);
+		var _filter_tabs = !this.state.filterTabs;
+		this.setState({
+			filterTabs: _filter_tabs
+		});
+		await setLocalStorage("filter-tabs", _filter_tabs);
 		this.forceUpdate();
 	}
 	getTip() {
@@ -1790,16 +1910,13 @@ class TabManager extends React.Component {
 
 		return "Tip: " + tips[Math.floor(Math.random() * tips.length)];
 	}
-	isInViewport(element, ofElement) {
-		var rect = element.getBoundingClientRect();
-		return rect.top >= 0 && rect.left >= 0 && rect.bottom <= ofElement.height && rect.right <= ofElement.width;
-	}
-	elVisible(elem) {
+	elVisible(elem : HTMLElement) {
 		if (!(elem instanceof Element)) throw Error("DomUtil: elem is not an element.");
 		var style = getComputedStyle(elem);
 		if (style.display === "none") return false;
 		if (style.visibility !== "visible") return false;
-		if (style.opacity < 0.1) return false;
+		let _opacity : number = parseFloat(style.opacity);
+		if (_opacity < 0.1) return false;
 		if (elem.offsetWidth + elem.offsetHeight + elem.getBoundingClientRect().height + elem.getBoundingClientRect().width === 0) {
 			return false;
 		}
@@ -1812,29 +1929,10 @@ class TabManager extends React.Component {
 		if (elemCenter.x > (document.documentElement.clientWidth || window.innerWidth)) return false;
 		if (elemCenter.y < 0) return false;
 		if (elemCenter.y > (document.documentElement.clientHeight || window.innerHeight)) return false;
-		var pointContainer = document.elementFromPoint(elemCenter.x, elemCenter.y);
+		var pointContainer : ParentNode = document.elementFromPoint(elemCenter.x, elemCenter.y);
 		do {
 			if (pointContainer === elem) return true;
-		} while ((pointContainer = pointContainer.parentNode));
+		} while ((pointContainer = pointContainer.parentNode))
 		return false;
 	}
 }
-
-function debounce(func, wait, immediate) {
-	var timeout;
-	return function() {
-		var context = this,
-			args = arguments;
-		var later = function later() {
-			timeout = null;
-			if (!immediate) func.apply(context, args);
-		};
-		var callNow = immediate && !timeout;
-		clearTimeout(timeout);
-		timeout = setTimeout(later, wait);
-		if (callNow) func.apply(context, args);
-	};
-}
-
-const maybePluralize = (count, noun, suffix = 's') =>
-  `${count} ${noun}${count !== 1 ? suffix : ''}`;
