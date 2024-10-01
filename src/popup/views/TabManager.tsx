@@ -9,9 +9,8 @@ import {ICommand, ITabManager, ITabManagerState, ISavedSession} from "@types";
 const {setTimeout, clearTimeout} = window
 
 export class TabManager extends React.Component<ITabManager, ITabManagerState> {
-	constructor(props) {
+	constructor(props : ITabManager) {
 		super(props);
-		//this.update();
 
 		let layout = "blocks";
 		let animations = true;
@@ -29,7 +28,6 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		let tabHeight = 600;
 
 		let resetTimeout = -1;
-
 		// var closeTimeout;
 
 		this.state = {

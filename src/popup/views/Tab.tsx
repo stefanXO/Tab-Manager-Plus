@@ -6,7 +6,7 @@ import * as browser from 'webextension-polyfill';
 import {ICommand, ITab, ITabState} from '@types';
 
 export class Tab extends React.Component<ITab, ITabState> {
-	constructor(props) {
+	constructor(props : ITab) {
 		super(props);
 		this.state = {
 			favIcon: "",

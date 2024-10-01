@@ -5,7 +5,7 @@ import * as browser from 'webextension-polyfill';
 import { ITabOptions, ITabOptionsState } from "@types";
 
 export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
-	constructor(props) {
+	constructor(props : ITabOptions) {
 		super(props);
 		this.state = {};
 	}

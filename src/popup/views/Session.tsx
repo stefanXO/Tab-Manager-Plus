@@ -10,8 +10,7 @@ import * as S from "@strings";
 export class Session extends React.Component<ISession, ISessionState> {
 	constructor(props : ISession) {
 		super(props);
-		//console.log(this.props.session);
-		//console.log(this.props.session.name);
+
 		let name = this.props.session.name;
 		let color = this.props.session.color || "default";
 
