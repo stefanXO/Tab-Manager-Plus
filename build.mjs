@@ -1,7 +1,7 @@
 import * as esbuild from 'esbuild'
 
 await esbuild.build({
-	entryPoints: ['lib/popup/popup.tsx'],
+	entryPoints: ['src/popup/popup.tsx'],
 	bundle: true,
 	sourcemap: true,
 	target: 'chrome88',
@@ -13,7 +13,7 @@ await esbuild.build({
 })
 
 await esbuild.build({
-	entryPoints: ['lib/service_worker/service_worker.ts'],
+	entryPoints: ['src/service_worker/service_worker.ts'],
 	bundle: true,
 	sourcemap: true,
 	target: 'chrome88',
@@ -25,7 +25,7 @@ await esbuild.build({
 })
 
 await esbuild.build({
-	entryPoints: ['lib/popup/options.js'],
+	entryPoints: ['src/popup/options.js'],
 	bundle: true,
 	sourcemap: true,
 	target: 'chrome88',

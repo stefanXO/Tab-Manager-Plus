@@ -3,8 +3,8 @@ import * as esbuild from 'esbuild';
 async function watch() {
 	const ctx = await esbuild.context({
 		entryPoints: [
-			'lib/service_worker/service_worker.ts',  // Main service worker entry point
-			'lib/popup/popup.tsx'                    // Popup script (JSX or JS)
+			'src/service_worker/service_worker.ts',  // Main service worker entry point
+			'src/popup/popup.tsx'                    // Popup script (JSX or JS)
 		],
 		bundle: true,
 		sourcemap: true,  // Generate source maps for easier debugging

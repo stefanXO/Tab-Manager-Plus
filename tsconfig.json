@@ -1,7 +1,7 @@
 ﻿{
 	"compilerOptions": {
 		"jsx": "react",
-		"baseUrl": "./lib",
+		"baseUrl": "./src",
 		"paths": {
 			"@views": [
 				"popup/views/index"
