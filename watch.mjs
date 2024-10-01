@@ -19,7 +19,9 @@ async function watch() {
 				})
 			},
 		}],
-		define: {__VERSION__: '"' + process.env.npm_package_version + '"'}
+		define: {
+			'process.env.VERSION': '"' + process.env.npm_package_version + '"'
+		}
 	});
 
 	await ctx.watch();  // Watch mode
