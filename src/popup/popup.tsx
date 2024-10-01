@@ -36,8 +36,8 @@ setTimeout(loadApp, 15000);
 
 async function loadApp() {
 	if (!!window.loaded) return;
-	let height : number = await getLocalStorage("tabHeight", 800);
-	let width : number = await getLocalStorage("tabWidth", 600);
+	let height : number = await getLocalStorage("tabHeight", 600);
+	let width : number = await getLocalStorage("tabWidth", 800);
 	console.log(height, width);
 	if (window.inPopup) {
 
