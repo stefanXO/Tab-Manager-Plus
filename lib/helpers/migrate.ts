@@ -1,23 +1,24 @@
 ﻿"use strict";
 import { toBoolean } from "./utils.js";
+import * as S from "@strings";
+import * as browser from 'webextension-polyfill';
+import {ISavedSession} from "@types";
 
-var browser = browser || chrome;
-
-var stringkeys = [
+const stringkeys = [
 	"layout",
 	"version"
 ];
 
-var jsonkeys = [
+const jsonkeys = [
 	"tabLimit",
 	"tabWidth",
 	"tabHeight",
 	"windowAge",
-	"windowNames",
-	"windowColors"
+	S.windowNames,
+	S.windowColors
 ];
 
-var boolkeys = [
+const boolkeys = [
 	"openInOwnTab",
 	"animations",
 	"windowTitles",
@@ -32,7 +33,7 @@ var boolkeys = [
 
 (async function () {
 
-	var needsMigration = false;
+	let needsMigration = false;
 
 	for (const key of stringkeys) {
 		if (!!localStorage[key]) { needsMigration = true; break; }
@@ -47,19 +48,21 @@ var boolkeys = [
 	}
 
 	if (needsMigration) {
-		var values = await browser.storage.local.get(null);
-		values = values || {};
-		// delete all values that don't have a tabs array
-		for (const key in values) {
-			if (!!values[key].tabs) {
-				console.log("session deleting " + key);
-				await browser.storage.local.remove(key);
-			} else {
-				delete values[key];
+		let keyValue = {};
+		let values : Record<string, unknown> = await browser.storage.local.get(null);
+		if (!!values) {
+			// delete all values that don't have a tabs array
+			for (const key in values) {
+				if (!!(values[key] as ISavedSession).tabs) {
+					console.log("session deleting " + key);
+					await browser.storage.local.remove(key);
+				} else {
+					delete values[key];
+				}
 			}
+			keyValue["sessions"] = values;
 		}
-		var keyValue = {};
-		keyValue["sessions"] = values;
+
 		for (const key of stringkeys) {
 			if (!!localStorage[key]) keyValue[key] = localStorage[key];
 		}
@@ -77,6 +80,5 @@ var boolkeys = [
 		for (const key of stringkeys) localStorage.removeItem(key);
 		for (const key of boolkeys) localStorage.removeItem(key);
 		for (const key of jsonkeys) localStorage.removeItem(key);
-
 	}
 })();
