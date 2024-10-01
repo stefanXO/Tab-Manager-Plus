@@ -127,91 +127,26 @@ class Session extends React.Component {
 		return true;
 	}
 	stop(e) {
-		e.stopPropagation();
+		this.stopProp(e);
 	}
 	async windowClick(e) {
 		var _this2 = this;
-		e.stopPropagation();
+		this.stopProp(e);
 		console.log("source window", this.props.window);
 		// chrome.runtime.getBackgroundPage(function callback(tabs, backgroundPage) {
 		// 	backgroundPage.createWindowWithTabs(tabs);
 		// }.bind(null, this.props.window.tabs));
 
-		var customName = false;
-		if (this.props.window && this.props.window.name && this.props.window.customName) {
-			customName = this.props.window.name;
-		}
-
-		var whitelistWindow = ["left", "top", "width", "height", "incognito", "type"];
-
+		let backgroundPage = await browser.runtime.getBackgroundPage();
 		if (navigator.userAgent.search("Firefox") > -1) {
-			whitelistWindow = ["left", "top", "width", "height", "incognito", "type"];
+			backgroundPage.createWindowWithTabsFromSessionDelayed(this.props.window);
+		} else {
+			backgroundPage.createWindowWithTabsFromSession(this.props.window);
 		}
 
-		var whitelistTab = ["url", "active", "selected", "pinned"];
+		///////
 
-		if (navigator.userAgent.search("Firefox") > -1) {
-			whitelistTab = ["url", "active", "pinned"];
-		}
-
-		var filteredWindow = Object.keys(this.props.window.windowsInfo)
-			.filter(function(key) {
-				return whitelistWindow.includes(key);
-			})
-			.reduce(function(obj, key) {
-				obj[key] = _this2.props.window.windowsInfo[key];
-				return obj;
-			}, {});
-		console.log("filtered window", filteredWindow);
-
-		var newWindow = await browser.windows.create(filteredWindow).catch(function(error) {
-			console.error(error);
-			console.log(error);
-			console.log(error.message);
-		});
-
-		var emptyTab = newWindow.tabs[0].id;
-
-		for (var i = 0; i < this.props.window.tabs.length; i++) {
-			var newTab = Object.keys(this.props.window.tabs[i])
-				.filter(function(key) {
-					return whitelistTab.includes(key);
-				})
-				.reduce(function(obj, key) {
-					obj[key] = _this2.props.window.tabs[i][key];
-					return obj;
-				}, {});
-			console.log("source tab", newTab);
-			if (navigator.userAgent.search("Firefox") > -1) {
-				if (!!newTab.url && newTab.url.search("about:") > -1) {
-					console.log("filtered by about: url", newTab.url);
-					newTab.url = "";
-				}
-			}
-			newTab.windowId = newWindow.id;
-			var tabCreated = await browser.tabs.create(newTab).catch(function(error) {
-				console.error(error);
-				console.log(error);
-				console.log(error.message);
-			});
-		}
-
-		await browser.tabs.remove(emptyTab).catch(function(error) {
-			console.error(error);
-			console.log(error);
-			console.log(error.message);
-		});
-
-		if (customName) {
-			var names = localStorage["windowNames"];
-			if (!!names) {
-				names = JSON.parse(names);
-			} else {
-				names = {};
-			}
-			names[newWindow.id] = customName || "";
-			localStorage["windowNames"] = JSON.stringify(names);
-		}
+		console.log("updating parent");
 
 		this.props.parentUpdate();
 
@@ -237,16 +172,26 @@ class Session extends React.Component {
 		// function (a) {this.props.parentUpdate();}.bind(this));
 	}
 	async close(e) {
-		e.stopPropagation();
+		this.stopProp(e);
 		var value = await browser.storage.local.remove(this.props.window.id);
 		console.log(value);
 		this.props.parentUpdate();
 		// browser.windows.remove(this.props.window.windowsInfo.id);
 	}
 	maximize(e) {
-		e.stopPropagation();
+		this.stopProp(e);
 		// browser.windows.update(this.props.window.windowsInfo.id, {
 		// 	"state": "normal" },
 		// function (a) {this.props.parentUpdate();}.bind(this));
+	}
+	stopProp(e) {
+		if (e && e.nativeEvent) {
+			e.nativeEvent.preventDefault();
+			e.nativeEvent.stopPropagation();
+		}
+		if (e && e.preventDefault) {
+			e.preventDefault();
+			e.stopPropagation();
+		}
 	}
 }
