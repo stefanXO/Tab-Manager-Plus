@@ -1016,7 +1016,7 @@
     }
   });
 
-  // lib/helpers/storage.ts
+  // src/helpers/storage.ts
   var browser = __toESM(require_browser_polyfill());
   async function getLocalStorage(key, default_value = null) {
     const result = await browser.storage.local.get([key]);
@@ -1046,10 +1046,10 @@
     return browser.storage.local.set(obj);
   }
 
-  // lib/service_worker/context.ts
+  // src/service_worker/context.ts
   var globalTabsActive = [];
 
-  // lib/strings/strings.ts
+  // src/strings/strings.ts
   var reload_popup_controls = "reload_popup_controls";
   var update_tab_count = "update_tab_count";
   var discard_tabs = "discard_tabs";
@@ -1084,7 +1084,7 @@
   var windowColors = "windowColors";
   var windowNames = "windowNames";
 
-  // lib/helpers/utils.ts
+  // src/helpers/utils.ts
   function debounce(func, wait, immediate = false) {
     var timeout;
     return function() {
@@ -1118,7 +1118,7 @@
     return hash;
   }
 
-  // lib/service_worker/background/tracking.ts
+  // src/service_worker/background/tracking.ts
   var browser2 = __toESM(require_browser_polyfill());
   var cleanupDebounce = debounce(cleanUp, 500);
   async function cleanUp(remove_old = false) {
@@ -1206,7 +1206,7 @@
     }
   }
 
-  // lib/service_worker/background/windows.ts
+  // src/service_worker/background/windows.ts
   var browser3 = __toESM(require_browser_polyfill());
   async function setupWindowListeners() {
     browser3.windows.onFocusChanged.removeListener(windowFocus);
@@ -1447,7 +1447,7 @@
     return hash;
   }
 
-  // lib/service_worker/background/tabs.ts
+  // src/service_worker/background/tabs.ts
   var browser4 = __toESM(require_browser_polyfill());
   async function setupTabListeners() {
     browser4.tabs.onCreated.removeListener(tabAdded);
@@ -1583,7 +1583,7 @@
     await checkWindow(moveinfo.windowId);
   }
 
-  // lib/service_worker/ui/open.ts
+  // src/service_worker/ui/open.ts
   var browser5 = __toESM(require_browser_polyfill());
   async function openSidebar() {
     await browser5.sidebarAction.open();
@@ -1636,7 +1636,7 @@
     }
   }
 
-  // lib/service_worker/background/actions.ts
+  // src/service_worker/background/actions.ts
   var browser6 = __toESM(require_browser_polyfill());
   async function handleMessages(message, sender, sendResponse) {
     const request = message;
@@ -1753,7 +1753,7 @@
     await setLocalStorageMap(windowHashes, hashes);
   }
 
-  // lib/service_worker/ui/context_menus.ts
+  // src/service_worker/ui/context_menus.ts
   var browser7 = __toESM(require_browser_polyfill());
   async function setupContextMenus() {
     await browser7.contextMenus.removeAll();
@@ -1894,7 +1894,7 @@
     }
   }
 
-  // lib/service_worker/service_worker.ts
+  // src/service_worker/service_worker.ts
   var browser8 = __toESM(require_browser_polyfill());
   browser8.runtime.onStartup.addListener(
     async function() {
@@ -1930,9 +1930,9 @@
     await setupWindowListeners();
     updateTabCountDebounce();
     setTimeout(cleanupDebounce, 2500);
-    setTimeout(cleanUp.bind(this, true), 2e5);
   }
   setInterval(setupDebounced, 3e5);
+  setTimeout(cleanUp.bind(void 0, true), 2e6);
   setup();
 })();
 //# sourceMappingURL=service_worker.js.map

@@ -7243,7 +7243,7 @@
     }
   });
 
-  // lib/helpers/utils.ts
+  // src/helpers/utils.ts
   function debounce(func, wait, immediate = false) {
     var timeout;
     return function() {
@@ -7281,7 +7281,7 @@
     }
   }
 
-  // lib/strings/strings.ts
+  // src/strings/strings.ts
   var reload_popup_controls = "reload_popup_controls";
   var update_tab_count = "update_tab_count";
   var discard_tabs = "discard_tabs";
@@ -7299,7 +7299,7 @@
   var windowColors = "windowColors";
   var windowNames = "windowNames";
 
-  // lib/helpers/migrate.ts
+  // src/helpers/migrate.ts
   var browser = __toESM(require_browser_polyfill());
   var stringkeys = [
     "layout",
@@ -7375,7 +7375,7 @@
     }
   })();
 
-  // lib/helpers/storage.ts
+  // src/helpers/storage.ts
   var browser2 = __toESM(require_browser_polyfill());
   async function getLocalStorage(key, default_value = null) {
     const result = await browser2.storage.local.get([key]);
@@ -7400,7 +7400,7 @@
     return browser2.storage.local.set(obj);
   }
 
-  // lib/popup/views/Session.tsx
+  // src/popup/views/Session.tsx
   var React = __toESM(require_react());
   var browser3 = __toESM(require_browser_polyfill());
   var Session = class extends React.Component {
@@ -7437,7 +7437,7 @@
           {
             id: "sessiontab_" + _this.props.session.id + "_" + tab.index,
             key: "sessiontab_" + _this.props.session.id + "_" + tab.index,
-            window: _this.props.window,
+            session: _this.props.session,
             layout: _this.props.layout,
             tab,
             selected: isSelected,
@@ -7527,13 +7527,15 @@
       this.restoreSession(e, null);
     }
     async openTab(e, index) {
-      console.log(index);
       this.restoreSession(e, index);
     }
     async restoreSession(e, tabId) {
       e.stopPropagation();
-      console.log("source window", this.props.session);
-      browser3.runtime.sendMessage({ command: create_window_with_session_tabs, session: this.props.session, tab_id: tabId });
+      await browser3.runtime.sendMessage({
+        command: create_window_with_session_tabs,
+        session: this.props.session,
+        tab_id: tabId
+      });
       this.props.parentUpdate();
       if (!!window.inPopup) {
         window.close();
@@ -7559,7 +7561,7 @@
     }
   };
 
-  // lib/popup/views/Tab.tsx
+  // src/popup/views/Tab.tsx
   var React2 = __toESM(require_react());
   var browser4 = __toESM(require_browser_polyfill());
   var Tab = class extends React2.Component {
@@ -7652,7 +7654,6 @@
     async click(e) {
       this.stopProp(e);
       var tabId = this.props.tab.id;
-      var windowId = this.props.window.id;
       if (e.button === 1) {
         this.props.middleClick(tabId);
       } else if (e.button === 2 || e.nativeEvent.metaKey || e.nativeEvent.altKey || e.nativeEvent.shiftKey || e.nativeEvent.ctrlKey) {
@@ -7666,6 +7667,7 @@
         if (!!this.props.click) {
           this.props.click(e, this.props.tab.id);
         } else {
+          let windowId = this.props.window.id;
           if (navigator.userAgent.search("Firefox") > -1) {
             browser4.runtime.sendMessage({
               command: focus_on_tab_and_window_delayed,
@@ -7769,7 +7771,7 @@
     }
   };
 
-  // lib/popup/views/TabManager.tsx
+  // src/popup/views/TabManager.tsx
   var React3 = __toESM(require_react());
   var browser5 = __toESM(require_browser_polyfill());
   var { setTimeout: setTimeout2, clearTimeout: clearTimeout2 } = window;
@@ -7914,7 +7916,7 @@
       if (typeof storage4["sessionsFeature"] === "undefined") storage4["sessionsFeature"] = sessionsFeature;
       if (typeof storage4["hideWindows"] === "undefined") storage4["hideWindows"] = hideWindows;
       if (typeof storage4["filter-tabs"] === "undefined") storage4["filter-tabs"] = filterTabs;
-      storage4["version"] = "__VERSION__";
+      storage4["version"] = window.extensionVersion;
       await browser5.storage.local.set(storage4);
       layout = storage4["layout"];
       tabLimit = storage4["tabLimit"];
@@ -9504,7 +9506,7 @@
     }
   };
 
-  // lib/popup/views/TabOptions.tsx
+  // src/popup/views/TabOptions.tsx
   var React4 = __toESM(require_react());
   var browser6 = __toESM(require_browser_polyfill());
   var TabOptions = class extends React4.Component {
@@ -9513,7 +9515,7 @@
       this.state = {};
     }
     logo() {
-      return /* @__PURE__ */ React4.createElement("div", { className: "logo-options", key: "logo" }, /* @__PURE__ */ React4.createElement("div", { className: "logo-box" }, /* @__PURE__ */ React4.createElement("img", { src: "images/browsers.svg", style: { maxWidth: "3rem" }, alt: "Tab Manager Plus" }), /* @__PURE__ */ React4.createElement("h2", { key: "title" }, "Tab Manager Plus ", "__VERSION__")));
+      return /* @__PURE__ */ React4.createElement("div", { className: "logo-options", key: "logo" }, /* @__PURE__ */ React4.createElement("div", { className: "logo-box" }, /* @__PURE__ */ React4.createElement("img", { src: "images/browsers.svg", style: { maxWidth: "3rem" }, alt: "Tab Manager Plus" }), /* @__PURE__ */ React4.createElement("h2", { key: "title" }, "Tab Manager Plus ", window.extensionVersion)));
     }
     optionsSection() {
       return /* @__PURE__ */ React4.createElement("div", { className: "toggle-options", key: "options" }, /* @__PURE__ */ React4.createElement("div", { className: "optionsBox" }, /* @__PURE__ */ React4.createElement("h4", null, "Tab options"), /* @__PURE__ */ React4.createElement("div", { className: "toggle-box" }, /* @__PURE__ */ React4.createElement(
@@ -9676,7 +9678,7 @@
     }
   };
 
-  // lib/popup/views/Window.tsx
+  // src/popup/views/Window.tsx
   var React5 = __toESM(require_react());
   var browser7 = __toESM(require_browser_polyfill());
   var Window = class extends React5.Component {
@@ -10449,12 +10451,13 @@
     return ipv4Regex.test(input) || ipv6Regex.test(input);
   }
 
-  // lib/popup/popup.tsx
+  // src/popup/popup.tsx
   var React6 = __toESM(require_react());
   var ReactDOM = __toESM(require_react_dom());
   window.loaded = false;
   window.inPopup = window.location.search.indexOf("?popup") > -1;
   window.inPanel = window.location.search.indexOf("?panel") > -1;
+  window.extensionVersion = "6.0.0";
   window.onload = () => window.requestAnimationFrame(loadApp);
   setTimeout(loadApp, 75);
   setTimeout(loadApp, 125);
@@ -10468,8 +10471,8 @@
   setTimeout(loadApp, 15e3);
   async function loadApp() {
     if (!!window.loaded) return;
-    var height = await getLocalStorage("tabHeight", 0);
-    var width = await getLocalStorage("tabWidth", 0);
+    let height = await getLocalStorage("tabHeight", 600);
+    let width = await getLocalStorage("tabWidth", 800);
     console.log(height, width);
     if (window.inPopup) {
       if (height > 0 && width > 0) {
