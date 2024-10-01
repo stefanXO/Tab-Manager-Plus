@@ -1,5 +1,20 @@
 "use strict";
 
+import '@helpers/migrate';
+import {getLocalStorage} from "@helpers/storage";
+import {TabManager} from '@views';
+import * as React from 'react';
+import * as ReactDOM from "react-dom";
+
+declare global {
+	interface Window {
+		loaded: boolean;
+		inPopup: boolean;
+		inPanel: boolean;
+		optionPage: boolean;
+	}
+}
+
 window.loaded = false;
 window.inPopup = window.location.search.indexOf("?popup") > -1;
 window.inPanel = window.location.search.indexOf("?panel") > -1;
@@ -31,8 +46,7 @@ async function loadApp() {
 
 		var root = document.getElementById("root");
 		if (root != null) {
-			var _height = document.body.style.height.split("px")[0];
-			_height = parseInt(_height) || 0;
+			var _height = parseInt(document.body.style.height.split("px")[0]) || 0;
 			if (_height < 300) {
 				_height = 400;
 				document.body.style.minHeight = _height + "px";
@@ -64,5 +78,7 @@ async function loadApp() {
 	ReactDOM.render(<TabManager optionsActive={!!window.optionPage}/>, document.getElementById("TMP"));
 }
 
-window.addEventListener("contextmenu", function (e) {e.preventDefault();});
+window.addEventListener("contextmenu", function (e) {
+	e.preventDefault();
+});
 
