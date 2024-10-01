@@ -1,6 +1,9 @@
-next
+6.0.0
 =====
 - You can now open single tabs from your saved sessions
+- Experimental: Try to restore window names and colors after a browser restart
+- Fix: Vertical layout takes now the full width in popups
+- Fix: Vertical view has now nicer separators when used in full window, that take the whole screen width
 - Fix: Sometimes favicons would not load properly
 - Fix: Make sure session tabs are fully restored before closing the popup
 - Fix: Moving many tabs could stop early because of popup closing in the meantime
@@ -11,6 +14,18 @@ next
 - Fix: Windows that were too big for the current monitor, would not be restored
 - Fix: Don't animate scrolling if animations are disabled
 - Fix: Dragging tabs would sometimes drop them in the wrong location, now they will be added to the closest tab in the new window
+- Fix: Favicons sometimes stuck, based on browser cache
+- Fix: Also use favicon url based on pending url if tab is loading
+- Fix: Don't attempt to show empty favicon
+- Fix: pending urls not being read when calculating window title
+- Fix: window title not updating after tabs fully loaded
+- Fix: IPs being shown as weird numbers in window title/name
+- Fix: title being based on whole url, instead of hostname while tab was loading
+- Fix: Try to find nicer window title if it matches hostname
+- Fix: Group by top-Ips, like 192.168.*.*
+- Fix: If you selected incognito tabs and normal tabs based on a search, and tried to move them to one window then it
+  would fail because they can't be mixed together. Now it will open 2 windows - one with normal tabs, one with incognito
+  tabs.
 
 5.3.0
 =====

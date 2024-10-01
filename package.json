@@ -1,15 +1,15 @@
 {
-  "name": "tab-manager",
-  "version": "5.3.0",
+  "name": "tab-manager-plus",
+  "version": "6.0.0",
   "description": "This is an extended version of the old Tab Manager Google Chrome extension. Should work on both Chrome and Firefox. Malware free, with a new view type and many new features.",
   "main": "index.js",
   "directories": {
-    "lib": "lib"
+    "src": "src"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "watch": "npx babel --watch lib --out-dir outlib --source-maps true",
-    "build": "babel lib --out-dir outlib --source-maps true"
+    "watch": "tsc --noEmit && node watch.mjs",
+    "build": "tsc --noEmit && node build.mjs"
   },
   "repository": {
     "type": "git",
@@ -22,19 +22,22 @@
   },
   "homepage": "https://github.com/stefanXO/Tab-Manager#readme",
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.3",
-    "babel-plugin-inline-replace-variables": "^1.3.1",
-    "babel-plugin-transform-async-to-generator": "^6.24.1",
-    "babel-plugin-transform-react-createelement-to-jsx": "^1.1.0",
-    "babel-preset-browser": "^1.0.1",
-    "babel-preset-es2015": "^6.24.1",
-    "babel-preset-es2017": "^6.24.1",
-    "babel-preset-react": "^6.24.1",
-    "babel-preset-react-app": "^3.1.2",
-    "crx3": "^1.1.3"
+    "@types/chrome": "^0.0.272",
+    "@types/node": "^22.7.2",
+    "@types/react": "^18.3.9",
+    "@types/react-dom": "^18.3.0",
+    "@types/webextension-polyfill": "^0.12.1",
+    "crx3": "^1.1.3",
+    "esbuild": "0.24.0",
+    "typescript": "^5.6.2",
+    "webextension-polyfill": "^0.12.0"
   },
   "dependencies": {
-    "babel-preset-es2016": "^6.24.1"
-  }
+    "react": "16.11.0",
+    "react-dom": "16.11.0",
+    "react-jsx": "^1.0.0"
+  },
+  "browserslist": [
+    "Chrome >= 88"
+  ]
 }

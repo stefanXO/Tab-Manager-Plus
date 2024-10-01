@@ -19,7 +19,7 @@
 			<div class="logo-options">
 				<div class="logo-box">
 					<img src="images/browsers.svg" style="max-width: 3rem;">
-					<h2>Tab Manager Plus 5.3.0</h2>
+					<h2>Tab Manager Plus 6.0.0</h2>
 				</div>
 			</div>
 			<div class="toggle-options">
@@ -36,9 +36,12 @@
 					<h3>Here's what's new since the last time</h3>
 					<div class="toggle-box">
 
-						<h3>next</h3>
+						<h3>6.0.0</h3>
 						<ul>
 							<li>You can now open single tabs from your saved sessions</li>
+							<li>Experimental: Try to restore window names and colors after a browser restart</li>
+							<li>Fix: Vertical layout takes now the full width in popups</li>
+							<li>Fix: Vertical view has now nicer separators when used in full window, that take the whole screen width</li>
 							<li>Fix: Sometimes favicons would not load properly</li>
 							<li>Fix: Make sure session tabs are fully restored before closing the popup</li>
 							<li>Fix: Moving many tabs could stop early because of popup closing in the meantime</li>
@@ -49,6 +52,18 @@
 							<li>Fix: Windows that were too big for the current monitor, would not be restored</li>
 							<li>Fix: Don't animate scrolling if animations are disabled</li>
 							<li>Fix: Dragging tabs would sometimes drop them in the wrong location, now they will be added to the closest tab in the new window</li>
+							<li>Fix: Favicons sometimes stuck, based on browser cache</li>
+							<li>Fix: Also use favicon url based on pending url if tab is loading</li>
+							<li>Fix: Don't attempt to show empty favicon</li>
+							<li>Fix: pending urls not being read when calculating window title</li>
+							<li>Fix: window title not updating after tabs fully loaded</li>
+							<li>Fix: IPs being shown as weird numbers in window title/name</li>
+							<li>Fix: title being based on whole url, instead of hostname while tab was loading</li>
+							<li>Fix: Try to find nicer window title if it matches hostname</li>
+							<li>Fix: Group by top-Ips, like 192.168.*.*</li>
+							<li>Fix: If you selected incognito tabs and normal tabs based on a search, and tried to move them to one window then it
+							  would fail because they can't be mixed together. Now it will open 2 windows - one with normal tabs, one with incognito
+							  tabs.</li>
 						</ul>
 
 						<h3>5.3.0</h3>
