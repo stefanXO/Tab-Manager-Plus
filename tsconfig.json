@@ -1,7 +1,10 @@
 ﻿{
 	"compilerOptions": {
 		"jsx": "react",
+		"outDir": "ts-built",
+		"rootDir": "src",
 		"baseUrl": "./src",
+		"skipLibCheck": true,
 		"paths": {
 			"@views": [
 				"popup/views/index"
@@ -26,5 +29,11 @@
 			]
 		},
 		"target": "es6"
-	}
+	},
+	"include": [
+		"src/**/*"
+	],
+	"exclude": [
+		"**/*.spec.ts"
+	]
 }
