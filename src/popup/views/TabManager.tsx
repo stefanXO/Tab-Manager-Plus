@@ -458,7 +458,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 						disabled={true}
 						className="tabtitle"
 						ref="topbox"
-						placeholder={maybePluralize(tabCount, 'tab') + " in " + this.state.windows.length + " windows"}
+						placeholder={maybePluralize(tabCount, 'tab') + " in " + maybePluralize(this.state.windows.length, 'window')}
 						value={this.state.topText}
 					/>
 					<input type="text" disabled={true} className="taburl" ref="topboxurl" placeholder={this.getTip()} value={this.state.bottomText} />
