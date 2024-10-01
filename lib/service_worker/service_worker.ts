@@ -52,9 +52,9 @@ async function setup() {
 	_t.updateTabCountDebounce();
 
 	setTimeout(cleanupDebounce, 2500);
-	setTimeout(cleanUp.bind(this, true), 200000);
 }
 
 setInterval(setupDebounced, 300000);
+setTimeout(cleanUp.bind(this, true), 2000000);
 
 setup();
