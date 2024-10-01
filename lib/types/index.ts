@@ -8,3 +8,5 @@ export * from './IWindowState';
 export * from './ISession';
 export * from './ISessionState';
 export * from './ISavedSession';
+export * from './ITabOptions';
+export * from './ITabOptionsState';
