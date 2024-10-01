@@ -1909,7 +1909,7 @@
   browser8.commands.onCommand.addListener(handleCommands);
   browser8.runtime.onMessage.addListener(handleMessages);
   (async function() {
-    var windows7 = await browser8.windows.getAll({ populate: true });
+    let windows7 = await browser8.windows.getAll({ populate: true });
     await setLocalStorage("windowAge", []);
     if (!!windows7 && windows7.length > 0) {
       windows7.sort(function(a, b) {

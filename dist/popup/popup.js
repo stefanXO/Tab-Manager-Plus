@@ -7421,8 +7421,6 @@
     }
     render() {
       let _this = this;
-      let name = this.state.name;
-      let color = this.state.color || "default";
       let hideWindow = true;
       let titleAdded = false;
       let tabsperrow = this.props.layout.indexOf("blocks") > -1 ? Math.ceil(Math.sqrt(this.props.tabs.length + 2)) : this.props.layout === "vertical" ? 1 : 15;
@@ -7476,9 +7474,9 @@
           );
         }
         if (this.props.windowTitles) {
-          if (name) {
+          if (this.state.name) {
             tabs4.unshift(
-              /* @__PURE__ */ React.createElement("h3", { key: "session-" + this.props.session.id + "-windowTitle", className: "center windowTitle" }, name)
+              /* @__PURE__ */ React.createElement("h3", { key: "session-" + this.props.session.id + "-windowTitle", className: "center windowTitle" }, this.state.name)
             );
             titleAdded = true;
           }
@@ -8176,7 +8174,7 @@
             disabled: true,
             className: "tabtitle",
             ref: "topbox",
-            placeholder: maybePluralize(tabCount, "tab") + " in " + this.state.windows.length + " windows",
+            placeholder: maybePluralize(tabCount, "tab") + " in " + maybePluralize(this.state.windows.length, "window"),
             value: this.state.topText
           }
         ), /* @__PURE__ */ React3.createElement("input", { type: "text", disabled: true, className: "taburl", ref: "topboxurl", placeholder: this.getTip(), value: this.state.bottomText })),
@@ -9657,13 +9655,13 @@
         }
       ), /* @__PURE__ */ React4.createElement("label", { onMouseEnter: this.props.tabActionsText, htmlFor: "tabactions_mode", style: { whiteSpace: "pre", lineHeight: "2rem" } })), /* @__PURE__ */ React4.createElement("label", { className: "textlabel", htmlFor: "tabactions_mode", style: { whiteSpace: "pre", lineHeight: "2rem" } }, "Show action buttons"), /* @__PURE__ */ React4.createElement("div", { className: "option-description" }, "Displays buttons in every window for : opening a new tab, minimizing the window, assigning a color to the window and closing the window.", /* @__PURE__ */ React4.createElement("br", null), /* @__PURE__ */ React4.createElement("i", null, "By default: enabled")))), /* @__PURE__ */ React4.createElement("div", { className: "optionsBox" }, /* @__PURE__ */ React4.createElement("h4", null, "Advanced settings"), /* @__PURE__ */ React4.createElement("div", { className: "toggle-box" }, /* @__PURE__ */ React4.createElement("div", { className: "toggle-box" }, /* @__PURE__ */ React4.createElement("a", { href: "#", onClick: this.openIncognitoOptions }, "Allow in Incognito")), /* @__PURE__ */ React4.createElement("div", { className: "option-description" }, "If you also want to see your incognito tabs in the Tab Manager overview, then enable incognito access for this extension.")), /* @__PURE__ */ React4.createElement("div", { className: "toggle-box" }, /* @__PURE__ */ React4.createElement("a", { href: "#", onClick: this.openShortcuts }, "Change shortcut key"), /* @__PURE__ */ React4.createElement("div", { className: "option-description" }, "If you want to disable or change the shortcut key with which to open Tab Manager Plus, you can do so here."))), /* @__PURE__ */ React4.createElement("div", { className: "optionsBox" }, /* @__PURE__ */ React4.createElement("div", { className: "toggle-box" }, /* @__PURE__ */ React4.createElement("h4", null, "Right mouse button"), /* @__PURE__ */ React4.createElement("div", { className: "option-description" }, "With the right mouse button you can select tabs"), /* @__PURE__ */ React4.createElement("h4", null, "Shift+Right mouse button"), /* @__PURE__ */ React4.createElement("div", { className: "option-description" }, "While holding shift, and pressing the right mouse button you can select all tabs between the last selected tab and the current one"), /* @__PURE__ */ React4.createElement("h4", null, "Middle mouse button"), /* @__PURE__ */ React4.createElement("div", { className: "option-description" }, "With the middle mouse button you can close a tab"), /* @__PURE__ */ React4.createElement("h4", null, "[Enter / Return] button"), /* @__PURE__ */ React4.createElement("div", { className: "option-description" }, "With the return button you can switch to the currently selected tab, or move multiple selected tabs to a new window"))));
     }
-    openIncognitoOptions() {
-      browser6.tabs.create({
+    async openIncognitoOptions() {
+      await browser6.tabs.create({
         url: "chrome://extensions/?id=cnkdjjdmfiffagllbiiilooaoofcoeff"
       });
     }
-    openShortcuts() {
-      browser6.tabs.create({ url: "chrome://extensions/shortcuts" });
+    async openShortcuts() {
+      await browser6.tabs.create({ url: "chrome://extensions/shortcuts" });
     }
     licenses() {
       return /* @__PURE__ */ React4.createElement("div", { className: "licenses", key: "licenses" }, /* @__PURE__ */ React4.createElement("div", { className: "license" }, "Tab Manager Plus is based on", " ", /* @__PURE__ */ React4.createElement("a", { href: "https://github.com/dsc/Tab-Manager", target: "_blank", title: "Tab-Manager" }, "dsc/Tab-Manager"), ",", " ", /* @__PURE__ */ React4.createElement("a", { href: "https://github.com/joshperry/Tab-Manager", target: "_blank", title: "Tab-Manager" }, "joshperry/Tab-Manager"), " ", "and", " ", /* @__PURE__ */ React4.createElement("a", { href: "https://github.com/JonasNo/Tab-Manager", target: "_blank", title: "Tab-Manager" }, "JonasNo/Tab-Manager"), ".", /* @__PURE__ */ React4.createElement("br", null), "Licensed by", " ", /* @__PURE__ */ React4.createElement("a", { href: "http://creativecommons.org/licenses/by/3.0/", target: "_blank", title: " Mozilla Public License (MPL)" }, "MPLv2"), ". Icons made by", " ", /* @__PURE__ */ React4.createElement("a", { href: "http://www.freepik.com", title: "Freepik" }, "Freepik"), " ", "from", " ", /* @__PURE__ */ React4.createElement("a", { href: "http://www.flaticon.com", title: "Flaticon" }, "www.flaticon.com"), ". Licensed by", " ", /* @__PURE__ */ React4.createElement("a", { href: "http://creativecommons.org/licenses/by/3.0/", target: "_blank", title: "Creative Commons BY 3.0" }, "CC 3.0 BY"), "."));
