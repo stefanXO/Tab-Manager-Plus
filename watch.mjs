@@ -9,7 +9,7 @@ async function watch() {
 		bundle: true,
 		sourcemap: true,  // Generate source maps for easier debugging
 		target: 'chrome88', // Set browser target version
-		outdir: 'outlib',   // Output directory
+		outdir: 'dist',   // Output directory
 		plugins: [{
 			name: 'rebuild-notify',
 			setup(build) {

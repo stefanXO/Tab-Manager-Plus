@@ -5,7 +5,7 @@ await esbuild.build({
 	bundle: true,
 	sourcemap: true,
 	target: 'chrome88',
-	outfile: 'outlib/popup/popup.js',
+	outfile: 'dist/popup/popup.js',
 	define: {
 		__VERSION__: '"' + process.env.npm_package_version + '"',
 		'process.env.NODE_ENV': '"production"'
@@ -17,7 +17,7 @@ await esbuild.build({
 	bundle: true,
 	sourcemap: true,
 	target: 'chrome88',
-	outfile: 'outlib/service_worker/service_worker.js',
+	outfile: 'dist/service_worker/service_worker.js',
 	define: {
 		__VERSION__: '"' + process.env.npm_package_version + '"',
 		'process.env.NODE_ENV': '"production"'
@@ -29,7 +29,7 @@ await esbuild.build({
 	bundle: true,
 	sourcemap: true,
 	target: 'chrome88',
-	outfile: 'outlib/popup/options.js',
+	outfile: 'dist/popup/options.js',
 	define: {
 		__VERSION__: '"' + process.env.npm_package_version + '"',
 		'process.env.NODE_ENV': '"production"'

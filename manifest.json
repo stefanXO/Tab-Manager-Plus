@@ -24,7 +24,7 @@
 	],
 	"incognito":"spanning",
 	"background": {
-		"service_worker": "outlib/service_worker/service_worker.js"
+		"service_worker": "dist/service_worker/service_worker.js"
 	},
 	"action": {
 		"default_icon": {
