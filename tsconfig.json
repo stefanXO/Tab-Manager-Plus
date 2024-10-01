@@ -1,0 +1,30 @@
+﻿{
+	"compilerOptions": {
+		"jsx": "react",
+		"baseUrl": "./lib",
+		"paths": {
+			"@views": [
+				"popup/views/index"
+			],
+			"@background/*": [
+				"service_worker/background/*"
+			],
+			"@helpers/*": [
+				"helpers/*"
+			],
+			"@types": [
+				"types/index"
+			],
+			"@ui/*": [
+				"service_worker/ui/*"
+			],
+			"@strings": [
+				"strings/strings"
+			],
+			"@context": [
+				"service_worker/context"
+			]
+		},
+		"target": "es6"
+	}
+}
