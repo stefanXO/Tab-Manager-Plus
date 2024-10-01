@@ -18,7 +18,7 @@ export async function setupWindowListeners() {
 	browser.windows.onRemoved.addListener(windowRemoved);
 }
 
-export async function createWindowWithTabs(tabs, isIncognito = false) {
+export async function createWindowWithTabs(tabs : browser.Tabs.Tab[], isIncognito : boolean = false) {
 	var pinnedIndex = 0;
 	var firstTab = tabs.shift();
 	var t = [];
@@ -251,7 +251,7 @@ export async function windowActive(windowId : number) {
 	// console.log(windows);
 }
 
-async function windowFocus(windowId) {
+async function windowFocus(windowId : number) {
 	try {
 		if (!!windowId) {
 			await windowActive(windowId);
@@ -263,7 +263,7 @@ async function windowFocus(windowId) {
 	}
 }
 
-async function windowCreated(window) {
+async function windowCreated(window : browser.Windows.Window) {
 	try {
 		if (!!window && !!window.id) {
 			await windowActive(window.id);
@@ -275,7 +275,7 @@ async function windowCreated(window) {
 	setTimeout(cleanupDebounce, 250);
 }
 
-async function windowRemoved(windowId) {
+async function windowRemoved(windowId : number) {
 	try {
 		if (!!windowId) {
 			await windowActive(windowId);
@@ -307,7 +307,7 @@ export async function checkWindow(windowId : number) {
 	}
 }
 
-export function hashcode(window) : number {
+export function hashcode(window : browser.Windows.Window) : number {
 	let urls = [];
 	for (let i = 0; i < window.tabs.length; i++) {
 		if (!window.tabs[i].url) continue;

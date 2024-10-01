@@ -29,8 +29,6 @@ export class Session extends React.Component<ISession, ISessionState> {
 	}
 	render() {
 		let _this = this;
-		let name = this.state.name;
-		let color = this.state.color || "default";
 		let hideWindow = true;
 		let titleAdded = false;
 		let tabsperrow = this.props.layout.indexOf("blocks") > -1 ? Math.ceil(Math.sqrt(this.props.tabs.length + 2)) : this.props.layout === "vertical" ? 1 : 15;
@@ -81,10 +79,10 @@ export class Session extends React.Component<ISession, ISessionState> {
 			}
 
 			if (this.props.windowTitles) {
-				if (name) {
+				if (this.state.name) {
 					tabs.unshift(
 						<h3 key={"session-" + this.props.session.id + "-windowTitle"} className="center windowTitle">
-							{name}
+							{this.state.name}
 						</h3>
 					);
 					titleAdded = true;

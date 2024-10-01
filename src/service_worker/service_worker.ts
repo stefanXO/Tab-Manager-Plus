@@ -27,7 +27,7 @@ browser.commands.onCommand.addListener(_a.handleCommands);
 browser.runtime.onMessage.addListener(_a.handleMessages);
 
 (async function () {
-	var windows = await browser.windows.getAll({ populate: true });
+	let windows = await browser.windows.getAll({ populate: true });
 	await setLocalStorage("windowAge", []);
 	if (!!windows && windows.length > 0) {
 		windows.sort(function (a, b) {

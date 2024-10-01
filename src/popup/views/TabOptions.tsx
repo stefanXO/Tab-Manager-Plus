@@ -358,13 +358,13 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 			</div>
 		);
 	}
-	openIncognitoOptions() {
-		browser.tabs.create({
+	async openIncognitoOptions() {
+		await browser.tabs.create({
 			url: "chrome://extensions/?id=cnkdjjdmfiffagllbiiilooaoofcoeff"
 		});
 	}
-	openShortcuts() {
-		browser.tabs.create({ url: "chrome://extensions/shortcuts" });
+	async openShortcuts() {
+		await browser.tabs.create({ url: "chrome://extensions/shortcuts" });
 	}
 	licenses() {
 		return (
