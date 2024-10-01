@@ -45,7 +45,7 @@ export class Session extends React.Component<ISession, ISessionState> {
 				<Tab
 					id={"sessiontab_" + _this.props.session.id + "_" + tab.index}
 					key={"sessiontab_" + _this.props.session.id + "_" + tab.index}
-					window={_this.props.window}
+					session={_this.props.session}
 					layout={_this.props.layout}
 					tab={tab}
 					selected={isSelected}
@@ -151,19 +151,16 @@ export class Session extends React.Component<ISession, ISessionState> {
 		this.restoreSession(e, null);
 	}
 	async openTab(e : React.MouseEvent<HTMLDivElement>, index : number) {
-		console.log(index);
 		this.restoreSession(e, index);
 	}
 	async restoreSession(e : React.MouseEvent<HTMLDivElement>, tabId : number) {
 		e.stopPropagation();
-		console.log("source window", this.props.session);
-		// chrome.runtime.getBackgroundPage(function callback(tabs, backgroundPage) {
-		// 	backgroundPage.createWindowWithTabs(tabs);
-		// }.bind(null, this.props.session.tabs));
 
-		browser.runtime.sendMessage<ICommand>({command: S.create_window_with_session_tabs, session: this.props.session, tab_id: tabId});
-
-
+		await browser.runtime.sendMessage<ICommand>({
+			command: S.create_window_with_session_tabs,
+			session: this.props.session,
+			tab_id: tabId
+		});
 
 		this.props.parentUpdate();
 
@@ -174,19 +171,6 @@ export class Session extends React.Component<ISession, ISessionState> {
 				this.props.scrollTo("window", browser.windows.WINDOW_ID_CURRENT);
 			}.bind(this), 500);
 		}
-
-		// , function (tabs, w) {
-		// 	browser.tabs.create(first.id, { pinned: first.pinned });
-		// 	if (t.length > 0) {
-		// 		browser.tabs.move(t, { windowId: w.id, index: -1 }, function (tab) {
-		// 			browser.tabs.update(tab.id, { pinned: tab.pinned });
-		// 		});
-		// 	}
-		// 	browser.windows.update(w.id, { focused: true });
-		// }.bind(null, this.props.session.tabs));
-		// browser.windows.update(this.props.session.windowsInfo.id, {
-		// 	"focused": true },
-		// function (a) {this.props.parentUpdate();}.bind(this));
 	}
 	async close(e) {
 		e.stopPropagation();

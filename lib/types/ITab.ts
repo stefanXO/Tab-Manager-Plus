@@ -1,9 +1,11 @@
 ﻿import * as browser from "webextension-polyfill";
 import {DragEvent, MouseEvent} from "react";
+import {ISavedSession} from "./ISavedSession";
 
 export interface ITab {
 	tab: browser.Tabs.Tab,
-	window: browser.Windows.Window,
+	window?: browser.Windows.Window,
+	session?: ISavedSession,
 	selected: boolean,
 	hidden: boolean,
 	id: string,

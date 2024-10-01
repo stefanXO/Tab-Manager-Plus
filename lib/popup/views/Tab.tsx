@@ -134,7 +134,6 @@ export class Tab extends React.Component<ITab, ITabState> {
 		this.stopProp(e);
 
 		var tabId : number = this.props.tab.id;
-		var windowId = this.props.window.id;
 
 		if (e.button === 1) {
 			this.props.middleClick(tabId);
@@ -149,6 +148,8 @@ export class Tab extends React.Component<ITab, ITabState> {
 			if (!!this.props.click) {
 				this.props.click(e, this.props.tab.id);
 			} else {
+				let windowId = this.props.window.id;
+
 				if (navigator.userAgent.search("Firefox") > -1) {
 					browser.runtime.sendMessage<ICommand>({
 						command: S.focus_on_tab_and_window_delayed,
