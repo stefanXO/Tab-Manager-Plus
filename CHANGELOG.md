@@ -1,3 +1,7 @@
+5.2.3
+=====
+- Fix: Allow restoring saved sessions from the popup
+
 5.2.2
 =====
 - Fix: Avoid non-Firefox permissions checks

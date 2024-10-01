@@ -127,91 +127,26 @@ Session = function (_React$Component) {_inherits(Session, _React$Component);
 			return true;
 		} }, { key: "stop", value: function stop(
 		e) {
-			e.stopPropagation();
+			this.stopProp(e);
 		} }, { key: "windowClick", value: function () {var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(
-			e) {var _this2, customName, whitelistWindow, whitelistTab, filteredWindow, newWindow, emptyTab, i, newTab, tabCreated, names;return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:
+			e) {var _this2, backgroundPage;return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:
 								_this2 = this;
-								e.stopPropagation();
+								this.stopProp(e);
 								console.log("source window", this.props.window);
 								// chrome.runtime.getBackgroundPage(function callback(tabs, backgroundPage) {
 								// 	backgroundPage.createWindowWithTabs(tabs);
 								// }.bind(null, this.props.window.tabs));
-
-								customName = false;
-								if (this.props.window && this.props.window.name && this.props.window.customName) {
-									customName = this.props.window.name;
-								}
-
-								whitelistWindow = ["left", "top", "width", "height", "incognito", "type"];
-
+								_context.next = 5;return (
+									browser.runtime.getBackgroundPage());case 5:backgroundPage = _context.sent;
 								if (navigator.userAgent.search("Firefox") > -1) {
-									whitelistWindow = ["left", "top", "width", "height", "incognito", "type"];
+									backgroundPage.createWindowWithTabsFromSessionDelayed(this.props.window);
+								} else {
+									backgroundPage.createWindowWithTabsFromSession(this.props.window);
 								}
 
-								whitelistTab = ["url", "active", "selected", "pinned"];
+								///////
 
-								if (navigator.userAgent.search("Firefox") > -1) {
-									whitelistTab = ["url", "active", "pinned"];
-								}
-
-								filteredWindow = Object.keys(this.props.window.windowsInfo).
-								filter(function (key) {
-									return whitelistWindow.includes(key);
-								}).
-								reduce(function (obj, key) {
-									obj[key] = _this2.props.window.windowsInfo[key];
-									return obj;
-								}, {});
-								console.log("filtered window", filteredWindow);_context.next = 13;return (
-
-									browser.windows.create(filteredWindow).catch(function (error) {
-										console.error(error);
-										console.log(error);
-										console.log(error.message);
-									}));case 13:newWindow = _context.sent;
-
-								emptyTab = newWindow.tabs[0].id;
-
-								i = 0;case 16:if (!(i < this.props.window.tabs.length)) {_context.next = 27;break;}
-								newTab = Object.keys(this.props.window.tabs[i]).
-								filter(function (key) {
-									return whitelistTab.includes(key);
-								}).
-								reduce(function (obj, key) {
-									obj[key] = _this2.props.window.tabs[i][key];
-									return obj;
-								}, {});
-								console.log("source tab", newTab);
-								if (navigator.userAgent.search("Firefox") > -1) {
-									if (!!newTab.url && newTab.url.search("about:") > -1) {
-										console.log("filtered by about: url", newTab.url);
-										newTab.url = "";
-									}
-								}
-								newTab.windowId = newWindow.id;_context.next = 23;return (
-									browser.tabs.create(newTab).catch(function (error) {
-										console.error(error);
-										console.log(error);
-										console.log(error.message);
-									}));case 23:tabCreated = _context.sent;case 24:i++;_context.next = 16;break;case 27:_context.next = 29;return (
-
-
-									browser.tabs.remove(emptyTab).catch(function (error) {
-										console.error(error);
-										console.log(error);
-										console.log(error.message);
-									}));case 29:
-
-								if (customName) {
-									names = localStorage["windowNames"];
-									if (!!names) {
-										names = JSON.parse(names);
-									} else {
-										names = {};
-									}
-									names[newWindow.id] = customName || "";
-									localStorage["windowNames"] = JSON.stringify(names);
-								}
+								console.log("updating parent");
 
 								this.props.parentUpdate();
 
@@ -235,17 +170,27 @@ Session = function (_React$Component) {_inherits(Session, _React$Component);
 								// browser.windows.update(this.props.window.windowsInfo.id, {
 								// 	"focused": true },
 								// function (a) {this.props.parentUpdate();}.bind(this));
-							case 32:case "end":return _context.stop();}}}, _callee, this);}));function windowClick(_x) {return _ref.apply(this, arguments);}return windowClick;}() }, { key: "close", value: function () {var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(
+							case 10:case "end":return _context.stop();}}}, _callee, this);}));function windowClick(_x) {return _ref.apply(this, arguments);}return windowClick;}() }, { key: "close", value: function () {var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(
 			e) {var value;return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:
-								e.stopPropagation();_context2.next = 3;return (
+								this.stopProp(e);_context2.next = 3;return (
 									browser.storage.local.remove(this.props.window.id));case 3:value = _context2.sent;
 								console.log(value);
 								this.props.parentUpdate();
 								// browser.windows.remove(this.props.window.windowsInfo.id);
 							case 6:case "end":return _context2.stop();}}}, _callee2, this);}));function close(_x2) {return _ref2.apply(this, arguments);}return close;}() }, { key: "maximize", value: function maximize(
 		e) {
-			e.stopPropagation();
+			this.stopProp(e);
 			// browser.windows.update(this.props.window.windowsInfo.id, {
 			// 	"state": "normal" },
 			// function (a) {this.props.parentUpdate();}.bind(this));
+		} }, { key: "stopProp", value: function stopProp(
+		e) {
+			if (e && e.nativeEvent) {
+				e.nativeEvent.preventDefault();
+				e.nativeEvent.stopPropagation();
+			}
+			if (e && e.preventDefault) {
+				e.preventDefault();
+				e.stopPropagation();
+			}
 		} }]);return Session;}(React.Component);

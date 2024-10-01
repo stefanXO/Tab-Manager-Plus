@@ -6,7 +6,7 @@ TabOptions = function (_React$Component) {_inherits(TabOptions, _React$Component
 		_this.state = {};return _this;
 	}_createClass(TabOptions, [{ key: "logo", value: function logo()
 		{
-			var logo = [React.createElement("img", { src: "images/browsers.svg", style: { maxWidth: "3rem" } }), React.createElement("h2", null, "Tab Manager Plus ", "5.2.2")];
+			var logo = [React.createElement("img", { src: "images/browsers.svg", style: { maxWidth: "3rem" } }), React.createElement("h2", null, "Tab Manager Plus ", "5.2.3")];
 
 			return (
 				React.createElement("div", { className: "logo-options" },
