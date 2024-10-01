@@ -1,6 +1,13 @@
-﻿var browser = browser || chrome;
+﻿"use strict";
 
-async function setupTabListeners() {
+import {getLocalStorage} from "@helpers/storage";
+import {trackLastTab} from "@background/actions"
+import {globalTabsActive} from '@context';
+import {debounce} from "@helpers/utils";
+import {checkWindow, createWindowWithTabs} from '@background/windows';
+import * as browser from 'webextension-polyfill';
+
+export async function setupTabListeners() {
 	browser.tabs.onCreated.removeListener(tabAdded);
 	browser.tabs.onUpdated.removeListener(tabCountChanged);
 	browser.tabs.onRemoved.removeListener(tabCountChanged);
@@ -47,7 +54,7 @@ export async function discardTabs(tabs) {
 
 export async function closeTabs(tabs) {
 	for (const tab of tabs) {
-		await browser.tabs.remove(item.id);
+		await browser.tabs.remove(tab.id);
 	}
 }
 
@@ -58,45 +65,36 @@ export async function moveTabsToWindow(windowId, tabs) {
 	}
 }
 
-export function focusOnTabAndWindowDelayed(tab) {
-	var _tab = JSON.parse(JSON.stringify(tab));
-	setTimeout(focusOnTabAndWindow.bind(this, _tab), 125);
+export function focusOnTabAndWindowDelayed(tabId: number, windowId: number) {
+	setTimeout(focusOnTabAndWindow.bind(this, tabId, windowId), 125);
 }
 
-export async function focusOnTabAndWindow(tab) {
-	var windowId = tab.windowId;
-	var tabId;
-	if (!!tab.tabId) {
-		tabId = tab.tabId;
-	} else {
-		tabId = tab.id;
-	}
-
+export async function focusOnTabAndWindow(tabId : number, windowId : number) {
 	await browser.windows.update(windowId, {focused: true});
 	await browser.tabs.update(tabId, {active: true});
 	await tabActiveChanged({tabId: tabId, windowId: windowId});
 }
 
 export async function updateTabCount() {
-	var run = true;
+	let run = true;
 
-	var badge = await getLocalStorage("badge", true);
+	const badge = await getLocalStorage("badge", true);
 	if (!badge) run = false;
 
 	if (run) {
-		var result = await browser.tabs.query({});
-		var count = 0;
+		let result = await browser.tabs.query({});
+		let count = 0;
 		if (!!result && !!result.length) {
 			count = result.length;
 		}
 		await browser.action.setBadgeText({text: count + ""});
 		await browser.action.setBadgeBackgroundColor({color: "purple"});
-		var _to_remove = [];
+		const _to_remove : number[] = [];
 
 		if (!!globalTabsActive) {
 			for (let i = 0; i < globalTabsActive.length; i++) {
-				var t = globalTabsActive[i];
-				var found = false;
+				const t = globalTabsActive[i];
+				let found = false;
 				if (!!result && !!result.length) {
 					for (let j = 0; j < result.length; j++) {
 						if (result[j].id === t.tabId) found = true;
@@ -108,7 +106,6 @@ export async function updateTabCount() {
 
 		while (_to_remove.length > 0) {
 			let index = _to_remove.pop();
-			// console.log("removing", toRemove[i]);
 			if (!!globalTabsActive && globalTabsActive.length > 0) {
 				if (!!globalTabsActive[index]) globalTabsActive.splice(index, 1);
 			}
@@ -123,11 +120,13 @@ function tabCountChanged() {
 	updateTabCountDebounce();
 }
 
+export const updateTabCountDebounce = debounce(updateTabCount, 250);
+
 async function tabAdded(tab) {
-	var tabLimit = await getLocalStorage("tabLimit", 0);
+	const tabLimit = await getLocalStorage("tabLimit", 0);
 	if (tabLimit > 0) {
 		if (tab.id !== browser.tabs.TAB_ID_NONE) {
-			var tabCount = await browser.tabs.query({currentWindow: true});
+			const tabCount = await browser.tabs.query({currentWindow: true});
 			if (tabCount.length > tabLimit) {
 				await createWindowWithTabs([tab], tab.incognito);
 			}
@@ -136,25 +135,8 @@ async function tabAdded(tab) {
 	updateTabCountDebounce();
 }
 
-function tabActiveChanged(tab) {
-	if (!!tab && !!tab.tabId) {
-		if (!globalTabsActive) globalTabsActive = [];
-		if (!!globalTabsActive && globalTabsActive.length > 0) {
-			var lastActive = globalTabsActive[globalTabsActive.length - 1];
-			if (!!lastActive && lastActive.tabId == tab.tabId && lastActive.windowId == tab.windowId) {
-				return;
-			}
-		}
-		while (globalTabsActive.length > 20) {
-			globalTabsActive.shift();
-		}
-		for (var i = globalTabsActive.length - 1; i >= 0; i--) {
-			if (globalTabsActive[i].tabId == tab.tabId) {
-				globalTabsActive.splice(i, 1);
-			}
-		}
-		globalTabsActive.push(tab);
-	}
+function tabActiveChanged(tab : browser.Tabs.OnActivatedActiveInfoType) {
+	trackLastTab(tab);
 	updateTabCountDebounce();
 }
 
