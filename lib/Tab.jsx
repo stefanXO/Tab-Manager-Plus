@@ -140,7 +140,6 @@ class Tab extends React.Component {
 		if (!!this.props.drag) {
 			let url = this.props.tab.url || this.props.tab.pendingUrl;
 			e.dataTransfer.setData("Text", this.props.tab.id);
-			e.dataTransfer.setData("text/uri-list", this.props.tab.url || "");
 			e.dataTransfer.setData("text/uri-list", url || "");
 			this.props.drag(e, this.props.tab.id);
 		} else {
