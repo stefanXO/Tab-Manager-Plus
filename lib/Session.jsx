@@ -153,8 +153,8 @@ class Session extends React.Component {
 		if (!!window.inPopup) {
 			window.close();
 		}else{
-			setTimeout(function() {
-				this.props.scrollTo("window", newWindow.id);
+			setTimeout(function () {
+				this.props.scrollTo("window", browser.windows.WINDOW_ID_CURRENT);
 			}.bind(this), 250);
 		}
 
