@@ -1584,13 +1584,24 @@ class TabManager extends React.Component {
 		var mi = ("0" + today.getMinutes()).slice(-2);
 		var s = ("0" + today.getSeconds()).slice(-2);
 		exportName += "-" + y + m + d + "-" + h + mi + "-" + s;
-		var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.state.sessions, null, 2));
+
+		const blob = new Blob([JSON.stringify(this.state.sessions, null, 2)], {type: "text/json"});
 		var downloadAnchorNode = document.createElement("a");
-		downloadAnchorNode.setAttribute("href", dataStr);
-		downloadAnchorNode.setAttribute("download", exportName + ".json");
+		downloadAnchorNode.download = exportName + ".json";
+		downloadAnchorNode.href = window.URL.createObjectURL(blob);
+		downloadAnchorNode.dataset.downloadurl = ["text/json", downloadAnchorNode.download, downloadAnchorNode.href].join(":");
+
+		const evt = new MouseEvent("click", {
+			view: window,
+			bubbles: true,
+			cancelable: true,
+		});
+
 		document.body.appendChild(downloadAnchorNode); // required for firefox
-		downloadAnchorNode.click();
+
+		downloadAnchorNode.dispatchEvent(evt);
 		downloadAnchorNode.remove();
+
 		this.exportSessionsText();
 		this.forceUpdate();
 	}
