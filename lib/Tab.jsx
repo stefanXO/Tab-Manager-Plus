@@ -138,8 +138,10 @@ class Tab extends React.Component {
 	}
 	dragStart(e) {
 		if (!!this.props.drag) {
+			let url = this.props.tab.url || this.props.tab.pendingUrl;
 			e.dataTransfer.setData("Text", this.props.tab.id);
 			e.dataTransfer.setData("text/uri-list", this.props.tab.url || "");
+			e.dataTransfer.setData("text/uri-list", url || "");
 			this.props.drag(e, this.props.tab.id);
 		} else {
 			return false;
@@ -179,7 +181,8 @@ class Tab extends React.Component {
 		// 	image = await browser.tabs.captureTab(this.props.tab.id);
 		// 	image = "url(" + image + ")";
 		// }else
-		if (!!this.props.tab.url && this.props.tab.url.indexOf("chrome://") !== 0 && this.props.tab.url.indexOf("about:") !== 0) {
+		let url = this.props.tab.url || this.props.tab.pendingUrl;
+		if (!!url && url.indexOf("chrome://") !== 0 && url.indexOf("about:") !== 0) {
 			// chrome screenshots / only for active tabs; needs <all_urls>
 			// if(!!browser.tabs.captureVisibleTab && this.props.tab.highlighted) {
 			// 	console.log("tabsCapture");
@@ -195,7 +198,7 @@ class Tab extends React.Component {
 			//}
 		} else {
 			var favIcons = ["bookmarks", "chrome", "crashes", "downloads", "extensions", "flags", "history", "settings"];
-			var iconUrl = this.props.tab.url || "";
+			var iconUrl = url || "";
 			var iconName = "";
 			if (iconUrl.length > 9) iconName = iconUrl.slice(9).match(/^\w+/g);
 			image = !iconName || favIcons.indexOf(iconName[0]) < 0 ? "" : "url(../images/chrome/" + iconName[0] + ".png)";
