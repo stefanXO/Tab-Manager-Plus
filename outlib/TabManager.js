@@ -115,7 +115,8 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 			optionsActive: !!_this7.props.optionsActive,
 			filterTabs: filterTabs,
 			dupTabs: false,
-			colorsActive: false };
+			colorsActive: false,
+			dirty: false };
 
 
 		_this7.addWindow = _this7.addWindow.bind(_this7);
@@ -168,7 +169,15 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 	}_createClass(TabManager, [{ key: "componentWillMount", value: function componentWillMount()
 		{
 			this.update();
-		} }, { key: "hoverHandler", value: function hoverHandler(
+		} }, { key: "componentDidUpdate", value: function () {var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(
+
+			prevProps, prevState) {return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:if (!
+								this.state.dirty) {_context.next = 4;break;}_context.next = 3;return (
+									this.update());case 3:
+								this.setState({ dirty: false });case 4:case "end":return _context.stop();}}}, _callee, this);}));function componentDidUpdate(_x, _x2) {return _ref.apply(this, arguments);}return componentDidUpdate;}() }, { key: "hoverHandler", value: function hoverHandler(
+
+
+
 		tab) {
 			this.setState({ topText: tab.title || "" });
 			this.setState({ bottomText: tab.url || "" });
@@ -498,49 +507,56 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 					React.createElement("div", { className: "window placeholder" })));
 
 
-		} }, { key: "componentDidMount", value: function componentDidMount()
-		{
+		} }, { key: "componentDidMount", value: function () {var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {var _this, runUpdate, runSlowUpdate;return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:
 
-			var runUpdate = debounce(this.update, 250);
-			runUpdate = runUpdate.bind(this);
 
-			browser.tabs.onCreated.addListener(runUpdate);
-			browser.tabs.onUpdated.addListener(runUpdate);
-			browser.tabs.onMoved.addListener(runUpdate);
-			browser.tabs.onRemoved.addListener(runUpdate);
-			browser.tabs.onReplaced.addListener(runUpdate);
-			browser.tabs.onDetached.addListener(runUpdate);
-			browser.tabs.onAttached.addListener(runUpdate);
-			browser.tabs.onActivated.addListener(runUpdate);
-			browser.windows.onFocusChanged.addListener(runUpdate);
-			browser.windows.onCreated.addListener(runUpdate);
-			browser.windows.onRemoved.addListener(runUpdate);
+								_this = this;
 
-			browser.storage.onChanged.addListener(this.sessionSync);
+								runUpdate = function runUpdate() {
+									_this.setState({ dirty: true });
+								};
 
-			this.sessionSync();
+								runSlowUpdate = debounce(function () {
+									_this.setState({ dirty: true });
+								}, 250);
 
-			this.refs.root.focus();
-			this.focusRoot();
-			setTimeout(function () {
-				var scrollArea = document.getElementsByClassName("window-container")[0];
-				var activeWindow = document.getElementsByClassName("activeWindow");
-				if (!!activeWindow && activeWindow.length > 0) {
-					var activeTab = activeWindow[0].getElementsByClassName("highlighted");
-					if (!!activeTab && activeTab.length > 0) {
-						if (!!scrollArea && scrollArea.scrollTop > 0) {
-						} else {
-							activeTab[0].scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
-						}
-					}
-				}
-			}, 1000);
+								browser.tabs.onCreated.addListener(runUpdate);
+								browser.tabs.onUpdated.addListener(runSlowUpdate);
+								browser.tabs.onMoved.addListener(runSlowUpdate);
+								browser.tabs.onRemoved.addListener(runUpdate);
+								browser.tabs.onReplaced.addListener(runSlowUpdate);
+								browser.tabs.onDetached.addListener(runUpdate);
+								browser.tabs.onAttached.addListener(runUpdate);
+								browser.tabs.onActivated.addListener(runSlowUpdate);
+								browser.windows.onFocusChanged.addListener(runUpdate);
+								browser.windows.onCreated.addListener(runUpdate);
+								browser.windows.onRemoved.addListener(runUpdate);
 
-			// box.select();
-			// box.focus();
-		} }, { key: "sessionSync", value: function () {var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {var values, sessions, key, sess;return regeneratorRuntime.wrap(function _callee$(_context) {while (1) {switch (_context.prev = _context.next) {case 0:_context.next = 2;return (
+								browser.storage.onChanged.addListener(this.sessionSync);_context2.next = 17;return (
 
-									browser.storage.local.get(null));case 2:values = _context.sent;
+									this.sessionSync());case 17:
+
+								this.refs.root.focus();
+								this.focusRoot();
+								setTimeout(function () {
+									var scrollArea = document.getElementsByClassName("window-container")[0];
+									var activeWindow = document.getElementsByClassName("activeWindow");
+									if (!!activeWindow && activeWindow.length > 0) {
+										var activeTab = activeWindow[0].getElementsByClassName("highlighted");
+										if (!!activeTab && activeTab.length > 0) {
+											if (!!scrollArea && scrollArea.scrollTop > 0) {
+											} else {
+												activeTab[0].scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+											}
+										}
+									}
+								}, 1000);
+
+								// box.select();
+								// box.focus();
+							case 20:case "end":return _context2.stop();}}}, _callee2, this);}));function componentDidMount() {return _ref2.apply(this, arguments);}return componentDidMount;}() }, { key: "sessionSync", value: function () {var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3() {var values, sessions, key, sess;return regeneratorRuntime.wrap(function _callee3$(_context3) {while (1) {switch (_context3.prev = _context3.next) {case 0:_context3.next = 2;return (
+
+									browser.storage.local.get(null));case 2:values = _context3.sent;
 								// console.log(values);
 								sessions = [];
 								for (key in values) {
@@ -550,7 +566,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 									}
 								}
 								this.state.sessions = sessions;
-								this.update();case 7:case "end":return _context.stop();}}}, _callee, this);}));function sessionSync() {return _ref.apply(this, arguments);}return sessionSync;}() }, { key: "focusRoot", value: function focusRoot()
+								this.update();case 7:case "end":return _context3.stop();}}}, _callee3, this);}));function sessionSync() {return _ref3.apply(this, arguments);}return sessionSync;}() }, { key: "focusRoot", value: function focusRoot()
 
 		{
 			this.state.focusUpdates++;
@@ -589,9 +605,9 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 			}
 			console.log("colorsActive", active, windowId, this.state.colorsActive);
 			this.forceUpdate();
-		} }, { key: "update", value: function () {var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {var windows, tabCount, i, window, j, tab, id;return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:_context2.next = 2;return (
+		} }, { key: "update", value: function () {var _ref4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4() {var windows, tabCount, i, window, j, tab, id;return regeneratorRuntime.wrap(function _callee4$(_context4) {while (1) {switch (_context4.prev = _context4.next) {case 0:_context4.next = 2;return (
 
-									browser.windows.getAll({ populate: true }));case 2:windows = _context2.sent;
+									browser.windows.getAll({ populate: true }));case 2:windows = _context4.sent;
 								windows.sort(function (a, b) {
 									var windows = [];
 									if (!!localStorage["windowAge"]) {
@@ -626,33 +642,32 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 										this.state.lastSelect = id;
 									}
 								}
-								this.state.tabCount = tabCount;
 								this.setState({
 									tabCount: tabCount });
 
 								//this.state.searchLen = 0;
 								// this.forceUpdate();
-							case 13:case "end":return _context2.stop();}}}, _callee2, this);}));function update() {return _ref2.apply(this, arguments);}return update;}() }, { key: "deleteTabs", value: function () {var _ref3 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee3() {var _this2, tabs, i, t;return regeneratorRuntime.wrap(function _callee3$(_context3) {while (1) {switch (_context3.prev = _context3.next) {case 0:
+							case 12:case "end":return _context4.stop();}}}, _callee4, this);}));function update() {return _ref4.apply(this, arguments);}return update;}() }, { key: "deleteTabs", value: function () {var _ref5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5() {var _this2, tabs, i, t;return regeneratorRuntime.wrap(function _callee5$(_context5) {while (1) {switch (_context5.prev = _context5.next) {case 0:
 
 								_this2 = this;
 								tabs = Object.keys(this.state.selection).map(function (id) {
 									return _this2.state.tabsbyid[id];
 								});if (!
-								tabs.length) {_context3.next = 12;break;}
-								i = 0;case 4:if (!(i < tabs.length)) {_context3.next = 10;break;}_context3.next = 7;return (
-									browser.tabs.remove(tabs[i].id));case 7:i++;_context3.next = 4;break;case 10:_context3.next = 18;break;case 12:_context3.next = 14;return (
+								tabs.length) {_context5.next = 12;break;}
+								i = 0;case 4:if (!(i < tabs.length)) {_context5.next = 10;break;}_context5.next = 7;return (
+									browser.tabs.remove(tabs[i].id));case 7:i++;_context5.next = 4;break;case 10:_context5.next = 18;break;case 12:_context5.next = 14;return (
 
 
-									browser.tabs.query({ currentWindow: true, active: true }));case 14:t = _context3.sent;if (!(
-								t && t.length > 0)) {_context3.next = 18;break;}_context3.next = 18;return (
+									browser.tabs.query({ currentWindow: true, active: true }));case 14:t = _context5.sent;if (!(
+								t && t.length > 0)) {_context5.next = 18;break;}_context5.next = 18;return (
 									browser.tabs.remove(t[0].id));case 18:
 
 
-								this.forceUpdate();case 19:case "end":return _context3.stop();}}}, _callee3, this);}));function deleteTabs() {return _ref3.apply(this, arguments);}return deleteTabs;}() }, { key: "deleteTab", value: function deleteTab(
+								this.forceUpdate();case 19:case "end":return _context5.stop();}}}, _callee5, this);}));function deleteTabs() {return _ref5.apply(this, arguments);}return deleteTabs;}() }, { key: "deleteTab", value: function deleteTab(
 
 		tabId) {
 			browser.tabs.remove(tabId);
-		} }, { key: "discardTabs", value: function () {var _ref4 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee4() {var tabs, i;return regeneratorRuntime.wrap(function _callee4$(_context4) {while (1) {switch (_context4.prev = _context4.next) {case 0:
+		} }, { key: "discardTabs", value: function () {var _ref6 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6() {var tabs, i;return regeneratorRuntime.wrap(function _callee6$(_context6) {while (1) {switch (_context6.prev = _context6.next) {case 0:
 
 								tabs = Object.keys(this.state.selection).map(function (id) {
 									return parseInt(id);
@@ -667,11 +682,11 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 										}
 									}
 								}
-								this.clearSelection();case 3:case "end":return _context4.stop();}}}, _callee4, this);}));function discardTabs() {return _ref4.apply(this, arguments);}return discardTabs;}() }, { key: "discardTab", value: function discardTab(
+								this.clearSelection();case 3:case "end":return _context6.stop();}}}, _callee6, this);}));function discardTabs() {return _ref6.apply(this, arguments);}return discardTabs;}() }, { key: "discardTab", value: function discardTab(
 
 		tabId) {
 			browser.tabs.discard(tabId);
-		} }, { key: "addWindow", value: function () {var _ref5 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee5() {var _this3, count, tabs, backgroundPage;return regeneratorRuntime.wrap(function _callee5$(_context5) {while (1) {switch (_context5.prev = _context5.next) {case 0:
+		} }, { key: "addWindow", value: function () {var _ref7 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7() {var _this3, count, tabs, backgroundPage;return regeneratorRuntime.wrap(function _callee7$(_context7) {while (1) {switch (_context7.prev = _context7.next) {case 0:
 
 								_this3 = this;
 								count = Object.keys(this.state.selection).length;
@@ -679,20 +694,20 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 									return _this3.state.tabsbyid[id];
 								});if (!(
 
-								count == 0)) {_context5.next = 8;break;}_context5.next = 6;return (
-									browser.windows.create({}));case 6:_context5.next = 19;break;case 8:if (!(
-								count == 1)) {_context5.next = 15;break;}_context5.next = 11;return (
-									browser.runtime.getBackgroundPage());case 11:backgroundPage = _context5.sent;
+								count == 0)) {_context7.next = 8;break;}_context7.next = 6;return (
+									browser.windows.create({}));case 6:_context7.next = 19;break;case 8:if (!(
+								count == 1)) {_context7.next = 15;break;}_context7.next = 11;return (
+									browser.runtime.getBackgroundPage());case 11:backgroundPage = _context7.sent;
 								if (navigator.userAgent.search("Firefox") > -1) {
 									backgroundPage.focusOnTabAndWindowDelayed(tabs[0]);
 								} else {
 									backgroundPage.focusOnTabAndWindow(tabs[0]);
-								}_context5.next = 19;break;case 15:_context5.next = 17;return (
+								}_context7.next = 19;break;case 15:_context7.next = 17;return (
 
-									browser.runtime.getBackgroundPage());case 17:backgroundPage = _context5.sent;
+									browser.runtime.getBackgroundPage());case 17:backgroundPage = _context7.sent;
 								backgroundPage.createWindowWithTabs(tabs);case 19:
 
-								if (!!window.inPopup) window.close();case 20:case "end":return _context5.stop();}}}, _callee5, this);}));function addWindow() {return _ref5.apply(this, arguments);}return addWindow;}() }, { key: "pinTabs", value: function () {var _ref6 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee6() {var _this4, tabs, i, t;return regeneratorRuntime.wrap(function _callee6$(_context6) {while (1) {switch (_context6.prev = _context6.next) {case 0:
+								if (!!window.inPopup) window.close();case 20:case "end":return _context7.stop();}}}, _callee7, this);}));function addWindow() {return _ref7.apply(this, arguments);}return addWindow;}() }, { key: "pinTabs", value: function () {var _ref8 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8() {var _this4, tabs, i, t;return regeneratorRuntime.wrap(function _callee8$(_context8) {while (1) {switch (_context8.prev = _context8.next) {case 0:
 
 
 								_this4 = this;
@@ -703,15 +718,15 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 								sort(function (a, b) {
 									return a.index - b.index;
 								});if (!
-								tabs.length) {_context6.next = 13;break;}
+								tabs.length) {_context8.next = 13;break;}
 								if (tabs[0].pinned) tabs.reverse();
-								i = 0;case 5:if (!(i < tabs.length)) {_context6.next = 11;break;}_context6.next = 8;return (
-									browser.tabs.update(tabs[i].id, { pinned: !tabs[0].pinned }));case 8:i++;_context6.next = 5;break;case 11:_context6.next = 19;break;case 13:_context6.next = 15;return (
+								i = 0;case 5:if (!(i < tabs.length)) {_context8.next = 11;break;}_context8.next = 8;return (
+									browser.tabs.update(tabs[i].id, { pinned: !tabs[0].pinned }));case 8:i++;_context8.next = 5;break;case 11:_context8.next = 19;break;case 13:_context8.next = 15;return (
 
 
-									browser.tabs.query({ currentWindow: true, active: true }));case 15:t = _context6.sent;if (!(
-								t && t.length > 0)) {_context6.next = 19;break;}_context6.next = 19;return (
-									browser.tabs.update(t[0].id, { pinned: !t[0].pinned }));case 19:case "end":return _context6.stop();}}}, _callee6, this);}));function pinTabs() {return _ref6.apply(this, arguments);}return pinTabs;}() }, { key: "highlightDuplicates", value: function highlightDuplicates(
+									browser.tabs.query({ currentWindow: true, active: true }));case 15:t = _context8.sent;if (!(
+								t && t.length > 0)) {_context8.next = 19;break;}_context8.next = 19;return (
+									browser.tabs.update(t[0].id, { pinned: !t[0].pinned }));case 19:case "end":return _context8.stop();}}}, _callee8, this);}));function pinTabs() {return _ref8.apply(this, arguments);}return pinTabs;}() }, { key: "highlightDuplicates", value: function highlightDuplicates(
 
 
 
@@ -1405,8 +1420,8 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 				this.state.lastSelect = id;
 			}
 			this.forceUpdate();
-		} }, { key: "drop", value: function () {var _ref7 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee7(
-			id, before) {var _this5, tab, tabs, index, i, t;return regeneratorRuntime.wrap(function _callee7$(_context7) {while (1) {switch (_context7.prev = _context7.next) {case 0:
+		} }, { key: "drop", value: function () {var _ref9 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9(
+			id, before) {var _this5, tab, tabs, index, i, t;return regeneratorRuntime.wrap(function _callee9$(_context9) {while (1) {switch (_context9.prev = _context9.next) {case 0:
 								_this5 = this;
 								tab = this.state.tabsbyid[id];
 								tabs = Object.keys(this.state.selection).map(function (id) {
@@ -1414,28 +1429,28 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 								});
 								index = tab.index + (before ? 0 : 1);
 
-								i = 0;case 5:if (!(i < tabs.length)) {_context7.next = 14;break;}
-								t = tabs[i];_context7.next = 9;return (
-									browser.tabs.move(t.id, { windowId: tab.windowId, index: index }));case 9:_context7.next = 11;return (
-									browser.tabs.update(t.id, { pinned: t.pinned }));case 11:i++;_context7.next = 5;break;case 14:
+								i = 0;case 5:if (!(i < tabs.length)) {_context9.next = 14;break;}
+								t = tabs[i];_context9.next = 9;return (
+									browser.tabs.move(t.id, { windowId: tab.windowId, index: index }));case 9:_context9.next = 11;return (
+									browser.tabs.update(t.id, { pinned: t.pinned }));case 11:i++;_context9.next = 5;break;case 14:
 
 								this.setState({
 									selection: {} });
 
-								this.update();case 16:case "end":return _context7.stop();}}}, _callee7, this);}));function drop(_x, _x2) {return _ref7.apply(this, arguments);}return drop;}() }, { key: "dropWindow", value: function () {var _ref8 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee8(
+								this.update();case 16:case "end":return _context9.stop();}}}, _callee9, this);}));function drop(_x3, _x4) {return _ref9.apply(this, arguments);}return drop;}() }, { key: "dropWindow", value: function () {var _ref10 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(
 
-			windowId) {var _this6, tabs, i, t;return regeneratorRuntime.wrap(function _callee8$(_context8) {while (1) {switch (_context8.prev = _context8.next) {case 0:
+			windowId) {var _this6, tabs, i, t;return regeneratorRuntime.wrap(function _callee10$(_context10) {while (1) {switch (_context10.prev = _context10.next) {case 0:
 								_this6 = this;
 								tabs = Object.keys(this.state.selection).map(function (id) {
 									return _this6.state.tabsbyid[id];
 								});
-								i = 0;case 3:if (!(i < tabs.length)) {_context8.next = 12;break;}
-								t = tabs[i];_context8.next = 7;return (
-									browser.tabs.move(t.id, { windowId: windowId, index: -1 }));case 7:_context8.next = 9;return (
-									browser.tabs.update(t.id, { pinned: t.pinned }));case 9:i++;_context8.next = 3;break;case 12:
+								i = 0;case 3:if (!(i < tabs.length)) {_context10.next = 12;break;}
+								t = tabs[i];_context10.next = 7;return (
+									browser.tabs.move(t.id, { windowId: windowId, index: -1 }));case 7:_context10.next = 9;return (
+									browser.tabs.update(t.id, { pinned: t.pinned }));case 9:i++;_context10.next = 3;break;case 12:
 
 								this.setState({
-									selection: {} });case 13:case "end":return _context8.stop();}}}, _callee8, this);}));function dropWindow(_x3) {return _ref8.apply(this, arguments);}return dropWindow;}() }, { key: "changeTabLimit", value: function changeTabLimit(
+									selection: {} });case 13:case "end":return _context10.stop();}}}, _callee10, this);}));function dropWindow(_x5) {return _ref10.apply(this, arguments);}return dropWindow;}() }, { key: "changeTabLimit", value: function changeTabLimit(
 
 
 		e) {
@@ -1532,14 +1547,14 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 			this.setState({
 				bottomText: "Adds 'Open a new tab' and 'Close this window' option to each window. Default : on" });
 
-		} }, { key: "toggleBadge", value: function () {var _ref9 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee9() {var backgroundPage;return regeneratorRuntime.wrap(function _callee9$(_context9) {while (1) {switch (_context9.prev = _context9.next) {case 0:
+		} }, { key: "toggleBadge", value: function () {var _ref11 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11() {var backgroundPage;return regeneratorRuntime.wrap(function _callee11$(_context11) {while (1) {switch (_context11.prev = _context11.next) {case 0:
 
 								this.state.badge = !this.state.badge;
 								localStorage["badge"] = this.state.badge ? "1" : "0";
-								this.badgeText();_context9.next = 5;return (
-									browser.runtime.getBackgroundPage());case 5:backgroundPage = _context9.sent;
+								this.badgeText();_context11.next = 5;return (
+									browser.runtime.getBackgroundPage());case 5:backgroundPage = _context11.sent;
 								backgroundPage.updateTabCount();
-								this.forceUpdate();case 8:case "end":return _context9.stop();}}}, _callee9, this);}));function toggleBadge() {return _ref9.apply(this, arguments);}return toggleBadge;}() }, { key: "badgeText", value: function badgeText()
+								this.forceUpdate();case 8:case "end":return _context11.stop();}}}, _callee11, this);}));function toggleBadge() {return _ref11.apply(this, arguments);}return toggleBadge;}() }, { key: "badgeText", value: function badgeText()
 
 		{
 			this.setState({
@@ -1584,13 +1599,24 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 			var mi = ("0" + today.getMinutes()).slice(-2);
 			var s = ("0" + today.getSeconds()).slice(-2);
 			exportName += "-" + y + m + d + "-" + h + mi + "-" + s;
-			var dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.state.sessions, null, 2));
+
+			var blob = new Blob([JSON.stringify(this.state.sessions, null, 2)], { type: "text/json" });
 			var downloadAnchorNode = document.createElement("a");
-			downloadAnchorNode.setAttribute("href", dataStr);
-			downloadAnchorNode.setAttribute("download", exportName + ".json");
+			downloadAnchorNode.download = exportName + ".json";
+			downloadAnchorNode.href = window.URL.createObjectURL(blob);
+			downloadAnchorNode.dataset.downloadurl = ["text/json", downloadAnchorNode.download, downloadAnchorNode.href].join(":");
+
+			var evt = new MouseEvent("click", {
+				view: window,
+				bubbles: true,
+				cancelable: true });
+
+
 			document.body.appendChild(downloadAnchorNode); // required for firefox
-			downloadAnchorNode.click();
+
+			downloadAnchorNode.dispatchEvent(evt);
 			downloadAnchorNode.remove();
+
 			this.exportSessionsText();
 			this.forceUpdate();
 		} }, { key: "exportSessionsText", value: function exportSessionsText()
@@ -1617,7 +1643,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 				var file = files[0];
 				var reader = new FileReader();
 				var self = this;
-				reader.onload = function () {var _ref10 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee10(event) {var backupFile, success, i, newSession, obj, value;return regeneratorRuntime.wrap(function _callee10$(_context10) {while (1) {switch (_context10.prev = _context10.next) {case 0:
+				reader.onload = function () {var _ref12 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee12(event) {var backupFile, success, i, newSession, obj, value;return regeneratorRuntime.wrap(function _callee12$(_context12) {while (1) {switch (_context12.prev = _context12.next) {case 0:
 
 
 										try {
@@ -1627,28 +1653,28 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 											window.alert(err);
 											_this8.setState({ bottomText: "Error: Could not read the backup file!" });
 										} //console.log('FILE CONTENT', event.target.result);
-										if (!(!!backupFile && backupFile.length > 0)) {_context10.next = 18;break;}
+										if (!(!!backupFile && backupFile.length > 0)) {_context12.next = 18;break;}
 										success = backupFile.length;
-										i = 0;case 4:if (!(i < backupFile.length)) {_context10.next = 15;break;}
+										i = 0;case 4:if (!(i < backupFile.length)) {_context12.next = 15;break;}
 										newSession = backupFile[i];if (!(
-										newSession.windowsInfo && newSession.tabs && newSession.id)) {_context10.next = 12;break;}
+										newSession.windowsInfo && newSession.tabs && newSession.id)) {_context12.next = 12;break;}
 										obj = {};
 										obj[newSession.id] = newSession;
 										//this.state.sessions.push(obj);
-										_context10.next = 11;return browser.storage.local.set(obj).catch(function (err) {
+										_context12.next = 11;return browser.storage.local.set(obj).catch(function (err) {
 											console.log(err);
 											console.error(err.message);
 											success--;
-										});case 11:value = _context10.sent;case 12:i++;_context10.next = 4;break;case 15:
+										});case 11:value = _context12.sent;case 12:i++;_context12.next = 4;break;case 15:
 
 
 
-										_this8.setState({ bottomText: success + " windows successfully restored!" });_context10.next = 19;break;case 18:
+										_this8.setState({ bottomText: success + " windows successfully restored!" });_context12.next = 19;break;case 18:
 
 										_this8.setState({ bottomText: "Error: Could not restore any windows from the backup file!" });case 19:
 
 										inputField.value = "";
-										_this8.sessionSync();case 21:case "end":return _context10.stop();}}}, _callee10, _this8);}));return function (_x4) {return _ref10.apply(this, arguments);};}();
+										_this8.sessionSync();case 21:case "end":return _context12.stop();}}}, _callee12, _this8);}));return function (_x6) {return _ref12.apply(this, arguments);};}();
 
 				reader.readAsText(file);
 			} catch (err) {
@@ -1662,13 +1688,13 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 			this.setState({
 				bottomText: "Allows you to restore your saved windows from an external backup" });
 
-		} }, { key: "toggleHide", value: function () {var _ref11 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee11() {var granted;return regeneratorRuntime.wrap(function _callee11$(_context11) {while (1) {switch (_context11.prev = _context11.next) {case 0:if (!(
+		} }, { key: "toggleHide", value: function () {var _ref13 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee13() {var granted;return regeneratorRuntime.wrap(function _callee13$(_context13) {while (1) {switch (_context13.prev = _context13.next) {case 0:if (!(
 
 
-								navigator.userAgent.search("Firefox") > -1)) {_context11.next = 4;break;}
-								this.state.hideWindows = false;_context11.next = 8;break;case 4:_context11.next = 6;return (
+								navigator.userAgent.search("Firefox") > -1)) {_context13.next = 4;break;}
+								this.state.hideWindows = false;_context13.next = 8;break;case 4:_context13.next = 6;return (
 
-									browser.permissions.request({ permissions: ["system.display"] }));case 6:granted = _context11.sent;
+									browser.permissions.request({ permissions: ["system.display"] }));case 6:granted = _context13.sent;
 								if (granted) {
 									this.state.hideWindows = !this.state.hideWindows;
 								} else {
@@ -1678,7 +1704,7 @@ TabManager = function (_React$Component) {_inherits(TabManager, _React$Component
 
 								localStorage["hideWindows"] = this.state.hideWindows ? "1" : "0";
 								this.hideText();
-								this.forceUpdate();case 11:case "end":return _context11.stop();}}}, _callee11, this);}));function toggleHide() {return _ref11.apply(this, arguments);}return toggleHide;}() }, { key: "hideText", value: function hideText()
+								this.forceUpdate();case 11:case "end":return _context13.stop();}}}, _callee13, this);}));function toggleHide() {return _ref13.apply(this, arguments);}return toggleHide;}() }, { key: "hideText", value: function hideText()
 
 		{
 			this.setState({

@@ -19,6 +19,11 @@ Tab = function (_React$Component) {_inherits(Tab, _React$Component);
 	}_createClass(Tab, [{ key: "componentWillMount", value: function componentWillMount()
 		{
 			this.resolveFavIconUrl();
+		} }, { key: "componentDidUpdate", value: function componentDidUpdate(
+		prevProps, prevState) {
+			if (this.props.tab.favIconUrl != prevProps.tab.favIconUrl) {
+				this.resolveFavIconUrl();
+			}
 		} }, { key: "render", value: function render()
 		{
 			var children = [];
@@ -138,8 +143,9 @@ Tab = function (_React$Component) {_inherits(Tab, _React$Component);
 
 		e) {
 			if (!!this.props.drag) {
+				var url = this.props.tab.url || this.props.tab.pendingUrl;
 				e.dataTransfer.setData("Text", this.props.tab.id);
-				e.dataTransfer.setData("text/uri-list", this.props.tab.url || "");
+				e.dataTransfer.setData("text/uri-list", url || "");
 				this.props.drag(e, this.props.tab.id);
 			} else {
 				return false;
@@ -170,40 +176,42 @@ Tab = function (_React$Component) {_inherits(Tab, _React$Component);
 			} else {
 				return false;
 			}
-		} }, { key: "resolveFavIconUrl", value: function () {var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2() {var image, favIcons, iconUrl, iconName;return regeneratorRuntime.wrap(function _callee2$(_context2) {while (1) {switch (_context2.prev = _context2.next) {case 0:
+		} }, { key: "resolveFavIconUrl", value: function resolveFavIconUrl()
+		{
+			var image;
+			// firefox screenshots; needs <all_urls>
+			// if(!!browser.tabs.captureTab) {
+			// 	console.log("tabs captureTab");
+			// 	image = await browser.tabs.captureTab(this.props.tab.id);
+			// 	image = "url(" + image + ")";
+			// }else
+			var url = this.props.tab.url || this.props.tab.pendingUrl;
+			if (!!url && url.indexOf("chrome://") !== 0 && url.indexOf("about:") !== 0) {
+				// chrome screenshots / only for active tabs; needs <all_urls>
+				// if(!!browser.tabs.captureVisibleTab && this.props.tab.highlighted) {
+				// 	console.log("tabsCapture");
+				// 	try {
+				// 		image = await browser.tabs.captureVisibleTab( this.props.window.id, {} );
+				// 		//console.log(image);
+				// 	} catch ( e ) {
+				// 		console.log(e.message);
+				// 	}
+				// 	image = "url(" + image + ")";
+				// }else{
+				image = this.props.tab.favIconUrl ? "url(" + this.props.tab.favIconUrl + ")" : "";
+				//}
+			} else {
+				var favIcons = ["bookmarks", "chrome", "crashes", "downloads", "extensions", "flags", "history", "settings"];
+				var iconUrl = url || "";
+				var iconName = "";
+				if (iconUrl.length > 9) iconName = iconUrl.slice(9).match(/^\w+/g);
+				image = !iconName || favIcons.indexOf(iconName[0]) < 0 ? "" : "url(../images/chrome/" + iconName[0] + ".png)";
+			}
+			if (this.state.favIcon == image) return;
+			this.setState({
+				favIcon: image });
 
-
-								// firefox screenshots; needs <all_urls>
-								// if(!!browser.tabs.captureTab) {
-								// 	console.log("tabs captureTab");
-								// 	image = await browser.tabs.captureTab(this.props.tab.id);
-								// 	image = "url(" + image + ")";
-								// }else
-								if (!!this.props.tab.url && this.props.tab.url.indexOf("chrome://") !== 0 && this.props.tab.url.indexOf("about:") !== 0) {
-									// chrome screenshots / only for active tabs; needs <all_urls>
-									// if(!!browser.tabs.captureVisibleTab && this.props.tab.highlighted) {
-									// 	console.log("tabsCapture");
-									// 	try {
-									// 		image = await browser.tabs.captureVisibleTab( this.props.window.id, {} );
-									// 		//console.log(image);
-									// 	} catch ( e ) {
-									// 		console.log(e.message);
-									// 	}
-									// 	image = "url(" + image + ")";
-									// }else{
-									image = this.props.tab.favIconUrl ? "url(" + this.props.tab.favIconUrl + ")" : "";
-									//}
-								} else {
-									favIcons = ["bookmarks", "chrome", "crashes", "downloads", "extensions", "flags", "history", "settings"];
-									iconUrl = this.props.tab.url || "";
-									iconName = "";
-									if (iconUrl.length > 9) iconName = iconUrl.slice(9).match(/^\w+/g);
-									image = !iconName || favIcons.indexOf(iconName[0]) < 0 ? "" : "url(../images/chrome/" + iconName[0] + ".png)";
-								}
-								this.setState({
-									favIcon: image });case 2:case "end":return _context2.stop();}}}, _callee2, this);}));function resolveFavIconUrl() {return _ref2.apply(this, arguments);}return resolveFavIconUrl;}() }, { key: "stopProp", value: function stopProp(
-
-
+		} }, { key: "stopProp", value: function stopProp(
 		e) {
 			if (e && e.nativeEvent) {
 				e.nativeEvent.preventDefault();

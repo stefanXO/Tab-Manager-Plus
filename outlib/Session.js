@@ -154,7 +154,7 @@ Session = function (_React$Component) {_inherits(Session, _React$Component);
 									window.close();
 								} else {
 									setTimeout(function () {
-										this.props.scrollTo("window", newWindow.id);
+										this.props.scrollTo("window", browser.windows.WINDOW_ID_CURRENT);
 									}.bind(this), 250);
 								}
 
