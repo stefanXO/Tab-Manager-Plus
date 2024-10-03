@@ -20,6 +20,11 @@ class Tab extends React.Component {
 	componentWillMount() {
 		this.resolveFavIconUrl();
 	}
+	componentDidUpdate(prevProps, prevState) {
+		if (this.props.tab.favIconUrl != prevProps.tab.favIconUrl) {
+			this.resolveFavIconUrl();
+		}
+	}
 	render() {
 		var children = [];
 		if (this.props.layout == "vertical") {
@@ -72,7 +77,7 @@ class Tab extends React.Component {
 				this.props.tab.id +
 				" " +
 				(this.props.layout == "vertical" ? "vertical " : "blocks "),
-			style: 
+			style:
 				(this.props.layout == "vertical"
 					? { }
 					: { backgroundImage: this.state.favIcon }
@@ -172,7 +177,7 @@ class Tab extends React.Component {
 			return false;
 		}
 	}
-	async resolveFavIconUrl() {
+	resolveFavIconUrl() {
 		var image;
 		// firefox screenshots; needs <all_urls>
 		// if(!!browser.tabs.captureTab) {
@@ -202,6 +207,7 @@ class Tab extends React.Component {
 			if (iconUrl.length > 9) iconName = iconUrl.slice(9).match(/^\w+/g);
 			image = !iconName || favIcons.indexOf(iconName[0]) < 0 ? "" : "url(../images/chrome/" + iconName[0] + ".png)";
 		}
+		if (this.state.favIcon == image) return;
 		this.setState({
 			favIcon: image
 		});
