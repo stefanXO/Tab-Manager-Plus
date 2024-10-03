@@ -39,8 +39,9 @@
 			"128": "images/browsers128.png",
 			"256": "images/browsers256.png"
 		},
-		"default_title" : "Tab Manager Plus",
-		"default_panel": "popup.html?panel=true"
+		"default_title": "Tab Manager Plus",
+		"default_panel": "popup.html?panel=true",
+		"open_at_install": false
 	},
 	"options_ui": {
 		"page": "options.html"
