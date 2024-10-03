@@ -115,7 +115,8 @@ class TabManager extends React.Component {
 			optionsActive: !!this.props.optionsActive,
 			filterTabs: filterTabs,
 			dupTabs: false,
-			colorsActive: false
+			colorsActive: false,
+			dirty: false
 		};
 
 		this.addWindow = this.addWindow.bind(this);
@@ -169,6 +170,14 @@ class TabManager extends React.Component {
 	componentWillMount() {
 		this.update();
 	}
+
+	async componentDidUpdate(prevProps, prevState) {
+		if (this.state.dirty) {
+			await this.update();
+			this.setState({dirty: false});
+		}
+	}
+
 	hoverHandler(tab) {
 		this.setState({ topText: tab.title || "" });
 		this.setState({ bottomText: tab.url || "" });
@@ -499,26 +508,33 @@ class TabManager extends React.Component {
 			</div>
 		);
 	}
-	componentDidMount() {
 
-		var runUpdate = debounce(this.update, 250);
-		runUpdate = runUpdate.bind(this);
+	async componentDidMount() {
+		let _this = this;
+
+		var runUpdate = () => {
+			_this.setState({ dirty: true });
+		}
+
+		var runSlowUpdate = debounce(() => {
+			_this.setState({dirty: true});
+		}, 250);
 
 		browser.tabs.onCreated.addListener(runUpdate);
-		browser.tabs.onUpdated.addListener(runUpdate);
-		browser.tabs.onMoved.addListener(runUpdate);
+		browser.tabs.onUpdated.addListener(runSlowUpdate);
+		browser.tabs.onMoved.addListener(runSlowUpdate);
 		browser.tabs.onRemoved.addListener(runUpdate);
-		browser.tabs.onReplaced.addListener(runUpdate);
+		browser.tabs.onReplaced.addListener(runSlowUpdate);
 		browser.tabs.onDetached.addListener(runUpdate);
 		browser.tabs.onAttached.addListener(runUpdate);
-		browser.tabs.onActivated.addListener(runUpdate);
+		browser.tabs.onActivated.addListener(runSlowUpdate);
 		browser.windows.onFocusChanged.addListener(runUpdate);
 		browser.windows.onCreated.addListener(runUpdate);
 		browser.windows.onRemoved.addListener(runUpdate);
 
 		browser.storage.onChanged.addListener(this.sessionSync);
 
-		this.sessionSync();
+		await this.sessionSync();
 
 		this.refs.root.focus();
 		this.focusRoot();
@@ -626,7 +642,6 @@ class TabManager extends React.Component {
 				this.state.lastSelect = id;
 			}
 		}
-		this.state.tabCount = tabCount;
 		this.setState({
 			tabCount: tabCount
 		});
