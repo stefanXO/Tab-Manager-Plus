@@ -1,3 +1,9 @@
+5.2.4
+=====
+- Fix: Allow backing up large saved session data
+- Fix: Update favicons once tab loaded
+- Fix: Do not open sidebar panel automatically on install
+
 5.2.3
 =====
 - Fix: Allow restoring saved sessions from the popup
