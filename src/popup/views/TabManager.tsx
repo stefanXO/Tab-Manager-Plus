@@ -936,7 +936,11 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 
 		let searchType = "normal";
 		let searchTerms = [];
-		if(searchQuery.indexOf(" ") === -1) {
+		let regexExpression : RegExp;
+		if(searchQuery.startsWith("/") && searchQuery.endsWith("/")){
+			searchType = "regex";
+			regexExpression = new RegExp(searchQuery.slice(1, -1), "i");
+		}else if(searchQuery.indexOf(" ") === -1) {
 			searchType = "normal";
 		}else if(searchQuery.indexOf(" OR ") > -1) {
 			searchTerms = searchQuery.split(" OR ");
@@ -945,7 +949,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			searchTerms = searchQuery.split(" ");
 			searchType = "AND";
 		}
-		if(searchType !== "normal") {
+
+		if(searchType !== "normal" && searchType !== "regex") {
 			searchTerms = searchTerms.filter(function(entry) { return entry.trim() !== ''; });
 		}
 
@@ -973,7 +978,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				if (!!tab.url) tabSearchTerm += " " + tab.url;
 				tabSearchTerm = tabSearchTerm.toLowerCase();
 				let match = false;
-				if(searchType === "normal") {
+				if(searchType === "regex" && regexExpression){
+					match = regexExpression.test(tabSearchTerm);
+				}else if(searchType === "normal") {
 					match = (tabSearchTerm.indexOf(e.target.value.toLowerCase()) >= 0);
 				}else if(searchType === "OR") {
 					for (let searchOR of searchTerms) {
