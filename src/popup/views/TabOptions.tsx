@@ -3,11 +3,63 @@
 import * as React from "react";
 import * as browser from 'webextension-polyfill';
 import { ITabOptions, ITabOptionsState } from "@types";
+import {
+	approveExternalApiRequest,
+	denyExternalApiRequest,
+	externalAccessKey,
+	externalPendingRequestsKey,
+	getExternalApiAccess,
+	getExternalApiPendingRequests,
+	IExternalExtension,
+	removeAllowedExternalApiExtension
+} from "@helpers/external_api";
 
 export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 	constructor(props : ITabOptions) {
 		super(props);
-		this.state = {};
+		this.state = {
+			externalApiAllowedExtensions: [],
+			externalApiPendingRequests: []
+		};
+		this.approveExternalRequest = this.approveExternalRequest.bind(this);
+		this.denyExternalRequest = this.denyExternalRequest.bind(this);
+		this.handleExternalApiStorageChange = this.handleExternalApiStorageChange.bind(this);
+		this.refreshExternalApiAccess = this.refreshExternalApiAccess.bind(this);
+		this.removeAllowedExternalExtension = this.removeAllowedExternalExtension.bind(this);
+	}
+	componentDidMount() {
+		this.refreshExternalApiAccess();
+		browser.storage.onChanged.addListener(this.handleExternalApiStorageChange);
+	}
+	componentWillUnmount() {
+		browser.storage.onChanged.removeListener(this.handleExternalApiStorageChange);
+	}
+	handleExternalApiStorageChange(changes, areaName) {
+		if (areaName === "local" && (changes[externalAccessKey] || changes[externalPendingRequestsKey])) {
+			this.refreshExternalApiAccess();
+		}
+	}
+	async refreshExternalApiAccess() {
+		const [access, pendingRequests] = await Promise.all([
+			getExternalApiAccess(),
+			getExternalApiPendingRequests()
+		]);
+		this.setState({
+			externalApiAllowedExtensions: access.allowedExtensions,
+			externalApiPendingRequests: pendingRequests
+		});
+	}
+	async approveExternalRequest(request : IExternalExtension) {
+		await approveExternalApiRequest(request);
+		await this.refreshExternalApiAccess();
+	}
+	async denyExternalRequest(request : IExternalExtension) {
+		await denyExternalApiRequest(request.id);
+		await this.refreshExternalApiAccess();
+	}
+	async removeAllowedExternalExtension(extension : IExternalExtension) {
+		await removeAllowedExternalApiExtension(extension.id);
+		await this.refreshExternalApiAccess();
 	}
 	logo() {
 		return (
@@ -228,6 +280,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 							Allows you to restore your backup from an external file. The restored windows will be added to your current saved windows.
 						</div>
 					</div>}
+					{this.externalApiSection()}
 				</div>
 				<div className="optionsBox">
 					<h4>Popup icon</h4>
@@ -354,6 +407,51 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 							With the return button you can switch to the currently selected tab, or move multiple selected tabs to a new window
 						</div>
 					</div>
+				</div>
+			</div>
+		);
+	}
+	externalApiSection() {
+		const pendingRequests = this.state.externalApiPendingRequests || [];
+		const allowedExtensions = this.state.externalApiAllowedExtensions || [];
+		return (
+			<div className={"toggle-box external-api-access " + (pendingRequests.length > 0 ? "has-pending-requests" : "")}>
+				<label className="textlabel" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
+					<h4>External Session Access</h4>
+				</label>
+				<div className="option-description">
+					Allow other extensions to request saved session URLs from Tab Manager Plus. This lets tools like ArchiveBox import saved tabs after you approve them.
+				</div>
+				<div className="external-api-list">
+					<h5>Pending requests</h5>
+					{pendingRequests.length === 0 && <div className="external-api-empty">No pending requests.</div>}
+					{pendingRequests.map((request) => (
+						<div className="external-api-row" key={"pending-" + request.id}>
+							<div>
+								<div className="external-api-name">{request.name || "Unknown extension"}</div>
+								<div className="external-api-id">{request.id}</div>
+							</div>
+							<div className="external-api-actions">
+								<button type="button" onClick={this.approveExternalRequest.bind(this, request)}>Approve</button>
+								<button type="button" onClick={this.denyExternalRequest.bind(this, request)}>Deny</button>
+							</div>
+						</div>
+					))}
+				</div>
+				<div className="external-api-list">
+					<h5>Allowed extensions</h5>
+					{allowedExtensions.length === 0 && <div className="external-api-empty">No extensions allowed yet.</div>}
+					{allowedExtensions.map((extension) => (
+						<div className="external-api-row" key={"allowed-" + extension.id}>
+							<div>
+								<div className="external-api-name">{extension.name || "Unknown extension"}</div>
+								<div className="external-api-id">{extension.id}</div>
+							</div>
+							<div className="external-api-actions">
+								<button type="button" onClick={this.removeAllowedExternalExtension.bind(this, extension)}>Remove</button>
+							</div>
+						</div>
+					))}
 				</div>
 			</div>
 		);

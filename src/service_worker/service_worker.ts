@@ -9,6 +9,7 @@ import { cleanupDebounce, cleanUp } from '@background/tracking';
 import * as _c from '@ui/context_menus';
 import * as _o from '@ui/open';
 import {debounce} from "@helpers/utils";
+import {externalSavedSessionsMethod, handleExternalApiMessage} from "@helpers/external_api";
 import * as browser from 'webextension-polyfill';
 
 browser.runtime.onStartup.addListener(
@@ -24,7 +25,30 @@ browser.runtime.onSuspend.addListener(
 );
 
 browser.commands.onCommand.addListener(_a.handleCommands);
-browser.runtime.onMessage.addListener(_a.handleMessages);
+browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+	_a.handleMessages(message, sender, sendResponse)
+		.then(sendResponse)
+		.catch((error) => sendResponse({
+			error: error && error.message ? error.message : String(error)
+		}));
+	return true;
+});
+browser.runtime.onMessageExternal.addListener((message, sender, sendResponse) => {
+	const request = message as {method?: string};
+	if (!request || request.method !== externalSavedSessionsMethod) {
+		sendResponse(undefined);
+		return true;
+	}
+
+	handleExternalApiMessage(message, sender)
+		.then(sendResponse)
+		.catch((error) => sendResponse({
+			ok: false,
+			error: "unexpected_error",
+			message: error && error.message ? error.message : String(error)
+		}));
+	return true;
+});
 
 (async function () {
 	let windows = await browser.windows.getAll({ populate: true });

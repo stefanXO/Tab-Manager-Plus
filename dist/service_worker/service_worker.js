@@ -26,9 +26,9 @@
     mod
   ));
 
-  // node_modules/webextension-polyfill/dist/browser-polyfill.js
+  // node_modules/.pnpm/webextension-polyfill@0.12.0/node_modules/webextension-polyfill/dist/browser-polyfill.js
   var require_browser_polyfill = __commonJS({
-    "node_modules/webextension-polyfill/dist/browser-polyfill.js"(exports, module) {
+    "node_modules/.pnpm/webextension-polyfill@0.12.0/node_modules/webextension-polyfill/dist/browser-polyfill.js"(exports, module) {
       (function(global, factory) {
         if (typeof define === "function" && define.amd) {
           define("webextension-polyfill", ["module"], factory);
@@ -1216,11 +1216,11 @@
     browser3.windows.onCreated.addListener(windowCreated);
     browser3.windows.onRemoved.addListener(windowRemoved);
   }
-  async function createWindowWithTabs(tabs5, isIncognito = false) {
+  async function createWindowWithTabs(tabs6, isIncognito = false) {
     var pinnedIndex = 0;
-    var firstTab = tabs5.shift();
+    var firstTab = tabs6.shift();
     var t = [];
-    for (const _tab of tabs5) {
+    for (const _tab of tabs6) {
       t.push(_tab.id);
     }
     var firstPinned = firstTab.pinned;
@@ -1479,8 +1479,8 @@
     browser4.tabs.onAttached.addListener(checkTabAttached);
     browser4.tabs.onMoved.addListener(checkTabMoved);
   }
-  async function discardTabs(tabs5) {
-    for (const tab of tabs5) {
+  async function discardTabs(tabs6) {
+    for (const tab of tabs6) {
       if (!tab.discarded) {
         browser4.tabs.discard(tab.id).catch(function(e) {
           console.error(e);
@@ -1489,13 +1489,13 @@
       }
     }
   }
-  async function closeTabs(tabs5) {
-    for (const tab of tabs5) {
+  async function closeTabs(tabs6) {
+    for (const tab of tabs6) {
       await browser4.tabs.remove(tab.id);
     }
   }
-  async function moveTabsToWindow(windowId, tabs5) {
-    for (const tab of tabs5) {
+  async function moveTabsToWindow(windowId, tabs6) {
+    for (const tab of tabs6) {
       await browser4.tabs.move(tab.id, { windowId, index: -1 });
       await browser4.tabs.update(tab.id, { pinned: tab.pinned });
     }
@@ -1600,15 +1600,15 @@
   }
   async function openAsOwnTab() {
     const popup_page = await browser5.runtime.getURL("popup.html");
-    const tabs5 = await browser5.tabs.query({});
+    const tabs6 = await browser5.tabs.query({});
     let currentTab;
     let previousTab;
     if (!!globalTabsActive && globalTabsActive.length > 1) {
       currentTab = globalTabsActive[globalTabsActive.length - 1];
       previousTab = globalTabsActive[globalTabsActive.length - 2];
     }
-    for (var i = 0; i < tabs5.length; i++) {
-      const tab = tabs5[i];
+    for (var i = 0; i < tabs6.length; i++) {
+      const tab = tabs6[i];
       if (tab.url.indexOf("popup.html") > -1 && tab.url.indexOf(popup_page) > -1) {
         if (currentTab && currentTab.tabId && tab.id === currentTab.tabId && previousTab && previousTab.tabId) {
           await focusOnTabAndWindow(previousTab.tabId, previousTab.windowId);
@@ -1894,22 +1894,124 @@
     }
   }
 
-  // src/service_worker/service_worker.ts
+  // src/helpers/external_api.ts
   var browser8 = __toESM(require_browser_polyfill());
-  browser8.runtime.onStartup.addListener(
+  var externalAccessKey = "externalApiAccess";
+  var externalPendingRequestsKey = "externalApiPendingRequests";
+  var externalSavedSessionsMethod = "tabManagerPlus.getSavedSessions";
+  async function getExternalApiAccess() {
+    const access = await getLocalStorage(externalAccessKey, {});
+    return {
+      allowedExtensions: Array.isArray(access.allowedExtensions) ? access.allowedExtensions : []
+    };
+  }
+  async function getExternalApiPendingRequests() {
+    const requests = await getLocalStorage(externalPendingRequestsKey, []);
+    return Array.isArray(requests) ? requests : [];
+  }
+  async function rememberExternalApiRequest(extensionId, displayName) {
+    const requests = await getExternalApiPendingRequests();
+    const name = displayName && displayName.trim() ? displayName.trim() : "Unknown extension";
+    const nextRequests = requests.filter((request) => request.id !== extensionId);
+    nextRequests.push({
+      id: extensionId,
+      name,
+      requestedAt: Date.now()
+    });
+    await setLocalStorage(externalPendingRequestsKey, nextRequests);
+  }
+  async function handleExternalApiMessage(message, sender) {
+    if (!message || message.method !== externalSavedSessionsMethod) {
+      return;
+    }
+    const extensionId = sender && sender.id;
+    if (!extensionId) {
+      return {
+        ok: false,
+        error: "missing_sender_id",
+        message: "Tab Manager Plus could not identify the requesting extension."
+      };
+    }
+    const access = await getExternalApiAccess();
+    const allowed = access.allowedExtensions.some((extension) => extension.id === extensionId);
+    if (!allowed) {
+      await rememberExternalApiRequest(extensionId, message.displayName);
+      await browser8.tabs.create({ url: browser8.runtime.getURL("options.html") });
+      return {
+        ok: false,
+        error: "approval_required",
+        message: "Approve this extension in Tab Manager Plus options, then request saved sessions again."
+      };
+    }
+    return {
+      ok: true,
+      sessions: await getExternalSavedSessions()
+    };
+  }
+  async function getExternalSavedSessions() {
+    const values = await getLocalStorage("sessions", {});
+    return Object.keys(values).map((key) => normalizeExternalSession(values[key])).filter((session) => !!session);
+  }
+  function normalizeExternalSession(session) {
+    if (!session || !session.id || !Array.isArray(session.tabs)) {
+      return null;
+    }
+    const tabs6 = session.tabs.map((tab) => {
+      const url = tab.url || tab.pendingUrl;
+      if (!url || !/^https?:\/\//i.test(url)) {
+        return null;
+      }
+      return {
+        title: tab.title || "",
+        url,
+        ...tab.favIconUrl ? { favIconUrl: tab.favIconUrl } : {}
+      };
+    }).filter((tab) => !!tab);
+    if (tabs6.length === 0) {
+      return null;
+    }
+    return {
+      id: session.id,
+      name: session.name || "",
+      date: session.date || session.sessionStartTime || Date.now(),
+      tabs: tabs6
+    };
+  }
+
+  // src/service_worker/service_worker.ts
+  var browser9 = __toESM(require_browser_polyfill());
+  browser9.runtime.onStartup.addListener(
     async function() {
       console.log(" ON STARTUP");
     }
   );
-  browser8.runtime.onSuspend.addListener(
+  browser9.runtime.onSuspend.addListener(
     async function() {
       console.log(" ON SUSPEND");
     }
   );
-  browser8.commands.onCommand.addListener(handleCommands);
-  browser8.runtime.onMessage.addListener(handleMessages);
+  browser9.commands.onCommand.addListener(handleCommands);
+  browser9.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    handleMessages(message, sender, sendResponse).then(sendResponse).catch((error) => sendResponse({
+      error: error && error.message ? error.message : String(error)
+    }));
+    return true;
+  });
+  browser9.runtime.onMessageExternal.addListener((message, sender, sendResponse) => {
+    const request = message;
+    if (!request || request.method !== externalSavedSessionsMethod) {
+      sendResponse(void 0);
+      return true;
+    }
+    handleExternalApiMessage(message, sender).then(sendResponse).catch((error) => sendResponse({
+      ok: false,
+      error: "unexpected_error",
+      message: error && error.message ? error.message : String(error)
+    }));
+    return true;
+  });
   (async function() {
-    let windows7 = await browser8.windows.getAll({ populate: true });
+    let windows7 = await browser9.windows.getAll({ populate: true });
     await setLocalStorage("windowAge", []);
     if (!!windows7 && windows7.length > 0) {
       windows7.sort(function(a, b) {

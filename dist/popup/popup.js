@@ -26,9 +26,9 @@
     mod
   ));
 
-  // node_modules/webextension-polyfill/dist/browser-polyfill.js
+  // node_modules/.pnpm/webextension-polyfill@0.12.0/node_modules/webextension-polyfill/dist/browser-polyfill.js
   var require_browser_polyfill = __commonJS({
-    "node_modules/webextension-polyfill/dist/browser-polyfill.js"(exports, module) {
+    "node_modules/.pnpm/webextension-polyfill@0.12.0/node_modules/webextension-polyfill/dist/browser-polyfill.js"(exports, module) {
       (function(global, factory) {
         if (typeof define === "function" && define.amd) {
           define("webextension-polyfill", ["module"], factory);
@@ -1016,9 +1016,9 @@
     }
   });
 
-  // node_modules/object-assign/index.js
+  // node_modules/.pnpm/object-assign@4.1.1/node_modules/object-assign/index.js
   var require_object_assign = __commonJS({
-    "node_modules/object-assign/index.js"(exports, module) {
+    "node_modules/.pnpm/object-assign@4.1.1/node_modules/object-assign/index.js"(exports, module) {
       "use strict";
       var getOwnPropertySymbols = Object.getOwnPropertySymbols;
       var hasOwnProperty = Object.prototype.hasOwnProperty;
@@ -1086,9 +1086,9 @@
     }
   });
 
-  // node_modules/react/cjs/react.production.min.js
+  // node_modules/.pnpm/react@16.11.0/node_modules/react/cjs/react.production.min.js
   var require_react_production_min = __commonJS({
-    "node_modules/react/cjs/react.production.min.js"(exports, module) {
+    "node_modules/.pnpm/react@16.11.0/node_modules/react/cjs/react.production.min.js"(exports, module) {
       "use strict";
       var h = require_object_assign();
       var n = "function" === typeof Symbol && Symbol.for;
@@ -1373,9 +1373,9 @@
     }
   });
 
-  // node_modules/react/index.js
+  // node_modules/.pnpm/react@16.11.0/node_modules/react/index.js
   var require_react = __commonJS({
-    "node_modules/react/index.js"(exports, module) {
+    "node_modules/.pnpm/react@16.11.0/node_modules/react/index.js"(exports, module) {
       "use strict";
       if (true) {
         module.exports = require_react_production_min();
@@ -1385,9 +1385,9 @@
     }
   });
 
-  // node_modules/scheduler/cjs/scheduler.production.min.js
+  // node_modules/.pnpm/scheduler@0.17.0/node_modules/scheduler/cjs/scheduler.production.min.js
   var require_scheduler_production_min = __commonJS({
-    "node_modules/scheduler/cjs/scheduler.production.min.js"(exports) {
+    "node_modules/.pnpm/scheduler@0.17.0/node_modules/scheduler/cjs/scheduler.production.min.js"(exports) {
       "use strict";
       Object.defineProperty(exports, "__esModule", { value: true });
       var f;
@@ -1682,9 +1682,9 @@
     }
   });
 
-  // node_modules/scheduler/index.js
+  // node_modules/.pnpm/scheduler@0.17.0/node_modules/scheduler/index.js
   var require_scheduler = __commonJS({
-    "node_modules/scheduler/index.js"(exports, module) {
+    "node_modules/.pnpm/scheduler@0.17.0/node_modules/scheduler/index.js"(exports, module) {
       "use strict";
       if (true) {
         module.exports = require_scheduler_production_min();
@@ -1694,9 +1694,9 @@
     }
   });
 
-  // node_modules/react-dom/cjs/react-dom.production.min.js
+  // node_modules/.pnpm/react-dom@16.11.0_react@16.11.0/node_modules/react-dom/cjs/react-dom.production.min.js
   var require_react_dom_production_min = __commonJS({
-    "node_modules/react-dom/cjs/react-dom.production.min.js"(exports, module) {
+    "node_modules/.pnpm/react-dom@16.11.0_react@16.11.0/node_modules/react-dom/cjs/react-dom.production.min.js"(exports, module) {
       "use strict";
       var aa = require_react();
       var n = require_object_assign();
@@ -7217,9 +7217,9 @@
     }
   });
 
-  // node_modules/react-dom/index.js
+  // node_modules/.pnpm/react-dom@16.11.0_react@16.11.0/node_modules/react-dom/index.js
   var require_react_dom = __commonJS({
-    "node_modules/react-dom/index.js"(exports, module) {
+    "node_modules/.pnpm/react-dom@16.11.0_react@16.11.0/node_modules/react-dom/index.js"(exports, module) {
       "use strict";
       function checkDCE() {
         if (typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ === "undefined" || typeof __REACT_DEVTOOLS_GLOBAL_HOOK__.checkDCE !== "function") {
@@ -7424,7 +7424,7 @@
       let hideWindow = true;
       let titleAdded = false;
       let tabsperrow = this.props.layout.indexOf("blocks") > -1 ? Math.ceil(Math.sqrt(this.props.tabs.length + 2)) : this.props.layout === "vertical" ? 1 : 15;
-      let tabs4 = this.props.tabs.map(function(tab) {
+      let tabs5 = this.props.tabs.map(function(tab) {
         let tabId = tab.id * tab.id * tab.id * 100;
         let isHidden = _this.props.hiddenTabs.has(tabId) && _this.props.filterTabs;
         let isSelected = _this.props.selection.has(tabId);
@@ -7452,13 +7452,13 @@
       });
       if (!hideWindow) {
         if (!!this.props.tabactions) {
-          tabs4.push(
+          tabs5.push(
             /* @__PURE__ */ React.createElement("div", { key: "sessionnl_" + _this.props.session.id, className: "newliner" }),
             /* @__PURE__ */ React.createElement("div", { key: "sessionwa_" + _this.props.session.id, className: "window-actions" }, /* @__PURE__ */ React.createElement(
               "div",
               {
                 className: "icon tabaction restore " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction"),
-                title: "Restore this saved window\nWill restore " + tabs4.length + " tabs. Please note : The tabs will be restored without their history.",
+                title: "Restore this saved window\nWill restore " + tabs5.length + " tabs. Please note : The tabs will be restored without their history.",
                 onClick: this.windowClick,
                 onMouseEnter: this.props.hoverIcon
               }
@@ -7466,7 +7466,7 @@
               "div",
               {
                 className: "icon tabaction delete " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction"),
-                title: "Delete this saved window\nWill delete " + tabs4.length + " tabs permanently",
+                title: "Delete this saved window\nWill delete " + tabs5.length + " tabs permanently",
                 onClick: this.close,
                 onMouseEnter: this.props.hoverIcon
               }
@@ -7475,7 +7475,7 @@
         }
         if (this.props.windowTitles) {
           if (this.state.name) {
-            tabs4.unshift(
+            tabs5.unshift(
               /* @__PURE__ */ React.createElement("h3", { key: "session-" + this.props.session.id + "-windowTitle", className: "center windowTitle" }, this.state.name)
             );
             titleAdded = true;
@@ -7486,10 +7486,10 @@
         }
         var children = [];
         if (!!titleAdded) {
-          children.push(tabs4.shift());
+          children.push(tabs5.shift());
         }
-        for (var j = 0; j < tabs4.length; j++) {
-          children.push(tabs4[j]);
+        for (var j = 0; j < tabs5.length; j++) {
+          children.push(tabs5[j]);
           if ((j + 1) % tabsperrow === 0 && j && this.props.layout.indexOf("blocks") > -1) {
             children.push(/* @__PURE__ */ React.createElement("div", { key: "sessionnl_" + _this.props.session.id + "_" + j, className: "newliner" }));
           }
@@ -7899,37 +7899,37 @@
       var openInOwnTab = false;
       var tabWidth = 800;
       var tabHeight = 600;
-      var storage4 = await browser5.storage.local.get(null);
-      if (!storage4["layout"]) storage4["layout"] = layout;
-      if (typeof storage4["tabLimit"] === "undefined") storage4["tabLimit"] = tabLimit;
-      if (typeof storage4["tabWidth"] === "undefined") storage4["tabWidth"] = tabWidth;
-      if (typeof storage4["tabHeight"] === "undefined") storage4["tabHeight"] = tabHeight;
-      if (typeof storage4["animations"] === "undefined") storage4["animations"] = animations;
-      if (typeof storage4["windowTitles"] === "undefined") storage4["windowTitles"] = windowTitles;
-      if (typeof storage4["tabactions"] === "undefined") storage4["tabactions"] = tabactions;
-      if (typeof storage4["badge"] === "undefined") storage4["badge"] = badge;
-      if (typeof storage4["openInOwnTab"] === "undefined") storage4["openInOwnTab"] = openInOwnTab;
-      if (typeof storage4["compact"] === "undefined") storage4["compact"] = compact;
-      if (typeof storage4["dark"] === "undefined") storage4["dark"] = dark;
-      if (typeof storage4["sessionsFeature"] === "undefined") storage4["sessionsFeature"] = sessionsFeature;
-      if (typeof storage4["hideWindows"] === "undefined") storage4["hideWindows"] = hideWindows;
-      if (typeof storage4["filter-tabs"] === "undefined") storage4["filter-tabs"] = filterTabs;
-      storage4["version"] = window.extensionVersion;
-      await browser5.storage.local.set(storage4);
-      layout = storage4["layout"];
-      tabLimit = storage4["tabLimit"];
-      tabWidth = storage4["tabWidth"];
-      tabHeight = storage4["tabHeight"];
-      openInOwnTab = storage4["openInOwnTab"];
-      animations = storage4["animations"];
-      windowTitles = storage4["windowTitles"];
-      compact = storage4["compact"];
-      dark = storage4["dark"];
-      tabactions = storage4["tabactions"];
-      badge = storage4["badge"];
-      sessionsFeature = storage4["sessionsFeature"];
-      hideWindows = storage4["hideWindows"];
-      filterTabs = storage4["filter-tabs"];
+      var storage5 = await browser5.storage.local.get(null);
+      if (!storage5["layout"]) storage5["layout"] = layout;
+      if (typeof storage5["tabLimit"] === "undefined") storage5["tabLimit"] = tabLimit;
+      if (typeof storage5["tabWidth"] === "undefined") storage5["tabWidth"] = tabWidth;
+      if (typeof storage5["tabHeight"] === "undefined") storage5["tabHeight"] = tabHeight;
+      if (typeof storage5["animations"] === "undefined") storage5["animations"] = animations;
+      if (typeof storage5["windowTitles"] === "undefined") storage5["windowTitles"] = windowTitles;
+      if (typeof storage5["tabactions"] === "undefined") storage5["tabactions"] = tabactions;
+      if (typeof storage5["badge"] === "undefined") storage5["badge"] = badge;
+      if (typeof storage5["openInOwnTab"] === "undefined") storage5["openInOwnTab"] = openInOwnTab;
+      if (typeof storage5["compact"] === "undefined") storage5["compact"] = compact;
+      if (typeof storage5["dark"] === "undefined") storage5["dark"] = dark;
+      if (typeof storage5["sessionsFeature"] === "undefined") storage5["sessionsFeature"] = sessionsFeature;
+      if (typeof storage5["hideWindows"] === "undefined") storage5["hideWindows"] = hideWindows;
+      if (typeof storage5["filter-tabs"] === "undefined") storage5["filter-tabs"] = filterTabs;
+      storage5["version"] = window.extensionVersion;
+      await browser5.storage.local.set(storage5);
+      layout = storage5["layout"];
+      tabLimit = storage5["tabLimit"];
+      tabWidth = storage5["tabWidth"];
+      tabHeight = storage5["tabHeight"];
+      openInOwnTab = storage5["openInOwnTab"];
+      animations = storage5["animations"];
+      windowTitles = storage5["windowTitles"];
+      compact = storage5["compact"];
+      dark = storage5["dark"];
+      tabactions = storage5["tabactions"];
+      badge = storage5["badge"];
+      sessionsFeature = storage5["sessionsFeature"];
+      hideWindows = storage5["hideWindows"];
+      filterTabs = storage5["filter-tabs"];
       if (dark) {
         document.body.className = "dark";
       } else {
@@ -8280,7 +8280,7 @@
       browser5.windows.onFocusChanged.addListener(runUpdate);
       browser5.windows.onCreated.addListener(runUpdate);
       browser5.windows.onRemoved.addListener(runUpdate);
-      browser5.runtime.onMessage.addListener(async function(message, sender, sendResponse) {
+      browser5.runtime.onMessage.addListener(function(message, sender, sendResponse) {
         const request = message;
         console.log(request.command);
         switch (request.command) {
@@ -8292,6 +8292,7 @@
             }
             break;
         }
+        return true;
       });
       browser5.storage.onChanged.addListener(this.sessionSync);
       await this.sessionSync();
@@ -8427,11 +8428,11 @@
     }
     async deleteTabs() {
       const _this = this;
-      const tabs4 = [...this.state.selection.keys()].map(function(id) {
+      const tabs5 = [...this.state.selection.keys()].map(function(id) {
         return _this.state.tabsbyid.get(id);
       });
-      if (tabs4.length) {
-        browser5.runtime.sendMessage({ command: close_tabs, tabs: tabs4 });
+      if (tabs5.length) {
+        browser5.runtime.sendMessage({ command: close_tabs, tabs: tabs5 });
       } else {
         const t = await browser5.tabs.query({ currentWindow: true, active: true });
         if (t && t.length > 0) {
@@ -8445,11 +8446,11 @@
     }
     async discardTabs() {
       const _this = this;
-      const tabs4 = [...this.state.selection.keys()].map(function(id) {
+      const tabs5 = [...this.state.selection.keys()].map(function(id) {
         return _this.state.tabsbyid.get(id);
       });
-      if (tabs4.length) {
-        browser5.runtime.sendMessage({ command: discard_tabs, tabs: tabs4 });
+      if (tabs5.length) {
+        browser5.runtime.sendMessage({ command: discard_tabs, tabs: tabs5 });
       }
       this.clearSelection();
     }
@@ -8459,22 +8460,22 @@
     async addWindow() {
       const _this = this;
       const count = this.state.selection.size;
-      const tabs4 = [...this.state.selection.keys()].map(function(id) {
+      const tabs5 = [...this.state.selection.keys()].map(function(id) {
         return _this.state.tabsbyid.get(id);
       });
-      const incognito_tabs = tabs4.filter(function(tab) {
+      const incognito_tabs = tabs5.filter(function(tab) {
         return tab.incognito;
       });
-      const normal_tabs = tabs4.filter(function(tab) {
+      const normal_tabs = tabs5.filter(function(tab) {
         return !tab.incognito;
       });
       if (count === 0) {
         await browser5.windows.create({});
       } else if (count === 1) {
         if (navigator.userAgent.search("Firefox") > -1) {
-          await browser5.runtime.sendMessage({ command: focus_on_tab_and_window_delayed, tab: tabs4[0] });
+          await browser5.runtime.sendMessage({ command: focus_on_tab_and_window_delayed, tab: tabs5[0] });
         } else {
-          await browser5.runtime.sendMessage({ command: focus_on_tab_and_window, tab: tabs4[0] });
+          await browser5.runtime.sendMessage({ command: focus_on_tab_and_window, tab: tabs5[0] });
         }
       } else {
         if (normal_tabs.length > 0) {
@@ -8488,15 +8489,15 @@
     }
     async pinTabs() {
       const _this = this;
-      const tabs4 = [...this.state.selection.keys()].map(function(id) {
+      const tabs5 = [...this.state.selection.keys()].map(function(id) {
         return _this.state.tabsbyid.get(id);
       }).sort(function(a, b) {
         return a.index - b.index;
       });
-      if (tabs4.length) {
-        if (tabs4[0].pinned) tabs4.reverse();
-        for (let i = 0; i < tabs4.length; i++) {
-          await browser5.tabs.update(tabs4[i].id, { pinned: !tabs4[0].pinned });
+      if (tabs5.length) {
+        if (tabs5[0].pinned) tabs5.reverse();
+        for (let i = 0; i < tabs5.length; i++) {
+          await browser5.tabs.update(tabs5[i].id, { pinned: !tabs5[0].pinned });
         }
       } else {
         const t = await browser5.tabs.query({ currentWindow: true, active: true });
@@ -9040,7 +9041,7 @@
         });
       }
     }
-    selectTo(id, tabs4) {
+    selectTo(id, tabs5) {
       let activate = false;
       const lastSelect = this.state.lastSelect;
       if (id === lastSelect) {
@@ -9060,11 +9061,11 @@
       }
       let rangeIndex1;
       let rangeIndex2;
-      for (let i = 0; i < tabs4.length; i++) {
-        if (tabs4[i].id === id) {
+      for (let i = 0; i < tabs5.length; i++) {
+        if (tabs5[i].id === id) {
           rangeIndex1 = i;
         }
-        if (!!lastSelect && tabs4[i].id === lastSelect) {
+        if (!!lastSelect && tabs5[i].id === lastSelect) {
           rangeIndex2 = i;
         }
       }
@@ -9074,8 +9075,8 @@
       }
       if (!rangeIndex2) {
         const neighbours = [];
-        for (let i = 0; i < tabs4.length; i++) {
-          const tabId = tabs4[i].id;
+        for (let i = 0; i < tabs5.length; i++) {
+          const tabId = tabs5[i].id;
           if (tabId !== id) {
             if (this.state.selection.has(tabId)) {
               neighbours.push(tabId);
@@ -9084,13 +9085,13 @@
         }
         if (activate) {
           let leftSibling = 0;
-          let rightSibling = tabs4.length - 1;
+          let rightSibling = tabs5.length - 1;
           for (let i = 0; i < rangeIndex1; i++) {
             if (neighbours.indexOf(i) > -1) {
               leftSibling = i;
             }
           }
-          for (let i = tabs4.length - 1; i > rangeIndex1; i--) {
+          for (let i = tabs5.length - 1; i > rangeIndex1; i--) {
             if (neighbours.indexOf(i) > -1) {
               rightSibling = i;
             }
@@ -9110,7 +9111,7 @@
               leftSibling = i;
             }
           }
-          for (let i = rangeIndex1; i < tabs4.length; i++) {
+          for (let i = rangeIndex1; i < tabs5.length; i++) {
             if (neighbours.indexOf(i) > -1) {
               rightSibling = i;
             }
@@ -9125,7 +9126,7 @@
         }
       }
       this.setState({
-        lastSelect: tabs4[rangeIndex2].id
+        lastSelect: tabs5[rangeIndex2].id
       });
       if (rangeIndex2 < rangeIndex1) {
         let r1 = rangeIndex2;
@@ -9133,9 +9134,9 @@
         rangeIndex1 = r1;
         rangeIndex2 = r2;
       }
-      for (let i = 0; i < tabs4.length; i++) {
+      for (let i = 0; i < tabs5.length; i++) {
         if (i >= rangeIndex1 && i <= rangeIndex2) {
-          const _tab_id = tabs4[i].id;
+          const _tab_id = tabs5[i].id;
           if (activate) {
             this.state.selection.add(_tab_id);
           } else {
@@ -9175,12 +9176,12 @@
     async drop(id, before) {
       var _this = this;
       var tab = this.state.tabsbyid.get(id);
-      var tabs4 = [...this.state.selection.keys()].map(function(id2) {
+      var tabs5 = [...this.state.selection.keys()].map(function(id2) {
         return _this.state.tabsbyid.get(id2);
       });
       var index = tab.index + (before ? 0 : 1);
-      for (let i = 0; i < tabs4.length; i++) {
-        const t = tabs4[i];
+      for (let i = 0; i < tabs5.length; i++) {
+        const t = tabs5[i];
         await browser5.tabs.move(t.id, { windowId: tab.windowId, index });
         await browser5.tabs.update(t.id, { pinned: t.pinned });
       }
@@ -9189,10 +9190,10 @@
     }
     async dropWindow(windowId) {
       var _this = this;
-      var tabs4 = [...this.state.selection.keys()].map(function(id) {
+      var tabs5 = [...this.state.selection.keys()].map(function(id) {
         return _this.state.tabsbyid.get(id);
       });
-      browser5.runtime.sendMessage({ command: move_tabs_to_window, window_id: windowId, tabs: tabs4 });
+      browser5.runtime.sendMessage({ command: move_tabs_to_window, window_id: windowId, tabs: tabs5 });
       this.state.selection.clear();
     }
     async changeTabLimit(e) {
@@ -9506,11 +9507,92 @@
 
   // src/popup/views/TabOptions.tsx
   var React4 = __toESM(require_react());
+  var browser7 = __toESM(require_browser_polyfill());
+
+  // src/helpers/external_api.ts
   var browser6 = __toESM(require_browser_polyfill());
+  var externalAccessKey = "externalApiAccess";
+  var externalPendingRequestsKey = "externalApiPendingRequests";
+  async function getExternalApiAccess() {
+    const access = await getLocalStorage(externalAccessKey, {});
+    return {
+      allowedExtensions: Array.isArray(access.allowedExtensions) ? access.allowedExtensions : []
+    };
+  }
+  async function getExternalApiPendingRequests() {
+    const requests = await getLocalStorage(externalPendingRequestsKey, []);
+    return Array.isArray(requests) ? requests : [];
+  }
+  async function approveExternalApiRequest(request) {
+    const access = await getExternalApiAccess();
+    const requests = await getExternalApiPendingRequests();
+    const allowedExtensions = access.allowedExtensions.filter((extension) => extension.id !== request.id);
+    allowedExtensions.push({
+      id: request.id,
+      name: request.name || "Unknown extension",
+      approvedAt: Date.now()
+    });
+    await setLocalStorage(externalAccessKey, { allowedExtensions });
+    await setLocalStorage(externalPendingRequestsKey, requests.filter((item) => item.id !== request.id));
+  }
+  async function denyExternalApiRequest(extensionId) {
+    const requests = await getExternalApiPendingRequests();
+    await setLocalStorage(externalPendingRequestsKey, requests.filter((item) => item.id !== extensionId));
+  }
+  async function removeAllowedExternalApiExtension(extensionId) {
+    const access = await getExternalApiAccess();
+    await setLocalStorage(externalAccessKey, {
+      allowedExtensions: access.allowedExtensions.filter((extension) => extension.id !== extensionId)
+    });
+  }
+
+  // src/popup/views/TabOptions.tsx
   var TabOptions = class extends React4.Component {
     constructor(props) {
       super(props);
-      this.state = {};
+      this.state = {
+        externalApiAllowedExtensions: [],
+        externalApiPendingRequests: []
+      };
+      this.approveExternalRequest = this.approveExternalRequest.bind(this);
+      this.denyExternalRequest = this.denyExternalRequest.bind(this);
+      this.handleExternalApiStorageChange = this.handleExternalApiStorageChange.bind(this);
+      this.refreshExternalApiAccess = this.refreshExternalApiAccess.bind(this);
+      this.removeAllowedExternalExtension = this.removeAllowedExternalExtension.bind(this);
+    }
+    componentDidMount() {
+      this.refreshExternalApiAccess();
+      browser7.storage.onChanged.addListener(this.handleExternalApiStorageChange);
+    }
+    componentWillUnmount() {
+      browser7.storage.onChanged.removeListener(this.handleExternalApiStorageChange);
+    }
+    handleExternalApiStorageChange(changes, areaName) {
+      if (areaName === "local" && (changes[externalAccessKey] || changes[externalPendingRequestsKey])) {
+        this.refreshExternalApiAccess();
+      }
+    }
+    async refreshExternalApiAccess() {
+      const [access, pendingRequests] = await Promise.all([
+        getExternalApiAccess(),
+        getExternalApiPendingRequests()
+      ]);
+      this.setState({
+        externalApiAllowedExtensions: access.allowedExtensions,
+        externalApiPendingRequests: pendingRequests
+      });
+    }
+    async approveExternalRequest(request) {
+      await approveExternalApiRequest(request);
+      await this.refreshExternalApiAccess();
+    }
+    async denyExternalRequest(request) {
+      await denyExternalApiRequest(request.id);
+      await this.refreshExternalApiAccess();
+    }
+    async removeAllowedExternalExtension(extension) {
+      await removeAllowedExternalApiExtension(extension.id);
+      await this.refreshExternalApiAccess();
     }
     logo() {
       return /* @__PURE__ */ React4.createElement("div", { className: "logo-options", key: "logo" }, /* @__PURE__ */ React4.createElement("div", { className: "logo-box" }, /* @__PURE__ */ React4.createElement("img", { src: "images/browsers.svg", style: { maxWidth: "3rem" }, alt: "Tab Manager Plus" }), /* @__PURE__ */ React4.createElement("h2", { key: "title" }, "Tab Manager Plus ", window.extensionVersion)));
@@ -9613,7 +9695,7 @@
           name: "session_import",
           placeholder: "Import/Restore Sessions"
         }
-      ), /* @__PURE__ */ React4.createElement("label", { onMouseEnter: this.props.importSessionsText, htmlFor: "session_import", style: { whiteSpace: "pre", lineHeight: "2rem" } })), /* @__PURE__ */ React4.createElement("div", { className: "option-description" }, "Allows you to restore your backup from an external file. The restored windows will be added to your current saved windows."))), /* @__PURE__ */ React4.createElement("div", { className: "optionsBox" }, /* @__PURE__ */ React4.createElement("h4", null, "Popup icon"), /* @__PURE__ */ React4.createElement("div", { className: "toggle-box" }, /* @__PURE__ */ React4.createElement("div", { className: "toggle" }, /* @__PURE__ */ React4.createElement(
+      ), /* @__PURE__ */ React4.createElement("label", { onMouseEnter: this.props.importSessionsText, htmlFor: "session_import", style: { whiteSpace: "pre", lineHeight: "2rem" } })), /* @__PURE__ */ React4.createElement("div", { className: "option-description" }, "Allows you to restore your backup from an external file. The restored windows will be added to your current saved windows.")), this.externalApiSection()), /* @__PURE__ */ React4.createElement("div", { className: "optionsBox" }, /* @__PURE__ */ React4.createElement("h4", null, "Popup icon"), /* @__PURE__ */ React4.createElement("div", { className: "toggle-box" }, /* @__PURE__ */ React4.createElement("div", { className: "toggle" }, /* @__PURE__ */ React4.createElement(
         "input",
         {
           type: "checkbox",
@@ -9655,13 +9737,18 @@
         }
       ), /* @__PURE__ */ React4.createElement("label", { onMouseEnter: this.props.tabActionsText, htmlFor: "tabactions_mode", style: { whiteSpace: "pre", lineHeight: "2rem" } })), /* @__PURE__ */ React4.createElement("label", { className: "textlabel", htmlFor: "tabactions_mode", style: { whiteSpace: "pre", lineHeight: "2rem" } }, "Show action buttons"), /* @__PURE__ */ React4.createElement("div", { className: "option-description" }, "Displays buttons in every window for : opening a new tab, minimizing the window, assigning a color to the window and closing the window.", /* @__PURE__ */ React4.createElement("br", null), /* @__PURE__ */ React4.createElement("i", null, "By default: enabled")))), /* @__PURE__ */ React4.createElement("div", { className: "optionsBox" }, /* @__PURE__ */ React4.createElement("h4", null, "Advanced settings"), /* @__PURE__ */ React4.createElement("div", { className: "toggle-box" }, /* @__PURE__ */ React4.createElement("div", { className: "toggle-box" }, /* @__PURE__ */ React4.createElement("a", { href: "#", onClick: this.openIncognitoOptions }, "Allow in Incognito")), /* @__PURE__ */ React4.createElement("div", { className: "option-description" }, "If you also want to see your incognito tabs in the Tab Manager overview, then enable incognito access for this extension.")), /* @__PURE__ */ React4.createElement("div", { className: "toggle-box" }, /* @__PURE__ */ React4.createElement("a", { href: "#", onClick: this.openShortcuts }, "Change shortcut key"), /* @__PURE__ */ React4.createElement("div", { className: "option-description" }, "If you want to disable or change the shortcut key with which to open Tab Manager Plus, you can do so here."))), /* @__PURE__ */ React4.createElement("div", { className: "optionsBox" }, /* @__PURE__ */ React4.createElement("div", { className: "toggle-box" }, /* @__PURE__ */ React4.createElement("h4", null, "Right mouse button"), /* @__PURE__ */ React4.createElement("div", { className: "option-description" }, "With the right mouse button you can select tabs"), /* @__PURE__ */ React4.createElement("h4", null, "Shift+Right mouse button"), /* @__PURE__ */ React4.createElement("div", { className: "option-description" }, "While holding shift, and pressing the right mouse button you can select all tabs between the last selected tab and the current one"), /* @__PURE__ */ React4.createElement("h4", null, "Middle mouse button"), /* @__PURE__ */ React4.createElement("div", { className: "option-description" }, "With the middle mouse button you can close a tab"), /* @__PURE__ */ React4.createElement("h4", null, "[Enter / Return] button"), /* @__PURE__ */ React4.createElement("div", { className: "option-description" }, "With the return button you can switch to the currently selected tab, or move multiple selected tabs to a new window"))));
     }
+    externalApiSection() {
+      const pendingRequests = this.state.externalApiPendingRequests || [];
+      const allowedExtensions = this.state.externalApiAllowedExtensions || [];
+      return /* @__PURE__ */ React4.createElement("div", { className: "toggle-box external-api-access " + (pendingRequests.length > 0 ? "has-pending-requests" : "") }, /* @__PURE__ */ React4.createElement("label", { className: "textlabel", style: { whiteSpace: "pre", lineHeight: "2rem" } }, /* @__PURE__ */ React4.createElement("h4", null, "External Session Access")), /* @__PURE__ */ React4.createElement("div", { className: "option-description" }, "Allow other extensions to request saved session URLs from Tab Manager Plus. This lets tools like ArchiveBox import saved tabs after you approve them."), /* @__PURE__ */ React4.createElement("div", { className: "external-api-list" }, /* @__PURE__ */ React4.createElement("h5", null, "Pending requests"), pendingRequests.length === 0 && /* @__PURE__ */ React4.createElement("div", { className: "external-api-empty" }, "No pending requests."), pendingRequests.map((request) => /* @__PURE__ */ React4.createElement("div", { className: "external-api-row", key: "pending-" + request.id }, /* @__PURE__ */ React4.createElement("div", null, /* @__PURE__ */ React4.createElement("div", { className: "external-api-name" }, request.name || "Unknown extension"), /* @__PURE__ */ React4.createElement("div", { className: "external-api-id" }, request.id)), /* @__PURE__ */ React4.createElement("div", { className: "external-api-actions" }, /* @__PURE__ */ React4.createElement("button", { type: "button", onClick: this.approveExternalRequest.bind(this, request) }, "Approve"), /* @__PURE__ */ React4.createElement("button", { type: "button", onClick: this.denyExternalRequest.bind(this, request) }, "Deny"))))), /* @__PURE__ */ React4.createElement("div", { className: "external-api-list" }, /* @__PURE__ */ React4.createElement("h5", null, "Allowed extensions"), allowedExtensions.length === 0 && /* @__PURE__ */ React4.createElement("div", { className: "external-api-empty" }, "No extensions allowed yet."), allowedExtensions.map((extension) => /* @__PURE__ */ React4.createElement("div", { className: "external-api-row", key: "allowed-" + extension.id }, /* @__PURE__ */ React4.createElement("div", null, /* @__PURE__ */ React4.createElement("div", { className: "external-api-name" }, extension.name || "Unknown extension"), /* @__PURE__ */ React4.createElement("div", { className: "external-api-id" }, extension.id)), /* @__PURE__ */ React4.createElement("div", { className: "external-api-actions" }, /* @__PURE__ */ React4.createElement("button", { type: "button", onClick: this.removeAllowedExternalExtension.bind(this, extension) }, "Remove"))))));
+    }
     async openIncognitoOptions() {
-      await browser6.tabs.create({
+      await browser7.tabs.create({
         url: "chrome://extensions/?id=cnkdjjdmfiffagllbiiilooaoofcoeff"
       });
     }
     async openShortcuts() {
-      await browser6.tabs.create({ url: "chrome://extensions/shortcuts" });
+      await browser7.tabs.create({ url: "chrome://extensions/shortcuts" });
     }
     licenses() {
       return /* @__PURE__ */ React4.createElement("div", { className: "licenses", key: "licenses" }, /* @__PURE__ */ React4.createElement("div", { className: "license" }, "Tab Manager Plus is based on", " ", /* @__PURE__ */ React4.createElement("a", { href: "https://github.com/dsc/Tab-Manager", target: "_blank", title: "Tab-Manager" }, "dsc/Tab-Manager"), ",", " ", /* @__PURE__ */ React4.createElement("a", { href: "https://github.com/joshperry/Tab-Manager", target: "_blank", title: "Tab-Manager" }, "joshperry/Tab-Manager"), " ", "and", " ", /* @__PURE__ */ React4.createElement("a", { href: "https://github.com/JonasNo/Tab-Manager", target: "_blank", title: "Tab-Manager" }, "JonasNo/Tab-Manager"), ".", /* @__PURE__ */ React4.createElement("br", null), "Licensed by", " ", /* @__PURE__ */ React4.createElement("a", { href: "http://creativecommons.org/licenses/by/3.0/", target: "_blank", title: " Mozilla Public License (MPL)" }, "MPLv2"), ". Icons made by", " ", /* @__PURE__ */ React4.createElement("a", { href: "http://www.freepik.com", title: "Freepik" }, "Freepik"), " ", "from", " ", /* @__PURE__ */ React4.createElement("a", { href: "http://www.flaticon.com", title: "Flaticon" }, "www.flaticon.com"), ". Licensed by", " ", /* @__PURE__ */ React4.createElement("a", { href: "http://creativecommons.org/licenses/by/3.0/", target: "_blank", title: "Creative Commons BY 3.0" }, "CC 3.0 BY"), "."));
@@ -9678,7 +9765,7 @@
 
   // src/popup/views/Window.tsx
   var React5 = __toESM(require_react());
-  var browser7 = __toESM(require_browser_polyfill());
+  var browser8 = __toESM(require_browser_polyfill());
   var Window = class extends React5.Component {
     constructor(props) {
       super(props);
@@ -9747,13 +9834,13 @@
       }
       let _window_titles = this.state.windowTitles;
       let _tabs = this.state.tabs;
-      let tabs4 = await browser7.tabs.query({ windowId: this.props.window.id });
-      if (tabs4.length == 0) return;
-      if (_window_titles.length === 0 || this.state.tabs !== tabs4.length + this.props.window.id * 99) {
+      let tabs5 = await browser8.tabs.query({ windowId: this.props.window.id });
+      if (tabs5.length == 0) return;
+      if (_window_titles.length === 0 || this.state.tabs !== tabs5.length + this.props.window.id * 99) {
         _window_titles.length = 0;
-        _tabs = tabs4.length + this.props.window.id * 99;
-        for (let i = 0; i < tabs4.length; i++) {
-          const _tab = tabs4[i];
+        _tabs = tabs5.length + this.props.window.id * 99;
+        for (let i = 0; i < tabs5.length; i++) {
+          const _tab = tabs5[i];
           if (!!_tab && (!!_tab.url || !!_tab.pendingUrl)) {
             let url;
             if (!!_tab.pendingUrl) {
@@ -9829,7 +9916,7 @@
       let hideWindow = true;
       let titleAdded = false;
       let tabsperrow = this.props.layout.indexOf("blocks") > -1 ? Math.ceil(Math.sqrt(this.props.tabs.length + 2)) : this.props.layout === "vertical" ? 1 : 15;
-      let tabs4 = this.props.tabs.map(function(tab) {
+      let tabs5 = this.props.tabs.map(function(tab) {
         let isHidden = _this.props.hiddenTabs.has(tab.id) && _this.props.filterTabs;
         let isSelected = _this.props.selection.has(tab.id);
         if (!isHidden) hideWindow = false;
@@ -9860,13 +9947,13 @@
       });
       if (!hideWindow) {
         if (!!this.props.tabactions) {
-          tabs4.push(
+          tabs5.push(
             /* @__PURE__ */ React5.createElement("div", { key: "windownl_" + _this.props.window.id, className: "newliner" }),
             /* @__PURE__ */ React5.createElement("div", { key: "windowactions_" + this.props.window.id, className: "window-actions" }, this.props.sessionsFeature ? /* @__PURE__ */ React5.createElement(
               "div",
               {
                 className: "icon tabaction save " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction"),
-                title: "Save this window for later\nWill save " + tabs4.length + " tabs with this window for later. Please note : The saved tabs will lose their history.",
+                title: "Save this window for later\nWill save " + tabs5.length + " tabs with this window for later. Please note : The saved tabs will lose their history.",
                 onClick: this.save,
                 onMouseEnter: this.props.hoverIcon
               }
@@ -9890,7 +9977,7 @@
               "div",
               {
                 className: "icon tabaction maximize " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction"),
-                title: "Maximize this window\nWill maximize " + tabs4.length + " tabs",
+                title: "Maximize this window\nWill maximize " + tabs5.length + " tabs",
                 onClick: this.maximize,
                 onMouseEnter: this.props.hoverIcon
               }
@@ -9898,7 +9985,7 @@
               "div",
               {
                 className: "icon tabaction minimize " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction"),
-                title: "Minimize this window\nWill minimize " + tabs4.length + " tabs",
+                title: "Minimize this window\nWill minimize " + tabs5.length + " tabs",
                 onClick: this.minimize,
                 onMouseEnter: this.props.hoverIcon
               }
@@ -9906,7 +9993,7 @@
               "div",
               {
                 className: "icon tabaction close " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction"),
-                title: "Close this window\nWill close " + tabs4.length + " tabs",
+                title: "Close this window\nWill close " + tabs5.length + " tabs",
                 onClick: this.close,
                 onMouseEnter: this.props.hoverIcon
               }
@@ -9914,7 +10001,7 @@
           );
         }
         if (this.state.colorActive) {
-          tabs4.push(
+          tabs5.push(
             /* @__PURE__ */ React5.createElement("div", { key: "windowcolors_" + _this.props.window.id, className: "window-colors " + (this.state.colorActive ? "" : "hidden"), onClick: this.stop, onKeyDown: this.checkKey }, /* @__PURE__ */ React5.createElement("h2", { className: "window-x", onClick: this.closePopup }, "x"), /* @__PURE__ */ React5.createElement("h3", { className: "center" }, "Name the window"), /* @__PURE__ */ React5.createElement(
               "input",
               {
@@ -10140,7 +10227,7 @@
         }
         if (this.props.windowTitles) {
           titleAdded = true;
-          tabs4.unshift(
+          tabs5.unshift(
             /* @__PURE__ */ React5.createElement(
               "h3",
               {
@@ -10160,15 +10247,15 @@
         }
         let children = [];
         if (!!titleAdded) {
-          children.push(tabs4.shift());
+          children.push(tabs5.shift());
         }
         let z = -1;
-        for (let j = 0; j < tabs4.length; j++) {
-          let tab = tabs4[j].props.tab;
+        for (let j = 0; j < tabs5.length; j++) {
+          let tab = tabs5[j].props.tab;
           let isHidden = !!tab && !!tab.id && this.props.hiddenTabs.has(tab.id) && this.props.filterTabs;
           if (isHidden) continue;
           z++;
-          children.push(tabs4[j]);
+          children.push(tabs5[j]);
           if ((z + 1) % tabsperrow === 0 && z && this.props.layout.indexOf("blocks") > -1) {
             children.push(/* @__PURE__ */ React5.createElement("div", { className: "newliner", key: "windownlz_" + _this.props.window.id + "_" + z }));
           }
@@ -10188,11 +10275,11 @@
             onDragLeave: this.dragLeave,
             onClick: this.windowClick,
             title: "",
-            onMouseEnter: this.hoverWindow.bind(null, tabs4),
+            onMouseEnter: this.hoverWindow.bind(null, tabs5),
             onMouseLeave: this.hoverWindowOut,
             onDrop: this.drop
           },
-          /* @__PURE__ */ React5.createElement("div", { key: "windowcontainer_" + this.props.window.id, className: "windowcontainer", title: "Focus this window\nWill select this window with " + tabs4.length + " tabs" }, children)
+          /* @__PURE__ */ React5.createElement("div", { key: "windowcontainer_" + this.props.window.id, className: "windowcontainer", title: "Focus this window\nWill select this window with " + tabs5.length + " tabs" }, children)
         );
       } else {
         return null;
@@ -10203,7 +10290,7 @@
     }
     addTab(e) {
       this.stopProp(e);
-      browser7.tabs.create({ windowId: this.props.window.id });
+      browser8.tabs.create({ windowId: this.props.window.id });
     }
     dragOver(e) {
       this.setState({ hover: true });
@@ -10246,9 +10333,9 @@
         this.props.dropWindow(this.props.window.id);
       }
     }
-    hoverWindow(tabs4, _) {
+    hoverWindow(tabs5, _) {
       this.setState({ hover: true });
-      this.props.hoverIcon("Focus this window\nWill select this window with " + tabs4.length + " tabs");
+      this.props.hoverIcon("Focus this window\nWill select this window with " + tabs5.length + " tabs");
     }
     hoverWindowOut(_) {
       this.setState({ hover: false });
@@ -10263,9 +10350,9 @@
       this.stopProp(e);
       let windowId = this.props.window.id;
       if (navigator.userAgent.search("Firefox") > -1) {
-        browser7.runtime.sendMessage({ command: focus_on_window_delayed, window_id: windowId });
+        browser8.runtime.sendMessage({ command: focus_on_window_delayed, window_id: windowId });
       } else {
-        browser7.runtime.sendMessage({ command: focus_on_window, window_id: windowId });
+        browser8.runtime.sendMessage({ command: focus_on_window, window_id: windowId });
       }
       this.props.parentUpdate();
       if (!!window.inPopup) window.close();
@@ -10276,7 +10363,7 @@
     }
     async close(e) {
       this.stopProp(e);
-      await browser7.windows.remove(this.props.window.id);
+      await browser8.windows.remove(this.props.window.id);
     }
     uuidv4() {
       return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
@@ -10305,19 +10392,19 @@
         windowId: this.props.window.id
       };
       console.log(queryInfo);
-      let tabs4 = await browser7.tabs.query(queryInfo);
-      console.log(tabs4);
-      for (let tabkey in tabs4) {
+      let tabs5 = await browser8.tabs.query(queryInfo);
+      console.log(tabs5);
+      for (let tabkey in tabs5) {
         if (navigator.userAgent.search("Firefox") > -1) {
-          let newTab = tabs4[tabkey];
+          let newTab = tabs5[tabkey];
           if (!!newTab.url && newTab.url.search("about:") > -1) {
             continue;
           }
         }
-        session.tabs.push(tabs4[tabkey]);
+        session.tabs.push(tabs5[tabkey]);
       }
       console.log(session.tabs);
-      session.windowsInfo = await browser7.windows.get(this.props.window.id);
+      session.windowsInfo = await browser8.windows.get(this.props.window.id);
       console.log(session);
       let sessions = await getLocalStorage("sessions", {});
       sessions[session.id] = session;
@@ -10333,14 +10420,14 @@
     }
     async minimize(e) {
       this.stopProp(e);
-      await browser7.windows.update(this.props.window.id, {
+      await browser8.windows.update(this.props.window.id, {
         state: "minimized"
       });
       this.props.parentUpdate();
     }
     async maximize(e) {
       this.stopProp(e);
-      await browser7.windows.update(this.props.window.id, {
+      await browser8.windows.update(this.props.window.id, {
         state: "normal"
       });
       this.props.parentUpdate();
@@ -10361,7 +10448,7 @@
       this.setState(a);
       this.props.toggleColors(!this.state.colorActive, this.props.window.id);
       let color = a.color || "default";
-      browser7.runtime.sendMessage({
+      browser8.runtime.sendMessage({
         command: set_window_color,
         window_id: this.props.window.id,
         color
@@ -10380,7 +10467,7 @@
     async changeName(e) {
       let name = "";
       if (e && e.target && e.target.value) name = e.target.value;
-      browser7.runtime.sendMessage({
+      browser8.runtime.sendMessage({
         command: set_window_name,
         window_id: this.props.window.id,
         name
@@ -10390,11 +10477,11 @@
       });
       if (navigator.userAgent.search("Firefox") > -1) {
         if (!!name) {
-          await browser7.windows.update(this.props.window.id, {
+          await browser8.windows.update(this.props.window.id, {
             titlePreface: name + " - "
           });
         } else {
-          await browser7.windows.update(this.props.window.id, {
+          await browser8.windows.update(this.props.window.id, {
             titlePreface: name
           });
         }
