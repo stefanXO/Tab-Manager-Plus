@@ -603,7 +603,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		browser.windows.onCreated.addListener(runUpdate);
 		browser.windows.onRemoved.addListener(runUpdate);
 
-		browser.runtime.onMessage.addListener(async function (message, sender, sendResponse) {
+		browser.runtime.onMessage.addListener(function (message, sender, sendResponse) {
 			const request = message as ICommand;
 
 			console.log(request.command);
@@ -616,6 +616,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 					}
 					break;
 			}
+			return true;
 		});
 
 

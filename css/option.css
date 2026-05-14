@@ -207,3 +207,65 @@ input[type=number]::-webkit-outer-spin-button {
   padding-bottom: 20px;
   /*font-size: 14px;*/
 }
+
+.external-api-access {
+  border: 1px solid #e6e6e6;
+  border-radius: 4px;
+  box-sizing: border-box;
+  margin-top: 12px;
+  padding: 12px;
+}
+
+.external-api-access.has-pending-requests {
+  background: #fff4f4;
+  border-color: #df7070;
+}
+
+.external-api-list {
+  border-top: 1px solid #e6e6e6;
+  padding: 10px 0;
+}
+
+.external-api-list h5 {
+  margin: 0 0 8px;
+}
+
+.external-api-row {
+  align-items: center;
+  border-top: 1px solid #f1f1f1;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  padding: 8px 0;
+}
+
+.external-api-row:first-of-type {
+  border-top: 0;
+}
+
+.external-api-name {
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.external-api-id {
+  color: #666;
+  font-family: monospace;
+  font-size: 0.7rem;
+  margin-top: 2px;
+  word-break: break-all;
+}
+
+.external-api-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.external-api-actions button {
+  font-size: 0.75rem;
+}
+
+.external-api-empty {
+  color: #777;
+  font-size: 0.8rem;
+}
