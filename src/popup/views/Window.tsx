@@ -8,6 +8,9 @@ import * as browser from 'webextension-polyfill';
 import {ICommand, IWindow, IWindowState, ISavedSession} from '@types';
 
 export class Window extends React.Component<IWindow, IWindowState> {
+
+	private nameBoxRef: React.RefObject<HTMLInputElement> = React.createRef();
+
 	constructor(props : IWindow) {
 		super(props);
 
@@ -19,7 +22,8 @@ export class Window extends React.Component<IWindow, IWindowState> {
 			auto_name: "",
 			tabs: 0,
 			hover: false,
-			dirty: false
+			dirty: false,
+			tabrefs: new Map<number, React.RefObject<Tab>>()
 		};
 
 		this.addTab = this.addTab.bind(this);
@@ -196,6 +200,11 @@ export class Window extends React.Component<IWindow, IWindowState> {
 			let isHidden : boolean = _this.props.hiddenTabs.has(tab.id) && _this.props.filterTabs;
 			let isSelected : boolean = _this.props.selection.has(tab.id);
 			if (!isHidden) hideWindow = false;
+			let tabRef = _this.state.tabrefs.get(tab.id) || React.createRef<Tab>();
+			if (!_this.state.tabrefs.has(tab.id)) {
+				_this.state.tabrefs.set(tab.id, tabRef);
+			}
+
 			return (
 				<Tab
 					key={"windowtab_" + _this.props.window.id + "_" + tab.id}
@@ -215,7 +224,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 					dropWindow={_this.props.dropWindow}
 					dragFavicon={_this.props.dragFavicon}
 					parentUpdate={_this.forceUpdate.bind(_this)}
-					ref={"tab" + tab.id}
+					ref={tabRef}
 					id={"tab-" + tab.id}
 				/>
 			);
@@ -552,8 +561,10 @@ export class Window extends React.Component<IWindow, IWindowState> {
 
 		for (let i = 0; i < this.props.tabs.length; i++) {
 			let tab = this.props.tabs[i];
-			let tabRef = (this.refs["tab" + tab.id] as Tab).state.tabRef.current;
-			let tabRect = tabRef.getBoundingClientRect();
+			let tabRef = this.state.tabrefs.get(tab.id);
+			if (!tabRef) continue;
+			let currentRef = tabRef.current?.tabRef?.current;
+			if (!currentRef) continue;
 			let x = e.nativeEvent.clientX;
 			let y = e.nativeEvent.clientY;
 			let dx = tabRect.x - x;
@@ -562,7 +573,6 @@ export class Window extends React.Component<IWindow, IWindowState> {
 			if (d < distance) {
 				distance = d;
 				closestTab = tab.id;
-				closestRef = tabRef;
 			}
 		}
 
@@ -705,7 +715,6 @@ export class Window extends React.Component<IWindow, IWindowState> {
 		});
 		setTimeout(function() {
 			if(this.state.colorActive) {
-				this.refs.namebox.focus();
 			}
 		}.bind(this), 150);
 	}
