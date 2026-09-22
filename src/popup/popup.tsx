@@ -4,11 +4,12 @@ import '@helpers/migrate';
 import {getLocalStorage} from "@helpers/storage";
 import {TabManager} from '@views';
 import * as React from 'react';
-import * as ReactDOM from "react-dom";
+import { createRoot } from 'react-dom/client';
 
 declare global {
 	interface Window {
 		loaded: boolean;
+		loading: boolean;
 		inPopup: boolean;
 		inPanel: boolean;
 		optionPage: boolean;
@@ -17,12 +18,14 @@ declare global {
 }
 
 window.loaded = false;
+window.loading = false;
 window.inPopup = window.location.search.indexOf("?popup") > -1;
 window.inPanel = window.location.search.indexOf("?panel") > -1;
 window.extensionVersion = process.env.VERSION;
 
 window.onload = () => window.requestAnimationFrame(loadApp);
 
+setTimeout(loadApp, 25);
 setTimeout(loadApp, 75);
 setTimeout(loadApp, 125);
 setTimeout(loadApp, 250);
@@ -36,6 +39,8 @@ setTimeout(loadApp, 15000);
 
 async function loadApp() {
 	if (!!window.loaded) return;
+	if (!!window.loading) return;
+	window.loading = true;
 	let height : number = await getLocalStorage("tabHeight", 600);
 	let width : number = await getLocalStorage("tabWidth", 800);
 	console.log(height, width);
@@ -46,8 +51,8 @@ async function loadApp() {
 			document.body.style.height = height + "px";
 		}
 
-		var root = document.getElementById("root");
-		if (root != null) {
+		const _root = document.getElementById("root");
+		if (_root != null) {
 			var _height = parseInt(document.body.style.height.split("px")[0]) || 0;
 			if (_height < 300) {
 				_height = 400;
@@ -77,10 +82,15 @@ async function loadApp() {
 
 	if (!!window.loaded) return;
 	window.loaded = true;
-	ReactDOM.render(<TabManager optionsActive={!!window.optionPage}/>, document.getElementById("TMP"));
+	const container = document.getElementById('TMP');
+	const root = createRoot(container!);
+	root.render(
+		<TabManager optionsActive={!!window.optionPage}/>
+	);
 }
 
 window.addEventListener("contextmenu", function (e) {
 	e.preventDefault();
 });
 
+loadApp();
