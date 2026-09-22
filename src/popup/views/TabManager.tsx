@@ -1382,8 +1382,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 
 		this.setState({
 			layout: newLayout,
-			topText: "Switched to " + this.readablelayout(this.state.layout) + " view",
 			bottomText: " "
+			topText: "Switched to " + this.readablelayout(newLayout) + " view",
 		});
 
 		this.forceUpdate();
