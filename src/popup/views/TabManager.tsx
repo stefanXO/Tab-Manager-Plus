@@ -539,7 +539,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				case S.refresh_windows:
 					let window_ids : number[] = request.window_ids;
 					for (let window_id of window_ids) {
-						let _window = this.state.windowrefs.get(window_id).current;
+						let _window = this.state.windowrefs.get(window_id)?.current;
 						if (!_window) continue;
 						_window.checkSettings();
 					}
@@ -1120,66 +1120,37 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 						}
 
 						for (const _w of this.state.windows) {
+							let _window = this.state.windowrefs.get(_w.id)?.current;
+							if (!_window) continue;
+							if (_window.state.hidden) continue;
 							if (found) break;
-							if (_w.state !== "minimized") {
-								for (const _t of _w.tabs) {
-									last = _t.id;
-									if (!first) first = _t.id;
-									if (!selectedTab) {
-										if (!altKey) this.state.selection.clear();
-										this.select(_t.id);
-										found = true;
-										break;
-									} else if (selectedTab === _t.id) {
-										// console.log("select next one", selectedNext);
-										if (goRight) {
-											selectedNext = true;
-										} else if (!!prev) {
-											if (!altKey) this.state.selection.clear();
-											this.select(prev);
-											found = true;
-											break;
-										}
-									} else if (selectedNext) {
+							for (const _t of _w.tabs) {
+								if (this.state.hiddenTabs.has(_t.id)) continue;
+								last = _t.id;
+								if (!first) first = _t.id;
+								if (!selectedTab) {
+									if (!altKey) this.state.selection.clear();
+									this.select(_t.id);
+									found = true;
+									break;
+								} else if (selectedTab === _t.id) {
+									// console.log("select next one", selectedNext);
+									if (goRight) {
+										selectedNext = true;
+									} else if (!!prev) {
 										if (!altKey) this.state.selection.clear();
 										this.select(prev);
 										found = true;
 										break;
 									}
-									prev = _t.id;
-									// console.log(_t, _t.id === selectedTab);
+								} else if (selectedNext) {
+									if (!altKey) this.state.selection.clear();
+									this.select(_t.id);
+									found = true;
+									break;
 								}
-							}
-						}
-						for (const _w of this.state.windows) {
-							if (found) break;
-							if (_w.state === "minimized") {
-								for (const _t of _w.tabs) {
-									last = _t.id;
-									if (!first) first = _t.id;
-									if (!selectedTab) {
-										if (!altKey) this.state.selection.clear();
-										this.select(_t.id);
-										found = true;
-										break;
-									} else if (selectedTab === _t.id) {
-										if (goRight) {
-											selectedNext = true;
-										} else if (!!prev) {
-											if (!altKey) this.state.selection.clear();
-											this.select(prev);
-											found = true;
-											break;
-										}
-									} else if (selectedNext) {
-										if (!altKey) this.state.selection.clear();
-										this.select(_t.id);
-										found = true;
-										break;
-									}
-									prev = _t.id;
-									// console.log(_t, _t.id === selectedTab);
-								}
+								prev = _t.id;
+								// console.log(_t, _t.id === selectedTab);
 							}
 						}
 						if (!found && goRight && !!first) {
@@ -1210,78 +1181,44 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 							selectedTab = selectedTabs[0];
 							// console.log(selectedTab);
 						}
-						for (const _w of this.state.windows) {
-							i = 0;
-							if (found) break;
-							if (_w.state !== "minimized") {
-								if (!first) first = _w.id;
-								for (const _t of _w.tabs) {
-									i++;
-									last = _w.id;
-									if (!selectedTab) {
-										this.selectWindowTab(_w.id, tabPosition);
-										found = true;
-										break;
-									} else if (selectedTab === _t.id) {
-										tabPosition = i;
-										// console.log("found tab", _w.id, _t.id, selectedTab, i);
-										if (goDown) {
-											// console.log("select next window ", selectedNext, tabPosition);
-											selectedNext = true;
-											break;
-										} else if (!!prev) {
-											// console.log("select prev window ", prev, tabPosition);
-											this.selectWindowTab(prev, tabPosition);
-											found = true;
-											break;
-										}
-									} else if (selectedNext) {
-										// console.log("selecting next window ", _w.id, tabPosition);
-										this.selectWindowTab(_w.id, tabPosition);
-										found = true;
-										break;
-									}
 
-									// console.log(_t, _t.id === selectedTab);
-								}
-								prev = _w.id;
-							}
-						}
 						for (const _w of this.state.windows) {
+							let _window = this.state.windowrefs.get(_w.id)?.current;
+							if (!_window) continue;
+							if (_window.state.hidden) continue;
 							i = 0;
 							if (found) break;
-							if (_w.state === "minimized") {
-								if (!first) first = _w.id;
-								for (const _t of _w.tabs) {
-									i++;
-									last = _w.id;
-									if (!selectedTab) {
-										this.selectWindowTab(_w.id, tabPosition);
-										found = true;
-										break;
-									} else if (selectedTab === _t.id) {
-										tabPosition = i;
+							if (!first) first = _w.id;
+							for (const _t of _w.tabs) {
+								if (this.state.hiddenTabs.has(_t.id)) continue;
+								i++;
+								last = _w.id;
+								if (!selectedTab) {
+									this.selectWindowTab(_w.id, tabPosition);
+									found = true;
+									break;
+								} else if (selectedTab === _t.id) {
+									tabPosition = i;
 										// console.log("found tab", _w.id, _t.id, selectedTab, i);
-										if (goDown) {
-											// console.log("select next window ", selectedNext, tabPosition);
-											selectedNext = true;
-											break;
-										} else if (!!prev) {
-											// console.log("select prev window ", prev, tabPosition);
-											this.selectWindowTab(prev, tabPosition);
-											found = true;
-											break;
-										}
-									} else if (selectedNext) {
-										// console.log("selecting next window ", _w.id, tabPosition);
-										this.selectWindowTab(_w.id, tabPosition);
+									if (goDown) {
+										// console.log("select next window ", selectedNext, tabPosition);
+										selectedNext = true;
+										break;
+									} else if (!!prev) {
+										// console.log("select prev window ", prev, tabPosition);
+										this.selectWindowTab(prev, tabPosition);
 										found = true;
 										break;
 									}
-									// console.log(_t, _t.id === selectedTab);
+								} else if (selectedNext) {
+									// console.log("selecting next window ", _w.id, tabPosition);
+									this.selectWindowTab(_w.id, tabPosition);
+									found = true;
+									break;
 								}
-								prev = _w.id;
+								// console.log(_t, _t.id === selectedTab);
 							}
+							prev = _w.id;
 						}
 						// console.log(found, goDown, first);
 						if (!found && goDown && !!first) {
@@ -1300,6 +1237,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 					}
 				}
 			}
+			return;
 		}
 		// page up / page down
 		if (e.keyCode === 33 || e.keyCode === 34) {
