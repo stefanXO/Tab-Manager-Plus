@@ -455,8 +455,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 	async changeTabLimit(e : React.ChangeEvent<HTMLInputElement>) {
 		var _tab_limit = parseInt(e.target.value);
 		this.props.manager.setState({
-			tabLimit: _tab_limit,
-			dirty: true
+			tabLimit: _tab_limit
 		});
 		await setLocalStorage("tabLimit", _tab_limit);
 		this.tabLimitText();
@@ -469,8 +468,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 	async changeTabWidth(e : React.ChangeEvent<HTMLInputElement>) {
 		var _tab_width = parseInt(e.target.value);
 		this.props.manager.setState({
-			tabWidth: _tab_width,
-			dirty: true
+			tabWidth: _tab_width
 		});
 		await setLocalStorage("tabWidth", _tab_width);
 		document.body.style.width = _tab_width + "px";
@@ -484,8 +482,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 	async changeTabHeight(e : React.ChangeEvent<HTMLInputElement>) {
 		var _tab_height = parseInt(e.target.value);
 		this.props.manager.setState({
-			tabHeight: _tab_height,
-			dirty: true
+			tabHeight: _tab_height
 		});
 		await setLocalStorage("tabHeight", _tab_height);
 		document.body.style.height = _tab_height + "px";
@@ -499,8 +496,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 	async toggleAnimations() {
 		var _animations = !this.props.manager.state.animations;
 		this.props.manager.setState({
-			animations: _animations,
-			dirty: true
+			animations: _animations
 		});
 		await setLocalStorage("animations", _animations);
 		this.animationsText();
@@ -513,8 +509,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 	async toggleWindowTitles() {
 		var _window_titles = !this.props.manager.state.windowTitles;
 		this.props.manager.setState({
-			windowTitles: _window_titles,
-			dirty: true
+			windowTitles: _window_titles
 		});
 		await setLocalStorage("windowTitles", _window_titles);
 		this.windowTitlesText();
@@ -527,8 +522,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 	async toggleCompact() {
 		var _compact = !this.props.manager.state.compact;
 		this.props.manager.setState({
-			compact: _compact,
-			dirty: true
+			compact: _compact
 		});
 		await setLocalStorage("compact", _compact);
 		this.compactText();
@@ -541,8 +535,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 	async toggleDark() {
 		var _dark = !this.props.manager.state.dark;
 		this.props.manager.setState({
-			dark: _dark,
-			dirty: true
+			dark: _dark
 		});
 		await setLocalStorage("dark", _dark);
 
@@ -563,8 +556,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 	async toggleTabActions() {
 		var _tabactions = !this.props.manager.state.tabactions;
 		this.props.manager.setState({
-			tabactions: _tabactions,
-			dirty: true
+			tabactions: _tabactions
 		});
 		await setLocalStorage("tabactions", _tabactions);
 		this.tabActionsText();
@@ -577,8 +569,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 	async toggleBadge() {
 		var _badge = !this.props.manager.state.badge;
 		this.props.manager.setState({
-			badge: _badge,
-			dirty: true
+			badge: _badge
 		});
 		await setLocalStorage("badge", _badge);
 		this.badgeText();
@@ -592,8 +583,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 	async toggleOpenInOwnTab() {
 		var _openInOwnTab = !this.props.manager.state.openInOwnTab;
 		this.props.manager.setState({
-			openInOwnTab: _openInOwnTab,
-			dirty: true
+			openInOwnTab: _openInOwnTab
 		});
 		await setLocalStorage("openInOwnTab", _openInOwnTab);
 		this.openInOwnTabText();
@@ -607,8 +597,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 	async toggleSessions() {
 		var _sessionsFeature = !this.props.manager.state.sessionsFeature;
 		this.props.manager.setState({
-			sessionsFeature: _sessionsFeature,
-			dirty: true
+			sessionsFeature: _sessionsFeature
 		});
 		await setLocalStorage("sessionsFeature", _sessionsFeature);
 		if (_sessionsFeature) await this.props.manager.sessionSync();
@@ -745,8 +734,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 
 		await setLocalStorage("hideWindows", _hide_windows);
 		this.props.manager.setState({
-			hideWindows: _hide_windows,
-			dirty: true
+			hideWindows: _hide_windows
 		});
 		this.hideText();
 	}
