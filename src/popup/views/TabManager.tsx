@@ -7,6 +7,11 @@ import * as browser from 'webextension-polyfill';
 import {ICommand, ITabManager, ITabManagerState, ISavedSession} from "@types";
 
 export class TabManager extends React.Component<ITabManager, ITabManagerState> {
+
+    private rootRef: React.RefObject<HTMLDivElement>;
+	private windowContainerRef: React.RefObject<HTMLDivElement>;
+	private searchBoxRef: React.RefObject<HTMLInputElement>;
+
 	constructor(props : ITabManager) {
 		super(props);
 
@@ -50,6 +55,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			hiddenTabs: new Set(),
 			tabsbyid: new Map(),
 			windowsbyid: new Map(),
+			windowrefs: new Map(),
 			resetTimeout: resetTimeout,
 			height: 600,
 			hasScrollBar: false,
@@ -65,63 +71,44 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 
 			tabCount: 0,
 			hiddenCount: 0,
-			searchLen: 0
+			searchLen: 0,
+
+			dirty: false
 		};
 
 		this.addWindow = this.addWindow.bind(this);
-		this.animationsText = this.animationsText.bind(this);
-		this.badgeText = this.badgeText.bind(this);
 		this.changelayout = this.changelayout.bind(this);
-		this.changeTabHeight = this.changeTabHeight.bind(this);
-		this.changeTabLimit = this.changeTabLimit.bind(this);
-		this.changeTabWidth = this.changeTabWidth.bind(this);
 		this.checkKey = this.checkKey.bind(this);
 		this.clearSelection = this.clearSelection.bind(this);
-		this.compactText = this.compactText.bind(this);
-		this.darkText = this.darkText.bind(this);
+		this.clearHiddenTabs = this.clearHiddenTabs.bind(this);
 		this.deleteTabs = this.deleteTabs.bind(this);
 		this.discardTabs = this.discardTabs.bind(this);
 		this.donate = this.donate.bind(this);
-		this.exportSessions = this.exportSessions.bind(this);
-		this.exportSessionsText = this.exportSessionsText.bind(this);
 		this.getTip = this.getTip.bind(this);
-		this.hideText = this.hideText.bind(this);
 		this.highlightDuplicates = this.highlightDuplicates.bind(this);
 		this.hoverIcon = this.hoverIcon.bind(this);
-		this.importSessions = this.importSessions.bind(this);
-		this.importSessionsText = this.importSessionsText.bind(this);
-		this.openInOwnTabText = this.openInOwnTabText.bind(this);
 		this.pinTabs = this.pinTabs.bind(this);
 		this.rateExtension = this.rateExtension.bind(this);
 		this.scrollTo = this.scrollTo.bind(this);
 		this.search = this.search.bind(this);
-		this.sessionsText = this.sessionsText.bind(this);
 		this.sessionSync = this.sessionSync.bind(this);
-		this.tabActionsText = this.tabActionsText.bind(this);
-		this.tabHeightText = this.tabHeightText.bind(this);
-		this.tabLimitText = this.tabLimitText.bind(this);
-		this.tabWidthText = this.tabWidthText.bind(this);
-		this.toggleAnimations = this.toggleAnimations.bind(this);
-		this.toggleBadge = this.toggleBadge.bind(this);
-		this.toggleCompact = this.toggleCompact.bind(this);
-		this.toggleDark = this.toggleDark.bind(this);
 		this.toggleFilterMismatchedTabs = this.toggleFilterMismatchedTabs.bind(this);
-		this.toggleHide = this.toggleHide.bind(this);
-		this.toggleOpenInOwnTab = this.toggleOpenInOwnTab.bind(this);
 		this.toggleOptions = this.toggleOptions.bind(this);
-		this.toggleSessions = this.toggleSessions.bind(this);
-		this.toggleTabActions = this.toggleTabActions.bind(this);
-		this.toggleWindowTitles = this.toggleWindowTitles.bind(this);
 		this.update = this.update.bind(this);
-		this.windowTitlesText = this.windowTitlesText.bind(this);
-		this.onTabDetached = this.onTabDetached.bind(this);
-		this.onTabAttached = this.onTabAttached.bind(this);
-		this.onTabRemoved = this.onTabRemoved.bind(this);
-		this.onTabCreated = this.onTabCreated.bind(this);
-		this.dirtyWindow = this.dirtyWindow.bind(this);
+		this.rootRef = React.createRef();
+		this.windowContainerRef = React.createRef();
+		this.searchBoxRef = React.createRef();
 	}
-	UNSAFE_componentWillMount() {
-		this.update();
+
+	async UNSAFE_componentWillMount() {
+		await this.update();
+	}
+
+	async componentDidUpdate(prevProps, prevState) {
+		if (this.state.dirty) {
+			await this.update();
+			this.setState({dirty: false});
+		}
 	}
 
 	async loadStorage() {
@@ -242,10 +229,11 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			text = a[0];
 			bottom = a[1];
 		}
-		this.setState({ topText: text });
-		this.setState({ bottomText: bottom });
-		//this.update();
-		this.forceUpdate();
+		this.setState({
+			topText: text,
+			bottomText: bottom,
+			dirty: true
+		 });
 	}
 	render() {
 		let _this = this;
@@ -282,16 +270,23 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 					(this.state.windowTitles ? "windowTitles" : "no-windowTitles")
 				}
 				onKeyDown={this.checkKey}
-				ref="root"
 				tabIndex={0}
+				ref={this.rootRef}
 			>
-				{!this.state.optionsActive && <div className={"window-container " + this.state.layout} ref="windowcontainer" tabIndex={2}>
+				{!this.state.optionsActive && <div className={"window-container " + this.state.layout} ref={this.windowContainerRef} tabIndex={2}>
 					{this.state.windows.map(function(window : browser.Windows.Window) {
 						if (window.state === "minimized") return;
 						if (!!this.state.colorsActive && this.state.colorsActive !== window.id) return;
+
+						let windowRef = this.state.windowrefs.get(window.id) || React.createRef<Window>();
+						if (!this.state.windowrefs.has(window.id)) {
+							this.state.windowrefs.set(window.id, windowRef);
+						}
+
 						return (
 							<Window
 								key={"window" + window.id}
+								manager={_this}
 								window={window}
 								tabs={window.tabs}
 								incognito={window.incognito}
@@ -302,22 +297,10 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 								tabactions={_this.state.tabactions}
 								hiddenTabs={_this.state.hiddenTabs}
 								filterTabs={_this.state.filterTabs}
-								hoverHandler={_this.hoverHandler.bind(_this)}
-								scrollTo={_this.scrollTo.bind(_this)}
-								hoverIcon={_this.hoverIcon.bind(_this)}
-								parentUpdate={_this.update.bind(_this)}
-								toggleColors={_this.toggleColors.bind(_this)}
-								tabMiddleClick={_this.deleteTab.bind(_this)}
-								select={_this.select.bind(_this)}
-								selectTo={_this.selectTo.bind(_this)}
 								draggable={true}
-								drag={_this.drag.bind(_this)}
-								drop={_this.drop.bind(_this)}
-								dropWindow={_this.dropWindow.bind(_this)}
 								windowTitles={_this.state.windowTitles}
 								lastOpenWindow={_this.state.lastOpenWindow}
-								dragFavicon={_this.dragFavicon.bind(_this)}
-								ref={"window" + window.id}
+								ref={windowRef}
 							/>
 						);
 					}.bind(this))}
@@ -329,9 +312,16 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 					{this.state.windows.map(function(window) {
 						if (window.state !== "minimized") return;
 						if (!!this.state.colorsActive && this.state.colorsActive !== window.id) return;
+
+						let windowRef = this.state.windowrefs.get(window.id) || React.createRef<Window>();
+						if (!this.state.windowrefs.has(window.id)) {
+							this.state.windowrefs.set(window.id, windowRef);
+						}
+
 						return (
 							<Window
 								key={"window" + window.id}
+								manager={_this}
 								window={window}
 								tabs={window.tabs}
 								incognito={window.incognito}
@@ -342,22 +332,10 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 								tabactions={_this.state.tabactions}
 								hiddenTabs={_this.state.hiddenTabs}
 								filterTabs={_this.state.filterTabs}
-								hoverHandler={_this.hoverHandler.bind(_this)}
-								scrollTo={_this.scrollTo.bind(_this)}
-								hoverIcon={_this.hoverIcon.bind(_this)}
-								parentUpdate={_this.update.bind(_this)}
-								toggleColors={_this.toggleColors.bind(_this)}
-								tabMiddleClick={_this.deleteTab.bind(_this)}
-								select={_this.select.bind(_this)}
-								selectTo={_this.selectTo.bind(_this)}
 								draggable={true}
-								drag={_this.drag.bind(_this)}
-								drop={_this.drop.bind(_this)}
-								dropWindow={_this.dropWindow.bind(_this)}
 								windowTitles={_this.state.windowTitles}
 								lastOpenWindow={_this.state.lastOpenWindow}
-								dragFavicon={_this.dragFavicon.bind(_this)}
-								ref={"window" + window.id}
+								ref={windowRef}
 							/>
 						);
 					}.bind(this))}
@@ -372,6 +350,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 								return (
 									<Session
 										key={"session" + window.id}
+										manager={_this}
 										session={window}
 										tabs={window.tabs}
 										incognito={window.incognito}
@@ -381,17 +360,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 										tabactions={_this.state.tabactions}
 										hiddenTabs={_this.state.hiddenTabs}
 										filterTabs={_this.state.filterTabs}
-										hoverHandler={_this.hoverHandler.bind(_this)}
-										scrollTo={_this.scrollTo.bind(_this)}
-										hoverIcon={_this.hoverIcon.bind(_this)}
-										parentUpdate={_this.update.bind(_this)}
-										toggleColors={_this.toggleColors.bind(_this)}
-										tabMiddleClick={_this.deleteTab.bind(_this)}
-										select={_this.select.bind(_this)}
 										windowTitles={_this.state.windowTitles}
 										lastOpenWindow={_this.state.lastOpenWindow}
 										draggable={false}
-										ref={"session" + window.id}
 									/>
 								);
 							}.bind(this))
@@ -438,7 +409,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 						<tbody>
 							<tr>
 								<td className="one">
-									<input className="searchBoxInput" type="text" placeholder="Start typing to search tabs..." tabIndex={1} onChange={this.search} ref="searchbox" />
+									<input className="searchBoxInput" type="text" placeholder="Start typing to search tabs..." tabIndex={1} onChange={this.search} ref={this.searchBoxRef} />
 								</td>
 								<td className="two">
 									<div
@@ -581,8 +552,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				case S.refresh_windows:
 					let window_ids : number[] = request.window_ids;
 					for (let window_id of window_ids) {
-						if (!_this.refs["window" + window_id]) continue;
-						(_this.refs["window" + window_id] as Window).checkSettings();
+						let _window = this.state.windowrefs.get(window_id).current;
+						if (!_window) continue;
+						_window.checkSettings();
 					}
 					break;
 			}
@@ -593,7 +565,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 
 		await this.sessionSync();
 
-		(this.refs.root as HTMLElement).focus();
+		this.rootRef.current?.focus();
 		this.focusRoot();
 
 		setTimeout(async function() {
@@ -630,19 +602,25 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		await this.update();
 	}
 	focusRoot() {
-		this.setState({ focusUpdates: (this.state.focusUpdates + 1) });
+		var _this = this;
+		this.setState({
+			focusUpdates: (this.state.focusUpdates + 1),
+			dirty: true
+		});
 		setTimeout(
 			function() {
 				if (document.activeElement === document.body) {
-					this.refs.root.focus();
-					this.forceUpdate();
-					if (this.state.focusUpdates < 5) this.focusRoot();
+					_this.rootRef.current?.focus();
+					_this.setState({
+						dirty: true
+					});
+					if (_this.state.focusUpdates < 5) _this.focusRoot();
 				}
 			}.bind(this),
 			500
 		);
 	}
-	dragFavicon(icon : string) : string {
+	dragFavicon(icon? : string) : string {
 		if (!icon) {
 			return this.state.dragFavicon;
 		} else {
@@ -656,19 +634,20 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		} else {
 			browser.tabs.create({ url: "https://chrome.google.com/webstore/detail/tab-manager-plus-for-chro/cnkdjjdmfiffagllbiiilooaoofcoeff" });
 		}
-		this.forceUpdate();
 	}
 	donate() {
 		browser.tabs.create({ url: "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=67TZLSEGYQFFW" });
-		this.forceUpdate();
 	}
 	toggleOptions() {
-		this.setState({ optionsActive: !this.state.optionsActive });
-		this.forceUpdate();
+		this.setState({
+			optionsActive: !this.state.optionsActive,
+			dirty: true
+		});
 	}
 	toggleColors(active : boolean, windowId : number) {
 		this.setState({
-			colorsActive: !!active ? windowId : 0
+			colorsActive: !!active ? windowId : 0,
+			dirty: true
 		})
 		console.log("colorsActive", active, windowId, this.state.colorsActive);
 		this.forceUpdate();
@@ -729,6 +708,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				tabCount++;
 			}
 		}
+		for (const id of this.state.windowrefs.keys()) {
+			if (!this.state.windowsbyid.has(id)) this.state.windowrefs.delete(id);
+		}
 		for (let id of this.state.selection.keys()) {
 			if (!this.state.tabsbyid.has(id)) {
 				this.state.selection.delete(id);
@@ -754,7 +736,6 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				await browser.tabs.remove(t[0].id);
 			}
 		}
-		this.forceUpdate();
 	}
 	deleteTab(tabId : number) {
 		browser.tabs.remove(tabId);
@@ -828,20 +809,22 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	}
 	highlightDuplicates(e) {
 		this.state.selection.clear();
-		this.state.hiddenTabs.clear();
+		this.clearHiddenTabs()
 
 		let searchLen = 0;
 		const dupTabs = !this.state.dupTabs;
 
-		(this.refs.searchbox as HTMLInputElement).value = "";
+		if (this.searchBoxRef.current) {
+			this.searchBoxRef.current.value = "";
+		}
 
 		if (!dupTabs) {
 			this.setState({
 				hiddenCount: 0,
 				dupTabs: dupTabs,
-				searchLen: searchLen
+				searchLen: searchLen,
+				dirty: true
 			});
-			this.forceUpdate();
 			return;
 		}
 		let hiddenCount = this.state.hiddenCount || 0;
@@ -864,9 +847,12 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			this.state.selection.add(dupItem);
 			this.state.hiddenTabs.delete(dupItem);
 			this.setState({
-				lastSelect: dupItem
+				lastSelect: dupItem,
+				dirty: true
 			});
 		}
+
+		const idList : number[] = [...this.state.tabsbyid.keys()];
 		for (const tab_id of idList) {
 			// var tab = this.state.tabsbyid.get(tab_id);
 			if (dup.indexOf(tab_id) === -1) {
@@ -874,7 +860,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				this.state.hiddenTabs.add(tab_id);
 				this.state.selection.delete(tab_id);
 				this.setState({
-					lastSelect: tab_id
+					lastSelect: tab_id,
+					dirty: true
 				});
 			}
 		}
@@ -890,14 +877,11 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			});
 		}
 		this.setState({
-			hiddenCount: hiddenCount
-		});
-		this.setState({
+			hiddenCount: hiddenCount,
 			searchLen: searchLen,
-			dupTabs: dupTabs
+			dupTabs: dupTabs,
+			dirty: true
 		});
-
-		this.forceUpdate();
 	}
 	search(e) {
 		let hiddenCount = this.state.hiddenCount || 0;
@@ -921,7 +905,12 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 
 		if (!searchLen) {
 			this.state.selection.clear();
-			this.state.hiddenTabs.clear();
+			this.setState({
+				hiddenCount: 0,
+				dupTabs: false,
+				dirty: true
+			});
+			this.clearHiddenTabs();
 			hiddenCount = 0;
 		} else {
 			let idList : number[];
@@ -976,7 +965,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 					this.state.selection.delete(id);
 				}
 				this.setState({
-					lastSelect: id
+					lastSelect: id,
+					dirty: true
 				});
 			}
 		}
@@ -986,7 +976,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			searchLen: searchLen
 		})
 
-		const matches = this.state.selection.size;
+		const matches = this.state.tabsbyid.size - hiddenCount;
 		// var matchtext = "";
 		if (matches === 0 && searchLen > 0) {
 			this.setState({
@@ -1000,16 +990,24 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			});
 		} else if (matches > 1) {
 			this.setState({
-				topText: this.state.selection.size + " matches for '" + searchQuery + "'",
+				topText: matches + " matches for '" + searchQuery + "'",
 				bottomText: "Press enter to move them to a new window"
 			});
 		} else if (matches === 1) {
 			this.setState({
-				topText: this.state.selection.size + " match for '" + searchQuery + "'",
+				topText: matches + " match for '" + searchQuery + "'",
 				bottomText: "Press enter to switch to the tab"
 			});
 		}
-		this.forceUpdate();
+		this.setState({
+			dirty: true
+		});
+	}
+	clearHiddenTabs() {
+		this.state.hiddenTabs.clear();
+		this.setState({
+			dirty: true
+		});
 	}
 	clearSelection() {
 		this.state.selection.clear();
@@ -1017,9 +1015,12 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			lastSelect: 0
 		});
 	}
-	checkKey(e) {
+	async checkKey(e) {
 		// enter
-		if (e.keyCode === 13) this.addWindow();
+		if (e.keyCode === 13) {
+			await this.addWindow();
+			return;
+		}
 		// escape key
 		if (e.keyCode === 27) {
 			if(this.state.searchLen > 0 || this.state.selection.size > 0) {
@@ -1028,13 +1029,19 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				e.nativeEvent.stopPropagation();
 			}
 
-			this.state.hiddenTabs.clear();
 			this.setState({
-				searchLen: 0
+				searchLen: 0,
+				hiddenCount: 0,
+				dupTabs: false,
+				dirty: true
 			});
 
-			(this.refs.searchbox as HTMLInputElement).value = "";
+			if (this.searchBoxRef.current) {
+				this.searchBoxRef.current.value = "";
+			}
 			this.clearSelection();
+			this.clearHiddenTabs();
+			return;
 		}
 		// any typed keys
 		if (
@@ -1046,14 +1053,13 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			e.keyCode === 46 ||
 			e.keyCode === 32
 		) {
-			if (document.activeElement !== this.refs.searchbox) {
+			if (document.activeElement !== this.searchBoxRef.current) {
 				var activeInputElement = document.activeElement as HTMLInputElement;
-				console.log(activeInputElement);
-				console.log(this.refs.searchbox);
 				if (activeInputElement.type !== "text" && activeInputElement.type !== "input") {
-					(this.refs.searchbox as HTMLElement)?.focus();
+					this.searchBoxRef.current?.focus();
 				}
 			}
+			return;
 		}
 		// arrow keys
 		/*
@@ -1063,13 +1069,11 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			down arrow  40
 		*/
 		if (e.keyCode >= 37 && e.keyCode <= 40) {
-			if (document.activeElement !== this.refs.windowcontainer && document.activeElement !== this.refs.searchbox) {
-				console.log(activeInputElement);
-				console.log(this.refs.windowcontainer);
-				(this.refs.windowcontainer as HTMLElement)?.focus();
+			if (document.activeElement !== this.windowContainerRef.current && document.activeElement !== this.searchBoxRef.current) {
+				this.windowContainerRef.current?.focus();
 			}
 
-			if (document.activeElement !== this.refs.searchbox || !((this.refs.searchbox as HTMLInputElement).value)) {
+			if (document.activeElement !== this.searchBoxRef.current || !this.searchBoxRef.current?.value) {
 				let goLeft = e.keyCode === 37;
 				let goRight = e.keyCode === 39;
 				let goUp = e.keyCode === 38;
@@ -1130,6 +1134,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 							if (goRight) this.setState({ lastDirection: "goRight" });
 							if (goLeft) this.setState({ lastDirection: "goLeft" });
 						}
+
 						for (const _w of this.state.windows) {
 							if (found) break;
 							if (_w.state !== "minimized") {
@@ -1314,26 +1319,31 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		}
 		// page up / page down
 		if (e.keyCode === 33 || e.keyCode === 34) {
-			if (document.activeElement != this.refs.windowcontainer) {
-				(this.refs.windowcontainer as HTMLElement).focus();
+			if (document.activeElement != this.windowContainerRef.current) {
+				this.windowContainerRef.current?.focus();
 			}
+			return;
 		}
 	}
-	selectWindowTab(windowId, tabPosition) {
+	selectWindowTab(windowId : number, tabPosition : number) {
 		if (!tabPosition || tabPosition < 1) tabPosition = 1;
-		for (let _w of this.state.windows) {
-			if (_w.id !== windowId) continue;
-			let i = 0;
-			for (let _t of _w.tabs) {
-				i++;
-				if ((_w.tabs.length >= tabPosition && tabPosition === i) || (_w.tabs.length < tabPosition && _w.tabs.length === i)) {
-					this.state.selection.clear();
-					this.select(_t.id);
-				}
+		let _w = this.state.windowsbyid.get(windowId);
+
+		let i = 0;
+
+		// remove tabs that are in this.state.hiddenTabs
+		let filteredTabs = _w.tabs.filter(tab => !this.state.hiddenTabs.has(tab.id));
+
+		for (let _t of filteredTabs) {
+			i++;
+			if ((filteredTabs.length >= tabPosition && tabPosition === i) || (filteredTabs.length < tabPosition && filteredTabs.length === i)) {
+				this.state.selection.clear();
+				this.select(_t.id);
+				return;
 			}
 		}
 	}
-	scrollTo(what : string, id : number) {
+	scrollTo(what : string, id : string) {
 		var els = document.getElementById(what + "-" + id);
 		if (!!els) {
 			if (!this.elVisible(els)) {
@@ -1352,11 +1362,10 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 
 		this.setState({
 			layout: newLayout,
-			bottomText: " "
 			topText: "Switched to " + this.readablelayout(newLayout) + " view",
+			bottomText: " ",
+			dirty: true
 		});
-
-		this.forceUpdate();
 	}
 	nextlayout() {
 		switch (this.state.layout) {
@@ -1394,13 +1403,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				lastSelect: id
 			});
 		}
-		this.scrollTo('tab', id);
-		var tab = this.state.tabsbyid.get(id);
-		if(!!this.refs['window' + tab.windowId] && !!(this.refs['window' + tab.windowId] as Window).refs['tab' + id]) {
-			((this.refs['window' + tab.windowId] as Window).refs['tab' + id] as Tab).resolveFavIconUrl();
-		}
+		this.scrollTo('tab', id.toString());
 
-		console.log(this.state.selection);
 		var selected = this.state.selection.size;
 		if (selected === 0) {
 			this.setState({
@@ -1529,26 +1533,28 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			}
 		}
 
-		this.scrollTo('tab', this.state.lastSelect);
+		this.scrollTo('tab', this.state.lastSelect.toString());
 
 		const selected = this.state.selection.size;
 		if (selected === 0) {
 			this.setState({
 				topText: "No tabs selected",
-				bottomText: " "
+				bottomText: " ",
+				dirty: true
 			});
 		} else if (selected === 1) {
 			this.setState({
 				topText: "Selected " + selected + " tab",
-				bottomText: "Press enter to switch to it"
+				bottomText: "Press enter to switch to it",
+				dirty: true
 			});
 		} else {
 			this.setState({
 				topText: "Selected " + selected + " tabs",
-				bottomText: "Press enter to move them to a new window"
+				bottomText: "Press enter to move them to a new window",
+				dirty: true
 			});
 		}
-		this.forceUpdate();
 	}
 	drag(e : React.DragEvent<HTMLDivElement>, id : number) {
 		if (!this.state.selection.has(id)) {
@@ -1557,7 +1563,6 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				lastSelect: id
 			});
 		}
-		this.forceUpdate();
 	}
 	async drop(id : number, before : boolean) {
 		var _this = this;
@@ -1588,10 +1593,10 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	async toggleFilterMismatchedTabs() {
 		var _filter_tabs = !this.state.filterTabs;
 		this.setState({
-			filterTabs: _filter_tabs
+			filterTabs: _filter_tabs,
+			dirty: true
 		});
 		await setLocalStorage("filter-tabs", _filter_tabs);
-		this.forceUpdate();
 	}
 	getTip() {
 		var tips = [
