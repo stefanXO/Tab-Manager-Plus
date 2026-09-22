@@ -24,8 +24,6 @@ export class Session extends React.Component<ISession, ISessionState> {
 		this.windowTabClick = this.windowTabClick.bind(this);
 		this.close = this.close.bind(this);
 		this.openTab = this.openTab.bind(this);
-		this.maximize = this.maximize.bind(this);
-
 	}
 	render() {
 		let _this = this;
@@ -183,11 +181,5 @@ export class Session extends React.Component<ISession, ISessionState> {
 		console.log(value);
 		this.props.parentUpdate();
 		// browser.windows.remove(this.props.session.windowsInfo.id);
-	}
-	maximize(e) {
-		e.stopPropagation();
-		// browser.windows.update(this.props.session.windowsInfo.id, {
-		// 	"state": "normal" },
-		// function (a) {this.props.parentUpdate();}.bind(this));
 	}
 }
