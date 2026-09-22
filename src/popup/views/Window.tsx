@@ -717,6 +717,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 		});
 		setTimeout(function() {
 			if(this.state.colorActive) {
+				this.nameBoxRef.current!.focus();
 			}
 		}.bind(this), 150);
 	}
