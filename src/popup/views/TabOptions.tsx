@@ -611,6 +611,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 			dirty: true
 		});
 		await setLocalStorage("sessionsFeature", _sessionsFeature);
+		if (_sessionsFeature) await this.props.manager.sessionSync();
 		this.sessionsText();
 	}
 	sessionsText() {
