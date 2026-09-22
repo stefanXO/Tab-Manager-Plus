@@ -510,36 +510,23 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 
 		let _this = this;
 
-		let runUpdate = debounce(this.update, 250);
-		runUpdate = runUpdate.bind(this);
-
-		var runTabUpdate = async (tabid, changeinfo, tab) => {
-			this.dirtyWindow(tab.windowId);
-
-			if (!!_this.refs["window" + tab.windowId]) {
-				var window = _this.refs["window" + tab.windowId] as Window;
-				if (!!window.refs["tab" + tabid]) {
-					var _tabref = window.refs["tab" + tabid] as Tab;
-					await _tabref.checkSettings();
-				}
-			}
+		var runUpdate = () => {
+			_this.setState({ dirty: true });
 		}
 
+		var runSlowUpdate = debounce(() => {
+			_this.setState({dirty: true});
+		}, 250);
+
 		browser.tabs.onCreated.addListener(runUpdate);
-		browser.tabs.onUpdated.addListener(runUpdate);
-		browser.tabs.onUpdated.addListener(runTabUpdate);
-		browser.tabs.onMoved.addListener(runUpdate);
+		browser.tabs.onUpdated.addListener(runSlowUpdate);
+		browser.tabs.onMoved.addListener(runSlowUpdate);
 		browser.tabs.onRemoved.addListener(runUpdate);
-		browser.tabs.onReplaced.addListener(runUpdate);
+		browser.tabs.onReplaced.addListener(runSlowUpdate);
 		browser.tabs.onDetached.addListener(runUpdate);
 		browser.tabs.onAttached.addListener(runUpdate);
+		browser.tabs.onActivated.addListener(runSlowUpdate);
 
-		browser.tabs.onCreated.addListener(this.onTabCreated);
-		browser.tabs.onDetached.addListener(this.onTabDetached);
-		browser.tabs.onAttached.addListener(this.onTabAttached);
-		browser.tabs.onRemoved.addListener(this.onTabRemoved);
-
-		browser.tabs.onActivated.addListener(runUpdate);
 		browser.windows.onFocusChanged.addListener(runUpdate);
 		browser.windows.onCreated.addListener(runUpdate);
 		browser.windows.onRemoved.addListener(runUpdate);
@@ -649,34 +636,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			colorsActive: !!active ? windowId : 0,
 			dirty: true
 		})
-		console.log("colorsActive", active, windowId, this.state.colorsActive);
-		this.forceUpdate();
+		// console.log("colorsActive", active, windowId, this.state.colorsActive);
 	}
-
-	onTabCreated(tab : browser.Tabs.Tab) {
-		this.dirtyWindow(tab.windowId);
-	}
-
-	onTabRemoved(tabId : number, removeInfo : browser.Tabs.OnRemovedRemoveInfoType) {
-		this.dirtyWindow(removeInfo.windowId);
-	}
-
-	onTabDetached(tabId : number, detachInfo : browser.Tabs.OnDetachedDetachInfoType) {
-		const windowId = detachInfo.oldWindowId;
-		this.dirtyWindow(windowId);
-	}
-
-	onTabAttached(tabId : number, attachInfo: browser.Tabs.OnAttachedAttachInfoType) {
-		const windowId = attachInfo.newWindowId;
-		this.dirtyWindow(windowId);
-	}
-
-	dirtyWindow(windowId : number) {
-		const window = this.refs['window' + windowId] as Window;
-		if (!window) return;
-		window.setState({dirty: true});
-	}
-
 	async update() {
 		const windows : browser.Windows.Window[] = await browser.windows.getAll({ populate: true });
 		const sort_windows = await getLocalStorage("windowAge", []);
