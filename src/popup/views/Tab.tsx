@@ -251,7 +251,11 @@ export class Tab extends React.Component<ITab, ITabState> {
 		var _url : string = this.props.tab.url || this.props.tab.pendingUrl || "";
 
 		if (!!_url && navigator.userAgent.search("Firefox") === -1) {
-			image = "chrome-extension://" + chrome.runtime.id + "/_favicon/?pageUrl=" + encodeURIComponent(_url) + "&size=64"; // &" + Date.now();
+			if (this.props.tab.status !== "loading") {
+				image = "chrome-extension://" + chrome.runtime.id + "/_favicon/?pageUrl=" + encodeURIComponent(_url) + "&size=64"; // &" + Date.now();
+			} else {
+				image = "";
+			}
 		} else if (!!_url && _url.indexOf("chrome://") !== 0 && _url.indexOf("about:") !== 0) {
 			 image = this.props.tab.favIconUrl ? "" + this.props.tab.favIconUrl + "" : "";
 		 } else {
@@ -263,6 +267,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 				image = !iconName || favIcons.indexOf(iconName[0]) < 0 ? "" : "../images/chrome/" + iconName[0] + ".png";
 			}
 		}
+		if (this.state.favIcon == image) return;
 		this.setState({
 			favIcon: image
 		});
