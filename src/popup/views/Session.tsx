@@ -34,24 +34,23 @@ export class Session extends React.Component<ISession, ISessionState> {
 			let tabId = tab.id * tab.id * tab.id * 100;
 			let isHidden = _this.props.hiddenTabs.has(tabId) && _this.props.filterTabs;
 			let isSelected = _this.props.selection.has(tabId);
+			let isFaded: boolean = _this.props.hiddenTabs.has(tab.id) && !_this.props.filterTabs;
 			tab.id = tab.index;
 			if (!isHidden) hideWindow = false;
 			return (
 				<Tab
 					id={"sessiontab_" + _this.props.session.id + "_" + tab.index}
 					key={"sessiontab_" + _this.props.session.id + "_" + tab.index}
+					manager={_this.props.manager}
+					parentSession={_this}
 					session={_this.props.session}
 					layout={_this.props.layout}
 					tab={tab}
 					selected={isSelected}
 					hidden={isHidden}
+					faded={isFaded}
 					draggable={false}
-					click={_this.openTab}
-					middleClick={_this.props.tabMiddleClick}
-					hoverHandler={_this.props.hoverHandler}
 					searchActive={_this.props.searchActive}
-					select={_this.props.select}
-					ref={"sessiontab" + tabId}
 				/>
 			);
 		});
@@ -64,13 +63,13 @@ export class Session extends React.Component<ISession, ISessionState> {
 							className={"icon tabaction restore " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
 							title={"Restore this saved window\nWill restore " + tabs.length + " tabs. Please note : The tabs will be restored without their history."}
 							onClick={this.windowClick}
-							onMouseEnter={this.props.hoverIcon}
+							onMouseEnter={this.props.manager.hoverIcon}
 						/>
 						<div
 							className={"icon tabaction delete " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
 							title={"Delete this saved window\nWill delete " + tabs.length + " tabs permanently"}
 							onClick={this.close}
-							onMouseEnter={this.props.hoverIcon}
+							onMouseEnter={this.props.manager.hoverIcon}
 						/>
 					</div>
 				);
@@ -151,20 +150,20 @@ export class Session extends React.Component<ISession, ISessionState> {
 	async restoreSession(e : React.MouseEvent<HTMLDivElement>, tabId : number) {
 		e.stopPropagation();
 
+		var _this = this;
+
 		await browser.runtime.sendMessage<ICommand>({
 			command: S.create_window_with_session_tabs,
 			session: this.props.session,
 			tab_id: tabId
 		});
 
-		this.props.parentUpdate();
-
 		if (!!window.inPopup) {
 			window.close();
 		}else{
 			setTimeout(function() {
-				this.props.scrollTo("window", browser.windows.WINDOW_ID_CURRENT);
-			}.bind(this), 500);
+				_this.props.manager.scrollTo("window", browser.windows.WINDOW_ID_CURRENT.toString());
+			}, 500);
 		}
 	}
 	async close(e) {
@@ -179,7 +178,7 @@ export class Session extends React.Component<ISession, ISessionState> {
 		});
 
 		console.log(value);
-		this.props.parentUpdate();
+		this.props.manager.setState({dirty: true});
 		// browser.windows.remove(this.props.session.windowsInfo.id);
 	}
 }
