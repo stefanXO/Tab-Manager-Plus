@@ -77,7 +77,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 			);
 		}
 
-		var tabDom = {
+		var tabDom : React.HTMLAttributes<HTMLDivElement> = {
 			className:
 				"icon tab " +
 				(this.props.selected ? "selected " : "") +
@@ -111,11 +111,11 @@ export class Tab extends React.Component<ITab, ITabState> {
 		};
 
 		if (!!this.props.draggable) {
-			tabDom["onDragStart"] = this.dragStart;
-			tabDom["onDragOver"] = this.dragOver;
-			tabDom["onDragLeave"] = this.dragOut;
-			tabDom["onDrop"] = this.drop;
-			tabDom["draggable"] = "true";
+			tabDom.onDragStart = this.dragStart;
+			tabDom.onDragOver = this.dragOver;
+			tabDom.onDragLeave = this.dragOut;
+			tabDom.onDrop = this.drop;
+			tabDom.draggable = "true";
 		}
 
 		return (
