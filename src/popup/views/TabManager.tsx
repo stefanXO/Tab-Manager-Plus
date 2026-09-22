@@ -1053,6 +1053,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			down arrow  40
 		*/
 		if (e.keyCode >= 37 && e.keyCode <= 40) {
+			if (this.state.colorsActive) return;
 			if (document.activeElement !== this.windowContainerRef.current && document.activeElement !== this.searchBoxRef.current) {
 				this.windowContainerRef.current?.focus();
 			}
