@@ -2,12 +2,44 @@
 
 import * as React from "react";
 import * as browser from 'webextension-polyfill';
-import { ITabOptions, ITabOptionsState } from "@types";
+import { ICommand, ITabOptions, ITabOptionsState } from "@types";
+import {getLocalStorage, setLocalStorage} from "@helpers/storage";
+import * as S from "@strings";
+
 
 export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 	constructor(props : ITabOptions) {
 		super(props);
 		this.state = {};
+
+		this.animationsText = this.animationsText.bind(this);
+		this.badgeText = this.badgeText.bind(this);
+		this.changeTabHeight = this.changeTabHeight.bind(this);
+		this.changeTabLimit = this.changeTabLimit.bind(this);
+		this.changeTabWidth = this.changeTabWidth.bind(this);
+		this.compactText = this.compactText.bind(this);
+		this.darkText = this.darkText.bind(this);
+		this.exportSessions = this.exportSessions.bind(this);
+		this.exportSessionsText = this.exportSessionsText.bind(this);
+		this.hideText = this.hideText.bind(this);
+		this.importSessions = this.importSessions.bind(this);
+		this.importSessionsText = this.importSessionsText.bind(this);
+		this.openInOwnTabText = this.openInOwnTabText.bind(this);
+		this.sessionsText = this.sessionsText.bind(this);
+		this.tabActionsText = this.tabActionsText.bind(this);
+		this.tabHeightText = this.tabHeightText.bind(this);
+		this.tabLimitText = this.tabLimitText.bind(this);
+		this.tabWidthText = this.tabWidthText.bind(this);
+		this.toggleAnimations = this.toggleAnimations.bind(this);
+		this.toggleBadge = this.toggleBadge.bind(this);
+		this.toggleCompact = this.toggleCompact.bind(this);
+		this.toggleDark = this.toggleDark.bind(this);
+		this.toggleHide = this.toggleHide.bind(this);
+		this.toggleOpenInOwnTab = this.toggleOpenInOwnTab.bind(this);
+		this.toggleSessions = this.toggleSessions.bind(this);
+		this.toggleTabActions = this.toggleTabActions.bind(this);
+		this.toggleWindowTitles = this.toggleWindowTitles.bind(this);
+		this.windowTitlesText = this.windowTitlesText.bind(this);
 	}
 	logo() {
 		return (
@@ -28,14 +60,14 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 					<div className="toggle-box">
 						<input
 							type="number"
-							onMouseEnter={this.props.tabLimitText}
-							onChange={this.props.changeTabLimit}
+							onMouseEnter={this.tabLimitText}
+							onChange={this.changeTabLimit}
 							value={this.props.tabLimit}
 							id="enable_tabLimit"
 							name="enable_tabLimit"
 						/>
-						<label onMouseEnter={this.props.tabLimitText} htmlFor="enable_tabLimit" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
-						<label className="textlabel" htmlFor="enable_tabLimit" style={{ textAlign: "", whiteSpace: "pre", lineHeight: "2rem" }}>
+						<label onMouseEnter={this.tabLimitText} htmlFor="enable_tabLimit" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
+						<label className="textlabel" htmlFor="enable_tabLimit" style={{ textAlign: "left", whiteSpace: "pre", lineHeight: "2rem" }}>
 							Limit Tabs Per Window
 						</label>
 						<div className="option-description">
@@ -55,7 +87,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 						Manager in a new tab.
 					</div>
 					<div className="toggle-box half-size float-right">
-						<label className="textlabel" htmlFor="enable_tabWidth" style={{ textAlign: "", whiteSpace: "pre", lineHeight: "2rem" }}>
+						<label className="textlabel" htmlFor="enable_tabWidth" style={{ textAlign: "left", whiteSpace: "pre", lineHeight: "2rem" }}>
 							Popup Width
 						</label>
 						<input
@@ -63,16 +95,16 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 							min="450"
 							max="800"
 							step="25"
-							onMouseEnter={this.props.tabWidthText}
-							onChange={this.props.changeTabWidth}
+							onMouseEnter={this.tabWidthText}
+							onChange={this.changeTabWidth}
 							value={this.props.tabWidth}
 							id="enable_tabWidth"
 							name="enable_tabWidth"
 						/>
-						<label onMouseEnter={this.props.tabWidthText} htmlFor="enable_tabWidth" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
+						<label onMouseEnter={this.tabWidthText} htmlFor="enable_tabWidth" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
 					</div>
 					<div className="toggle-box half-size">
-						<label className="textlabel" htmlFor="enable_tabHeight" style={{ textAlign: "", whiteSpace: "pre", lineHeight: "2rem" }}>
+						<label className="textlabel" htmlFor="enable_tabHeight" style={{ textAlign: "left", whiteSpace: "pre", lineHeight: "2rem" }}>
 							Popup Height
 						</label>
 						<input
@@ -80,13 +112,13 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 							min="400"
 							max="600"
 							step="25"
-							onMouseEnter={this.props.tabHeightText}
-							onChange={this.props.changeTabHeight}
+							onMouseEnter={this.tabHeightText}
+							onChange={this.changeTabHeight}
 							value={this.props.tabHeight}
 							id="enable_tabHeight"
 							name="enable_tabHeight"
 						/>
-						<label onMouseEnter={this.props.tabHeightText} htmlFor="enable_tabHeight" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
+						<label onMouseEnter={this.tabHeightText} htmlFor="enable_tabHeight" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
 					</div>
 				</div>
 				<div className="optionsBox">
@@ -95,13 +127,13 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 						<div className="toggle">
 							<input
 								type="checkbox"
-								onMouseEnter={this.props.darkText}
-								onChange={this.props.toggleDark}
+								onMouseEnter={this.darkText}
+								onChange={this.toggleDark}
 								checked={this.props.dark}
 								id="dark_mode"
 								name="dark_mode"
 							/>
-							<label onMouseEnter={this.props.darkText} htmlFor="dark_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
+							<label onMouseEnter={this.darkText} htmlFor="dark_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
 						</div>
 						<label className="textlabel" htmlFor="dark_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
 							Dark mode
@@ -115,13 +147,13 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 						<div className="toggle">
 							<input
 								type="checkbox"
-								onMouseEnter={this.props.compactText}
-								onChange={this.props.toggleCompact}
+								onMouseEnter={this.compactText}
+								onChange={this.toggleCompact}
 								checked={this.props.compact}
 								id="compact_mode"
 								name="compact_mode"
 							/>
-							<label onMouseEnter={this.props.compactText} htmlFor="compact_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
+							<label onMouseEnter={this.compactText} htmlFor="compact_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
 						</div>
 						<label className="textlabel" htmlFor="compact_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
 							Compact mode
@@ -135,13 +167,13 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 						<div className="toggle">
 							<input
 								type="checkbox"
-								onMouseEnter={this.props.animationsText}
-								onChange={this.props.toggleAnimations}
+								onMouseEnter={this.animationsText}
+								onChange={this.toggleAnimations}
 								checked={this.props.animations}
 								id="enable_animations"
 								name="enable_animations"
 							/>
-							<label onMouseEnter={this.props.animationsText} htmlFor="enable_animations" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
+							<label onMouseEnter={this.animationsText} htmlFor="enable_animations" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
 						</div>
 						<label className="textlabel" htmlFor="enable_animations" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
 							Animations
@@ -155,13 +187,13 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 						<div className="toggle">
 							<input
 								type="checkbox"
-								onMouseEnter={this.props.windowTitlesText}
-								onChange={this.props.toggleWindowTitles}
+								onMouseEnter={this.windowTitlesText}
+								onChange={this.toggleWindowTitles}
 								checked={this.props.windowTitles}
 								id="enable_windowTitles"
 								name="enable_windowTitles"
 							/>
-							<label onMouseEnter={this.props.windowTitlesText} htmlFor="enable_windowTitles" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
+							<label onMouseEnter={this.windowTitlesText} htmlFor="enable_windowTitles" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
 						</div>
 						<label className="textlabel" htmlFor="enable_windowTitles" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
 							Window titles
@@ -178,13 +210,13 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 						<div className="toggle">
 							<input
 								type="checkbox"
-								onMouseEnter={this.props.sessionsText}
-								onChange={this.props.toggleSessions}
+								onMouseEnter={this.sessionsText}
+								onChange={this.toggleSessions}
 								checked={this.props.sessionsFeature}
 								id="session_mode"
 								name="session_mode"
 							/>
-							<label onMouseEnter={this.props.sessionsText} htmlFor="session_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
+							<label onMouseEnter={this.sessionsText} htmlFor="session_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
 						</div>
 						<label className="textlabel" htmlFor="session_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
 							Save Windows for Later
@@ -201,10 +233,10 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 							<label className="textlabel" htmlFor="session_export" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
 								<h4>Export/Backup Sessions</h4>
 							</label>
-							<button type="button" onMouseEnter={this.props.exportSessionsText} onClick={this.props.exportSessions} id="session_export" name="session_export">
+							<button type="button" onMouseEnter={this.exportSessionsText} onClick={this.exportSessions} id="session_export" name="session_export">
 								Export/Backup Sessions
 							</button>
-							<label onMouseEnter={this.props.exportSessionsText} htmlFor="session_export" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
+							<label onMouseEnter={this.exportSessionsText} htmlFor="session_export" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
 						</div>
 						<div className="option-description">Allows you to backup your saved windows to an external file.</div>
 					</div>}
@@ -216,13 +248,13 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 							<input
 								type="file"
 								accept="application/json"
-								onMouseEnter={this.props.importSessionsText}
-								onChange={this.props.importSessions}
+								onMouseEnter={this.importSessionsText}
+								onChange={this.importSessions}
 								id="session_import"
 								name="session_import"
 								placeholder="Import/Restore Sessions"
 							/>
-							<label onMouseEnter={this.props.importSessionsText} htmlFor="session_import" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
+							<label onMouseEnter={this.importSessionsText} htmlFor="session_import" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
 						</div>
 						<div className="option-description">
 							Allows you to restore your backup from an external file. The restored windows will be added to your current saved windows.
@@ -235,13 +267,13 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 						<div className="toggle">
 							<input
 								type="checkbox"
-								onMouseEnter={this.props.badgeText}
-								onChange={this.props.toggleBadge}
+								onMouseEnter={this.badgeText}
+								onChange={this.toggleBadge}
 								checked={this.props.badge}
 								id="badge_mode"
 								name="badge_mode"
 							/>
-							<label onMouseEnter={this.props.badgeText} htmlFor="badge_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
+							<label onMouseEnter={this.badgeText} htmlFor="badge_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
 						</div>
 						<label className="textlabel" htmlFor="badge_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
 							Count Tabs
@@ -256,13 +288,13 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 						<div className="toggle">
 							<input
 								type="checkbox"
-								onMouseEnter={this.props.openInOwnTabText}
-								onChange={this.props.toggleOpenInOwnTab}
+								onMouseEnter={this.openInOwnTabText}
+								onChange={this.toggleOpenInOwnTab}
 								checked={this.props.openInOwnTab}
 								id="openinowntab_mode"
 								name="openinowntab_mode"
 							/>
-							<label onMouseEnter={this.props.openInOwnTabText} htmlFor="openinowntab_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
+							<label onMouseEnter={this.openInOwnTabText} htmlFor="openinowntab_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
 						</div>
 						<label className="textlabel" htmlFor="openinowntab_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
 							Open in own Tab by default
@@ -280,13 +312,13 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 						<div className="toggle">
 							<input
 								type="checkbox"
-								onMouseEnter={this.props.hideText}
-								onChange={this.props.toggleHide}
+								onMouseEnter={this.hideText}
+								onChange={this.toggleHide}
 								checked={this.props.hideWindows}
 								id="auto_hide"
 								name="auto_hide"
 							/>
-							<label onMouseEnter={this.props.hideText} htmlFor="auto_hide" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
+							<label onMouseEnter={this.hideText} htmlFor="auto_hide" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
 						</div>
 						<label className="textlabel" htmlFor="auto_hide" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
 							Minimize inactive windows
@@ -302,13 +334,13 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 						<div className="toggle">
 							<input
 								type="checkbox"
-								onMouseEnter={this.props.tabActionsText}
-								onChange={this.props.toggleTabActions}
+								onMouseEnter={this.tabActionsText}
+								onChange={this.toggleTabActions}
 								checked={this.props.tabactions}
 								id="tabactions_mode"
 								name="tabactions_mode"
 							/>
-							<label onMouseEnter={this.props.tabActionsText} htmlFor="tabactions_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
+							<label onMouseEnter={this.tabActionsText} htmlFor="tabactions_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
 						</div>
 						<label className="textlabel" htmlFor="tabactions_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
 							Show action buttons
@@ -419,4 +451,308 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 			</div>
 		);
 	}
+
+	async changeTabLimit(e : React.ChangeEvent<HTMLInputElement>) {
+		var _tab_limit = parseInt(e.target.value);
+		this.props.manager.setState({
+			tabLimit: _tab_limit,
+			dirty: true
+		});
+		await setLocalStorage("tabLimit", _tab_limit);
+		this.tabLimitText();
+	}
+	tabLimitText() {
+		this.props.manager.setState({
+			bottomText: "Limit the number of tabs per window. Will move new tabs into a new window instead. 0 to turn off"
+		});
+	}
+	async changeTabWidth(e : React.ChangeEvent<HTMLInputElement>) {
+		var _tab_width = parseInt(e.target.value);
+		this.props.manager.setState({
+			tabWidth: _tab_width,
+			dirty: true
+		});
+		await setLocalStorage("tabWidth", _tab_width);
+		document.body.style.width = _tab_width + "px";
+		this.tabWidthText();
+	}
+	tabWidthText() {
+		this.props.manager.setState({
+			bottomText: "Change the width of this window. 800 by default."
+		});
+	}
+	async changeTabHeight(e : React.ChangeEvent<HTMLInputElement>) {
+		var _tab_height = parseInt(e.target.value);
+		this.props.manager.setState({
+			tabHeight: _tab_height,
+			dirty: true
+		});
+		await setLocalStorage("tabHeight", _tab_height);
+		document.body.style.height = _tab_height + "px";
+		this.tabHeightText();
+	}
+	tabHeightText() {
+		this.props.manager.setState({
+			bottomText: "Change the height of this window. 600 by default."
+		});
+	}
+	async toggleAnimations() {
+		var _animations = !this.props.manager.state.animations;
+		this.props.manager.setState({
+			animations: _animations,
+			dirty: true
+		});
+		await setLocalStorage("animations", _animations);
+		this.animationsText();
+	}
+	animationsText() {
+		this.props.manager.setState({
+			bottomText: "Enables/disables animations. Default : on"
+		});
+	}
+	async toggleWindowTitles() {
+		var _window_titles = !this.props.manager.state.windowTitles;
+		this.props.manager.setState({
+			windowTitles: _window_titles,
+			dirty: true
+		});
+		await setLocalStorage("windowTitles", _window_titles);
+		this.windowTitlesText();
+	}
+	windowTitlesText() {
+		this.props.manager.setState({
+			bottomText: "Enables/disables window titles. Default : on"
+		});
+	}
+	async toggleCompact() {
+		var _compact = !this.props.manager.state.compact;
+		this.props.manager.setState({
+			compact: _compact,
+			dirty: true
+		});
+		await setLocalStorage("compact", _compact);
+		this.compactText();
+	}
+	compactText() {
+		this.props.manager.setState({
+			bottomText: "Compact mode is a more compressed layout. Default : off"
+		});
+	}
+	async toggleDark() {
+		var _dark = !this.props.manager.state.dark;
+		this.props.manager.setState({
+			dark: _dark,
+			dirty: true
+		});
+		await setLocalStorage("dark", _dark);
+
+		this.darkText();
+		if (_dark) {
+			document.body.className = "dark";
+			document.documentElement.className = "dark";
+		} else {
+			document.body.className = "";
+			document.documentElement.className = "";
+		}
+	}
+	darkText() {
+		this.props.manager.setState({
+			bottomText: "Dark mode inverts the layout - better on the eyes. Default : off"
+		});
+	}
+	async toggleTabActions() {
+		var _tabactions = !this.props.manager.state.tabactions;
+		this.props.manager.setState({
+			tabactions: _tabactions,
+			dirty: true
+		});
+		await setLocalStorage("tabactions", _tabactions);
+		this.tabActionsText();
+	}
+	tabActionsText() {
+		this.props.manager.setState({
+			bottomText: "Adds 'Open a new tab' and 'Close this window' option to each window. Default : on"
+		});
+	}
+	async toggleBadge() {
+		var _badge = !this.props.manager.state.badge;
+		this.props.manager.setState({
+			badge: _badge,
+			dirty: true
+		});
+		await setLocalStorage("badge", _badge);
+		this.badgeText();
+		browser.runtime.sendMessage<ICommand>({command: S.update_tab_count});
+	}
+	badgeText() {
+		this.props.manager.setState({
+			bottomText: "Shows the number of open tabs on the Tab Manager icon. Default : on"
+		});
+	}
+	async toggleOpenInOwnTab() {
+		var _openInOwnTab = !this.props.manager.state.openInOwnTab;
+		this.props.manager.setState({
+			openInOwnTab: _openInOwnTab,
+			dirty: true
+		});
+		await setLocalStorage("openInOwnTab", _openInOwnTab);
+		this.openInOwnTabText();
+		browser.runtime.sendMessage<ICommand>({ command: S.reload_popup_controls });
+	}
+	openInOwnTabText() {
+		this.props.manager.setState({
+			bottomText: "Open the Tab Manager by default in own tab, or as a popup?"
+		});
+	}
+	async toggleSessions() {
+		var _sessionsFeature = !this.props.manager.state.sessionsFeature;
+		this.props.manager.setState({
+			sessionsFeature: _sessionsFeature,
+			dirty: true
+		});
+		await setLocalStorage("sessionsFeature", _sessionsFeature);
+		this.sessionsText();
+	}
+	sessionsText() {
+		this.props.manager.setState({
+			bottomText: "Allows you to save/restore windows into sessions. ( Tab History will be lost ) Default : off"
+		});
+	}
+	exportSessions() {
+		if (this.props.manager.state.sessions.length === 0) {
+			window.alert("You have currently no windows saved for later. There is nothing to export.");
+			return;
+		}
+		let exportName = "tab-manager-plus-backup";
+		let today = new Date();
+		let y = today.getFullYear();
+		// JavaScript months are 0-based.
+		let m = ("0" + (today.getMonth() + 1)).slice(-2);
+		let d = ("0" + today.getDate()).slice(-2);
+		let h = ("0" + today.getHours()).slice(-2);
+		let mi = ("0" + today.getMinutes()).slice(-2);
+		let s = ("0" + today.getSeconds()).slice(-2);
+		exportName += "-" + y + m + d + "-" + h + mi + "-" + s;
+
+		const blob = new Blob([JSON.stringify(this.props.manager.state.sessions, null, 2)], {type: "text/json"});
+		var downloadAnchorNode = document.createElement("a");
+		downloadAnchorNode.download = exportName + ".json";
+		downloadAnchorNode.href = window.URL.createObjectURL(blob);
+		downloadAnchorNode.dataset.downloadurl = ["text/json", downloadAnchorNode.download, downloadAnchorNode.href].join(":");
+
+		const evt = new MouseEvent("click", {
+			view: window,
+			bubbles: true,
+			cancelable: true,
+		});
+
+		document.body.appendChild(downloadAnchorNode); // required for firefox
+
+		downloadAnchorNode.dispatchEvent(evt);
+		downloadAnchorNode.remove();
+
+		this.exportSessionsText();
+		this.props.manager.setState({
+			dirty: true
+		});
+	}
+	exportSessionsText() {
+		this.props.manager.setState({
+			bottomText: "Allows you to export your saved windows to an external backup"
+		});
+	}
+	importSessions(evt : React.ChangeEvent<HTMLInputElement>) {
+		if (navigator.userAgent.search("Firefox") > -1) {
+			if(window.inPopup) {
+				window.alert("Due to a Firefox bug session import does not work in the popup. Please use the options screen or open Tab Manager Plus in its' own tab");
+				return;
+			}
+		}
+		try {
+			let inputField = evt.target; // #session_import
+			let files = evt.target.files;
+			if (!files.length) {
+				alert("No file selected!");
+				this.props.manager.setState({ bottomText: "Error: Could not read the backup file!" });
+				return;
+			}
+			let file = files[0];
+			let reader = new FileReader();
+
+			reader.onload = async event => {
+				//console.log('FILE CONTENT', event.target.result);
+				var backupFile;
+				try {
+					backupFile = JSON.parse(event.target.result.toString());
+				} catch (err) {
+					console.error(err);
+					window.alert(err);
+					this.props.manager.setState({ bottomText: "Error: Could not read the backup file!" });
+				}
+				if (!!backupFile && backupFile.length > 0) {
+					var success = backupFile.length;
+					for (let i = 0; i < backupFile.length; i++) {
+						var newSession = backupFile[i];
+						if (newSession.windowsInfo && newSession.tabs && newSession.id) {
+							let sessions = await getLocalStorage('sessions', {});
+							sessions[newSession.id] = newSession;
+							//this.props.manager.state.sessions.push(obj);
+
+							await setLocalStorage('sessions', sessions).catch(function(err) {
+								console.log(err);
+								console.error(err.message);
+								success--;
+							});
+							//console.log(value);
+						}
+					}
+					this.props.manager.setState({ bottomText: success + " windows successfully restored!" });
+				} else {
+					this.props.manager.setState({ bottomText: "Error: Could not restore any windows from the backup file!" });
+				}
+				inputField.value = "";
+				await this.props.manager.sessionSync();
+			};
+			reader.readAsText(file);
+		} catch (err) {
+			console.error(err);
+			window.alert(err);
+		}
+		this.importSessionsText();
+		this.props.manager.setState({
+			dirty: true
+		});
+	}
+	importSessionsText() {
+		this.props.manager.setState({
+			bottomText: "Allows you to restore your saved windows from an external backup"
+		});
+	}
+	async toggleHide() {
+
+		var _hide_windows = this.props.manager.state.hideWindows;
+		if (navigator.userAgent.search("Firefox") > -1) {
+			_hide_windows = false;
+		} else {
+			var granted = await chrome.permissions.request({ permissions: ["system.display"] });
+			if (granted) {
+				_hide_windows = !_hide_windows;
+			} else {
+				_hide_windows = false;
+			}
+		}
+
+		await setLocalStorage("hideWindows", _hide_windows);
+		this.props.manager.setState({
+			hideWindows: _hide_windows,
+			dirty: true
+		});
+		this.hideText();
+	}
+	hideText() {
+		this.props.manager.setState({
+			bottomText: "Automatically minimizes inactive chrome windows. Default : off"
+		});
+	}
+
 }

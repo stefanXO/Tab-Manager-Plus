@@ -1,4 +1,4 @@
-﻿import * as React from "react";
+﻿import {TabManager} from "@views";
 
 export interface ITabOptions {
 	animations: boolean,
@@ -13,34 +13,5 @@ export interface ITabOptions {
 	tabWidth: number,
 	tabactions: boolean,
 	windowTitles: boolean,
-
-	tabLimitText: () => void,
-	changeTabLimit: (e: React.ChangeEvent<HTMLInputElement>) => void,
-	tabWidthText: () => void,
-	changeTabWidth: (e: React.ChangeEvent<HTMLInputElement>) => void,
-	tabHeightText: () => void,
-	changeTabHeight: (e: React.ChangeEvent<HTMLInputElement>) => void,
-	darkText: () => void,
-	toggleDark: () => void,
-	compactText: () => void,
-	toggleCompact: () => void,
-	animationsText: () => void,
-	toggleAnimations: () => void,
-	windowTitlesText: () => void,
-	toggleWindowTitles: () => void,
-	sessionsText: () => void,
-	toggleSessions: () => void,
-	exportSessionsText: () => void,
-	exportSessions: () => void,
-	importSessionsText: () => void,
-	importSessions: (e: React.ChangeEvent<HTMLInputElement>) => void,
-	badgeText: () => void,
-	toggleBadge: () => void,
-	openInOwnTabText: () => void,
-	toggleOpenInOwnTab: () => void,
-	hideText: () => void,
-	toggleHide: () => void,
-	tabActionsText: () => void,
-	toggleTabActions: () => void
-	getTip: () => string
+	manager: TabManager
 }
