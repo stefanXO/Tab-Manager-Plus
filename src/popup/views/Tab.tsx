@@ -6,14 +6,16 @@ import * as browser from 'webextension-polyfill';
 import {ICommand, ITab, ITabState} from '@types';
 
 export class Tab extends React.Component<ITab, ITabState> {
+
+    tabRef: React.RefObject<HTMLDivElement> = React.createRef();
+
 	constructor(props : ITab) {
 		super(props);
 		this.state = {
 			favIcon: "",
 			dragFavIcon: "",
 			draggingOver: "",
-			hovered: false,
-			tabRef: React.createRef()
+			hovered: false
 		};
 
 		this.onHover = this.onHover.bind(this);
@@ -106,8 +108,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 			onClick: this.click,
 			onMouseDown: this.onMouseDown,
 			onMouseEnter: this.onHover,
-			onMouseOut: this.onHoverOut,
-			ref: this.state.tabRef
+			onMouseOut: this.onHoverOut
 		};
 
 		if (!!this.props.draggable) {
@@ -119,7 +120,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 		}
 
 		return (
-			<div {...tabDom}>
+			<div {...tabDom} ref={this.tabRef}>
 				{children}
 				<div className="limiter" />
 			</div>
@@ -195,9 +196,9 @@ export class Tab extends React.Component<ITab, ITabState> {
 
 		var before = this.state.draggingOver;
 		if (this.props.layout === "vertical") {
-			draggingover = e.nativeEvent.offsetY > this.state.tabRef.current.clientHeight / 2 ? "bottom" : "top";
+			draggingover = e.nativeEvent.offsetY > this.tabRef.current.clientHeight / 2 ? "bottom" : "top";
 		} else {
-			draggingover = e.nativeEvent.offsetX > this.state.tabRef.current.clientWidth / 2 ? "right" : "left";
+			draggingover = e.nativeEvent.offsetX > this.tabRef.current.clientWidth / 2 ? "right" : "left";
 		}
 
 		this.setState({
@@ -239,7 +240,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 		this.forceUpdate();
 		this.props.parentUpdate();
 	}
-	async resolveFavIconUrl() {
+	resolveFavIconUrl() {
 		let image : string;
 		// firefox screenshots; needs <all_urls>
 		// if(!!browser.tabs.captureTab) {
