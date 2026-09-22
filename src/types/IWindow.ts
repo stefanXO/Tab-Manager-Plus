@@ -1,6 +1,5 @@
 ﻿import * as browser from "webextension-polyfill";
-import {MouseEvent} from "react";
-import * as React from "react";
+import {TabManager} from "@views";
 
 export interface IWindow {
 	window?: browser.Windows.Window,
@@ -10,7 +9,6 @@ export interface IWindow {
 	layout: string,
 	tabactions: boolean,
 	sessionsFeature?: boolean,
-	hoverIcon: (e: MouseEvent<HTMLDivElement> | string) => void,
 	hiddenTabs: Set<number>,
 	selection: Set<number>,
 	filterTabs: boolean,
@@ -18,15 +16,5 @@ export interface IWindow {
 	incognito: boolean,
 	draggable: boolean,
 
-	hoverHandler: (tab: browser.Tabs.Tab) => void,
-	scrollTo: (what: string, id: number) => void,
-	parentUpdate: () => void,
-	toggleColors: (active: boolean, windowId: number) => void,
-	tabMiddleClick: (tabId: number) => void,
-	select: (id: number) => void,
-	selectTo?: (id: number, tabs: browser.Tabs.Tab[]) => void,
-	drag?: (e: React.DragEvent<HTMLDivElement>, id: number) => void,
-	drop?: (id: number, before: boolean) => void,
-	dropWindow?: (windowId: number) => void,
-	dragFavicon?: (icon: string) => string
+	manager: TabManager
 }
