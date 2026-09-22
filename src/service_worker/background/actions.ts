@@ -1,6 +1,6 @@
 ﻿"use strict";
 
-import { globalTabsActive } from '@context'
+import { globalTabsActive, tabsActiveLoaded, persistTabsActive } from '@context'
 import * as S from "@strings";
 import { focusOnWindow, focusOnWindowDelayed, createWindowWithTabs, createWindowWithSessionTabs, hashcode } from '@background/windows';
 import { getLocalStorageMap, setLocalStorageMap } from "@helpers/storage";
@@ -9,29 +9,28 @@ import { updateTabCount, discardTabs, moveTabsToWindow, closeTabs, focusOnTabAnd
 import * as browser from 'webextension-polyfill';
 import { ICommand } from '@types';
 
-export async function handleMessages(message : unknown, sender : browser.Runtime.MessageSender) {
+// Returning the handler's promise keeps the message channel open until the
+// work is done, which also keeps the MV3 service worker alive for the whole
+// operation (e.g. restoring a large session). Unknown commands return nothing
+// so the channel is released immediately.
+export function handleMessages(message : unknown, sender : browser.Runtime.MessageSender) {
 	const request = message as ICommand;
 
 	switch (request.command) {
 		case S.reload_popup_controls:
-			setupPopup();
-			break;
+			return setupPopup();
 		case S.update_tab_count:
-			updateTabCount();
-			break;
+			return updateTabCount();
 		case S.discard_tabs:
-			discardTabs(request.tabs);
-			break;
+			return discardTabs(request.tabs);
 		case S.move_tabs_to_window:
-			moveTabsToWindow(request.window_id, request.tabs);
-			break;
+			return moveTabsToWindow(request.window_id, request.tabs);
 		case S.focus_on_tab_and_window:
 			if (!!request.tab) {
-				focusOnTabAndWindow(request.tab.id, request.tab.windowId);
+				return focusOnTabAndWindow(request.tab.id, request.tab.windowId);
 			} else {
-				focusOnTabAndWindow(request.saved_tab.tabId, request.saved_tab.windowId);
+				return focusOnTabAndWindow(request.saved_tab.tabId, request.saved_tab.windowId);
 			}
-			break;
 		case S.focus_on_tab_and_window_delayed:
 			if (!!request.tab) {
 				focusOnTabAndWindowDelayed(request.tab.id, request.tab.windowId);
@@ -40,40 +39,36 @@ export async function handleMessages(message : unknown, sender : browser.Runtime
 			}
 			break;
 		case S.focus_on_window:
-			focusOnWindow(request.window_id);
-			break;
+			return focusOnWindow(request.window_id);
 		case S.focus_on_window_delayed:
 			focusOnWindowDelayed(request.window_id);
 			break;
 		case S.set_window_color:
-			setWindowColor(request.window_id, request.color);
-			break;
+			return setWindowColor(request.window_id, request.color);
 		case S.set_window_name:
-			setWindowName(request.window_id, request.name);
-			break;
+			return setWindowName(request.window_id, request.name);
 		case S.create_window_with_tabs:
-			createWindowWithTabs(request.tabs, request.incognito);
-			break;
+			return createWindowWithTabs(request.tabs, request.incognito);
 		case S.create_window_with_session_tabs:
-			createWindowWithSessionTabs(request.session, request.tab_id);
-			break;
+			return createWindowWithSessionTabs(request.session, request.tab_id);
 		case S.close_tabs:
-			closeTabs(request.tabs);
-			break;
+			return closeTabs(request.tabs);
 	}
 }
 
-export function handleCommands(command : string) {
+export async function handleCommands(command : string) {
 	if (command === S.switch_to_previous_active_tab) {
+		await tabsActiveLoaded;
 		if (!!globalTabsActive && globalTabsActive.length > 1) {
 			var _tab = globalTabsActive[globalTabsActive.length - 2];
-			focusOnTabAndWindow(_tab.tabId, _tab.windowId);
+			await focusOnTabAndWindow(_tab.tabId, _tab.windowId);
 		}
 	}
 }
 
-export function trackLastTab(tab : browser.Tabs.OnActivatedActiveInfoType) {
+export async function trackLastTab(tab : browser.Tabs.OnActivatedActiveInfoType) {
 	if (!!tab && !!tab.tabId) {
+		await tabsActiveLoaded;
 		if (!!globalTabsActive && globalTabsActive.length > 0) {
 			var lastActive = globalTabsActive[globalTabsActive.length - 1];
 			if (!!lastActive && lastActive.tabId === tab.tabId && lastActive.windowId === tab.windowId) {
@@ -89,6 +84,7 @@ export function trackLastTab(tab : browser.Tabs.OnActivatedActiveInfoType) {
 			}
 		}
 		globalTabsActive.push(tab);
+		persistTabsActive();
 	}
 }
 

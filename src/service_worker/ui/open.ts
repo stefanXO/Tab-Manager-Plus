@@ -1,7 +1,7 @@
 ﻿"use strict";
 
 import {getLocalStorage} from "@helpers/storage";
-import {globalTabsActive} from '@context';
+import {globalTabsActive, tabsActiveLoaded} from '@context';
 import {focusOnTabAndWindow} from "@background/tabs";
 import * as browser from 'webextension-polyfill';
 
@@ -27,6 +27,7 @@ export async function openAsOwnTab() {
 	let currentTab : browser.Tabs.OnActivatedActiveInfoType;
 	let previousTab : browser.Tabs.OnActivatedActiveInfoType;
 
+	await tabsActiveLoaded;
 	if (!!globalTabsActive && globalTabsActive.length > 1) {
 		currentTab = globalTabsActive[globalTabsActive.length - 1];
 		previousTab = globalTabsActive[globalTabsActive.length - 2];
@@ -48,14 +49,23 @@ export async function openAsOwnTab() {
 	await browser.tabs.create({url: "popup.html"});
 }
 
+// must stay synchronous: it runs during the service worker's first event loop
+// turn so that the click that woke the worker is not missed. onClicked only
+// fires while no popup url is set, so registering unconditionally is safe -
+// setupPopup() below decides which mode is active via setPopup.
+export function setupPopupListeners() {
+	// browser.action does not exist on Firefox MV2 (browser_action there)
+	if (!browser.action) return;
+	browser.action.onClicked.removeListener(openAsOwnTab);
+	browser.action.onClicked.addListener(openAsOwnTab);
+}
+
 export async function setupPopup() {
 
 	const openInOwnTab = await getLocalStorage("openInOwnTab", false);
 
-	browser.action.onClicked.removeListener(openAsOwnTab);
 	if (openInOwnTab) {
 		await browser.action.setPopup({popup: ""});
-		browser.action.onClicked.addListener(openAsOwnTab);
 	} else {
 		await browser.action.setPopup({popup: "popup.html?popup=true"});
 	}

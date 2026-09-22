@@ -2,12 +2,14 @@
 
 import {getLocalStorage} from "@helpers/storage";
 import {trackLastTab} from "@background/actions"
-import {globalTabsActive} from '@context';
+import {globalTabsActive, tabsActiveLoaded, persistTabsActive} from '@context';
 import {debounce} from "@helpers/utils";
 import {checkWindow, createWindowWithTabs} from '@background/windows';
 import * as browser from 'webextension-polyfill';
 
-export async function setupTabListeners() {
+// must stay synchronous: it runs during the service worker's first event loop
+// turn so that the events that woke the worker are not missed
+export function setupTabListeners() {
 	browser.tabs.onCreated.removeListener(tabAdded);
 	browser.tabs.onUpdated.removeListener(tabCountChanged);
 	browser.tabs.onRemoved.removeListener(tabCountChanged);
@@ -91,6 +93,7 @@ export async function updateTabCount() {
 		await browser.action.setBadgeBackgroundColor({color: "purple"});
 		const _to_remove : number[] = [];
 
+		await tabsActiveLoaded;
 		if (!!globalTabsActive) {
 			for (let i = 0; i < globalTabsActive.length; i++) {
 				const t = globalTabsActive[i];
@@ -104,12 +107,14 @@ export async function updateTabCount() {
 			}
 		}
 
+		const pruned = _to_remove.length > 0;
 		while (_to_remove.length > 0) {
 			let index = _to_remove.pop();
 			if (!!globalTabsActive && globalTabsActive.length > 0) {
 				if (!!globalTabsActive[index]) globalTabsActive.splice(index, 1);
 			}
 		}
+		if (pruned) persistTabsActive();
 
 	} else {
 		await browser.action.setBadgeText({text: ""});

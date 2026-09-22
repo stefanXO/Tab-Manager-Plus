@@ -111,6 +111,11 @@ export async function setupContextMenus() {
 		parentId: "code_menu"
 	});
 
+}
+
+// must stay synchronous: it runs during the service worker's first event loop
+// turn so that a menu click that woke the worker is not missed
+export function setupContextMenuListeners() {
 	browser.contextMenus.onClicked.removeListener(contextListeners);
 	browser.contextMenus.onClicked.addListener(contextListeners);
 }

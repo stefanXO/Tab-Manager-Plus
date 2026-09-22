@@ -9,7 +9,9 @@ import * as browser from 'webextension-polyfill';
 import {ISavedSession} from "@types";
 import {IS_FIREFOX} from "@helpers/browser";
 
-export async function setupWindowListeners() {
+// must stay synchronous: it runs during the service worker's first event loop
+// turn so that the events that woke the worker are not missed
+export function setupWindowListeners() {
 	browser.windows.onFocusChanged.removeListener(windowFocus);
 	browser.windows.onCreated.removeListener(windowCreated);
 	browser.windows.onRemoved.removeListener(windowRemoved);
