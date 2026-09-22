@@ -61,11 +61,13 @@ export async function cleanUp(remove_old = false) {
 		let found = false;
 
 		for (let w of activewindows) {
+			// a window that already has a name or color must not adopt a stale one
+			if (names.has(w.id) || colors.has(w.id)) continue;
 			const windowhash = hashcode(w);
 			for (const [id, _hash] of hashes) {
 				if (!to_check.has(id)) continue;
 				if (exists.has(id)) continue;
-				if (w.id === id) break;
+				if (w.id === id) continue;
 				if (_hash === windowhash) {
 					console.log("found by hash, old id " + id + " new id " + w.id);
 					to_refresh.push(w.id);

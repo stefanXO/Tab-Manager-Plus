@@ -278,12 +278,23 @@ async function windowCreated(window : browser.Windows.Window) {
 async function windowRemoved(windowId : number) {
 	try {
 		if (!!windowId) {
-			await windowActive(windowId);
+			await windowInactive(windowId);
 		}
 	} catch (e) {
 
 	}
 	// console.log("onRemoved", windowId);
+}
+
+async function windowInactive(windowId : number) {
+	var windows = [];
+	var windowAge = await getLocalStorage("windowAge", []);
+	if (windowAge instanceof Array) windows = windowAge;
+
+	if (windows.indexOf(windowId) > -1) {
+		windows.splice(windows.indexOf(windowId), 1);
+		await setLocalStorage("windowAge", windows);
+	}
 }
 
 export async function checkWindow(windowId : number) {
@@ -292,7 +303,7 @@ export async function checkWindow(windowId : number) {
 	const colors: Map<number, string> = await getLocalStorageMap<number, string>(S.windowColors);
 	const names: Map<number, string> = await getLocalStorageMap<number, string>(S.windowNames);
 
-	if (!names[windowId] && !colors[windowId]) return;
+	if (!names.has(windowId) && !colors.has(windowId)) return;
 
 	const hashes: Map<number, number> = await getLocalStorageMap<number, number>(S.windowHashes);
 

@@ -140,27 +140,43 @@ function tabActiveChanged(tab : browser.Tabs.OnActivatedActiveInfoType) {
 	updateTabCountDebounce();
 }
 
+// checkWindow rehashes the whole window, so collapse bursts of tab events
+// into one trailing call per window
+const checkWindowTimers : Map<number, ReturnType<typeof setTimeout>> = new Map();
+
+function checkWindowDebounced(windowId : number) {
+	if (!windowId) return;
+	const timer = checkWindowTimers.get(windowId);
+	if (timer) clearTimeout(timer);
+	checkWindowTimers.set(windowId, setTimeout(function () {
+		checkWindowTimers.delete(windowId);
+		checkWindow(windowId).catch(function (e) {
+			console.error(e);
+		});
+	}, 500));
+}
+
 async function checkTabCreate(tab) {
-	await checkWindow(tab.windowId);
+	checkWindowDebounced(tab.windowId);
 }
 
 async function checkTabUpdate(tabid, changeinfo, tab) {
-	await checkWindow(tab.windowId);
+	checkWindowDebounced(tab.windowId);
 }
 
 async function checkTabRemove(tabid, removeinfo) {
 	if (removeinfo.isWindowClosing) return;
-	await checkWindow(removeinfo.windowId);
+	checkWindowDebounced(removeinfo.windowId);
 }
 
 async function checkTabDetached(tabid, detachinfo) {
-	await checkWindow(detachinfo.oldWindowId);
+	checkWindowDebounced(detachinfo.oldWindowId);
 }
 
 async function checkTabAttached(tabid, attachinfo) {
-	await checkWindow(attachinfo.newWindowId);
+	checkWindowDebounced(attachinfo.newWindowId);
 }
 
 async function checkTabMoved(tabid, moveinfo) {
-	await checkWindow(moveinfo.windowId);
+	checkWindowDebounced(moveinfo.windowId);
 }
