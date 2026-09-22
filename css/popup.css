@@ -192,8 +192,11 @@ h1,h2,h3,h4,h5,h6 {
 	transform: scale(1.1);
 	filter: none;
 }
-.animations .window.blocks-big .tab.search-active{
-	transform: scale(0.9);
+.animations .window.blocks-big .tab.search-active {
+	transform: scale(1.1);
+}
+.animations .window.blocks-big .tab.search-faded{
+	transform: scale(0.75);
 }
 .animations .window.blocks-big .tab.selected {
 	transform: scale(1.05);
@@ -268,7 +271,7 @@ h1,h2,h3,h4,h5,h6 {
 	/*image-rendering: -webkit-optimize-contrast;*/
 	z-index: 99999;
 }
-.tab.search-active{
+.tab.search-faded{
 	opacity:0.25;
 	/*image-rendering: -webkit-optimize-contrast;*/
 }
@@ -300,8 +303,8 @@ h1,h2,h3,h4,h5,h6 {
 	border-color: purple;
 	box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05) inset, 0px 0px 4px rgba(102, 51, 153, 0.6);
 }
-.animations .tab.search-active{
-	transform: scale(0.8);
+.animations .tab.search-faded{
+	transform: scale(0.65);
 }
 .animations .tab.selected {
 	transform: scale(1.3);
