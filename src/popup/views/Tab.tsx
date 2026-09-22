@@ -25,15 +25,22 @@ export class Tab extends React.Component<ITab, ITabState> {
 		this.dragOut = this.dragOut.bind(this);
 		this.drop = this.drop.bind(this);
 		this.resolveFavIconUrl = this.resolveFavIconUrl.bind(this);
-		this.checkSettings = this.checkSettings.bind(this);
+		this.update = this.update.bind(this);
 	}
 
-	async componentDidMount() {
-		await this.checkSettings();
+	componentDidMount() {
+		this.update();
 	}
 
-	async checkSettings() {
-		await this.resolveFavIconUrl();
+	update() {
+		this.resolveFavIconUrl();
+	}
+
+	componentDidUpdate(prevProps, prevState) {
+		const p = prevProps.tab, t = this.props.tab;
+		if (p.status !== t.status || p.favIconUrl !== t.favIconUrl || p.url !== t.url || p.pendingUrl !== t.pendingUrl) {
+			this.resolveFavIconUrl();
+		}
 	}
 
 	render() {
