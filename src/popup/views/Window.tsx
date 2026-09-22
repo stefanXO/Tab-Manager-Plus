@@ -565,6 +565,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 			if (!tabRef) continue;
 			let currentRef = tabRef.current?.tabRef?.current;
 			if (!currentRef) continue;
+			let tabRect = currentRef.getBoundingClientRect();
 			let x = e.nativeEvent.clientX;
 			let y = e.nativeEvent.clientY;
 			let dx = tabRect.x - x;
@@ -573,6 +574,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 			if (d < distance) {
 				distance = d;
 				closestTab = tab.id;
+				closestRef = currentRef;
 			}
 		}
 
