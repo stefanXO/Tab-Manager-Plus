@@ -12,7 +12,7 @@ html{
 	padding:0;
 	margin:0px;
 	user-select:none;
-	font-family:  "interfont",'Graphik', -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", 'Helvetica', Roboto, "Helvetica Neue", Arial, sans-serif;
+	font-family: "interfont",'Graphik', -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", 'Helvetica', Roboto, "Helvetica Neue", Arial, sans-serif;
 	min-width: 450px;
 	min-height: 400px;
 	font-weight: 400;
@@ -24,7 +24,7 @@ body{
 	-webkit-user-select:none;
 	min-width: 450px;
 	min-height:400px;
-	font-family:  "interfont",'Graphik', -apple-system, system-ui, BlinkMacSystemFont, "interfont", "Segoe UI", 'Helvetica', Roboto, "Helvetica Neue", Arial, sans-serif;
+	font-family: "interfont",'Graphik', -apple-system, system-ui, BlinkMacSystemFont, "interfont", "Segoe UI", 'Helvetica', Roboto, "Helvetica Neue", Arial, sans-serif;
 	font-weight: 400;
 }
 body {
