@@ -8,9 +8,12 @@ import {ICommand, ITabManager, ITabManagerState, ISavedSession} from "@types";
 
 export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 
-    private rootRef: React.RefObject<HTMLDivElement>;
-	private windowContainerRef: React.RefObject<HTMLDivElement>;
-	private searchBoxRef: React.RefObject<HTMLInputElement>;
+    private readonly rootRef: React.RefObject<HTMLDivElement>;
+	private readonly windowContainerRef: React.RefObject<HTMLDivElement>;
+	private readonly searchBoxRef: React.RefObject<HTMLInputElement>;
+	private readonly topHoverRef: React.RefObject<HTMLDivElement>;
+	private readonly topBoxRef: React.RefObject<HTMLInputElement>;
+	private readonly topBoxUrlRef: React.RefObject<HTMLInputElement>;
 
 	constructor(props : ITabManager) {
 		super(props);
@@ -385,7 +388,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 						manager={this}
 					/>
 				</div>}
-				<div className="window top" ref="tophover">
+				<div className="window top" ref={this.topHoverRef}>
 					<div className="icon windowaction donate" title="Donate a Coffee" onClick={this.donate} onMouseEnter={this.hoverIcon} />
 					<div
 						className="icon windowaction rate"
@@ -398,11 +401,11 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 						type="text"
 						disabled={true}
 						className="tabtitle"
-						ref="topbox"
+						ref={this.topBoxRef}
 						placeholder={maybePluralize(tabCount, 'tab') + " in " + maybePluralize(this.state.windows.length, 'window')}
 						value={this.state.topText}
 					/>
-					<input type="text" disabled={true} className="taburl" ref="topboxurl" placeholder={this.getTip()} value={this.state.bottomText} />
+					<input type="text" disabled={true} className="taburl" ref={this.topBoxUrlRef} placeholder={this.getTip()} value={this.state.bottomText} />
 				</div>
 				{!this.state.optionsActive && !this.state.colorsActive && <div className={"window searchbox"}>
 					<table>
