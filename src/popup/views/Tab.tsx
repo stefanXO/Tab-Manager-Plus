@@ -93,6 +93,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 				(this.props.tab.incognito ? "incognito " : "") +
 				(this.state.draggingOver) +
 				(this.props.searchActive ? "search-active " : "") +
+				(this.props.faded ? "search-faded " : "") +
 				" tab-" +
 				this.props.tab.id +
 				" " +
@@ -128,7 +129,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 	}
 	onHover(e) {
 		this.setState({hovered: true});
-		this.props.hoverHandler(this.props.tab);
+		this.props.manager.hoverHandler(this.props.tab);
 	}
 	onHoverOut(e) {
 		this.setState({hovered: false});
@@ -144,17 +145,17 @@ export class Tab extends React.Component<ITab, ITabState> {
 		var tabId : number = this.props.tab.id;
 
 		if (e.button === 1) {
-			this.props.middleClick(tabId);
+			this.props.manager.deleteTab(tabId);
 		} else if (e.button === 2 || e.nativeEvent.metaKey || e.nativeEvent.altKey || e.nativeEvent.shiftKey || e.nativeEvent.ctrlKey) {
 			e.preventDefault();
 			if (e.button === 2 && (e.nativeEvent.metaKey || e.nativeEvent.altKey || e.nativeEvent.shiftKey || e.nativeEvent.ctrlKey)) {
-				this.props.selectTo(tabId);
+				this.selectTo(tabId);
 			} else {
-				this.props.select(tabId);
+				this.props.manager.select(tabId);
 			}
 		} else {
-			if (!!this.props.click) {
-				this.props.click(e, this.props.tab.id);
+			if (!!this.props.parentSession) {
+				this.props.parentSession.openTab(e, this.props.tab.id);
 			} else {
 				let windowId = this.props.window.id;
 
@@ -177,21 +178,19 @@ export class Tab extends React.Component<ITab, ITabState> {
 	}
 	dragStart(e : React.DragEvent<HTMLDivElement>) {
 		if (!this.props.draggable) return false;
-		if (!this.props.drag) return false;
 
 		this.setState({
 			dragFavIcon: ""
 		});
-		this.props.dragFavicon(this.state.favIcon);
+		this.props.manager.dragFavicon(this.state.favIcon);
 		e.dataTransfer.setData("Text", this.props.tab.id.toString());
 		e.dataTransfer.setData("text/uri-list", this.props.tab.url || "");
-		this.props.drag(e, this.props.tab.id);
+		this.props.manager.drag(e, this.props.tab.id);
 	}
 	dragOver(e : React.DragEvent<HTMLDivElement>) {
 		if (!this.props.draggable) return false;
-		if (!this.props.drag) return false;
 
-		let favicon = this.props.dragFavicon();
+		let favicon = this.props.manager.dragFavicon();
 		let draggingover;
 
 		var before = this.state.draggingOver;
@@ -208,24 +207,21 @@ export class Tab extends React.Component<ITab, ITabState> {
 
 		if (before !== this.state.draggingOver) {
 			this.forceUpdate();
-			this.props.parentUpdate();
+			this.props.parentWindow.forceUpdate();
 		}
 	}
 	dragOut() {
 		if (!this.props.draggable) return false;
-		if (!this.props.drag) return;
 
 		this.setState({
 			dragFavIcon: "",
 			draggingOver: ""
 		});
 		this.forceUpdate();
-		this.props.parentUpdate();
+		this.props.parentWindow.forceUpdate();
 	}
 	drop(e : React.DragEvent<HTMLDivElement>) {
 		if (!this.props.draggable) return false;
-		if (!this.props.drag) return false;
-		if (!this.props.drop) return;
 
 		this.stopProp(e);
 
@@ -236,9 +232,12 @@ export class Tab extends React.Component<ITab, ITabState> {
 			dragFavIcon: ""
 		});
 
-		this.props.drop(this.props.tab.id, before);
+		this.props.manager.drop(this.props.tab.id, before);
 		this.forceUpdate();
-		this.props.parentUpdate();
+		this.props.parentWindow.forceUpdate();
+	}
+	selectTo(tabId : number) {
+		if (!!tabId) this.props.manager.selectTo(tabId, this.props.parentWindow.props.tabs);
 	}
 	resolveFavIconUrl() {
 		let image : string;
