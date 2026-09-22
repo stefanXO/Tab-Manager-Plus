@@ -768,6 +768,31 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			}
 		}
 	}
+
+	getDuplicates() {
+		const idList : number[] = [...this.state.tabsbyid.keys()];
+		const orig : Set<number> = new Set();
+		const dup : Set<number> = new Set();
+		for (const id of idList) {
+			if (dup.has(id)) continue;
+			var tab = this.state.tabsbyid.get(id);
+			for (const id2 of idList) {
+				if (id === id2) continue;
+				if (orig.has(id2)) continue;
+				var tab2 = this.state.tabsbyid.get(id2);
+				if (tab.url === tab2.url) {
+					dup.add(id2);
+					orig.add(id);
+				}
+			}
+		}
+		// return both original and duplicate tabs
+		return {
+			originals: orig,
+			duplicates: dup
+		};
+	}
+
 	highlightDuplicates(e) {
 		this.state.selection.clear();
 		this.clearHiddenTabs()
@@ -789,19 +814,11 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			return;
 		}
 		let hiddenCount = this.state.hiddenCount || 0;
-		const idList : number[] = [...this.state.tabsbyid.keys()];
-		const dup = [];
-		for (const id of idList) {
-			var tab = this.state.tabsbyid.get(id);
-			for (const id2 of idList) {
-				if (id === id2) continue;
-				var tab2 = this.state.tabsbyid.get(id2);
-				if (tab.url === tab2.url) {
-					dup.push(id);
-					break;
-				}
-			}
-		}
+
+		const duplicates = this.getDuplicates();
+		const dup = duplicates.duplicates;
+		const orig = duplicates.originals;
+
 		for (const dupItem of dup) {
 			searchLen++;
 			hiddenCount -= this.state.hiddenTabs.has(dupItem) ? 1 : 0;
@@ -816,7 +833,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		const idList : number[] = [...this.state.tabsbyid.keys()];
 		for (const tab_id of idList) {
 			// var tab = this.state.tabsbyid.get(tab_id);
-			if (dup.indexOf(tab_id) === -1) {
+			if (!dup.has(tab_id) && !orig.has(tab_id)) {
 				hiddenCount += 1 - (this.state.hiddenTabs.has(tab_id) ? 1 : 0);
 				this.state.hiddenTabs.add(tab_id);
 				this.state.selection.delete(tab_id);
@@ -826,14 +843,14 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				});
 			}
 		}
-		if (dup.length === 0) {
+		if (dup.size === 0) {
 			this.setState({
 				topText: "No duplicates found",
 				bottomText: " "
 			});
 		} else {
 			this.setState({
-				topText: "Highlighted " + dup.length + " duplicate tabs",
+				topText: "Highlighted " + dup.size + " duplicate tabs",
 				bottomText: "Press enter to move them to a new window"
 			});
 		}
@@ -877,14 +894,20 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			let idList : number[];
 			const lastSearchLen = this.state.searchLen;
 			idList = [ ...this.state.tabsbyid.keys() ];
-			if(searchType === "normal") {
-				if (!lastSearchLen) {
-					idList = [ ...this.state.tabsbyid.keys() ];
-				} else if (lastSearchLen > searchLen) {
-					idList = [ ...this.state.hiddenTabs.keys() ];
-				} else if (lastSearchLen < searchLen) {
-					idList = [ ...this.state.selection.keys() ];
-				}
+			// if(searchType === "normal") {
+			// 	if (!lastSearchLen) {
+			// 		idList = [ ...this.state.tabsbyid.keys() ];
+			// 	} else if (lastSearchLen > searchLen) {
+			// 		idList = [ ...this.state.hiddenTabs.keys() ];
+			// 	} else if (lastSearchLen < searchLen) {
+			// 		idList = [ ...this.state.selection.keys() ];
+			// 	}
+			// }
+			if(this.state.dupTabs) {
+				const duplicates = this.getDuplicates();
+				const dup = duplicates.duplicates;
+				const orig = duplicates.originals;
+				idList = [...dup, ...orig];
 			}
 			for (const id of idList) {
 				const tab = this.state.tabsbyid.get(id);
@@ -1119,7 +1142,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 										}
 									} else if (selectedNext) {
 										if (!altKey) this.state.selection.clear();
-										this.select(_t.id);
+										this.select(prev);
 										found = true;
 										break;
 									}
