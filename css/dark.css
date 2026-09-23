@@ -211,3 +211,6 @@ body.dark .color22:hover { background-color: #394062 !important; }
 body.dark .color23:hover { background-color: #4a3a5c !important; }
 body.dark .color24:hover { background-color: #59354a !important; }
 body.dark .color25:hover { background-color: #3a3a3a !important; }
+body.dark .tab > .limiter {
+	background-color: #ffffff;
+}
