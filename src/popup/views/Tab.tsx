@@ -24,23 +24,13 @@ export class Tab extends React.Component<ITab, ITabState> {
 			hovered: false
 		};
 
-		this.onHover = this.onHover.bind(this);
-		this.onHoverOut = this.onHoverOut.bind(this);
-		this.onMouseDown = this.onMouseDown.bind(this);
-		this.click = this.click.bind(this);
-		this.dragStart = this.dragStart.bind(this);
-		this.dragOver = this.dragOver.bind(this);
-		this.dragOut = this.dragOut.bind(this);
-		this.drop = this.drop.bind(this);
-		this.resolveFavIconUrl = this.resolveFavIconUrl.bind(this);
-		this.update = this.update.bind(this);
 	}
 
 	componentDidMount() {
 		this.update();
 	}
 
-	update() {
+	update = () => {
 		this.resolveFavIconUrl();
 	}
 
@@ -132,19 +122,19 @@ export class Tab extends React.Component<ITab, ITabState> {
 			</div>
 		);
 	}
-	onHover(e) {
+	onHover = (e) => {
 		this.setState({hovered: true});
 		this.context.hoverHandler(this.props.tab);
 	}
-	onHoverOut(e) {
+	onHoverOut = (e) => {
 		this.setState({hovered: false});
 	}
-	async onMouseDown(e : React.MouseEvent<HTMLDivElement>) {
+	onMouseDown = async (e : React.MouseEvent<HTMLDivElement>) => {
 		if (e.button === 0) return;
 		if (!this.props.draggable) return;
 		await this.click(e);
 	}
-	async click(e : React.MouseEvent<HTMLDivElement>) {
+	click = async (e : React.MouseEvent<HTMLDivElement>) => {
 		this.stopProp(e);
 
 		var tabId : number = this.props.tab.id;
@@ -181,7 +171,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 		}
 		return false;
 	}
-	dragStart(e : React.DragEvent<HTMLDivElement>) {
+	dragStart = (e : React.DragEvent<HTMLDivElement>) => {
 		if (!this.props.draggable) return false;
 
 		this.setState({
@@ -192,7 +182,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 		e.dataTransfer.setData("text/uri-list", this.props.tab.url || "");
 		this.context.drag(e, this.props.tab.id);
 	}
-	dragOver(e : React.DragEvent<HTMLDivElement>) {
+	dragOver = (e : React.DragEvent<HTMLDivElement>) => {
 		if (!this.props.draggable) return false;
 
 		let favicon = this.context.dragFavicon();
@@ -215,7 +205,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 			this.props.onDragChange?.();
 		}
 	}
-	dragOut() {
+	dragOut = () => {
 		if (!this.props.draggable) return false;
 
 		this.setState({
@@ -225,7 +215,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 		this.forceUpdate();
 		this.props.onDragChange?.();
 	}
-	drop(e : React.DragEvent<HTMLDivElement>) {
+	drop = (e : React.DragEvent<HTMLDivElement>) => {
 		if (!this.props.draggable) return false;
 
 		this.stopProp(e);
@@ -250,7 +240,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 		if (this.state.favIconInverted) style["--fav-inv"] = "url(" + this.state.favIconInverted + ")";
 		return style as React.CSSProperties;
 	}
-	resolveFavIconUrl() {
+	resolveFavIconUrl = () => {
 		let image : string;
 		// firefox screenshots; needs <all_urls>
 		// if(!!browser.tabs.captureTab) {

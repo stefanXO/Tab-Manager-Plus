@@ -22,11 +22,6 @@ export class Session extends React.Component<ISession, ISessionState> {
 			color: color
 		};
 
-		this.stop = this.stop.bind(this);
-		this.windowClick = this.windowClick.bind(this);
-		this.windowTabClick = this.windowTabClick.bind(this);
-		this.close = this.close.bind(this);
-		this.openTab = this.openTab.bind(this);
 	}
 	render() {
 		let _this = this;
@@ -137,16 +132,16 @@ export class Session extends React.Component<ISession, ISessionState> {
 		//console.log("should update?", nextProps, nextState);
 		return true;
 	}
-	stop(e) {
+	stop = (e) => {
 		e.stopPropagation();
 	}
-	async windowTabClick(e : React.MouseEvent<HTMLDivElement>) {
+	windowTabClick = async (e : React.MouseEvent<HTMLDivElement>) => {
 		e.stopPropagation();
 	}
-	async windowClick(e : React.MouseEvent<HTMLDivElement>) {
+	windowClick = async (e : React.MouseEvent<HTMLDivElement>) => {
 		this.restoreSession(e, null);
 	}
-	async openTab(e : React.MouseEvent<HTMLDivElement>, index : number) {
+	openTab = async (e : React.MouseEvent<HTMLDivElement>, index : number) => {
 		this.restoreSession(e, index);
 	}
 	async restoreSession(e : React.MouseEvent<HTMLDivElement>, tabId : number) {
@@ -168,7 +163,7 @@ export class Session extends React.Component<ISession, ISessionState> {
 			}, 500);
 		}
 	}
-	async close(e) {
+	close = async (e) => {
 		e.stopPropagation();
 
 		var sessions = await getLocalStorage('sessions', {});

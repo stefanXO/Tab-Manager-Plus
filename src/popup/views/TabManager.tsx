@@ -81,25 +81,6 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			dirty: false
 		};
 
-		this.addWindow = this.addWindow.bind(this);
-		this.changelayout = this.changelayout.bind(this);
-		this.checkKey = this.checkKey.bind(this);
-		this.clearSelection = this.clearSelection.bind(this);
-		this.clearHiddenTabs = this.clearHiddenTabs.bind(this);
-		this.deleteTabs = this.deleteTabs.bind(this);
-		this.discardTabs = this.discardTabs.bind(this);
-		this.donate = this.donate.bind(this);
-		this.getTip = this.getTip.bind(this);
-		this.highlightDuplicates = this.highlightDuplicates.bind(this);
-		this.hoverIcon = this.hoverIcon.bind(this);
-		this.pinTabs = this.pinTabs.bind(this);
-		this.rateExtension = this.rateExtension.bind(this);
-		this.scrollTo = this.scrollTo.bind(this);
-		this.search = this.search.bind(this);
-		this.sessionSync = this.sessionSync.bind(this);
-		this.toggleFilterMismatchedTabs = this.toggleFilterMismatchedTabs.bind(this);
-		this.toggleOptions = this.toggleOptions.bind(this);
-		this.update = this.update.bind(this);
 		this.rootRef = React.createRef();
 		this.windowContainerRef = React.createRef();
 		this.searchBoxRef = React.createRef();
@@ -235,7 +216,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		this.setState({resetTimeout: _reset_timeout});
 		//this.update();
 	}
-	hoverIcon(e : React.MouseEvent<HTMLDivElement> | string) {
+	hoverIcon = (e : React.MouseEvent<HTMLDivElement> | string) => {
 		var text = "";
 		if (typeof (e) === "string") {
 			text = e;
@@ -601,7 +582,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		// box.select();
 		// box.focus();
 	}
-	async sessionSync() {
+	sessionSync = async () => {
 		let values = await getLocalStorage('sessions', {});
 		//console.log(values);
 		let sessions : ISavedSession[] = [];
@@ -643,17 +624,17 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			return icon;
 		}
 	}
-	rateExtension() {
+	rateExtension = () => {
 		if (navigator.userAgent.search("Firefox") > -1) {
 			browser.tabs.create({ url: "https://addons.mozilla.org/en-US/firefox/addon/tab-manager-plus-for-firefox/" });
 		} else {
 			browser.tabs.create({ url: "https://chrome.google.com/webstore/detail/tab-manager-plus-for-chro/cnkdjjdmfiffagllbiiilooaoofcoeff" });
 		}
 	}
-	donate() {
+	donate = () => {
 		browser.tabs.create({ url: "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=67TZLSEGYQFFW" });
 	}
-	toggleOptions() {
+	toggleOptions = () => {
 		this.setState({
 			optionsActive: !this.state.optionsActive,
 			dirty: true
@@ -666,7 +647,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		})
 		// console.log("colorsActive", active, windowId, this.state.colorsActive);
 	}
-	async update() {
+	update = async () => {
 		const windows : browser.Windows.Window[] = await browser.windows.getAll({ populate: true });
 		const sort_windows = await getLocalStorage("windowAge", []);
 
@@ -712,7 +693,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		//this.state.searchLen = 0;
 		// this.forceUpdate();
 	}
-	async deleteTabs() {
+	deleteTabs = async () => {
 		const _this = this;
 		const tabs: browser.Tabs.Tab[] = [...this.state.selection.keys()].map(function(id) {
 			return _this.state.tabsbyid.get(id);
@@ -729,7 +710,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	deleteTab(tabId : number) {
 		browser.tabs.remove(tabId);
 	}
-	async discardTabs() {
+	discardTabs = async () => {
 		const _this = this;
 		const tabs : browser.Tabs.Tab[] = [...this.state.selection.keys()].map(function(id) {
 			return _this.state.tabsbyid.get(id);
@@ -742,7 +723,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	discardTab(tabId) {
 		browser.tabs.discard(tabId);
 	}
-	async addWindow() {
+	addWindow = async () => {
 		const _this = this;
 		const count = this.state.selection.size;
 		const tabs : browser.Tabs.Tab[] = [...this.state.selection.keys()].map(function(id) {
@@ -775,7 +756,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		}
 		if (!!window.inPopup) window.close();
 	}
-	async pinTabs() {
+	pinTabs = async () => {
 		const _this = this;
 		const tabs : browser.Tabs.Tab[] = [...this.state.selection.keys()]
 			.map(function(id) {
@@ -821,7 +802,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		};
 	}
 
-	highlightDuplicates(e) {
+	highlightDuplicates = (e) => {
 		this.state.selection.clear();
 		this.clearHiddenTabs()
 
@@ -889,7 +870,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			dirty: true
 		});
 	}
-	search(e) {
+	search = (e) => {
 		let hiddenCount = this.state.hiddenCount || 0;
 		const searchQuery = e.target.value || "";
 		const searchLen = searchQuery.length;
@@ -1015,19 +996,19 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			dirty: true
 		});
 	}
-	clearHiddenTabs() {
+	clearHiddenTabs = () => {
 		this.state.hiddenTabs.clear();
 		this.setState({
 			dirty: true
 		});
 	}
-	clearSelection() {
+	clearSelection = () => {
 		this.state.selection.clear();
 		this.setState({
 			lastSelect: 0
 		});
 	}
-	async checkKey(e) {
+	checkKey = async (e) => {
 		// enter
 		if (e.keyCode === 13) {
 			await this.addWindow();
@@ -1294,7 +1275,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			}
 		}
 	}
-	scrollTo(what : string, id : string) {
+	scrollTo = (what : string, id : string) => {
 		var els = document.getElementById(what + "-" + id);
 		if (!!els) {
 			if (!this.elVisible(els)) {
@@ -1302,7 +1283,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			}
 		}
 	}
-	async changelayout(layout) {
+	changelayout = async (layout) => {
 		var newLayout;
 		if (layout && typeof (layout) === "string") {
 			newLayout = layout;
@@ -1541,7 +1522,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 
 		this.state.selection.clear();
 	}
-	async toggleFilterMismatchedTabs() {
+	toggleFilterMismatchedTabs = async () => {
 		var _filter_tabs = !this.state.filterTabs;
 		this.setState({
 			filterTabs: _filter_tabs,
@@ -1549,7 +1530,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		});
 		await setLocalStorage("filter-tabs", _filter_tabs);
 	}
-	getTip() {
+	getTip = () => {
 		var tips = [
 			"You can right click on a tab to select it",
 			"Press enter to move all selected tabs to a new window",

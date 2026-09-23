@@ -16,34 +16,6 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		super(props);
 		this.state = {};
 
-		this.animationsText = this.animationsText.bind(this);
-		this.badgeText = this.badgeText.bind(this);
-		this.changeTabHeight = this.changeTabHeight.bind(this);
-		this.changeTabLimit = this.changeTabLimit.bind(this);
-		this.changeTabWidth = this.changeTabWidth.bind(this);
-		this.compactText = this.compactText.bind(this);
-		this.darkText = this.darkText.bind(this);
-		this.exportSessions = this.exportSessions.bind(this);
-		this.exportSessionsText = this.exportSessionsText.bind(this);
-		this.hideText = this.hideText.bind(this);
-		this.importSessions = this.importSessions.bind(this);
-		this.importSessionsText = this.importSessionsText.bind(this);
-		this.openInOwnTabText = this.openInOwnTabText.bind(this);
-		this.sessionsText = this.sessionsText.bind(this);
-		this.tabActionsText = this.tabActionsText.bind(this);
-		this.tabHeightText = this.tabHeightText.bind(this);
-		this.tabLimitText = this.tabLimitText.bind(this);
-		this.tabWidthText = this.tabWidthText.bind(this);
-		this.toggleAnimations = this.toggleAnimations.bind(this);
-		this.toggleBadge = this.toggleBadge.bind(this);
-		this.toggleCompact = this.toggleCompact.bind(this);
-		this.toggleDark = this.toggleDark.bind(this);
-		this.toggleHide = this.toggleHide.bind(this);
-		this.toggleOpenInOwnTab = this.toggleOpenInOwnTab.bind(this);
-		this.toggleSessions = this.toggleSessions.bind(this);
-		this.toggleTabActions = this.toggleTabActions.bind(this);
-		this.toggleWindowTitles = this.toggleWindowTitles.bind(this);
-		this.windowTitlesText = this.windowTitlesText.bind(this);
 	}
 	logo() {
 		return (
@@ -456,63 +428,63 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		);
 	}
 
-	async changeTabLimit(e : React.ChangeEvent<HTMLInputElement>) {
+	changeTabLimit = async (e : React.ChangeEvent<HTMLInputElement>) => {
 		var _tab_limit = parseInt(e.target.value);
 		this.context.setSetting("tabLimit", _tab_limit);
 		await setLocalStorage("tabLimit", _tab_limit);
 		this.tabLimitText();
 	}
-	tabLimitText() {
+	tabLimitText = () => {
 		this.context.setBottomText("Limit the number of tabs per window. Will move new tabs into a new window instead. 0 to turn off");
 	}
-	async changeTabWidth(e : React.ChangeEvent<HTMLInputElement>) {
+	changeTabWidth = async (e : React.ChangeEvent<HTMLInputElement>) => {
 		var _tab_width = parseInt(e.target.value);
 		this.context.setSetting("tabWidth", _tab_width);
 		await setLocalStorage("tabWidth", _tab_width);
 		document.body.style.width = _tab_width + "px";
 		this.tabWidthText();
 	}
-	tabWidthText() {
+	tabWidthText = () => {
 		this.context.setBottomText("Change the width of this window. 800 by default.");
 	}
-	async changeTabHeight(e : React.ChangeEvent<HTMLInputElement>) {
+	changeTabHeight = async (e : React.ChangeEvent<HTMLInputElement>) => {
 		var _tab_height = parseInt(e.target.value);
 		this.context.setSetting("tabHeight", _tab_height);
 		await setLocalStorage("tabHeight", _tab_height);
 		document.body.style.height = _tab_height + "px";
 		this.tabHeightText();
 	}
-	tabHeightText() {
+	tabHeightText = () => {
 		this.context.setBottomText("Change the height of this window. 600 by default.");
 	}
-	async toggleAnimations() {
+	toggleAnimations = async () => {
 		var _animations = !this.props.animations;
 		this.context.setSetting("animations", _animations);
 		await setLocalStorage("animations", _animations);
 		this.animationsText();
 	}
-	animationsText() {
+	animationsText = () => {
 		this.context.setBottomText("Enables/disables animations. Default : on");
 	}
-	async toggleWindowTitles() {
+	toggleWindowTitles = async () => {
 		var _window_titles = !this.props.windowTitles;
 		this.context.setSetting("windowTitles", _window_titles);
 		await setLocalStorage("windowTitles", _window_titles);
 		this.windowTitlesText();
 	}
-	windowTitlesText() {
+	windowTitlesText = () => {
 		this.context.setBottomText("Enables/disables window titles. Default : on");
 	}
-	async toggleCompact() {
+	toggleCompact = async () => {
 		var _compact = !this.props.compact;
 		this.context.setSetting("compact", _compact);
 		await setLocalStorage("compact", _compact);
 		this.compactText();
 	}
-	compactText() {
+	compactText = () => {
 		this.context.setBottomText("Compact mode is a more compressed layout. Default : off");
 	}
-	async toggleDark() {
+	toggleDark = async () => {
 		var _dark = !this.props.dark;
 		this.context.setSetting("dark", _dark);
 		await setLocalStorage("dark", _dark);
@@ -526,49 +498,49 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 			document.documentElement.className = "";
 		}
 	}
-	darkText() {
+	darkText = () => {
 		this.context.setBottomText("Dark mode inverts the layout - better on the eyes. Default : off");
 	}
-	async toggleTabActions() {
+	toggleTabActions = async () => {
 		var _tabactions = !this.props.tabactions;
 		this.context.setSetting("tabactions", _tabactions);
 		await setLocalStorage("tabactions", _tabactions);
 		this.tabActionsText();
 	}
-	tabActionsText() {
+	tabActionsText = () => {
 		this.context.setBottomText("Adds 'Open a new tab' and 'Close this window' option to each window. Default : on");
 	}
-	async toggleBadge() {
+	toggleBadge = async () => {
 		var _badge = !this.props.badge;
 		this.context.setSetting("badge", _badge);
 		await setLocalStorage("badge", _badge);
 		this.badgeText();
 		browser.runtime.sendMessage<ICommand>({command: S.update_tab_count});
 	}
-	badgeText() {
+	badgeText = () => {
 		this.context.setBottomText("Shows the number of open tabs on the Tab Manager icon. Default : on");
 	}
-	async toggleOpenInOwnTab() {
+	toggleOpenInOwnTab = async () => {
 		var _openInOwnTab = !this.props.openInOwnTab;
 		this.context.setSetting("openInOwnTab", _openInOwnTab);
 		await setLocalStorage("openInOwnTab", _openInOwnTab);
 		this.openInOwnTabText();
 		browser.runtime.sendMessage<ICommand>({ command: S.reload_popup_controls });
 	}
-	openInOwnTabText() {
+	openInOwnTabText = () => {
 		this.context.setBottomText("Open the Tab Manager by default in own tab, or as a popup?");
 	}
-	async toggleSessions() {
+	toggleSessions = async () => {
 		var _sessionsFeature = !this.props.sessionsFeature;
 		this.context.setSetting("sessionsFeature", _sessionsFeature);
 		await setLocalStorage("sessionsFeature", _sessionsFeature);
 		if (_sessionsFeature) await this.context.sessionSync();
 		this.sessionsText();
 	}
-	sessionsText() {
+	sessionsText = () => {
 		this.context.setBottomText("Allows you to save/restore windows into sessions. ( Tab History will be lost ) Default : off");
 	}
-	exportSessions() {
+	exportSessions = () => {
 		if (this.props.sessions.length === 0) {
 			window.alert("You have currently no windows saved for later. There is nothing to export.");
 			return;
@@ -604,10 +576,10 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		this.exportSessionsText();
 		this.context.reload();
 	}
-	exportSessionsText() {
+	exportSessionsText = () => {
 		this.context.setBottomText("Allows you to export your saved windows to an external backup");
 	}
-	importSessions(evt : React.ChangeEvent<HTMLInputElement>) {
+	importSessions = (evt : React.ChangeEvent<HTMLInputElement>) => {
 		if (navigator.userAgent.search("Firefox") > -1) {
 			if(window.inPopup) {
 				window.alert("Due to a Firefox bug session import does not work in the popup. Please use the options screen or open Tab Manager Plus in its' own tab");
@@ -667,10 +639,10 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		this.importSessionsText();
 		this.context.reload();
 	}
-	importSessionsText() {
+	importSessionsText = () => {
 		this.context.setBottomText("Allows you to restore your saved windows from an external backup");
 	}
-	async toggleHide() {
+	toggleHide = async () => {
 
 		var _hide_windows = this.props.hideWindows;
 		if (navigator.userAgent.search("Firefox") > -1) {
@@ -688,7 +660,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		this.context.setSetting("hideWindows", _hide_windows);
 		this.hideText();
 	}
-	hideText() {
+	hideText = () => {
 		this.context.setBottomText("Automatically minimizes inactive chrome windows. Default : off");
 	}
 

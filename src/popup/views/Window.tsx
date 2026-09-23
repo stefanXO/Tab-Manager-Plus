@@ -29,26 +29,6 @@ export class Window extends React.Component<IWindow, IWindowState> {
 			tabrefs: new Map<number, React.RefObject<Tab>>()
 		};
 
-		this.addTab = this.addTab.bind(this);
-		this.changeColors = this.changeColors.bind(this);
-		this.changeName = this.changeName.bind(this);
-		this.checkKey = this.checkKey.bind(this);
-		this.closePopup = this.closePopup.bind(this);
-		this.close = this.close.bind(this);
-		this.colors = this.colors.bind(this);
-		this.dragOver = this.dragOver.bind(this);
-		this.dragLeave = this.dragLeave.bind(this);
-		this.drop = this.drop.bind(this);
-		this.maximize = this.maximize.bind(this);
-		this.minimize = this.minimize.bind(this);
-		this.save = this.save.bind(this);
-		this.stop = this.stop.bind(this);
-		this.windowClick = this.windowClick.bind(this);
-		this.hoverWindow = this.hoverWindow.bind(this);
-		this.hoverWindowOut = this.hoverWindowOut.bind(this);
-		this.checkSettings = this.checkSettings.bind(this);
-		this.hoverIcon = this.hoverIcon.bind(this);
-		this.refreshTabs = this.refreshTabs.bind(this);
 	}
 
 	async componentDidMount() {
@@ -62,7 +42,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 		// }
 	}
 
-	async checkSettings() {
+	checkSettings = async () => {
 		let colors = await getLocalStorageMap<number, string>(S.windowColors);
 		let color = colors.get(this.props.window.id) || "default";
 
@@ -555,28 +535,28 @@ export class Window extends React.Component<IWindow, IWindowState> {
 			return null;
 		}
 	}
-	stop(e) {
+	stop = (e) => {
 		this.stopProp(e);
 	}
-	hoverIcon(e : React.MouseEvent<HTMLDivElement> | string) {
+	hoverIcon = (e : React.MouseEvent<HTMLDivElement> | string) => {
 		this.context.hoverIcon(e);
 	}
-	refreshTabs() {
+	refreshTabs = () => {
 		this.forceUpdate();
 	}
-	addTab(e) {
+	addTab = (e) => {
 		this.stopProp(e);
 		browser.tabs.create({ windowId: this.props.window.id });
 	}
-	dragOver(e) {
+	dragOver = (e) => {
 		this.setState({hover: true});
 		this.stopProp(e);
 	}
-	dragLeave(e) {
+	dragLeave = (e) => {
 		this.setState({hover: false});
 		this.stopProp(e);
 	}
-	drop(e) {
+	drop = (e) => {
 		let distance = 1000000;
 		let closestTab = null;
 		let closestRef = null;
@@ -615,22 +595,22 @@ export class Window extends React.Component<IWindow, IWindowState> {
 			this.context.dropWindow(this.props.window.id);
 		}
 	}
-	hoverWindow(tabs, _) {
+	hoverWindow = (tabs, _) => {
 		this.setState({ hover: true });
 		this.hoverIcon("Focus this window\nWill select this window with " + tabs.length + " tabs");
 		// this.hoverIcon(e);
 	}
-	hoverWindowOut(_) {
+	hoverWindowOut = (_) => {
 		this.setState({ hover: false });
 	}
-	async checkKey(e) {
+	checkKey = async (e) => {
 		// close popup when enter or escape have been pressed
 		if (e.keyCode === 13 || e.keyCode === 27) {
 			this.stopProp(e);
 			await this.closePopup();
 		}
 	}
-	async windowClick(e) {
+	windowClick = async (e) => {
 		this.stopProp(e);
 
 		let windowId = this.props.window.id;
@@ -648,7 +628,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 		}
 		return false;
 	}
-	async close(e) {
+	close = async (e) => {
 		this.stopProp(e);
 		await browser.windows.remove(this.props.window.id);
 	}
@@ -659,7 +639,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 			return v.toString(16);
 		});
 	}
-	async save(e) {
+	save = async (e) => {
 		this.stopProp(e);
 		var _this = this;
 
@@ -718,21 +698,21 @@ export class Window extends React.Component<IWindow, IWindowState> {
 			_this.context.scrollTo("session", session.id);
 		}, 150);
 	}
-	async minimize(e) {
+	minimize = async (e) => {
 		this.stopProp(e);
 		await browser.windows.update(this.props.window.id, {
 			state: "minimized"
 		});
 		this.context.reload();
 	}
-	async maximize(e) {
+	maximize = async (e) => {
 		this.stopProp(e);
 		await browser.windows.update(this.props.window.id, {
 			state: "normal"
 		});
 		this.context.reload();
 	}
-	colors(e) {
+	colors = (e) => {
 		this.stopProp(e);
 		this.context.toggleColors(!this.state.colorActive, this.props.window.id);
 		this.setState({
@@ -744,7 +724,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 			}
 		}.bind(this), 150);
 	}
-	async changeColors(a) {
+	changeColors = async (a) => {
 		this.setState(a);
 		this.context.toggleColors(!this.state.colorActive, this.props.window.id);
 
@@ -759,7 +739,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 		this.setState({ color: color });
 		await this.closePopup();
 	}
-	async closePopup() {
+	closePopup = async () => {
 		this.context.toggleColors(!this.state.colorActive, this.props.window.id);
 		this.setState({
 			colorActive: !this.state.colorActive
@@ -767,7 +747,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 		await this.update();
 		this.context.reload();
 	}
-	async changeName(e) {
+	changeName = async (e) => {
 		// this.setState(a);
 		let name = "";
 		if(e && e.target && e.target.value) name = e.target.value;
