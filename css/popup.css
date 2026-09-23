@@ -322,8 +322,8 @@ h1,h2,h3,h4,h5,h6 {
 	transform: scale(1);
 }
 .tab.highlighted {
-	border-color: purple;
-	box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05) inset, 0px 0px 4px rgba(102, 51, 153, 0.6);
+	border-color: rgba(102, 51, 153, 0.85);
+	box-shadow: 0 0 0 1px rgba(102, 51, 153, 0.35);
 }
 .animations .tab.search-active {
 	transform: scale(1.1);
@@ -1169,6 +1169,9 @@ table td {
 .window.vertical .tab.full.highlighted {
 	border-left-color: rgba(102, 51, 153, 0.8);
 	background-color: rgba(102, 51, 153, 0.06);
+}
+.window.vertical .tab.full.highlighted:hover {
+	background-color: rgba(102, 51, 153, 0.14);
 }
 .window.vertical .tab.full.selected {
 	background-color: rgba(255, 230, 0, 0.45);
