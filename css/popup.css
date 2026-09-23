@@ -351,8 +351,8 @@ h1,h2,h3,h4,h5,h6 {
 	transform: scale(1);
 }
 .tab.highlighted {
-	border-color: rgba(102, 51, 153, 0.85);
-	box-shadow: 0 0 0 1px rgba(102, 51, 153, 0.35);
+	border-color: rgba(0, 0, 0, 0.75);
+	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
 }
 .animations .tab.search-active {
 	transform: scale(1.1);
