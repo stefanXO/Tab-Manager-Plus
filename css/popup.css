@@ -531,20 +531,22 @@ h1,h2,h3,h4,h5,h6 {
 	background-image:url(../images/show64.png);
 }
 .tab.left > .limiter, .tab.right > .limiter{
-	width:2px;
-	height:20px;
+	position:absolute;
+	top:-3px;
+	bottom:-3px;
+	width:3px;
+	border-radius:2px;
 	background-color:#000000;
-	margin-top:-2px;
 }
 .tab.left > .limiter{
-	margin-left:-4px;
+	left:-5px;
 }
 .tab.right > .limiter{
-	float:right;
-	margin-right:-4px;
+	right:-5px;
 }
 .tab.top > .limiter, .tab.bottom > .limiter{
-	height:2px;
+	height:3px;
+	border-radius:2px;
 	left:0px;
 	right:0px;
 	position:absolute;
