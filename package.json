@@ -9,7 +9,12 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "watch": "tsc --noEmit && node watch.mjs",
-    "build": "tsc --noEmit && node build.mjs"
+    "build": "tsc --noEmit && node build.mjs",
+    "devbuild": "tsc --noEmit && node devbuild.mjs",
+    "version": "node scripts/sync-version.mjs && git add manifest.json manifest-firefox.json readme.md changelog.html",
+    "check-version": "node scripts/sync-version.mjs --check",
+    "release": "bash babelit.sh",
+    "react-devtools": "react-devtools"
   },
   "repository": {
     "type": "git",

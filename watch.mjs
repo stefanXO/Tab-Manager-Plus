@@ -1,4 +1,8 @@
-import * as esbuild from 'esbuild';
+import * as esbuild from 'esbuild'
+import { readFileSync } from 'node:fs'
+
+// version comes from package.json so `node build.mjs` works outside `npm run` too
+const { version } = JSON.parse(readFileSync('package.json', 'utf8'));
 
 async function watch() {
 	const ctx = await esbuild.context({
@@ -20,7 +24,7 @@ async function watch() {
 			},
 		}],
 		define: {
-			'process.env.VERSION': '"' + process.env.npm_package_version + '"'
+			'process.env.VERSION': JSON.stringify(version)
 		}
 	});
 

@@ -1,4 +1,4 @@
-# <sub><img src="images/browsers64.png" width="64px" height="64px"></sub> Tab Manager Plus 6.0.0
+# <sub><img src="images/browsers64.png" width="64px" height="64px"></sub> Tab Manager Plus <!-- VERSION -->6.0.1<!-- /VERSION -->
 
 ##### Search through your tabs instantly, save windows for later, limit open tabs per window - and many more.
 
