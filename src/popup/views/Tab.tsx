@@ -17,6 +17,8 @@ export class Tab extends React.Component<ITab, ITabState> {
 		super(props);
 		this.state = {
 			favIcon: "",
+			iconTone: "normal",
+			favIconInverted: "",
 			dragFavIcon: "",
 			draggingOver: "",
 			hovered: false
@@ -70,10 +72,8 @@ export class Tab extends React.Component<ITab, ITabState> {
 			children.push(
 				<div
 					key={"tab-icon-" + this.props.tab.id}
-					className="iconoverlay "
-					style={{
-						backgroundImage: !!this.state.favIcon ? "url(" + this.state.favIcon + ")" : ""
-					}}
+					className={"iconoverlay icon-" + this.state.iconTone}
+					style={this.favIconStyle()}
 				/>
 			);
 			children.push(
@@ -98,6 +98,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 				(this.state.draggingOver) +
 				(this.props.searchActive ? "search-active " : "") +
 				(this.props.faded ? "search-faded " : "") +
+				"icon-" + this.state.iconTone + " " +
 				" tab-" +
 				this.props.tab.id +
 				" " +
@@ -105,7 +106,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 			style:
 				(this.props.layout === "vertical"
 					? { }
-					: { backgroundImage: !!this.state.favIcon ? "url(" + this.state.favIcon + ")" : "" }
+					: this.favIconStyle()
 				)
 			,
 			id: this.props.id,
@@ -243,6 +244,12 @@ export class Tab extends React.Component<ITab, ITabState> {
 	selectTo(tabId : number) {
 		if (!!tabId && !!this.props.tabs) this.context.selectTo(tabId, this.props.tabs);
 	}
+	favIconStyle() : React.CSSProperties {
+		const style : Record<string, string> = {};
+		if (this.state.favIcon) style["--fav"] = "url(" + this.state.favIcon + ")";
+		if (this.state.favIconInverted) style["--fav-inv"] = "url(" + this.state.favIconInverted + ")";
+		return style as React.CSSProperties;
+	}
 	resolveFavIconUrl() {
 		let image : string;
 		// firefox screenshots; needs <all_urls>
@@ -273,7 +280,15 @@ export class Tab extends React.Component<ITab, ITabState> {
 		}
 		if (this.state.favIcon == image) return;
 		this.setState({
-			favIcon: image
+			favIcon: image,
+			iconTone: "normal",
+			favIconInverted: ""
+		});
+		faviconInfo(image).then((info) => {
+			// the favicon may have changed again while we were measuring
+			if (this.state.favIcon !== image) return;
+			if (this.state.iconTone === info.tone && this.state.favIconInverted === (info.inverted || "")) return;
+			this.setState({ iconTone: info.tone, favIconInverted: info.inverted || "" });
 		});
 	}
 	stopProp(e) {
