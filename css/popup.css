@@ -154,9 +154,25 @@ input, textarea {
 	-ms-transform: translate3d(0, 0, 0);
 	transform: translate3d(0, 0, 0);*/
 }
-.icon.tab, .iconoverlay {
+/* Favicon visibility. Tab.tsx sets --fav (the icon) and tags the tile with an
+   icon-* class from src/helpers/favicon.ts:
+     icon-mono-light  only white/grey → the icon is inverted with a CSS filter
+     icon-light       mostly white but not only (white card with a coloured
+                      mark, black-and-white…) → tint the tile so the white
+                      shape has an edge, like Chrome's dark tab strip does
+     icon-mono-dark / icon-dark  the same for black icons, handled in dark.css
+   The tile draws its icon on ::after (so a filter can hit the icon alone, not
+   the tile); the list layout uses the .iconoverlay child the same way. Size and
+   position come from the tile's own background-* rules via inherit.
+   The tint rules sit before .highlighted / .selected so those still win. */
+.icon.tab {
+	position: relative;
+	background-image: none;
+}
+.icon.tab::after {
 	content: "";
 	position: absolute;
+	inset: 0;
 	pointer-events: none;
 	background-image: var(--fav, url(../images/generic.png));
 	background-size: inherit;
