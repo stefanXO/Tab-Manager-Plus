@@ -192,7 +192,6 @@ export class Window extends React.Component<IWindow, IWindowState> {
 
 		let hideWindow = true;
 		let titleAdded = false;
-		let tabsperrow = this.props.layout.indexOf("blocks") > -1 ? Math.ceil(Math.sqrt(this.props.tabs.length + 2)) : this.props.layout === "vertical" ? 1 : 15;
 		let tabs = this.props.tabs.map(function(tab) {
 			const isHidden : boolean = _this.props.hiddenTabs.has(tab.id) && _this.props.filterTabs;
 			let isSelected : boolean = _this.props.selection.has(tab.id);
@@ -287,9 +286,6 @@ export class Window extends React.Component<IWindow, IWindowState> {
 				);
 			}
 
-			if (tabsperrow < 5) {
-				tabsperrow = 5;
-			}
 			let children = [];
 			if (!!titleAdded) {
 				children.push(tabs.shift());
@@ -301,10 +297,6 @@ export class Window extends React.Component<IWindow, IWindowState> {
 				if (isHidden || (!tab && tabs[j].key.startsWith("windowtab_"))) continue;
 				z++;
 				children.push(tabs[j]);
-
-				if ((z + 1) % tabsperrow === 0 && z && this.props.layout.indexOf("blocks") > -1) {
-					children.push(<div className="newliner" key={"windownlz_" + _this.props.window.id + "_" + z} />);
-				}
 			}
 			let focused = false;
 			if (this.props.window.focused || this.props.lastOpenWindow === this.props.window.id) {

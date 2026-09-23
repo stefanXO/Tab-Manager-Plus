@@ -28,7 +28,6 @@ export class Session extends React.Component<ISession, ISessionState> {
 		let _this = this;
 		let hideWindow = true;
 		let titleAdded = false;
-		let tabsperrow = this.props.layout.indexOf("blocks") > -1 ? Math.ceil(Math.sqrt(this.props.tabs.length + 2)) : this.props.layout === "vertical" ? 1 : 15;
 		let tabs = this.props.tabs.map(function(tab) {
 			let tabId = tab.id * tab.id * tab.id * 100;
 			let isHidden = _this.props.hiddenTabs.has(tabId) && _this.props.filterTabs;
@@ -81,18 +80,12 @@ export class Session extends React.Component<ISession, ISessionState> {
 					titleAdded = true;
 				}
 			}
-			if (tabsperrow < 3) {
-				tabsperrow = 3;
-			}
 			var children = [];
 			if (!!titleAdded) {
 				children.push(tabs.shift());
 			}
 			for (var j = 0; j < tabs.length; j++) {
 				children.push(tabs[j]);
-				if ((j + 1) % tabsperrow === 0 && j && this.props.layout.indexOf("blocks") > -1) {
-					children.push(<div key={"sessionnl_" + _this.props.session.id + "_" + j} className="newliner" />);
-				}
 			}
 			var focused = false;
 			if (this.props.session.windowsInfo.focused || this.props.lastOpenWindow === this.props.session.windowsInfo.id) {

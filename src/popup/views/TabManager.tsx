@@ -7,6 +7,7 @@ import * as browser from 'webextension-polyfill';
 import {ICommand, ITabManager, ITabManagerState, ISavedSession} from "@types";
 import {ManagerContext, ITabManagerActions, ISettings} from "../context";
 import {IS_FIREFOX} from "@helpers/browser";
+import {attachMasonry, Masonry} from "../masonry";
 
 export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 
@@ -17,6 +18,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	private readonly topBoxRef: React.RefObject<HTMLInputElement>;
 	private readonly topBoxUrlRef: React.RefObject<HTMLInputElement>;
 	private readonly actions: ITabManagerActions;
+	// row-span packing for the block layouts, attached to whatever container is mounted
+	private masonry : Masonry | null = null;
+	private masonryTarget : HTMLElement | null = null;
 
 	constructor(props : ITabManager) {
 		super(props);
@@ -108,10 +112,24 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	}
 
 	async componentDidUpdate(prevProps, prevState) {
+		this.syncMasonry();
 		if (this.state.dirty) {
 			await this.update();
 			this.setState({dirty: false});
 		}
+	}
+
+	componentWillUnmount() {
+		this.masonry?.disconnect();
+	}
+
+	syncMasonry() {
+		const el = this.windowContainerRef.current;
+		const wanted = el && this.state.layout.indexOf("blocks") > -1 ? el : null;
+		if (wanted === this.masonryTarget) return;
+		this.masonry?.disconnect();
+		this.masonry = wanted ? attachMasonry(wanted) : null;
+		this.masonryTarget = wanted;
 	}
 
 	async loadStorage() {
@@ -472,6 +490,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	async componentDidMount()
 	{
 		this.update();
+		this.syncMasonry();
 		await this.loadStorage();
 
 		if (IS_FIREFOX) {
