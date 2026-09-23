@@ -43,6 +43,7 @@ export interface ITabManagerState {
 	dupTabs: boolean,
 	dragFavicon: string,
 	colorsActive: number,
+	colorsAutoName: string,
 
 	resetTimeout: number,
 

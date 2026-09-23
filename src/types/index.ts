@@ -10,3 +10,5 @@ export * from './ISessionState';
 export * from './ISavedSession';
 export * from './ITabOptions';
 export * from './ITabOptionsState';
+export * from './IWindowOptions';
+export * from './IWindowOptionsState';

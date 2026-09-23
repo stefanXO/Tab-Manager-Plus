@@ -1,6 +1,6 @@
 import {getLocalStorage, setLocalStorage} from "@helpers/storage";
 import {debounce, maybePluralize} from "@helpers/utils";
-import {Window, Session, TabOptions, Tab} from "@views";
+import {Window, Session, TabOptions, Tab, WindowOptions} from "@views";
 import * as React from "react";
 import * as S from "@strings";
 import * as browser from 'webextension-polyfill';
@@ -73,6 +73,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			dupTabs: false,
 			dragFavicon: "",
 			colorsActive: 0,
+			colorsAutoName: "",
 
 			tabCount: 0,
 			hiddenCount: 0,
@@ -95,7 +96,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			dragFavicon: (icon) => this.dragFavicon(icon),
 			hoverIcon: (e) => this.hoverIcon(e),
 			hoverHandler: (tab) => this.hoverHandler(tab),
-			toggleColors: (active, windowId) => this.toggleColors(active, windowId),
+			openWindowOptions: (windowId, autoName) => this.setState({ colorsActive: windowId, colorsAutoName: autoName }),
+			closeWindowOptions: () => this.setState({ colorsActive: 0, colorsAutoName: "", dirty: true }),
 			scrollTo: (what, id) => this.scrollTo(what, id),
 			setSetting: (key, value) => this.setSetting(key, value),
 			setBottomText: (text) => this.setState({ bottomText: text }),
@@ -279,10 +281,14 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				tabIndex={0}
 				ref={this.rootRef}
 			>
-				{!this.state.optionsActive && <div className={"window-container " + this.state.layout} ref={this.windowContainerRef} tabIndex={2}>
+				{!!this.state.colorsActive && <WindowOptions
+					windowId={this.state.colorsActive}
+					layout={this.state.layout}
+					autoName={this.state.colorsAutoName}
+				/>}
+				{!this.state.optionsActive && !this.state.colorsActive && <div className={"window-container " + this.state.layout} ref={this.windowContainerRef} tabIndex={2}>
 					{this.state.windows.map((window : browser.Windows.Window) => {
 						if (window.state === "minimized") return;
-						if (!!this.state.colorsActive && this.state.colorsActive !== window.id) return;
 
 						let windowRef = this.state.windowrefs.get(window.id) || React.createRef<Window>();
 						if (!this.state.windowrefs.has(window.id)) {
@@ -316,7 +322,6 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 					</div>
 					{this.state.windows.map((window : browser.Windows.Window) => {
 						if (window.state !== "minimized") return;
-						if (!!this.state.colorsActive && this.state.colorsActive !== window.id) return;
 
 						let windowRef = this.state.windowrefs.get(window.id) || React.createRef<Window>();
 						if (!this.state.windowrefs.has(window.id)) {
@@ -350,7 +355,6 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 					</div>
 					{haveSess
 						? this.state.sessions.map((window : ISavedSession) => {
-								if (!!this.state.colorsActive) return;
 								return (
 									<Session
 										key={"session" + window.id}
@@ -632,13 +636,6 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			optionsActive: !this.state.optionsActive,
 			dirty: true
 		});
-	}
-	toggleColors(active : boolean, windowId : number) {
-		this.setState({
-			colorsActive: !!active ? windowId : 0,
-			dirty: true
-		})
-		// console.log("colorsActive", active, windowId, this.state.colorsActive);
 	}
 	update = async () => {
 		const windows : browser.Windows.Window[] = await browser.windows.getAll({ populate: true });

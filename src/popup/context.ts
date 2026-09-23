@@ -21,7 +21,8 @@ export interface ITabManagerActions {
 	dragFavicon(icon? : string) : string;
 	hoverIcon(e : React.MouseEvent<HTMLDivElement> | string) : void;
 	hoverHandler(tab : browser.Tabs.Tab) : void;
-	toggleColors(active : boolean, windowId : number) : void;
+	openWindowOptions(windowId : number, autoName : string) : void;
+	closeWindowOptions() : void;
 	scrollTo(what : string, id : string) : void;
 	setSetting<K extends keyof ISettings>(key : K, value : ISettings[K]) : void;
 	setBottomText(text : string) : void;

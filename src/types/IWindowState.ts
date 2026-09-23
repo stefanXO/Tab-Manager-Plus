@@ -7,7 +7,6 @@ export interface IWindowState {
 	auto_name: string,
 	color: string,
 	tabs: number,
-	colorActive: boolean,
 	hover: boolean,
 	hidden: boolean,
 	tabrefs: Map<number, React.RefObject<Tab>>,
