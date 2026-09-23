@@ -86,7 +86,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 				(this.props.tab.discarded ? "discarded " : "") +
 				(this.props.layout === "vertical" ? "full " : "") +
 				(this.props.tab.incognito ? "incognito " : "") +
-				(this.state.draggingOver) +
+				(this.state.draggingOver ? this.state.draggingOver + " " : "") +
 				(this.props.searchActive ? "search-active " : "") +
 				(this.props.faded ? "search-faded " : "") +
 				"icon-" + this.state.iconTone + " " +
