@@ -6,6 +6,5 @@ export interface ITabState {
 	dragFavIcon: string,
 	favIcon: string,
 	iconTone: FaviconTone,
-	favIconInverted: string,
 	hovered: boolean
 }

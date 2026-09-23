@@ -5,7 +5,7 @@ import * as React from "react";
 import * as browser from 'webextension-polyfill';
 import {ICommand, ITab, ITabState} from '@types';
 import {ManagerContext, ITabManagerActions} from '../context';
-import {faviconInfo} from '@helpers/favicon';
+import {faviconTone} from '@helpers/favicon';
 import {IS_FIREFOX} from "@helpers/browser";
 
 export class Tab extends React.Component<ITab, ITabState> {
@@ -19,7 +19,6 @@ export class Tab extends React.Component<ITab, ITabState> {
 		this.state = {
 			favIcon: "",
 			iconTone: "normal",
-			favIconInverted: "",
 			dragFavIcon: "",
 			draggingOver: "",
 			hovered: false
@@ -238,7 +237,6 @@ export class Tab extends React.Component<ITab, ITabState> {
 	favIconStyle() : React.CSSProperties {
 		const style : Record<string, string> = {};
 		if (this.state.favIcon) style["--fav"] = "url(" + this.state.favIcon + ")";
-		if (this.state.favIconInverted) style["--fav-inv"] = "url(" + this.state.favIconInverted + ")";
 		return style as React.CSSProperties;
 	}
 	resolveFavIconUrl = () => {
@@ -254,7 +252,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 
 		if (!!_url && !IS_FIREFOX) {
 			if (this.props.tab.status !== "loading") {
-				image = "chrome-extension://" + chrome.runtime.id + "/_favicon/?pageUrl=" + encodeURIComponent(_url) + "&size=64"; // &" + Date.now();
+				image = "chrome-extension://" + chrome.runtime.id + "/_favicon/?pageUrl=" + encodeURIComponent(_url) + "&size=64";
 			} else {
 				image = "";
 			}
@@ -265,21 +263,18 @@ export class Tab extends React.Component<ITab, ITabState> {
 			let iconUrl = _url;
 			if (iconUrl.length > 9) {
 				let iconName = iconUrl.slice(9).match(/^\w+/g);
-				console.log(iconName);
 				image = !iconName || favIcons.indexOf(iconName[0]) < 0 ? "" : "../images/chrome/" + iconName[0] + ".png";
 			}
 		}
 		if (this.state.favIcon == image) return;
 		this.setState({
 			favIcon: image,
-			iconTone: "normal",
-			favIconInverted: ""
+			iconTone: "normal"
 		});
-		faviconInfo(image).then((info) => {
+		faviconTone(image).then((tone) => {
 			// the favicon may have changed again while we were measuring
-			if (this.state.favIcon !== image) return;
-			if (this.state.iconTone === info.tone && this.state.favIconInverted === (info.inverted || "")) return;
-			this.setState({ iconTone: info.tone, favIconInverted: info.inverted || "" });
+			if (this.state.favIcon !== image || this.state.iconTone === tone) return;
+			this.setState({ iconTone: tone });
 		});
 	}
 	stopProp(e) {

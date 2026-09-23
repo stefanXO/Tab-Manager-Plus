@@ -1,10 +1,10 @@
 // Looks at a favicon's pixels so the popup can keep it visible on its tile.
 //
 //   mono-light  nothing but white/light grey (github, nytimes, ⌘…): invisible
-//               on the light tile → the popup shows an inverted copy instead
+//               on the light tile → the CSS inverts the icon (filter)
 //   light       mostly white but not only (black-and-white, white with a blue
 //               mark…): kept as is, the tile is tinted instead
-//   mono-dark   nothing but black/dark grey: inverted copy in dark mode
+//   mono-dark   nothing but black/dark grey: inverted in dark mode
 //   dark        mostly black but not only: classified, not acted on (the
 //               dark tile is teal rather than black and shows it fine)
 //   normal      leave alone
@@ -14,14 +14,9 @@
 
 export type FaviconTone = "normal" | "light" | "dark" | "mono-light" | "mono-dark";
 
-export interface FaviconInfo {
-	tone: FaviconTone,
-	// data: URL of the colour-inverted icon, only for the two mono tones
-	inverted?: string
-}
 
 const SIZE = 32;
-const cache = new Map<string, Promise<FaviconInfo>>();
+const cache = new Map<string, Promise<FaviconTone>>();
 
 let canvas : HTMLCanvasElement | null = null;
 
@@ -46,14 +41,13 @@ function load(url : string) : Promise<HTMLImageElement> {
 	});
 }
 
-function analyze(img : HTMLImageElement) : FaviconInfo {
+function analyze(img : HTMLImageElement) : FaviconTone {
 	const ctx = context();
-	if (!ctx) return { tone: "normal" };
+	if (!ctx) return "normal";
 	ctx.clearRect(0, 0, SIZE, SIZE);
 	ctx.drawImage(img, 0, 0, SIZE, SIZE);
 	// throws on a tainted canvas (cross-origin image without CORS)
-	const image = ctx.getImageData(0, 0, SIZE, SIZE);
-	const data = image.data;
+	const data = ctx.getImageData(0, 0, SIZE, SIZE).data;
 
 	let opaque = 0, light = 0, dark = 0, grey = 0;
 	for (let i = 0; i < data.length; i += 4) {
@@ -68,43 +62,34 @@ function analyze(img : HTMLImageElement) : FaviconInfo {
 		if (Math.max(r, g, b) - Math.min(r, g, b) < 40) grey++;
 	}
 	// too little drawn to judge
-	if (opaque < SIZE * SIZE * 0.04) return { tone: "normal" };
+	if (opaque < SIZE * SIZE * 0.04) return "normal";
 
 	// "mono" = one tone only (plus transparency): practically every drawn pixel
 	// is grey AND near-white (or near-black). A black-and-white icon has both
 	// tones and must not be inverted, it gets the chip instead.
 	const grey_ratio = grey / opaque, light_ratio = light / opaque, dark_ratio = dark / opaque;
 	if (grey_ratio > 0.95 && light_ratio > 0.95 && dark_ratio < 0.01) {
-		return { tone: "mono-light", inverted: invert(ctx, image) };
+		return "mono-light";
 	}
 	// only-black icons get the mirror treatment in dark mode; black-and-white
 	// and dark-but-coloured icons are left alone there, the teal tile shows them
 	if (grey_ratio > 0.95 && dark_ratio > 0.95 && light_ratio < 0.01) {
-		return { tone: "mono-dark", inverted: invert(ctx, image) };
+		return "mono-dark";
 	}
-	if (light_ratio > 0.7) return { tone: "light" };
-	if (dark_ratio > 0.7) return { tone: "dark" };
-	return { tone: "normal" };
+	if (light_ratio > 0.7) return "light";
+	if (dark_ratio > 0.7) return "dark";
+	return "normal";
 }
 
-// flips every opaque pixel's colour, keeps its alpha
-function invert(ctx : CanvasRenderingContext2D, image : ImageData) : string {
-	const data = image.data;
-	for (let i = 0; i < data.length; i += 4) {
-		if (data[i + 3] === 0) continue;
-		data[i] = 255 - data[i];
-		data[i + 1] = 255 - data[i + 1];
-		data[i + 2] = 255 - data[i + 2];
-	}
-	ctx.putImageData(image, 0, 0);
-	return ctx.canvas.toDataURL("image/png");
-}
-
-export function faviconInfo(url : string) : Promise<FaviconInfo> {
-	if (!url) return Promise.resolve({ tone: "normal" });
+// `url` must be readable from a canvas: the extension's own favicon cache, a
+// data: URI or a bundled image. Remote icons (a page's declared SVG, Firefox's
+// favIconUrl) would taint the canvas; the caller passes the cache bitmap instead.
+export function faviconTone(url : string) : Promise<FaviconTone> {
+	if (!url) return Promise.resolve("normal");
+	if (/^https?:/i.test(url)) return Promise.resolve("normal");
 	let pending = cache.get(url);
 	if (!pending) {
-		pending = load(url).then(analyze).catch(() => ({ tone: "normal" } as FaviconInfo));
+		pending = load(url).then(analyze).catch(() => "normal" as FaviconTone);
 		cache.set(url, pending);
 	}
 	return pending;

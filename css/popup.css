@@ -155,10 +155,23 @@ input, textarea {
 	transform: translate3d(0, 0, 0);*/
 }
 .icon.tab, .iconoverlay {
+	content: "";
+	position: absolute;
+	pointer-events: none;
+	background-image: var(--fav, url(../images/generic.png));
+	background-size: inherit;
+	background-position: inherit;
+	background-repeat: inherit;
+}
+.iconoverlay {
 	background-image: var(--fav, url(../images/generic.png));
 }
-.icon.icon-mono-light, .iconoverlay.icon-mono-light {
-	background-image: var(--fav-inv, var(--fav));
+/* the list layout draws the icon on .iconoverlay, not on the row */
+.icon.tab.full::after {
+	content: none;
+}
+.icon.icon-mono-light::after, .iconoverlay.icon-mono-light {
+	filter: invert(1);
 }
 .icon.icon-light, .iconoverlay.icon-light {
 	background-color: #cfd4db;
