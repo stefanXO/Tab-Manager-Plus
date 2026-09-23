@@ -6,9 +6,24 @@
 const ROW = 8;   // px, must match grid-auto-rows in popup.css
 const GAP = 8;   // px, must match --card-gap in popup.css
 
+// Writes are batched into the next frame and skipped when nothing changed:
+// setting a span inside the observer callback would re-trigger observations in
+// the same cycle ("ResizeObserver loop completed with undelivered notifications").
+const pending = new Set<HTMLElement>();
+let frame = 0;
+
 function span(card : HTMLElement) {
-	const height = card.getBoundingClientRect().height;
-	card.style.gridRowEnd = "span " + Math.max(1, Math.ceil((height + GAP) / (ROW + GAP)));
+	pending.add(card);
+	if (frame) return;
+	frame = requestAnimationFrame(() => {
+		frame = 0;
+		for (const el of pending) {
+			const height = el.getBoundingClientRect().height;
+			const value = "span " + Math.max(1, Math.ceil((height + GAP) / (ROW + GAP)));
+			if (el.style.gridRowEnd !== value) el.style.gridRowEnd = value;
+		}
+		pending.clear();
+	});
 }
 
 export interface Masonry {
