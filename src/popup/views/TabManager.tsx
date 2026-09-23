@@ -544,6 +544,11 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 
 
 		browser.storage.onChanged.addListener(this.sessionSync);
+		// the worker records window focus order (windowAge) after the same focus event
+		// the popup reacts to; when its write lands, re-sort so the order is never stale
+		browser.storage.onChanged.addListener((changes, area) => {
+			if (area === "local" && "windowAge" in changes) runUpdate();
+		});
 
 		await this.sessionSync();
 
