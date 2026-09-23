@@ -511,10 +511,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		browser.windows.onCreated.addListener(runUpdate);
 		browser.windows.onRemoved.addListener(runUpdate);
 
-		browser.runtime.onMessage.addListener((message, sender, sendResponse) => {
+		browser.runtime.onMessage.addListener((message : unknown) => {
 			const request = message as ICommand;
 
-			console.log(request.command);
 			switch (request.command) {
 				case S.refresh_windows:
 					const window_ids : number[] = request.window_ids;
@@ -525,8 +524,6 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 					}
 					break;
 			}
-			// undefined = "not answering this message"; true or a promise would claim the response channel
-			return undefined;
 		});
 
 
