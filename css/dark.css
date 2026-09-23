@@ -10,13 +10,14 @@ body.dark .icon, body.dark .iconoverlay{
 	border:1px solid #b2b2b2;
 	background-color: #07222b;
 }
-body.dark .icon.icon-mono-light, body.dark .iconoverlay.icon-mono-light,
+body.dark .icon.icon-mono-light::after, body.dark .iconoverlay.icon-mono-light {
+	filter: none;
+}
 body.dark .icon.icon-light, body.dark .iconoverlay.icon-light {
-	background-image: var(--fav);
 	background-color: #07222b;
 }
-body.dark .icon.icon-mono-dark, body.dark .iconoverlay.icon-mono-dark {
-	background-image: var(--fav-inv, var(--fav));
+body.dark .icon.icon-mono-dark::after, body.dark .iconoverlay.icon-mono-dark {
+	filter: invert(1);
 }
 
 body.dark input.tabtitle::placeholder, body.dark input.taburl::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
