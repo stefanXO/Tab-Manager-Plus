@@ -19,8 +19,7 @@ export interface ITabManagerActions {
 	drop(id : number, before : boolean) : void;
 	dropWindow(windowId : number) : void;
 	dragFavicon(icon? : string) : string;
-	hoverIcon(e : React.MouseEvent<HTMLDivElement> | string) : void;
-	hoverHandler(tab : browser.Tabs.Tab) : void;
+	hoverIcon(text : string) : void;
 	openWindowOptions(windowId : number, autoName : string) : void;
 	closeWindowOptions() : void;
 	scrollTo(what : string, id : string) : void;

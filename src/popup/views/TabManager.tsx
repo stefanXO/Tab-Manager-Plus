@@ -95,8 +95,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			drop: (id, before) => { this.drop(id, before); },
 			dropWindow: (windowId) => { this.dropWindow(windowId); },
 			dragFavicon: (icon) => this.dragFavicon(icon),
-			hoverIcon: (e) => this.hoverIcon(e),
-			hoverHandler: (tab) => this.hoverHandler(tab),
+			hoverIcon: (text) => this.hoverIcon(text),
 			openWindowOptions: (windowId, autoName) => this.setState({ colorsActive: windowId, colorsAutoName: autoName }),
 			closeWindowOptions: () => this.setState({ colorsActive: 0, colorsAutoName: "", dirty: true }),
 			scrollTo: (what, id) => this.scrollTo(what, id),
@@ -200,48 +199,27 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	setSetting<K extends keyof ISettings>(key : K, value : ISettings[K]) {
 		this.setState({ [key]: value } as Pick<ITabManagerState, K>);
 	}
-	hoverHandler(tab : browser.Tabs.Tab) {
-		this.setState({ topText: tab.title || "" });
-		this.setState({ bottomText: tab.url || tab.pendingUrl || "" });
-		// clearTimeout(this.state.closeTimeout);
-		// this.state.closeTimeout = setTimeout(function () {
-		//  window.close();
-		// }, 100000);
-		var _reset_timeout = this.state.resetTimeout;
-		clearTimeout(_reset_timeout);
-		_reset_timeout = setTimeout(() => {
-			this.setState({ topText: "", bottomText: "" });
-			this.update();
-		}, 15000);
-		this.setState({resetTimeout: _reset_timeout});
-		//this.update();
+	hoverOver = (e : React.MouseEvent<HTMLDivElement>) => {
+		const el = (e.target as HTMLElement).closest<HTMLElement>("[data-hover], [title]");
+		this.hoverIcon(el ? (el.dataset.hover ?? el.title) : "");
 	}
-	hoverIcon = (e : React.MouseEvent<HTMLDivElement> | string) => {
-		var text = "";
-		if (typeof (e) === "string") {
-			text = e;
-		} else {
-			if (e && e.nativeEvent) {
-				e.nativeEvent.preventDefault();
-				e.nativeEvent.stopPropagation();
-			}
-
-			if (e && e.target && !!(e.target as HTMLDivElement).title) {
-				text = (e.target as HTMLDivElement).title;
-			}
-		}
-
-		var bottom = " ";
+	hoverIcon = (text : string) => {
+		let bottom = " ";
 		if (text.indexOf("\n") > -1) {
-			var a = text.split("\n");
+			const a = text.split("\n");
 			text = a[0];
 			bottom = a[1];
 		}
+		if (text === this.state.topText && bottom === this.state.bottomText) return;
 		this.setState({
 			topText: text,
-			bottomText: bottom,
-			dirty: true
-		 });
+			bottomText: bottom
+		});
+		// idle: clear the header after a while
+		clearTimeout(this.state.resetTimeout);
+		this.setState({
+			resetTimeout: setTimeout(() => this.setState({ topText: "", bottomText: "" }), 15000)
+		});
 	}
 	render() {
 		let _this = this;
@@ -279,6 +257,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 					(this.state.windowTitles ? "windowTitles" : "no-windowTitles")
 				}
 				onKeyDown={this.checkKey}
+				onMouseOver={this.hoverOver}
 				tabIndex={0}
 				ref={this.rootRef}
 			>
@@ -394,14 +373,13 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 					/>
 				</div>}
 				<div className="window top" ref={this.topHoverRef}>
-					<div className="icon windowaction donate" title="Donate a Coffee" onClick={this.donate} onMouseEnter={this.hoverIcon} />
+					<div className="icon windowaction donate" title="Donate a Coffee" onClick={this.donate} />
 					<div
 						className="icon windowaction rate"
 						title="Rate Tab Manager Plus"
 						onClick={this.rateExtension}
-						onMouseEnter={this.hoverIcon}
 					/>
-					<div className="icon windowaction options" title="Options" onClick={this.toggleOptions} onMouseEnter={this.hoverIcon} />
+					<div className="icon windowaction options" title="Options" onClick={this.toggleOptions} />
 					<input
 						type="text"
 						disabled={true}
@@ -424,7 +402,6 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 										className={"icon windowaction " + this.state.layout + "-view"}
 										title={"Change to " + this.readablelayout(this.nextlayout()) + " View"}
 										onClick={this.changelayout}
-										onMouseEnter={this.hoverIcon}
 									/>
 									<div
 										className="icon windowaction trash"
@@ -434,7 +411,6 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 												: "Close current Tab"
 										}
 										onClick={this.deleteTabs}
-										onMouseEnter={this.hoverIcon}
 									/>
 									<div
 										className="icon windowaction discard"
@@ -449,7 +425,6 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 												: { opacity: 0.25 }
 										}
 										onClick={this.discardTabs}
-										onMouseEnter={this.hoverIcon}
 									/>
 									<div
 										className="icon windowaction pin"
@@ -459,7 +434,6 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 												: "Pin current Tab"
 										}
 										onClick={this.pinTabs}
-										onMouseEnter={this.hoverIcon}
 									/>
 									<div
 										className={"icon windowaction filter" + (this.state.filterTabs ? " enabled" : "")}
@@ -473,7 +447,6 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 												: "")
 										}
 										onClick={this.toggleFilterMismatchedTabs}
-										onMouseEnter={this.hoverIcon}
 									/>
 									<div
 										className="icon windowaction new"
@@ -483,13 +456,11 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 												: "Open new empty window"
 										}
 										onClick={this.addWindow}
-										onMouseEnter={this.hoverIcon}
 									/>
 									<div
 										className={"icon windowaction duplicates" + (this.state.dupTabs ? " enabled" : "")}
 										title="Highlight Duplicates"
 										onClick={this.highlightDuplicates}
-										onMouseEnter={this.hoverIcon}
 									/>
 								</td>
 							</tr>

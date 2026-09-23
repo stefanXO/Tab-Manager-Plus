@@ -52,7 +52,6 @@ export class WindowOptions extends React.Component<IWindowOptions, IWindowOption
 							className={"icon tabaction " + color + " " + actionClass}
 							title="Change background color"
 							onClick={() => this.changeColor(color)}
-							onMouseEnter={this.context.hoverIcon}
 						/>
 					))}
 				</div>

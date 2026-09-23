@@ -3,6 +3,7 @@
 import {getLocalStorage, setLocalStorage} from "@helpers/storage";
 import {Tab} from "@views";
 import * as React from "react";
+import {maybePluralize} from "@helpers/utils";
 import * as browser from 'webextension-polyfill';
 import {ICommand, ISession, ISessionState} from '@types';
 import * as S from "@strings";
@@ -58,15 +59,13 @@ export class Session extends React.Component<ISession, ISessionState> {
 					<div key={"sessionwa_" + _this.props.session.id} className="window-actions">
 						<div
 							className={"icon tabaction restore " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-							title={"Restore this saved window\nWill restore " + tabs.length + " tabs. Please note : The tabs will be restored without their history."}
+							title={"Restore this saved window\nWill restore " + maybePluralize(this.props.tabs.length, "tab") + ". Please note : The tabs will be restored without their history."}
 							onClick={this.windowClick}
-							onMouseEnter={this.context.hoverIcon}
 						/>
 						<div
 							className={"icon tabaction delete " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-							title={"Delete this saved window\nWill delete " + tabs.length + " tabs permanently"}
+							title={"Delete this saved window\nWill delete " + maybePluralize(this.props.tabs.length, "tab") + " permanently"}
 							onClick={this.close}
-							onMouseEnter={this.context.hoverIcon}
 						/>
 					</div>
 				);
@@ -121,7 +120,7 @@ export class Session extends React.Component<ISession, ISessionState> {
 					}
 					onClick={this.windowClick}
 				>
-					<div className="windowcontainer">{children}</div>
+					<div className="windowcontainer" title={"Restore this saved window\nWill restore " + maybePluralize(this.props.tabs.length, "tab") + " in a new window. Click a single tab to restore only that one"}>{children}</div>
 				</div>
 			);
 		} else {

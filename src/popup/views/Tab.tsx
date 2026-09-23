@@ -74,7 +74,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 			);
 		}
 
-		var tabDom : React.HTMLAttributes<HTMLDivElement> = {
+		var tabDom : React.HTMLAttributes<HTMLDivElement> & { "data-hover"?: string } = {
 			className:
 				"icon tab " +
 				(this.props.selected ? "selected " : "") +
@@ -104,8 +104,9 @@ export class Tab extends React.Component<ITab, ITabState> {
 			title: this.props.tab.title,
 			onClick: this.click,
 			onMouseDown: this.onMouseDown,
+			"data-hover": (this.props.tab.title || "") + "\n" + (this.props.tab.url || this.props.tab.pendingUrl || ""),
 			onMouseEnter: this.onHover,
-			onMouseOut: this.onHoverOut
+			onMouseLeave: this.onHoverOut
 		};
 
 		if (!!this.props.draggable) {
@@ -123,11 +124,10 @@ export class Tab extends React.Component<ITab, ITabState> {
 			</div>
 		);
 	}
-	onHover = (e) => {
+	onHover = () => {
 		this.setState({hovered: true});
-		this.context.hoverHandler(this.props.tab);
 	}
-	onHoverOut = (e) => {
+	onHoverOut = () => {
 		this.setState({hovered: false});
 	}
 	onMouseDown = async (e : React.MouseEvent<HTMLDivElement>) => {

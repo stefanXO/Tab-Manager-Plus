@@ -4,6 +4,7 @@ import {getLocalStorage, setLocalStorage, getLocalStorageMap} from "@helpers/sto
 import {Tab} from "@views";
 import * as S from "@strings";
 import * as React from "react";
+import {maybePluralize} from "@helpers/utils";
 import * as browser from 'webextension-polyfill';
 import {ICommand, IWindow, IWindowState, ISavedSession} from '@types';
 import {ManagerContext, ITabManagerActions} from '../context';
@@ -234,45 +235,39 @@ export class Window extends React.Component<IWindow, IWindowState> {
 								className={"icon tabaction save " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
 								title={
 									"Save this window for later\nWill save " +
-									this.props.tabs.length +
-									" tabs with this window for later. Please note : The saved tabs will lose their history."
+									maybePluralize(this.props.tabs.length, "tab") +
+									" with this window for later. Please note : The saved tabs will lose their history."
 								}
 								onClick={this.save}
-								onMouseEnter={this.hoverIcon}
 							/>
 						) : false}
 						<div
 							className={"icon tabaction add " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
 							title="Open a new tab"
 							onClick={this.addTab}
-							onMouseEnter={this.hoverIcon}
 						/>
 						<div
 							className={"icon tabaction colors " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
 							title="Change window name or color"
 							onClick={this.openOptions}
-							onMouseEnter={this.hoverIcon}
 						/>
 						{this.props.window.state === "minimized" ? (
 							<div
 								className={"icon tabaction maximize " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title={"Maximize this window\nWill maximize " + this.props.tabs.length + " tabs"}
+								title={"Maximize this window\nWill maximize " + maybePluralize(this.props.tabs.length, "tab")}
 								onClick={this.maximize}
-								onMouseEnter={this.hoverIcon}
 							/>
 						) : (
 							<div
 								className={"icon tabaction minimize " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title={"Minimize this window\nWill minimize " + this.props.tabs.length + " tabs"}
+								title={"Minimize this window\nWill minimize " + maybePluralize(this.props.tabs.length, "tab")}
 								onClick={this.minimize}
-								onMouseEnter={this.hoverIcon}
 							/>
 						)}
 						<div
 							className={"icon tabaction close " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-							title={"Close this window\nWill close " + this.props.tabs.length + " tabs"}
+							title={"Close this window\nWill close " + maybePluralize(this.props.tabs.length, "tab")}
 							onClick={this.close}
-							onMouseEnter={this.hoverIcon}
 						/>
 					</div>
 				);
@@ -285,7 +280,6 @@ export class Window extends React.Component<IWindow, IWindowState> {
 						className="editName center windowTitle"
 						onClick={this.openOptions}
 						title="Change the name of this window"
-						onMouseEnter={this.hoverIcon}
 					>
 						{this.props.window.incognito ? "🕵" : ""}
 						{!!this.state.name ? this.state.name : this.state.auto_name}
@@ -347,7 +341,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 					onMouseLeave={this.hoverWindowOut}
 					onDrop={this.drop}
 				>
-					<div key={"windowcontainer_" + this.props.window.id} className="windowcontainer" title={"Focus this window\nWill select this window with " + this.props.tabs.length + " tabs"}>{children}</div>
+					<div key={"windowcontainer_" + this.props.window.id} className="windowcontainer" title={"Focus this window\nWill select this window with " + maybePluralize(this.props.tabs.length, "tab")}>{children}</div>
 				</div>
 			);
 		} else {
@@ -360,9 +354,6 @@ export class Window extends React.Component<IWindow, IWindowState> {
 	}
 	stop = (e) => {
 		this.stopProp(e);
-	}
-	hoverIcon = (e : React.MouseEvent<HTMLDivElement> | string) => {
-		this.context.hoverIcon(e);
 	}
 	refreshTabs = () => {
 		this.forceUpdate();
@@ -420,7 +411,6 @@ export class Window extends React.Component<IWindow, IWindowState> {
 	}
 	hoverWindow = () => {
 		this.setState({ hover: true });
-		this.hoverIcon("Focus this window\nWill select this window with " + this.props.tabs.length + " tabs");
 	}
 	hoverWindowOut = (_) => {
 		this.setState({ hover: false });
