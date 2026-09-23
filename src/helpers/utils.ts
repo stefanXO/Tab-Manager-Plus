@@ -4,7 +4,7 @@
 // leading edge, instead of the trailing.
 export function debounce(func, wait, immediate = false) {
 	var timeout;
-	return function () {
+	return function (this : unknown) {
 		var context = this, args = arguments;
 		var later = function later() {
 			timeout = null;

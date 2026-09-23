@@ -206,13 +206,10 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		// }, 100000);
 		var _reset_timeout = this.state.resetTimeout;
 		clearTimeout(_reset_timeout);
-		_reset_timeout = setTimeout(
-			function() {
-				this.setState({ topText: "", bottomText: "" });
-				this.update();
-			}.bind(this),
-			15000
-		);
+		_reset_timeout = setTimeout(() => {
+			this.setState({ topText: "", bottomText: "" });
+			this.update();
+		}, 15000);
 		this.setState({resetTimeout: _reset_timeout});
 		//this.update();
 	}
@@ -283,7 +280,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				ref={this.rootRef}
 			>
 				{!this.state.optionsActive && <div className={"window-container " + this.state.layout} ref={this.windowContainerRef} tabIndex={2}>
-					{this.state.windows.map(function(window : browser.Windows.Window) {
+					{this.state.windows.map((window : browser.Windows.Window) => {
 						if (window.state === "minimized") return;
 						if (!!this.state.colorsActive && this.state.colorsActive !== window.id) return;
 
@@ -311,13 +308,13 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 								ref={windowRef}
 							/>
 						);
-					}.bind(this))}
+					})}
 					<div className={"hrCont " + (!haveMin ? "hidden" : "")}>
 						<div className="hrDiv">
 							<span className="hrSpan">Minimized windows</span>
 						</div>
 					</div>
-					{this.state.windows.map(function(window) {
+					{this.state.windows.map((window : browser.Windows.Window) => {
 						if (window.state !== "minimized") return;
 						if (!!this.state.colorsActive && this.state.colorsActive !== window.id) return;
 
@@ -345,15 +342,15 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 								ref={windowRef}
 							/>
 						);
-					}.bind(this))}
+					})}
 					<div className={"hrCont " + (!haveSess ? "hidden" : "")}>
 						<div className="hrDiv">
 							<span className="hrSpan">Saved windows</span>
 						</div>
 					</div>
 					{haveSess
-						? this.state.sessions.map(function(window : ISavedSession) {
-								if (!!this.state.colorsActive && this.state.colorsActive !== window.id) return;
+						? this.state.sessions.map((window : ISavedSession) => {
+								if (!!this.state.colorsActive) return;
 								return (
 									<Session
 										key={"session" + window.id}
@@ -371,7 +368,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 										draggable={false}
 									/>
 								);
-							}.bind(this))
+							})
 						: false}
 				</div>}
 				{this.state.optionsActive && <div className={"options-container"}>
@@ -598,23 +595,19 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		await this.update();
 	}
 	focusRoot() {
-		var _this = this;
 		this.setState({
 			focusUpdates: (this.state.focusUpdates + 1),
 			dirty: true
 		});
-		setTimeout(
-			function() {
-				if (document.activeElement === document.body) {
-					_this.rootRef.current?.focus();
-					_this.setState({
-						dirty: true
-					});
-					if (_this.state.focusUpdates < 5) _this.focusRoot();
-				}
-			}.bind(this),
-			500
-		);
+		setTimeout(() => {
+			if (document.activeElement === document.body) {
+				this.rootRef.current?.focus();
+				this.setState({
+					dirty: true
+				});
+				if (this.state.focusUpdates < 5) this.focusRoot();
+			}
+		}, 500);
 	}
 	dragFavicon(icon? : string) : string {
 		if (!icon) {

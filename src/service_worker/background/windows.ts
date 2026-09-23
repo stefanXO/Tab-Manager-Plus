@@ -169,7 +169,7 @@ export async function createWindowWithSessionTabs(session: ISavedSession, tabId:
 }
 
 export function focusOnWindowDelayed(windowId: number) {
-	setTimeout(focusOnWindow.bind(this, windowId), 125);
+	setTimeout(() => focusOnWindow(windowId), 125);
 }
 
 export async function focusOnWindow(windowId : number) {

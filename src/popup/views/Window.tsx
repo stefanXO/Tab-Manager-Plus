@@ -718,11 +718,11 @@ export class Window extends React.Component<IWindow, IWindowState> {
 		this.setState({
 			colorActive: !this.state.colorActive
 		});
-		setTimeout(function() {
-			if(this.state.colorActive) {
+		setTimeout(() => {
+			if (this.state.colorActive) {
 				this.nameBoxRef.current!.focus();
 			}
-		}.bind(this), 150);
+		}, 150);
 	}
 	changeColors = async (a) => {
 		this.setState(a);
