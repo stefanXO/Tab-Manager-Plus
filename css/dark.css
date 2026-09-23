@@ -214,3 +214,25 @@ body.dark .color25:hover { background-color: #3a3a3a !important; }
 body.dark .tab > .limiter {
 	background-color: #ffffff;
 }
+
+/* list layout on the dark theme */
+body.dark .window {
+	box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+body.dark .focused {
+	box-shadow: 0 0 0 2px rgba(183, 154, 232, 0.6) !important;
+}
+body.dark .window.vertical .windowTitle {
+	border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+body.dark .window.vertical .tab.full:hover {
+	background-color: rgba(255, 255, 255, 0.07);
+}
+body.dark .window.vertical .tab.full.highlighted {
+	border-left-color: rgba(183, 154, 232, 0.9);
+	background-color: rgba(183, 154, 232, 0.1);
+}
+body.dark .window.vertical .tab.full.selected {
+	background-color: rgba(255, 230, 0, 0.25);
+	color: #fff;
+}

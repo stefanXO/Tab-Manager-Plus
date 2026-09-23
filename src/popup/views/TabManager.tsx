@@ -125,7 +125,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 
 	syncMasonry() {
 		const el = this.windowContainerRef.current;
-		const wanted = el && this.state.layout.indexOf("blocks") > -1 ? el : null;
+		const wanted = el && this.state.layout !== "horizontal" ? el : null;
 		if (wanted === this.masonryTarget) return;
 		this.masonry?.disconnect();
 		this.masonry = wanted ? attachMasonry(wanted) : null;
