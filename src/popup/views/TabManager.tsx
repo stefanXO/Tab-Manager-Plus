@@ -6,6 +6,7 @@ import * as S from "@strings";
 import * as browser from 'webextension-polyfill';
 import {ICommand, ITabManager, ITabManagerState, ISavedSession} from "@types";
 import {ManagerContext, ITabManagerActions, ISettings} from "../context";
+import {IS_FIREFOX} from "@helpers/browser";
 
 export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 
@@ -505,7 +506,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	{
 		await this.loadStorage();
 
-		if (navigator.userAgent.search("Firefox") > -1) {
+		if (IS_FIREFOX) {
 		} else {
 			let result = await browser.permissions.contains({permissions: ["system.display"]});
 			if (!result) {
@@ -622,7 +623,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		}
 	}
 	rateExtension = () => {
-		if (navigator.userAgent.search("Firefox") > -1) {
+		if (IS_FIREFOX) {
 			browser.tabs.create({ url: "https://addons.mozilla.org/en-US/firefox/addon/tab-manager-plus-for-firefox/" });
 		} else {
 			browser.tabs.create({ url: "https://chrome.google.com/webstore/detail/tab-manager-plus-for-chro/cnkdjjdmfiffagllbiiilooaoofcoeff" });
@@ -731,7 +732,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		if (count === 0) {
 			await browser.windows.create({});
 		} else if (count === 1) {
-			if (navigator.userAgent.search("Firefox") > -1) {
+			if (IS_FIREFOX) {
 				await browser.runtime.sendMessage<ICommand>({command: S.focus_on_tab_and_window_delayed, tab: tabs[0]});
 			}else{
 				await browser.runtime.sendMessage<ICommand>({command: S.focus_on_tab_and_window, tab: tabs[0]});

@@ -6,6 +6,7 @@ import * as browser from 'webextension-polyfill';
 import {ICommand, ITab, ITabState} from '@types';
 import {ManagerContext, ITabManagerActions} from '../context';
 import {faviconInfo} from '@helpers/favicon';
+import {IS_FIREFOX} from "@helpers/browser";
 
 export class Tab extends React.Component<ITab, ITabState> {
 	static contextType = ManagerContext;
@@ -154,7 +155,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 			} else {
 				let windowId = this.props.window.id;
 
-				if (navigator.userAgent.search("Firefox") > -1) {
+				if (IS_FIREFOX) {
 					browser.runtime.sendMessage<ICommand>({
 						command: S.focus_on_tab_and_window_delayed,
 						saved_tab: {tabId: tabId, windowId: windowId}
@@ -251,7 +252,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 
 		var _url : string = this.props.tab.url || this.props.tab.pendingUrl || "";
 
-		if (!!_url && navigator.userAgent.search("Firefox") === -1) {
+		if (!!_url && !IS_FIREFOX) {
 			if (this.props.tab.status !== "loading") {
 				image = "chrome-extension://" + chrome.runtime.id + "/_favicon/?pageUrl=" + encodeURIComponent(_url) + "&size=64"; // &" + Date.now();
 			} else {

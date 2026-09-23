@@ -6,6 +6,7 @@ import { ICommand, ITabOptions, ITabOptionsState } from "@types";
 import {ManagerContext, ITabManagerActions} from "../context";
 import {getLocalStorage, setLocalStorage} from "@helpers/storage";
 import * as S from "@strings";
+import {IS_FIREFOX} from "@helpers/browser";
 
 
 export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
@@ -580,7 +581,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		this.context.setBottomText("Allows you to export your saved windows to an external backup");
 	}
 	importSessions = (evt : React.ChangeEvent<HTMLInputElement>) => {
-		if (navigator.userAgent.search("Firefox") > -1) {
+		if (IS_FIREFOX) {
 			if(window.inPopup) {
 				window.alert("Due to a Firefox bug session import does not work in the popup. Please use the options screen or open Tab Manager Plus in its' own tab");
 				return;
@@ -645,7 +646,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 	toggleHide = async () => {
 
 		var _hide_windows = this.props.hideWindows;
-		if (navigator.userAgent.search("Firefox") > -1) {
+		if (IS_FIREFOX) {
 			_hide_windows = false;
 		} else {
 			var granted = await chrome.permissions.request({ permissions: ["system.display"] });

@@ -7,6 +7,7 @@ import * as React from "react";
 import * as browser from 'webextension-polyfill';
 import {ICommand, IWindow, IWindowState, ISavedSession} from '@types';
 import {ManagerContext, ITabManagerActions} from '../context';
+import {IS_FIREFOX} from "@helpers/browser";
 
 export class Window extends React.Component<IWindow, IWindowState> {
 	static contextType = ManagerContext;
@@ -430,7 +431,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 
 		let windowId = this.props.window.id;
 
-		if (navigator.userAgent.search("Firefox") > -1) {
+		if (IS_FIREFOX) {
 			browser.runtime.sendMessage<ICommand>({command: S.focus_on_window_delayed, window_id: windowId});
 		} else {
 			browser.runtime.sendMessage<ICommand>({command: S.focus_on_window, window_id: windowId});
@@ -486,7 +487,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 		let tabs : browser.Tabs.Tab[] = await browser.tabs.query(queryInfo);
 		console.log(tabs);
 		for (let tabkey in tabs) {
-			if (navigator.userAgent.search("Firefox") > -1) {
+			if (IS_FIREFOX) {
 				let newTab = tabs[tabkey];
 				if (!!newTab.url && newTab.url.search("about:") > -1) {
 					continue;

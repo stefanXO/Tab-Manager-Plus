@@ -6,6 +6,7 @@ import {getLocalStorageMap} from "@helpers/storage";
 import * as S from "@strings";
 import {ICommand, IWindowOptions, IWindowOptionsState} from "@types";
 import {ManagerContext, ITabManagerActions} from "../context";
+import {IS_FIREFOX} from "@helpers/browser";
 
 // "default" plus the 25 palette entries from css/popup.css
 export const WINDOW_COLORS = ["default", ...Array.from({ length: 25 }, (_, i) => "color" + (i + 1))];
@@ -80,7 +81,7 @@ export class WindowOptions extends React.Component<IWindowOptions, IWindowOption
 			name: name
 		});
 		// Firefox shows the name in the window title
-		if (navigator.userAgent.search("Firefox") > -1) {
+		if (IS_FIREFOX) {
 			await browser.windows.update(this.props.windowId, {
 				titlePreface: name ? name + " - " : ""
 			});

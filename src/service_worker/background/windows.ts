@@ -7,6 +7,7 @@ import {setWindowColor, setWindowName} from "@background/actions";
 import * as S from "@strings";
 import * as browser from 'webextension-polyfill';
 import {ISavedSession} from "@types";
+import {IS_FIREFOX} from "@helpers/browser";
 
 export async function setupWindowListeners() {
 	browser.windows.onFocusChanged.removeListener(windowFocus);
@@ -76,13 +77,13 @@ export async function createWindowWithSessionTabs(session: ISavedSession, tabId:
 
 	var whitelistWindow = ["left", "top", "width", "height", "incognito", "type"];
 
-	if (navigator.userAgent.search("Firefox") > -1) {
+	if (IS_FIREFOX) {
 		whitelistWindow = ["left", "top", "width", "height", "incognito", "type"];
 	}
 
 	var whitelistTab = ["url", "active", "selected", "pinned", "index"];
 
-	if (navigator.userAgent.search("Firefox") > -1) {
+	if (IS_FIREFOX) {
 		whitelistTab = ["url", "active", "pinned", "index"];
 	}
 
@@ -131,7 +132,7 @@ export async function createWindowWithSessionTabs(session: ISavedSession, tabId:
 		}
 		fTab.windowId = newWindow.id;
 
-		if (navigator.userAgent.search("Firefox") > -1) {
+		if (IS_FIREFOX) {
 			if (!!fTab.url && fTab.url.search("about:") > -1) {
 				console.log("filtered by about: url", fTab.url);
 				fTab.url = "";
@@ -177,7 +178,7 @@ export async function focusOnWindow(windowId : number) {
 }
 
 async function hideWindows(windowId : number) {
-	if (navigator.userAgent.search("Firefox") > -1) return;
+	if (IS_FIREFOX) return;
 	if (!windowId || windowId < 0) return;
 
 	let hide_windows = await getLocalStorage("hideWindows", false);
