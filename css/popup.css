@@ -809,58 +809,57 @@ h1,h2,h3,h4,h5,h6 {
 	margin-right: auto;
 }
 
-.color1 { background-color: rgba(142, 166, 4, 0.25) !important; }
-.color2 { background-color: rgba(245, 187, 0, 0.25) !important; }
-.color3 { background-color: rgba(236, 159, 5, 0.25) !important; }
-.color4 { background-color: rgba(215, 106, 3, 0.25) !important; }
-.color5 { background-color: rgba(191, 49, 0, 0.25) !important; }
-.color6 { background-color: rgba(251, 80, 18, 0.25) !important; }
-.color7 { background-color: rgba(1, 253, 246, 0.25) !important; }
-.color8 { background-color: rgba(233, 223, 0, 0.25) !important; }
-.color9 { background-color: rgba(237, 234, 208, 0.25) !important; }
-.color10 { background-color: rgba(3, 252, 186, 0.25) !important; }
-.color11 { background-color: rgba(162, 102, 111, 0.25) !important; }
-.color12 { background-color: rgba(244, 147, 144, 0.25) !important; }
-.color13 { background-color: rgba(244, 88, 102, 0.25) !important; }
-.color14 { background-color: rgba(196, 90, 179, 0.25) !important; }
-.color15 { background-color: rgba(99, 26, 134, 0.25) !important; }
-.color16 { background-color: rgba(58, 183, 149, 0.25) !important; }
-.color17 { background-color: rgba(160, 232, 175, 0.25) !important; }
-.color18 { background-color: rgba(134, 186, 161, 0.25) !important; }
-.color19 { background-color: rgba(237, 234, 208, 0.25) !important; }
-.color20 { background-color: rgba(255, 207, 86, 0.25) !important; }
-.color21 { background-color: rgba(204, 251, 254, 0.25) !important; }
-.color22 { background-color: rgba(205, 214, 221, 0.25) !important; }
-.color23 { background-color: rgba(205, 202, 204, 0.25) !important; }
-.color24 { background-color: rgba(205, 172, 161, 0.25) !important; }
-.color25 { background-color: rgba(205, 137, 135, 0.25) !important; }
+.color1 { background-color: #ffdad6 !important; } /* red soft */
+.color2 { background-color: #ffdec8 !important; } /* orange soft */
+.color3 { background-color: #ffe2c1 !important; } /* amber soft */
+.color4 { background-color: #f3e8bf !important; } /* yellow soft */
+.color5 { background-color: #dfefc7 !important; } /* lime soft */
+.color6 { background-color: #cff3d5 !important; } /* green soft */
+.color7 { background-color: #c2f5e6 !important; } /* teal soft */
+.color8 { background-color: #bff2ff !important; } /* cyan soft */
+.color9 { background-color: #d0eaff !important; } /* blue soft */
+.color10 { background-color: #dde6ff !important; } /* indigo soft */
+.color11 { background-color: #f0dfff !important; } /* violet soft */
+.color12 { background-color: #ffdaf0 !important; } /* pink soft */
+.color13 { background-color: #ffbbb3 !important; } /* red strong */
+.color14 { background-color: #ffc199 !important; } /* orange strong */
+.color15 { background-color: #ffc98b !important; } /* amber strong */
+.color16 { background-color: #e9d487 !important; } /* yellow strong */
+.color17 { background-color: #c5e097 !important; } /* lime strong */
+.color18 { background-color: #a4e7b2 !important; } /* green strong */
+.color19 { background-color: #89ead0 !important; } /* teal strong */
+.color20 { background-color: #80e5fd !important; } /* cyan strong */
+.color21 { background-color: #a8d8ff !important; } /* blue strong */
+.color22 { background-color: #c1d0ff !important; } /* indigo strong */
+.color23 { background-color: #e3c4ff !important; } /* violet strong */
+.color24 { background-color: #ffbae3 !important; } /* pink strong */
+.color25 { background-color: #dedede !important; } /* grey */
 
-
-.color1:hover { background-color: rgba(142, 166, 4, 0.35) !important; }
-.color2:hover { background-color: rgba(245, 187, 0, 0.35) !important; }
-.color3:hover { background-color: rgba(236, 159, 5, 0.35) !important; }
-.color4:hover { background-color: rgba(215, 106, 3, 0.35) !important; }
-.color5:hover { background-color: rgba(191, 49, 0, 0.35) !important; }
-.color6:hover { background-color: rgba(251, 80, 18, 0.35) !important; }
-.color7:hover { background-color: rgba(1, 253, 246, 0.35) !important; }
-.color8:hover { background-color: rgba(233, 223, 0, 0.35) !important; }
-.color9:hover { background-color: rgba(237, 234, 208, 0.35) !important; }
-.color10:hover { background-color: rgba(3, 252, 186, 0.35) !important; }
-.color11:hover { background-color: rgba(162, 102, 111, 0.35) !important; }
-.color12:hover { background-color: rgba(244, 147, 144, 0.35) !important; }
-.color13:hover { background-color: rgba(244, 88, 102, 0.35) !important; }
-.color14:hover { background-color: rgba(196, 90, 179, 0.35) !important; }
-.color15:hover { background-color: rgba(99, 26, 134, 0.35) !important; }
-.color16:hover { background-color: rgba(58, 183, 149, 0.35) !important; }
-.color17:hover { background-color: rgba(160, 232, 175, 0.35) !important; }
-.color18:hover { background-color: rgba(134, 186, 161, 0.35) !important; }
-.color19:hover { background-color: rgba(237, 234, 208, 0.35) !important; }
-.color20:hover { background-color: rgba(255, 207, 86, 0.35) !important; }
-.color21:hover { background-color: rgba(204, 251, 254, 0.35) !important; }
-.color22:hover { background-color: rgba(205, 214, 221, 0.35) !important; }
-.color23:hover { background-color: rgba(205, 202, 204, 0.35) !important; }
-.color24:hover { background-color: rgba(205, 172, 161, 0.35) !important; }
-.color25:hover { background-color: rgba(205, 137, 135, 0.35) !important; }
+.color1:hover { background-color: #fdcdc9 !important; }
+.color2:hover { background-color: #fad1bb !important; }
+.color3:hover { background-color: #f3d5b4 !important; }
+.color4:hover { background-color: #e6dbb2 !important; }
+.color5:hover { background-color: #d2e2ba !important; }
+.color6:hover { background-color: #c2e6c8 !important; }
+.color7:hover { background-color: #b6e7d9 !important; }
+.color8:hover { background-color: #b2e5f2 !important; }
+.color9:hover { background-color: #c3ddff !important; }
+.color10:hover { background-color: #d0d9ff !important; }
+.color11:hover { background-color: #e3d2f9 !important; }
+.color12:hover { background-color: #f7cde3 !important; }
+.color13:hover { background-color: #ffaea7 !important; }
+.color14:hover { background-color: #fdb48c !important; }
+.color15:hover { background-color: #f1bc7e !important; }
+.color16:hover { background-color: #dbc77a !important; }
+.color17:hover { background-color: #b8d38b !important; }
+.color18:hover { background-color: #98daa5 !important; }
+.color19:hover { background-color: #7bddc4 !important; }
+.color20:hover { background-color: #73d8f0 !important; }
+.color21:hover { background-color: #9bcbff !important; }
+.color22:hover { background-color: #b4c3ff !important; }
+.color23:hover { background-color: #d6b7fc !important; }
+.color24:hover { background-color: #f7add6 !important; }
+.color25:hover { background-color: #d1d1d1 !important; }
 
 .hrCont {
 	padding-top: 20px; padding-bottom: 20px;

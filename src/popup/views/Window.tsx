@@ -234,7 +234,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 								className={"icon tabaction save " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
 								title={
 									"Save this window for later\nWill save " +
-									tabs.length +
+									this.props.tabs.length +
 									" tabs with this window for later. Please note : The saved tabs will lose their history."
 								}
 								onClick={this.save}
@@ -256,21 +256,21 @@ export class Window extends React.Component<IWindow, IWindowState> {
 						{this.props.window.state === "minimized" ? (
 							<div
 								className={"icon tabaction maximize " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title={"Maximize this window\nWill maximize " + tabs.length + " tabs"}
+								title={"Maximize this window\nWill maximize " + this.props.tabs.length + " tabs"}
 								onClick={this.maximize}
 								onMouseEnter={this.hoverIcon}
 							/>
 						) : (
 							<div
 								className={"icon tabaction minimize " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title={"Minimize this window\nWill minimize " + tabs.length + " tabs"}
+								title={"Minimize this window\nWill minimize " + this.props.tabs.length + " tabs"}
 								onClick={this.minimize}
 								onMouseEnter={this.hoverIcon}
 							/>
 						)}
 						<div
 							className={"icon tabaction close " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-							title={"Close this window\nWill close " + tabs.length + " tabs"}
+							title={"Close this window\nWill close " + this.props.tabs.length + " tabs"}
 							onClick={this.close}
 							onMouseEnter={this.hoverIcon}
 						/>
@@ -347,7 +347,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 					onMouseLeave={this.hoverWindowOut}
 					onDrop={this.drop}
 				>
-					<div key={"windowcontainer_" + this.props.window.id} className="windowcontainer" title={"Focus this window\nWill select this window with " + tabs.length + " tabs"}>{children}</div>
+					<div key={"windowcontainer_" + this.props.window.id} className="windowcontainer" title={"Focus this window\nWill select this window with " + this.props.tabs.length + " tabs"}>{children}</div>
 				</div>
 			);
 		} else {
