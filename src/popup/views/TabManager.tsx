@@ -644,8 +644,12 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		this.state.windowsbyid.clear();
 		this.state.tabsbyid.clear();
 
+		// The "current" window. In own-tab mode the browser reports it as focused; as
+		// a browser-action popup every window reports focused: false (the popup has
+		// the focus), so fall back to the most recently active one from windowAge.
+		const focusedWindow = windows.find((w) => w.focused);
 		this.setState({
-			lastOpenWindow: windows[0].id,
+			lastOpenWindow: focusedWindow ? focusedWindow.id : (windows.length > 0 ? windows[0].id : -1),
 			windows: windows
 		});
 

@@ -298,10 +298,8 @@ export class Window extends React.Component<IWindow, IWindowState> {
 				z++;
 				children.push(tabs[j]);
 			}
-			let focused = false;
-			if (this.props.window.focused || this.props.lastOpenWindow === this.props.window.id) {
-				focused = true;
-			}
+			// one definition of "current", decided in TabManager.update()
+			const focused = this.props.lastOpenWindow === this.props.window.id;
 			return (
 				<div
 					key={"window-" + this.props.window.id}
