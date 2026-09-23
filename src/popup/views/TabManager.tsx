@@ -107,10 +107,6 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		};
 	}
 
-	async UNSAFE_componentWillMount() {
-		await this.update();
-	}
-
 	async componentDidUpdate(prevProps, prevState) {
 		if (this.state.dirty) {
 			await this.update();
@@ -475,6 +471,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 
 	async componentDidMount()
 	{
+		this.update();
 		await this.loadStorage();
 
 		if (IS_FIREFOX) {
