@@ -343,7 +343,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 					onDragLeave={this.dragLeave}
 					onClick={this.windowClick}
 					title={""}
-					onMouseEnter={this.hoverWindow.bind(null, tabs)}
+					onMouseEnter={this.hoverWindow}
 					onMouseLeave={this.hoverWindowOut}
 					onDrop={this.drop}
 				>
@@ -418,10 +418,9 @@ export class Window extends React.Component<IWindow, IWindowState> {
 			this.context.dropWindow(this.props.window.id);
 		}
 	}
-	hoverWindow = (tabs, _) => {
+	hoverWindow = () => {
 		this.setState({ hover: true });
-		this.hoverIcon("Focus this window\nWill select this window with " + tabs.length + " tabs");
-		// this.hoverIcon(e);
+		this.hoverIcon("Focus this window\nWill select this window with " + this.props.tabs.length + " tabs");
 	}
 	hoverWindowOut = (_) => {
 		this.setState({ hover: false });
