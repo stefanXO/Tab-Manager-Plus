@@ -902,3 +902,142 @@ h1,h2,h3,h4,h5,h6 {
 table td {
 	vertical-align: top;
 }
+/* ---------------------------------------------------------------------------
+   Block layouts as a grid.
+   Cards share one width and the browser picks the column count from the popup
+   width; `dense` backfills gaps with later, smaller cards. Inside a card the
+   title and its action icons share the first row, the tiles wrap below them.
+   Tokens differ per layout and for compact mode; structure is the same.
+   --------------------------------------------------------------------------- */
+.window-container.blocks, .window-container.blocks-big {
+	--card-min: 15rem;
+	--card-gap: 8px;
+	--card-pad: 0.6rem 0.75rem 0.5rem;
+	--title-size: 12.5px;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(var(--card-min), 1fr));
+	/* 8px rows; src/popup/masonry.ts sets each card's row span from its height,
+	   so cards pack under shorter neighbours while keeping their order */
+	grid-auto-rows: 8px;
+	grid-auto-flow: row;
+	align-items: start;
+	gap: var(--card-gap);
+	padding: var(--card-gap) var(--card-gap) 1rem;
+	box-sizing: border-box;
+}
+.window-container.blocks-big {
+	--card-min: 17rem;
+}
+.compact .window-container.blocks, .compact .window-container.blocks-big {
+	--card-min: 12.5rem;
+	--card-pad: 0.35rem 0.5rem 0.35rem;
+	--title-size: 12px;
+}
+.compact .window-container.blocks-big {
+	--card-min: 14.5rem;
+}
+/* section dividers span the whole grid */
+.window-container.blocks .hrCont, .window-container.blocks-big .hrCont {
+	grid-column: 1 / -1;
+	padding: 0.6rem 0 0.4rem;
+}
+.window-container.blocks .window.block, .window-container.blocks-big .window.block {
+	display: block;
+	width: auto;
+	margin: 0;
+	padding: var(--card-pad);
+	min-width: 0;
+}
+.window-container.blocks .window.block .windowcontainer,
+.window-container.blocks-big .window.block .windowcontainer {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	width: 100%;
+	padding: 0;
+}
+/* title on its own line (centred, truncated), tiles below, actions on a last line at the right */
+.window.block .windowTitle {
+	flex: 1 1 100%;
+	min-width: 0;
+	display: block;
+	margin: 0 0 0.25rem 0;
+	text-align: center;
+	font-size: var(--title-size);
+	line-height: 1.5rem;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.window.block .window-actions {
+	flex: 0 0 auto;
+	display: flex;
+	float: none;
+	margin: 0.25rem 0 0 auto;
+}
+/* the newliner before the actions bar becomes a real line break; the tiles never carry one now */
+.window.block .newliner {
+	flex: 1 1 100%;
+	height: 0;
+	clear: none;
+}
+.compact .window.block .windowcontainer {
+	padding: 0 !important;
+}
+
+/* ---------------------------------------------------------------------------
+   Horizontal layout as a strip view: one compact row per window, tabs in strip
+   order, so every window is a full-width drop lane.
+   [ title (fixed column) | tabs, wrapping | actions ]
+   --------------------------------------------------------------------------- */
+.window-container.horizontal {
+	--strip-title: 11rem;
+	--strip-pad: 0.35rem 0.6rem;
+	padding: 0.5rem 0 1rem;
+}
+.compact .window-container.horizontal {
+	--strip-title: 9rem;
+	--strip-pad: 0.15rem 0.4rem;
+}
+.window-container.horizontal .window.horizontal {
+	display: block;
+	width: calc(100% - 1rem);
+	margin: 0.4rem 0.5rem;
+	padding: 0;
+}
+.compact .window-container.horizontal .window.horizontal {
+	margin: 0.2rem 0.5rem;
+}
+.window-container.horizontal .window.horizontal .windowcontainer {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	width: 100%;
+	box-sizing: border-box;
+	padding: var(--strip-pad) !important;
+}
+.window.horizontal .windowTitle {
+	flex: 0 0 var(--strip-title);
+	min-width: 0;
+	display: block;
+	margin: 0 0.5rem 0 0;
+	text-align: left;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	align-self: center;
+}
+/* actions keep their DOM order at the right end of the row */
+.window.horizontal .window-actions {
+	display: flex;
+	float: none;
+	margin-left: auto;
+	padding-left: 0.5rem;
+}
+.window.horizontal .window-actions .windowaction {
+	float: none;
+	margin: 0 0.1rem;
+}
+.window.horizontal .newliner {
+	display: none;
+}
