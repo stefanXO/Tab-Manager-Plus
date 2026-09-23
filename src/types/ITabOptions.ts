@@ -1,4 +1,4 @@
-﻿import {TabManager} from "@views";
+import {ISavedSession} from "./ISavedSession";
 
 export interface ITabOptions {
 	animations: boolean,
@@ -13,5 +13,5 @@ export interface ITabOptions {
 	tabWidth: number,
 	tabactions: boolean,
 	windowTitles: boolean,
-	manager: TabManager
+	sessions: ISavedSession[]
 }

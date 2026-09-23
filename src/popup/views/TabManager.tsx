@@ -5,6 +5,7 @@ import * as React from "react";
 import * as S from "@strings";
 import * as browser from 'webextension-polyfill';
 import {ICommand, ITabManager, ITabManagerState, ISavedSession} from "@types";
+import {ManagerContext, ITabManagerActions, ISettings} from "../context";
 
 export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 
@@ -14,6 +15,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	private readonly topHoverRef: React.RefObject<HTMLDivElement>;
 	private readonly topBoxRef: React.RefObject<HTMLInputElement>;
 	private readonly topBoxUrlRef: React.RefObject<HTMLInputElement>;
+	private readonly actions: ITabManagerActions;
 
 	constructor(props : ITabManager) {
 		super(props);
@@ -101,6 +103,25 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		this.rootRef = React.createRef();
 		this.windowContainerRef = React.createRef();
 		this.searchBoxRef = React.createRef();
+
+		this.actions = {
+			select: (id) => this.select(id),
+			selectTo: (id, tabs) => this.selectTo(id, tabs),
+			deleteTab: (id) => this.deleteTab(id),
+			drag: (e, id) => this.drag(e, id),
+			drop: (id, before) => { this.drop(id, before); },
+			dropWindow: (windowId) => { this.dropWindow(windowId); },
+			dragFavicon: (icon) => this.dragFavicon(icon),
+			hoverIcon: (e) => this.hoverIcon(e),
+			hoverHandler: (tab) => this.hoverHandler(tab),
+			toggleColors: (active, windowId) => this.toggleColors(active, windowId),
+			scrollTo: (what, id) => this.scrollTo(what, id),
+			setSetting: (key, value) => this.setSetting(key, value),
+			setBottomText: (text) => this.setState({ bottomText: text }),
+			sessionSync: () => this.sessionSync(),
+			reload: () => this.setState({ dirty: true }),
+			rerender: () => this.forceUpdate()
+		};
 	}
 
 	async UNSAFE_componentWillMount() {
@@ -192,6 +213,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		});
 	}
 
+	setSetting<K extends keyof ISettings>(key : K, value : ISettings[K]) {
+		this.setState({ [key]: value } as Pick<ITabManagerState, K>);
+	}
 	hoverHandler(tab : browser.Tabs.Tab) {
 		this.setState({ topText: tab.title || "" });
 		this.setState({ bottomText: tab.url || tab.pendingUrl || "" });
@@ -263,6 +287,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		}
 
 		return (
+			<ManagerContext.Provider value={this.actions}>
 			<div
 				id="root"
 				className={
@@ -289,7 +314,6 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 						return (
 							<Window
 								key={"window" + window.id}
-								manager={_this}
 								window={window}
 								tabs={window.tabs}
 								incognito={window.incognito}
@@ -324,7 +348,6 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 						return (
 							<Window
 								key={"window" + window.id}
-								manager={_this}
 								window={window}
 								tabs={window.tabs}
 								incognito={window.incognito}
@@ -353,7 +376,6 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 								return (
 									<Session
 										key={"session" + window.id}
-										manager={_this}
 										session={window}
 										tabs={window.tabs}
 										incognito={window.incognito}
@@ -385,7 +407,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 						badge={this.state.badge}
 						hideWindows={this.state.hideWindows}
 						sessionsFeature={this.state.sessionsFeature}
-						manager={this}
+						sessions={this.state.sessions}
 					/>
 				</div>}
 				<div className="window top" ref={this.topHoverRef}>
@@ -493,6 +515,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				</div>}
 				<div className="window placeholder" />
 			</div>
+			</ManagerContext.Provider>
 		);
 	}
 

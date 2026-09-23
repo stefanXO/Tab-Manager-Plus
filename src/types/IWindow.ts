@@ -1,5 +1,4 @@
-﻿import * as browser from "webextension-polyfill";
-import {TabManager} from "@views";
+import * as browser from "webextension-polyfill";
 
 export interface IWindow {
 	window?: browser.Windows.Window,
@@ -14,7 +13,5 @@ export interface IWindow {
 	filterTabs: boolean,
 	lastOpenWindow: number,
 	incognito: boolean,
-	draggable: boolean,
-
-	manager: TabManager
+	draggable: boolean
 }

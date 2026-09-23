@@ -1,6 +1,6 @@
-﻿import * as browser from "webextension-polyfill";
+import * as browser from "webextension-polyfill";
 import {ISavedSession} from "./ISavedSession";
-import {TabManager, Window, Session} from "@views";
+import {MouseEvent} from "react";
 
 export interface ITab {
 	tab: browser.Tabs.Tab,
@@ -15,7 +15,7 @@ export interface ITab {
 	layout: string,
 	draggable: boolean,
 
-	manager: TabManager,
-	parentWindow?: Window,
-	parentSession?: Session,
+	tabs?: browser.Tabs.Tab[],
+	onOpen?: (e : MouseEvent<HTMLDivElement>, index : number) => void,
+	onDragChange?: () => void
 }

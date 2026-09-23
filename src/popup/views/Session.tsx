@@ -6,8 +6,11 @@ import * as React from "react";
 import * as browser from 'webextension-polyfill';
 import {ICommand, ISession, ISessionState} from '@types';
 import * as S from "@strings";
+import {ManagerContext, ITabManagerActions} from '../context';
 
 export class Session extends React.Component<ISession, ISessionState> {
+	static contextType = ManagerContext;
+	declare context : ITabManagerActions;
 	constructor(props : ISession) {
 		super(props);
 
@@ -41,8 +44,7 @@ export class Session extends React.Component<ISession, ISessionState> {
 				<Tab
 					id={"sessiontab_" + _this.props.session.id + "_" + tab.index}
 					key={"sessiontab_" + _this.props.session.id + "_" + tab.index}
-					manager={_this.props.manager}
-					parentSession={_this}
+					onOpen={_this.openTab}
 					session={_this.props.session}
 					layout={_this.props.layout}
 					tab={tab}
@@ -63,13 +65,13 @@ export class Session extends React.Component<ISession, ISessionState> {
 							className={"icon tabaction restore " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
 							title={"Restore this saved window\nWill restore " + tabs.length + " tabs. Please note : The tabs will be restored without their history."}
 							onClick={this.windowClick}
-							onMouseEnter={this.props.manager.hoverIcon}
+							onMouseEnter={this.context.hoverIcon}
 						/>
 						<div
 							className={"icon tabaction delete " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
 							title={"Delete this saved window\nWill delete " + tabs.length + " tabs permanently"}
 							onClick={this.close}
-							onMouseEnter={this.props.manager.hoverIcon}
+							onMouseEnter={this.context.hoverIcon}
 						/>
 					</div>
 				);
@@ -162,7 +164,7 @@ export class Session extends React.Component<ISession, ISessionState> {
 			window.close();
 		}else{
 			setTimeout(function() {
-				_this.props.manager.scrollTo("window", browser.windows.WINDOW_ID_CURRENT.toString());
+				_this.context.scrollTo("window", browser.windows.WINDOW_ID_CURRENT.toString());
 			}, 500);
 		}
 	}
@@ -178,7 +180,7 @@ export class Session extends React.Component<ISession, ISessionState> {
 		});
 
 		console.log(value);
-		this.props.manager.setState({dirty: true});
+		this.context.reload();
 		// browser.windows.remove(this.props.session.windowsInfo.id);
 	}
 }

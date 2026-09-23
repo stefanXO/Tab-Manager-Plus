@@ -6,8 +6,11 @@ import * as S from "@strings";
 import * as React from "react";
 import * as browser from 'webextension-polyfill';
 import {ICommand, IWindow, IWindowState, ISavedSession} from '@types';
+import {ManagerContext, ITabManagerActions} from '../context';
 
 export class Window extends React.Component<IWindow, IWindowState> {
+	static contextType = ManagerContext;
+	declare context : ITabManagerActions;
 
 	private nameBoxRef: React.RefObject<HTMLInputElement> = React.createRef();
 
@@ -45,6 +48,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 		this.hoverWindowOut = this.hoverWindowOut.bind(this);
 		this.checkSettings = this.checkSettings.bind(this);
 		this.hoverIcon = this.hoverIcon.bind(this);
+		this.refreshTabs = this.refreshTabs.bind(this);
 	}
 
 	async componentDidMount() {
@@ -226,8 +230,8 @@ export class Window extends React.Component<IWindow, IWindowState> {
 			return (
 				<Tab
 					key={"windowtab_" + _this.props.window.id + "_" + tab.id}
-					manager={_this.props.manager}
-					parentWindow={_this}
+					tabs={_this.props.tabs}
+					onDragChange={_this.refreshTabs}
 					window={_this.props.window}
 					layout={_this.props.layout}
 					tab={tab}
@@ -555,7 +559,10 @@ export class Window extends React.Component<IWindow, IWindowState> {
 		this.stopProp(e);
 	}
 	hoverIcon(e : React.MouseEvent<HTMLDivElement> | string) {
-		this.props.manager.hoverIcon(e);
+		this.context.hoverIcon(e);
+	}
+	refreshTabs() {
+		this.forceUpdate();
 	}
 	addTab(e) {
 		this.stopProp(e);
@@ -603,9 +610,9 @@ export class Window extends React.Component<IWindow, IWindowState> {
 			} else {
 				before = e.nativeEvent.clientX < boundingRect.left;
 			}
-			this.props.manager.drop(closestTab, before);
+			this.context.drop(closestTab, before);
 		} else {
-			this.props.manager.dropWindow(this.props.window.id);
+			this.context.dropWindow(this.props.window.id);
 		}
 	}
 	hoverWindow(tabs, _) {
@@ -637,7 +644,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 		if (!!window.inPopup) {
 			window.close();
 		} else {
-			this.props.manager.setState({dirty: true});
+			this.context.reload();
 		}
 		return false;
 	}
@@ -704,11 +711,11 @@ export class Window extends React.Component<IWindow, IWindowState> {
 			console.log(err);
 			console.error(err.message);
 		});
-		this.props.manager.setState({ dirty: true });
+		this.context.reload();
 		console.log("Value is set to " + value);
 
 		setTimeout(function() {
-			_this.props.manager.scrollTo("session", session.id);
+			_this.context.scrollTo("session", session.id);
 		}, 150);
 	}
 	async minimize(e) {
@@ -716,18 +723,18 @@ export class Window extends React.Component<IWindow, IWindowState> {
 		await browser.windows.update(this.props.window.id, {
 			state: "minimized"
 		});
-		this.props.manager.setState({ dirty: true });
+		this.context.reload();
 	}
 	async maximize(e) {
 		this.stopProp(e);
 		await browser.windows.update(this.props.window.id, {
 			state: "normal"
 		});
-		this.props.manager.setState({ dirty: true });
+		this.context.reload();
 	}
 	colors(e) {
 		this.stopProp(e);
-		this.props.manager.toggleColors(!this.state.colorActive, this.props.window.id);
+		this.context.toggleColors(!this.state.colorActive, this.props.window.id);
 		this.setState({
 			colorActive: !this.state.colorActive
 		});
@@ -739,7 +746,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 	}
 	async changeColors(a) {
 		this.setState(a);
-		this.props.manager.toggleColors(!this.state.colorActive, this.props.window.id);
+		this.context.toggleColors(!this.state.colorActive, this.props.window.id);
 
 		let color = a.color || "default";
 
@@ -753,12 +760,12 @@ export class Window extends React.Component<IWindow, IWindowState> {
 		await this.closePopup();
 	}
 	async closePopup() {
-		this.props.manager.toggleColors(!this.state.colorActive, this.props.window.id);
+		this.context.toggleColors(!this.state.colorActive, this.props.window.id);
 		this.setState({
 			colorActive: !this.state.colorActive
 		});
 		await this.update();
-		this.props.manager.setState({dirty: true});
+		this.context.reload();
 	}
 	async changeName(e) {
 		// this.setState(a);
