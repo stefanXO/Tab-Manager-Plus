@@ -32,9 +32,11 @@ function context() : CanvasRenderingContext2D | null {
 function load(url : string) : Promise<HTMLImageElement> {
 	return new Promise((resolve, reject) => {
 		const img = new Image();
-		// lets Firefox read remote favicons that send CORS headers; the same-origin
-		// chrome-extension://…/_favicon/ endpoint needs nothing
-		img.crossOrigin = "anonymous";
+		// A remote icon (Firefox: tab.favIconUrl) can only be read from the canvas
+		// when loaded in CORS mode and the site allows it; sites that don't log a
+		// CORS error and the icon is simply left as it is. Same-origin sources
+		// (Chrome's _favicon cache, data:, bundled images) need nothing.
+		if (/^https?:/i.test(url)) img.crossOrigin = "anonymous";
 		img.onload = () => resolve(img);
 		img.onerror = () => reject(new Error("favicon load failed: " + url));
 		img.src = url;
@@ -81,12 +83,8 @@ function analyze(img : HTMLImageElement) : FaviconTone {
 	return "normal";
 }
 
-// `url` must be readable from a canvas: the extension's own favicon cache, a
-// data: URI or a bundled image. Remote icons (a page's declared SVG, Firefox's
-// favIconUrl) would taint the canvas; the caller passes the cache bitmap instead.
 export function faviconTone(url : string) : Promise<FaviconTone> {
 	if (!url) return Promise.resolve("normal");
-	if (/^https?:/i.test(url)) return Promise.resolve("normal");
 	let pending = cache.get(url);
 	if (!pending) {
 		pending = load(url).then(analyze).catch(() => "normal" as FaviconTone);
