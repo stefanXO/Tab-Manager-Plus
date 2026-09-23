@@ -850,8 +850,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			});
 		} else {
 			this.setState({
-				topText: "Highlighted " + dup.size + " duplicate tabs",
-				bottomText: "Press enter to move them to a new window"
+				topText: "Found " + maybePluralize(dup.size + orig.size, "tab") + " with duplicates, selected " + maybePluralize(dup.size, "duplicate"),
+				bottomText: "Delete closes the duplicates and keeps one of each. Enter moves them to a new window"
 			});
 		}
 		this.setState({
