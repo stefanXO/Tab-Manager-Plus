@@ -186,38 +186,37 @@ export class Window extends React.Component<IWindow, IWindowState> {
 
 	render() {
 		if (this.state.hidden) return null;
-		let _this = this;
 
 		let color = this.state.color || "default";
 
 		let hideWindow = true;
 		let titleAdded = false;
-		let tabs = this.props.tabs.map(function(tab) {
-			const isHidden : boolean = _this.props.hiddenTabs.has(tab.id) && _this.props.filterTabs;
-			let isSelected : boolean = _this.props.selection.has(tab.id);
-			let isFaded : boolean = _this.props.hiddenTabs.has(tab.id) && !_this.props.filterTabs;
+		let tabs = this.props.tabs.map((tab) => {
+			const isHidden : boolean = this.props.hiddenTabs.has(tab.id) && this.props.filterTabs;
+			let isSelected : boolean = this.props.selection.has(tab.id);
+			let isFaded : boolean = this.props.hiddenTabs.has(tab.id) && !this.props.filterTabs;
 			if (!isHidden) hideWindow = false;
 			if (isHidden) {
-				return <div key={"windowtab_" + _this.props.window.id + "_" + tab.id}></div>;
+				return <div key={"windowtab_" + this.props.window.id + "_" + tab.id}></div>;
 			}
 
-			let tabRef = _this.state.tabrefs.get(tab.id) || React.createRef<Tab>();
-			if (!_this.state.tabrefs.has(tab.id)) {
-				_this.state.tabrefs.set(tab.id, tabRef);
+			let tabRef = this.state.tabrefs.get(tab.id) || React.createRef<Tab>();
+			if (!this.state.tabrefs.has(tab.id)) {
+				this.state.tabrefs.set(tab.id, tabRef);
 			}
 
 			return (
 				<Tab
-					key={"windowtab_" + _this.props.window.id + "_" + tab.id}
-					tabs={_this.props.tabs}
-					onDragChange={_this.refreshTabs}
-					window={_this.props.window}
-					layout={_this.props.layout}
+					key={"windowtab_" + this.props.window.id + "_" + tab.id}
+					tabs={this.props.tabs}
+					onDragChange={this.refreshTabs}
+					window={this.props.window}
+					layout={this.props.layout}
 					tab={tab}
 					selected={isSelected}
 					hidden={isHidden}
 					faded={isFaded}
-					searchActive={_this.props.searchActive}
+					searchActive={this.props.searchActive}
 					draggable={true}
 					ref={tabRef}
 					id={"tab-" + tab.id}
@@ -227,7 +226,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 		if (!hideWindow) {
 			if (!!this.props.tabactions) {
 				tabs.push(
-					<div key={"windownl_" + _this.props.window.id} className="newliner"/>,
+					<div key={"windownl_" + this.props.window.id} className="newliner"/>,
 					<div key={"windowactions_" + this.props.window.id} className="window-actions">
 						{this.props.sessionsFeature ? (
 							<div
@@ -451,7 +450,6 @@ export class Window extends React.Component<IWindow, IWindowState> {
 	}
 	save = async (e) => {
 		this.stopProp(e);
-		var _this = this;
 
 		console.log("session name", this.state.name);
 		let sessionName = this.state.name || this.topEntries(this.state.windowTitles).join("");
@@ -504,8 +502,8 @@ export class Window extends React.Component<IWindow, IWindowState> {
 		this.context.reload();
 		console.log("Value is set to " + value);
 
-		setTimeout(function() {
-			_this.context.scrollTo("session", session.id);
+		setTimeout(() => {
+			this.context.scrollTo("session", session.id);
 		}, 150);
 	}
 	minimize = async (e) => {

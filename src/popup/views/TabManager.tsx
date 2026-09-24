@@ -233,8 +233,6 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		});
 	}
 	render() {
-		let _this = this;
-
 		// let hiddenCount = this.state.hiddenCount || 0;
 		let tabCount = this.state.tabCount;
 
@@ -292,16 +290,16 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 								window={window}
 								tabs={window.tabs}
 								incognito={window.incognito}
-								layout={_this.state.layout}
-								selection={_this.state.selection}
-								searchActive={_this.state.searchLen > 0}
-								sessionsFeature={_this.state.sessionsFeature}
-								tabactions={_this.state.tabactions}
-								hiddenTabs={_this.state.hiddenTabs}
-								filterTabs={_this.state.filterTabs}
+								layout={this.state.layout}
+								selection={this.state.selection}
+								searchActive={this.state.searchLen > 0}
+								sessionsFeature={this.state.sessionsFeature}
+								tabactions={this.state.tabactions}
+								hiddenTabs={this.state.hiddenTabs}
+								filterTabs={this.state.filterTabs}
 								draggable={true}
-								windowTitles={_this.state.windowTitles}
-								lastOpenWindow={_this.state.lastOpenWindow}
+								windowTitles={this.state.windowTitles}
+								lastOpenWindow={this.state.lastOpenWindow}
 								ref={windowRef}
 							/>
 						);
@@ -325,16 +323,16 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 								window={window}
 								tabs={window.tabs}
 								incognito={window.incognito}
-								layout={_this.state.layout}
-								selection={_this.state.selection}
-								searchActive={_this.state.searchLen > 0}
-								sessionsFeature={_this.state.sessionsFeature}
-								tabactions={_this.state.tabactions}
-								hiddenTabs={_this.state.hiddenTabs}
-								filterTabs={_this.state.filterTabs}
+								layout={this.state.layout}
+								selection={this.state.selection}
+								searchActive={this.state.searchLen > 0}
+								sessionsFeature={this.state.sessionsFeature}
+								tabactions={this.state.tabactions}
+								hiddenTabs={this.state.hiddenTabs}
+								filterTabs={this.state.filterTabs}
 								draggable={true}
-								windowTitles={_this.state.windowTitles}
-								lastOpenWindow={_this.state.lastOpenWindow}
+								windowTitles={this.state.windowTitles}
+								lastOpenWindow={this.state.lastOpenWindow}
 								ref={windowRef}
 							/>
 						);
@@ -352,14 +350,14 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 										session={window}
 										tabs={window.tabs}
 										incognito={window.incognito}
-										layout={_this.state.layout}
-										selection={_this.state.selection}
-										searchActive={_this.state.searchLen > 0}
-										tabactions={_this.state.tabactions}
-										hiddenTabs={_this.state.hiddenTabs}
-										filterTabs={_this.state.filterTabs}
-										windowTitles={_this.state.windowTitles}
-										lastOpenWindow={_this.state.lastOpenWindow}
+										layout={this.state.layout}
+										selection={this.state.selection}
+										searchActive={this.state.searchLen > 0}
+										tabactions={this.state.tabactions}
+										hiddenTabs={this.state.hiddenTabs}
+										filterTabs={this.state.filterTabs}
+										windowTitles={this.state.windowTitles}
+										lastOpenWindow={this.state.lastOpenWindow}
 										draggable={false}
 									/>
 								);
@@ -501,14 +499,12 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			}
 		}
 
-		let _this = this;
-
 		var runUpdate = () => {
-			_this.setState({ dirty: true });
+			this.setState({ dirty: true });
 		}
 
 		var runSlowUpdate = debounce(() => {
-			_this.setState({dirty: true});
+			this.setState({dirty: true});
 		}, 250);
 
 		browser.tabs.onCreated.addListener(runUpdate);
