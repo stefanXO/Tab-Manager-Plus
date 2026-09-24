@@ -1071,6 +1071,17 @@ table td {
 .window.horizontal .newliner {
 	display: none;
 }
+/* the tiles wrapper is invisible to layout everywhere except the strip view */
+.tabs {
+	display: contents;
+}
+.window.horizontal .tabs {
+	display: flex;
+	flex-wrap: wrap;
+	flex: 1 1 0;
+	min-width: 0;
+	align-items: center;
+}
 
 /* ---------------------------------------------------------------------------
    Vertical layout as a list: window cards in a grid (one column in the popup,
