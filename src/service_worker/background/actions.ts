@@ -12,10 +12,18 @@ import { ICommand } from '@types';
 // Returning the handler's promise keeps the message channel open until the
 // work is done, which also keeps the MV3 service worker alive for the whole
 // operation (e.g. restoring a large session). Unknown commands return nothing
-// so the channel is released immediately.
+// so the channel is released immediately. A failed handler (say, focusing a
+// tab that was closed meanwhile) is logged here; the popup's sendMessage
+// resolves either way, none of its callers can do anything with the error.
 export function handleMessages(message : unknown, sender : browser.Runtime.MessageSender) {
-	const request = message as ICommand;
+	const result = dispatch(message as ICommand);
+	if (!result) return;
+	return result.catch(function (e) {
+		console.error(e);
+	});
+}
 
+function dispatch(request : ICommand) : Promise<unknown> | void {
 	switch (request.command) {
 		case S.reload_popup_controls:
 			return setupPopup();
