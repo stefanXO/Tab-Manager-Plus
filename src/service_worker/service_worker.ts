@@ -1,10 +1,10 @@
 "use strict";
 
-import { getLocalStorage, setLocalStorage } from "@helpers/storage";
+import { getLocalStorage, setLocalStorage, serialized } from "@helpers/storage";
 import * as _a from "@background/actions";
 import * as _w from '@background/windows';
 import * as _t from '@background/tabs';
-import { cleanupDebounce, cleanUp } from '@background/tracking';
+import { cleanupDebounce, cleanUp, forgetWindowIds } from '@background/tracking';
 
 import * as _c from '@ui/context_menus';
 import * as _o from '@ui/open';
@@ -38,19 +38,32 @@ browser.alarms.onAlarm.addListener(async function (alarm) {
 
 browser.runtime.onInstalled.addListener(async function () {
 	console.log(" ON INSTALLED");
+	// context menus persist in the browser, they only need creating here
+	try {
+		await _c.setupContextMenus();
+	} catch (e) {
+		console.error(e);
+	}
 	await reconcileWindowAge();
 });
 
 browser.runtime.onStartup.addListener(async function () {
 	console.log(" ON STARTUP");
-	await reconcileWindowAge();
-});
-
-browser.runtime.onSuspend.addListener(
-	async function () {
-		console.log(" ON SUSPEND");
+	// stored window ids are from the previous session and mean nothing now
+	try {
+		await forgetWindowIds();
+	} catch (e) {
+		console.error(e);
 	}
-);
+	await reconcileWindowAge();
+	// hand names and colors to whatever the session restore has recreated so
+	// far; later windows get theirs through windowCreated
+	try {
+		await cleanUp();
+	} catch (e) {
+		console.error(e);
+	}
+});
 
 // windowAge used to be wiped and rebuilt from window ids on every service
 // worker wake, which reset the user's window ordering many times a day.
@@ -61,30 +74,30 @@ async function reconcileWindowAge() {
 		const windows = await browser.windows.getAll({});
 		const liveIds : number[] = [];
 		for (const w of windows) {
-			if (!!w.id) liveIds.push(w.id);
+			if (w.id !== undefined) liveIds.push(w.id);
 		}
+		// at browser start the session may not be restored yet; the windows
+		// register themselves through windowCreated as they appear
+		if (liveIds.length === 0) return;
 
-		let windowAge = await getLocalStorage("windowAge", []);
-		if (!(windowAge instanceof Array)) windowAge = [];
+		await serialized(async function () {
+			let windowAge = await getLocalStorage("windowAge", []);
+			if (!(windowAge instanceof Array)) windowAge = [];
 
-		windowAge = windowAge.filter(function (id) {
-			return liveIds.indexOf(id) > -1;
+			windowAge = windowAge.filter(function (id) {
+				return liveIds.indexOf(id) > -1;
+			});
+			for (const id of liveIds) {
+				if (windowAge.indexOf(id) < 0) windowAge.push(id);
+			}
+			await setLocalStorage("windowAge", windowAge);
 		});
-		for (const id of liveIds) {
-			if (windowAge.indexOf(id) < 0) windowAge.push(id);
-		}
-		await setLocalStorage("windowAge", windowAge);
 	} catch (e) {
 		console.error(e);
 	}
 }
 
 async function setup() {
-	try {
-		await _c.setupContextMenus();
-	} catch (e) {
-		console.error(e);
-	}
 	try {
 		await _o.setupPopup();
 	} catch (e) {

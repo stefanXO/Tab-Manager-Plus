@@ -3,7 +3,7 @@
 import { globalTabsActive, tabsActiveLoaded, persistTabsActive } from '@context'
 import * as S from "@strings";
 import { focusOnWindow, focusOnWindowDelayed, createWindowWithTabs, createWindowWithSessionTabs, hashcode } from '@background/windows';
-import { getLocalStorageMap, setLocalStorageMap } from "@helpers/storage";
+import { getLocalStorageMap, setLocalStorageMap, serialized } from "@helpers/storage";
 import { setupPopup } from "@ui/open";
 import { updateTabCount, discardTabs, moveTabsToWindow, closeTabs, focusOnTabAndWindow, focusOnTabAndWindowDelayed } from "@background/tabs";
 import * as browser from 'webextension-polyfill';
@@ -16,7 +16,14 @@ import { ICommand } from '@types';
 // tab that was closed meanwhile) is logged here; the popup's sendMessage
 // resolves either way, none of its callers can do anything with the error.
 export function handleMessages(message : unknown, sender : browser.Runtime.MessageSender) {
-	const result = dispatch(message as ICommand);
+	if (!message || typeof message !== "object") return;
+	let result : Promise<unknown> | void;
+	try {
+		result = dispatch(message as ICommand);
+	} catch (e) {
+		console.error(e);
+		return;
+	}
 	if (!result) return;
 	return result.catch(function (e) {
 		console.error(e);
@@ -67,9 +74,17 @@ function dispatch(request : ICommand) : Promise<unknown> | void {
 export async function handleCommands(command : string) {
 	if (command === S.switch_to_previous_active_tab) {
 		await tabsActiveLoaded;
-		if (!!globalTabsActive && globalTabsActive.length > 1) {
-			var _tab = globalTabsActive[globalTabsActive.length - 2];
-			await focusOnTabAndWindow(_tab.tabId, _tab.windowId);
+		// the last entry is the current tab; walk back past entries whose tab
+		// is gone (closed while the history could not be pruned)
+		while (globalTabsActive.length > 1) {
+			const _tab = globalTabsActive[globalTabsActive.length - 2];
+			try {
+				await focusOnTabAndWindow(_tab.tabId, _tab.windowId);
+				return;
+			} catch (e) {
+				globalTabsActive.splice(globalTabsActive.length - 2, 1);
+				await persistTabsActive();
+			}
 		}
 	}
 }
@@ -92,38 +107,45 @@ export async function trackLastTab(tab : browser.Tabs.OnActivatedActiveInfoType)
 			}
 		}
 		globalTabsActive.push(tab);
-		persistTabsActive();
+		await persistTabsActive();
 	}
 }
 
 export async function setWindowColor(windowId : number, color : string) {
-	var colors : Map<number, string> = await getLocalStorageMap<number, string>(S.windowColors);
-	if (!!color) {
-		colors.set(windowId, color);
-	} else {
-		colors.delete(windowId);
-	}
-	await setLocalStorageMap(S.windowColors, colors);
-	await updateWindowHash(windowId);
-	browser.runtime.sendMessage<ICommand>({
-		command: S.refresh_windows,
-		window_ids: [windowId]
+	await serialized(async function () {
+		var colors : Map<number, string> = await getLocalStorageMap<number, string>(S.windowColors);
+		if (!!color) {
+			colors.set(windowId, color);
+		} else {
+			colors.delete(windowId);
+		}
+		await setLocalStorageMap(S.windowColors, colors);
+		await updateWindowHash(windowId);
 	});
+	notifyRefresh([windowId]);
 }
 
 export async function setWindowName(windowId: number, name : string) {
-	var names : Map<number, string> = await getLocalStorageMap<number, string>(S.windowNames);
-	if (!!name) {
-		names.set(windowId, name);
-	} else {
-		names.delete(windowId);
-	}
-	await setLocalStorageMap(S.windowNames, names);
-	await updateWindowHash(windowId);
+	await serialized(async function () {
+		var names : Map<number, string> = await getLocalStorageMap<number, string>(S.windowNames);
+		if (!!name) {
+			names.set(windowId, name);
+		} else {
+			names.delete(windowId);
+		}
+		await setLocalStorageMap(S.windowNames, names);
+		await updateWindowHash(windowId);
+	});
+	notifyRefresh([windowId]);
+}
+
+// tells the popup to re-read the names and colors of these windows; nobody
+// listens while the popup is closed, which is the common case
+export function notifyRefresh(windowIds : number[]) {
 	browser.runtime.sendMessage<ICommand>({
 		command: S.refresh_windows,
-		window_ids: [windowId]
-	});
+		window_ids: windowIds
+	}).catch(function () {});
 }
 
 async function updateWindowHash(windowId : number) {

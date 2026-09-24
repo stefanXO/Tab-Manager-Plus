@@ -18,8 +18,22 @@ export const tabsActiveLoaded : Promise<void> = (async function () {
 	}
 })();
 
-export function persistTabsActive() {
-	browser.storage.session.set({globalTabsActive: globalTabsActive}).catch(function (e) {
+export function persistTabsActive() : Promise<void> {
+	return browser.storage.session.set({globalTabsActive: globalTabsActive}).catch(function (e) {
 		console.error(e);
 	});
+}
+
+// drops a closed tab from the history so the previous-tab shortcut never
+// targets it
+export async function forgetTab(tabId : number) {
+	await tabsActiveLoaded;
+	let changed = false;
+	for (let i = globalTabsActive.length - 1; i >= 0; i--) {
+		if (globalTabsActive[i].tabId === tabId) {
+			globalTabsActive.splice(i, 1);
+			changed = true;
+		}
+	}
+	if (changed) await persistTabsActive();
 }

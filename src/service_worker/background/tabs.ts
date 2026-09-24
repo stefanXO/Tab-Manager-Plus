@@ -2,7 +2,7 @@
 
 import {getLocalStorage} from "@helpers/storage";
 import {trackLastTab} from "@background/actions"
-import {globalTabsActive, tabsActiveLoaded, persistTabsActive} from '@context';
+import {globalTabsActive, tabsActiveLoaded, persistTabsActive, forgetTab} from '@context';
 import {debounce} from "@helpers/utils";
 import {checkWindow, createWindowWithTabs} from '@background/windows';
 import * as browser from 'webextension-polyfill';
@@ -18,6 +18,7 @@ export function setupTabListeners() {
 	browser.tabs.onAttached.removeListener(tabCountChanged);
 	browser.tabs.onActivated.removeListener(tabActiveChanged);
 	browser.tabs.onMoved.removeListener(tabCountChanged);
+	browser.tabs.onRemoved.removeListener(tabRemoved);
 
 	browser.tabs.onCreated.removeListener(checkTabCreate);
 	browser.tabs.onUpdated.removeListener(checkTabUpdate);
@@ -34,6 +35,7 @@ export function setupTabListeners() {
 	browser.tabs.onAttached.addListener(tabCountChanged);
 	browser.tabs.onActivated.addListener(tabActiveChanged);
 	browser.tabs.onMoved.addListener(tabCountChanged);
+	browser.tabs.onRemoved.addListener(tabRemoved);
 
 	browser.tabs.onCreated.addListener(checkTabCreate); // 1, tab
 	browser.tabs.onUpdated.addListener(checkTabUpdate); // 3, tabid, changeinfo, tab
@@ -141,8 +143,13 @@ async function tabAdded(tab) {
 }
 
 function tabActiveChanged(tab : browser.Tabs.OnActivatedActiveInfoType) {
-	trackLastTab(tab);
 	updateTabCountDebounce();
+	// returned so the event keeps the worker alive until the history is written
+	return trackLastTab(tab);
+}
+
+function tabRemoved(tabId : number) {
+	return forgetTab(tabId);
 }
 
 // checkWindow rehashes the whole window, so collapse bursts of tab events
