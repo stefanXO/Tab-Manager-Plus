@@ -676,9 +676,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	}
 	deleteTabs = async () => {
 		const _this = this;
-		const tabs: browser.Tabs.Tab[] = [...this.state.selection.keys()].map(function(id) {
-			return _this.state.tabsbyid.get(id);
-		});
+		const tabs = this.selectedTabs();
 		if (tabs.length) {
 			browser.runtime.sendMessage<ICommand>({command: S.close_tabs, tabs: tabs});
 		} else {
@@ -693,9 +691,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	}
 	discardTabs = async () => {
 		const _this = this;
-		const tabs : browser.Tabs.Tab[] = [...this.state.selection.keys()].map(function(id) {
-			return _this.state.tabsbyid.get(id);
-		});
+		const tabs = this.selectedTabs();
 		if (tabs.length) {
 			browser.runtime.sendMessage<ICommand>({command: S.discard_tabs, tabs: tabs});
 		}
@@ -707,9 +703,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	addWindow = async () => {
 		const _this = this;
 		const count = this.state.selection.size;
-		const tabs : browser.Tabs.Tab[] = [...this.state.selection.keys()].map(function(id) {
-			return _this.state.tabsbyid.get(id);
-		});
+		const tabs = this.selectedTabs();
 
 		const incognito_tabs = tabs.filter(function(tab) {
 			return tab.incognito;
@@ -739,10 +733,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	}
 	pinTabs = async () => {
 		const _this = this;
-		const tabs : browser.Tabs.Tab[] = [...this.state.selection.keys()]
-			.map(function(id) {
-				return _this.state.tabsbyid.get(id);
-			})
+		const tabs = this.selectedTabs()
 			.sort(function(a, b) {
 				return a.index - b.index;
 			});
@@ -1304,6 +1295,17 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				return "Vertical";
 		}
 	}
+	// The selection may hold ids of tabs that closed since they were selected,
+	// and of session tabs, which are not open tabs; neither is in tabsbyid.
+	// Sending those on as undefined crashed the worker's close/move/discard.
+	selectedTabs() : browser.Tabs.Tab[] {
+		const tabs : browser.Tabs.Tab[] = [];
+		for (const id of this.state.selection.keys()) {
+			const tab = this.state.tabsbyid.get(id);
+			if (!!tab) tabs.push(tab);
+		}
+		return tabs;
+	}
 	select(id : number) {
 		if (this.state.selection.has(id)) {
 			this.state.selection.delete(id);
@@ -1480,9 +1482,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	async drop(id : number, before : boolean) {
 		var _this = this;
 		var tab : browser.Tabs.Tab = this.state.tabsbyid.get(id);
-		var tabs : browser.Tabs.Tab[] = [...this.state.selection.keys()].map(function(id) {
-			return _this.state.tabsbyid.get(id);
-		});
+		var tabs = this.selectedTabs();
 		var index = tab.index + (before ? 0 : 1);
 
 		for (let i = 0; i < tabs.length; i++) {
@@ -1495,9 +1495,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	}
 	async dropWindow(windowId : number) {
 		var _this = this;
-		var tabs : browser.Tabs.Tab[] = [...this.state.selection.keys()].map(function(id) {
-			return _this.state.tabsbyid.get(id);
-		});
+		var tabs = this.selectedTabs();
 
 		browser.runtime.sendMessage<ICommand>({command: S.move_tabs_to_window, window_id: windowId, tabs: tabs});
 

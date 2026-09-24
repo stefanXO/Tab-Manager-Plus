@@ -33,7 +33,10 @@ export class Session extends React.Component<ISession, ISessionState> {
 			let isHidden = _this.props.hiddenTabs.has(tabId) && _this.props.filterTabs;
 			let isSelected = _this.props.selection.has(tabId);
 			let isFaded: boolean = _this.props.hiddenTabs.has(tab.id) && !_this.props.filterTabs;
-			tab.id = tab.index;
+			// session tabs are addressed by their index when restoring; render
+			// a copy so the stored session (and the tabId derived above) is
+			// never changed by rendering
+			const sessionTab = Object.assign({}, tab, {id: tab.index});
 			if (!isHidden) hideWindow = false;
 			return (
 				<Tab
@@ -42,7 +45,7 @@ export class Session extends React.Component<ISession, ISessionState> {
 					onOpen={_this.openTab}
 					session={_this.props.session}
 					layout={_this.props.layout}
-					tab={tab}
+					tab={sessionTab}
 					selected={isSelected}
 					hidden={isHidden}
 					faded={isFaded}
