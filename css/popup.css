@@ -1217,6 +1217,16 @@ table td {
 .window.vertical .tab.full:hover {
 	background-color: rgba(0, 0, 0, 0.07);
 }
+/* Row states, each a coloured left accent plus a faint tint. One accent slot,
+   so the order here is the precedence, last wins:
+   pinned red < active purple < playing blue < muted grey < selected yellow */
+.window.vertical .tab.full.pinned {
+	border-left-color: rgba(255, 17, 119, 0.8);
+	background-color: rgba(255, 17, 119, 0.06);
+}
+.window.vertical .tab.full.pinned:hover {
+	background-color: rgba(255, 17, 119, 0.14);
+}
 .window.vertical .tab.full.highlighted {
 	border-left-color: rgba(102, 51, 153, 0.8);
 	background-color: rgba(102, 51, 153, 0.06);
@@ -1224,7 +1234,28 @@ table td {
 .window.vertical .tab.full.highlighted:hover {
 	background-color: rgba(102, 51, 153, 0.14);
 }
+.window.vertical .tab.full.audible {
+	border-left-color: #4285f4;
+	background-color: rgba(66, 133, 244, 0.08);
+}
+.window.vertical .tab.full.audible:hover {
+	background-color: rgba(66, 133, 244, 0.16);
+}
+.window.vertical .tab.full.audible > .iconoverlay {
+	background-color: #4285f4;
+}
+.window.vertical .tab.full.muted {
+	border-left-color: rgba(0, 0, 0, 0.35);
+	background-color: transparent;
+}
+.window.vertical .tab.full.muted:hover {
+	background-color: rgba(0, 0, 0, 0.07);
+}
+.window.vertical .tab.full.muted > .iconoverlay {
+	background-color: transparent;
+}
 .window.vertical .tab.full.selected {
+	border-left-color: rgba(230, 200, 0, 0.95);
 	background-color: rgba(255, 230, 0, 0.45);
 }
 .window.vertical .tab.full.selected:hover {
