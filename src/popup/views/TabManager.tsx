@@ -22,6 +22,28 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	private masonry : Masonry | null = null;
 	private masonryTarget : HTMLElement | null = null;
 
+	private readonly runUpdate = () => this.setState({ dirty: true });
+	private readonly runSlowUpdate = debounce(this.runUpdate, 250);
+	private readonly onRuntimeMessage = (message : unknown) => {
+		const request = message as ICommand;
+
+		switch (request.command) {
+			case S.refresh_windows:
+				const window_ids : number[] = request.window_ids;
+				for (const window_id of window_ids) {
+					const _window = this.state.windowrefs.get(window_id)?.current;
+					if (!_window) continue;
+					_window.checkSettings();
+				}
+				break;
+		}
+	}
+	// the worker records window focus order (windowAge) after the same focus event
+	// the popup reacts to; when its write lands, re-sort so the order is never stale
+	private readonly onStorageChanged = (changes : Record<string, unknown>, area : string) => {
+		if (area === "local" && "windowAge" in changes) this.runUpdate();
+	}
+
 	constructor(props : ITabManager) {
 		super(props);
 
@@ -121,6 +143,24 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 
 	componentWillUnmount() {
 		this.masonry?.disconnect();
+
+		browser.tabs.onCreated.removeListener(this.runUpdate);
+		browser.tabs.onUpdated.removeListener(this.runSlowUpdate);
+		browser.tabs.onMoved.removeListener(this.runSlowUpdate);
+		browser.tabs.onRemoved.removeListener(this.runUpdate);
+		browser.tabs.onReplaced.removeListener(this.runSlowUpdate);
+		browser.tabs.onDetached.removeListener(this.runUpdate);
+		browser.tabs.onAttached.removeListener(this.runUpdate);
+		browser.tabs.onActivated.removeListener(this.runSlowUpdate);
+
+		browser.windows.onFocusChanged.removeListener(this.runUpdate);
+		browser.windows.onCreated.removeListener(this.runUpdate);
+		browser.windows.onRemoved.removeListener(this.runUpdate);
+
+		browser.runtime.onMessage.removeListener(this.onRuntimeMessage);
+
+		browser.storage.onChanged.removeListener(this.sessionSync);
+		browser.storage.onChanged.removeListener(this.onStorageChanged);
 	}
 
 	syncMasonry() {
@@ -499,49 +539,23 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			}
 		}
 
-		var runUpdate = () => {
-			this.setState({ dirty: true });
-		}
+		browser.tabs.onCreated.addListener(this.runUpdate);
+		browser.tabs.onUpdated.addListener(this.runSlowUpdate);
+		browser.tabs.onMoved.addListener(this.runSlowUpdate);
+		browser.tabs.onRemoved.addListener(this.runUpdate);
+		browser.tabs.onReplaced.addListener(this.runSlowUpdate);
+		browser.tabs.onDetached.addListener(this.runUpdate);
+		browser.tabs.onAttached.addListener(this.runUpdate);
+		browser.tabs.onActivated.addListener(this.runSlowUpdate);
 
-		var runSlowUpdate = debounce(() => {
-			this.setState({dirty: true});
-		}, 250);
+		browser.windows.onFocusChanged.addListener(this.runUpdate);
+		browser.windows.onCreated.addListener(this.runUpdate);
+		browser.windows.onRemoved.addListener(this.runUpdate);
 
-		browser.tabs.onCreated.addListener(runUpdate);
-		browser.tabs.onUpdated.addListener(runSlowUpdate);
-		browser.tabs.onMoved.addListener(runSlowUpdate);
-		browser.tabs.onRemoved.addListener(runUpdate);
-		browser.tabs.onReplaced.addListener(runSlowUpdate);
-		browser.tabs.onDetached.addListener(runUpdate);
-		browser.tabs.onAttached.addListener(runUpdate);
-		browser.tabs.onActivated.addListener(runSlowUpdate);
-
-		browser.windows.onFocusChanged.addListener(runUpdate);
-		browser.windows.onCreated.addListener(runUpdate);
-		browser.windows.onRemoved.addListener(runUpdate);
-
-		browser.runtime.onMessage.addListener((message : unknown) => {
-			const request = message as ICommand;
-
-			switch (request.command) {
-				case S.refresh_windows:
-					const window_ids : number[] = request.window_ids;
-					for (const window_id of window_ids) {
-						const _window = this.state.windowrefs.get(window_id)?.current;
-						if (!_window) continue;
-						_window.checkSettings();
-					}
-					break;
-			}
-		});
-
+		browser.runtime.onMessage.addListener(this.onRuntimeMessage);
 
 		browser.storage.onChanged.addListener(this.sessionSync);
-		// the worker records window focus order (windowAge) after the same focus event
-		// the popup reacts to; when its write lands, re-sort so the order is never stale
-		browser.storage.onChanged.addListener((changes, area) => {
-			if (area === "local" && "windowAge" in changes) runUpdate();
-		});
+		browser.storage.onChanged.addListener(this.onStorageChanged);
 
 		await this.sessionSync();
 
