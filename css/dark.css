@@ -2,6 +2,8 @@
    and the toolbar icons are shown as they are, tiles are a lighter panel with a
    hairline, and the header / search bar are panels, not a coloured band. */
 body.dark {
+	/* native scrollbars and form controls in dark, the page itself is styled below */
+	color-scheme: dark;
 	--dk-ground: #151a1f;
 	--dk-panel: #1e252b;
 	--dk-panel-2: #242c33;
