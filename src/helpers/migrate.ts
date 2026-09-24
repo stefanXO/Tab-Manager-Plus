@@ -31,7 +31,9 @@ const boolkeys = [
 	"filter-tabs"
 ];
 
-(async function () {
+// Resolves once the one-time move from localStorage / per-session keys is
+// done (or was not needed); the popup awaits it before reading any setting.
+export const migrated : Promise<void> = (async function () {
 
 	let needsMigration = false;
 

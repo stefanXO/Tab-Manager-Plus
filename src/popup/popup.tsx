@@ -1,6 +1,6 @@
 "use strict";
 
-import '@helpers/migrate';
+import {migrated} from '@helpers/migrate';
 import {getLocalStorage} from "@helpers/storage";
 import {TabManager} from '@views';
 import * as React from 'react';
@@ -42,6 +42,9 @@ async function loadApp() {
 	if (!!window.loading) return;
 	try {
 		window.loading = true;
+		// the migration writes tabHeight/tabWidth and the TabManager settings;
+		// reading them earlier would race it and write defaults on top
+		await migrated;
 		let height : number = await getLocalStorage("tabHeight", 600);
 		let width : number = await getLocalStorage("tabWidth", 800);
 		console.log(height, width);

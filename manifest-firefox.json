@@ -15,7 +15,8 @@
 	"permissions": [
 		"tabs",
 		"contextMenus",
-		"storage"
+		"storage",
+		"unlimitedStorage"
 	],
 	"incognito": "spanning",
 	"background": {
