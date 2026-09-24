@@ -3,11 +3,15 @@
 import {getLocalStorage, setLocalStorage} from "@helpers/storage";
 import {Tab} from "@views";
 import * as React from "react";
+import {maybePluralize} from "@helpers/utils";
 import * as browser from 'webextension-polyfill';
 import {ICommand, ISession, ISessionState} from '@types';
 import * as S from "@strings";
+import {ManagerContext, ITabManagerActions} from '../context';
 
 export class Session extends React.Component<ISession, ISessionState> {
+	static contextType = ManagerContext;
+	declare context : ITabManagerActions;
 	constructor(props : ISession) {
 		super(props);
 
@@ -19,41 +23,31 @@ export class Session extends React.Component<ISession, ISessionState> {
 			color: color
 		};
 
-		this.stop = this.stop.bind(this);
-		this.windowClick = this.windowClick.bind(this);
-		this.windowTabClick = this.windowTabClick.bind(this);
-		this.close = this.close.bind(this);
-		this.openTab = this.openTab.bind(this);
-		this.maximize = this.maximize.bind(this);
-
 	}
 	render() {
 		let _this = this;
 		let hideWindow = true;
 		let titleAdded = false;
-		let tabsperrow = this.props.layout.indexOf("blocks") > -1 ? Math.ceil(Math.sqrt(this.props.tabs.length + 2)) : this.props.layout === "vertical" ? 1 : 15;
 		let tabs = this.props.tabs.map(function(tab) {
 			let tabId = tab.id * tab.id * tab.id * 100;
 			let isHidden = _this.props.hiddenTabs.has(tabId) && _this.props.filterTabs;
 			let isSelected = _this.props.selection.has(tabId);
+			let isFaded: boolean = _this.props.hiddenTabs.has(tab.id) && !_this.props.filterTabs;
 			tab.id = tab.index;
 			if (!isHidden) hideWindow = false;
 			return (
 				<Tab
 					id={"sessiontab_" + _this.props.session.id + "_" + tab.index}
 					key={"sessiontab_" + _this.props.session.id + "_" + tab.index}
+					onOpen={_this.openTab}
 					session={_this.props.session}
 					layout={_this.props.layout}
 					tab={tab}
 					selected={isSelected}
 					hidden={isHidden}
+					faded={isFaded}
 					draggable={false}
-					click={_this.openTab}
-					middleClick={_this.props.tabMiddleClick}
-					hoverHandler={_this.props.hoverHandler}
 					searchActive={_this.props.searchActive}
-					select={_this.props.select}
-					ref={"sessiontab" + tabId}
 				/>
 			);
 		});
@@ -64,15 +58,13 @@ export class Session extends React.Component<ISession, ISessionState> {
 					<div key={"sessionwa_" + _this.props.session.id} className="window-actions">
 						<div
 							className={"icon tabaction restore " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-							title={"Restore this saved window\nWill restore " + tabs.length + " tabs. Please note : The tabs will be restored without their history."}
+							title={"Restore this saved window\nWill restore " + maybePluralize(this.props.tabs.length, "tab") + ". Please note : The tabs will be restored without their history."}
 							onClick={this.windowClick}
-							onMouseEnter={this.props.hoverIcon}
 						/>
 						<div
 							className={"icon tabaction delete " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-							title={"Delete this saved window\nWill delete " + tabs.length + " tabs permanently"}
+							title={"Delete this saved window\nWill delete " + maybePluralize(this.props.tabs.length, "tab") + " permanently"}
 							onClick={this.close}
-							onMouseEnter={this.props.hoverIcon}
 						/>
 					</div>
 				);
@@ -88,18 +80,12 @@ export class Session extends React.Component<ISession, ISessionState> {
 					titleAdded = true;
 				}
 			}
-			if (tabsperrow < 3) {
-				tabsperrow = 3;
-			}
 			var children = [];
 			if (!!titleAdded) {
 				children.push(tabs.shift());
 			}
 			for (var j = 0; j < tabs.length; j++) {
 				children.push(tabs[j]);
-				if ((j + 1) % tabsperrow === 0 && j && this.props.layout.indexOf("blocks") > -1) {
-					children.push(<div key={"sessionnl_" + _this.props.session.id + "_" + j} className="newliner" />);
-				}
 			}
 			var focused = false;
 			if (this.props.session.windowsInfo.focused || this.props.lastOpenWindow === this.props.session.windowsInfo.id) {
@@ -127,7 +113,7 @@ export class Session extends React.Component<ISession, ISessionState> {
 					}
 					onClick={this.windowClick}
 				>
-					<div className="windowcontainer">{children}</div>
+					<div className="windowcontainer" title={"Restore this saved window\nWill restore " + maybePluralize(this.props.tabs.length, "tab") + " in a new window. Click a single tab to restore only that one"}>{children}</div>
 				</div>
 			);
 		} else {
@@ -138,20 +124,22 @@ export class Session extends React.Component<ISession, ISessionState> {
 		//console.log("should update?", nextProps, nextState);
 		return true;
 	}
-	stop(e) {
+	stop = (e) => {
 		e.stopPropagation();
 	}
-	async windowTabClick(e : React.MouseEvent<HTMLDivElement>) {
+	windowTabClick = async (e : React.MouseEvent<HTMLDivElement>) => {
 		e.stopPropagation();
 	}
-	async windowClick(e : React.MouseEvent<HTMLDivElement>) {
+	windowClick = async (e : React.MouseEvent<HTMLDivElement>) => {
 		this.restoreSession(e, null);
 	}
-	async openTab(e : React.MouseEvent<HTMLDivElement>, index : number) {
+	openTab = async (e : React.MouseEvent<HTMLDivElement>, index : number) => {
 		this.restoreSession(e, index);
 	}
 	async restoreSession(e : React.MouseEvent<HTMLDivElement>, tabId : number) {
 		e.stopPropagation();
+
+		var _this = this;
 
 		await browser.runtime.sendMessage<ICommand>({
 			command: S.create_window_with_session_tabs,
@@ -159,17 +147,15 @@ export class Session extends React.Component<ISession, ISessionState> {
 			tab_id: tabId
 		});
 
-		this.props.parentUpdate();
-
 		if (!!window.inPopup) {
 			window.close();
 		}else{
 			setTimeout(function() {
-				this.props.scrollTo("window", browser.windows.WINDOW_ID_CURRENT);
-			}.bind(this), 500);
+				_this.context.scrollTo("window", browser.windows.WINDOW_ID_CURRENT.toString());
+			}, 500);
 		}
 	}
-	async close(e) {
+	close = async (e) => {
 		e.stopPropagation();
 
 		var sessions = await getLocalStorage('sessions', {});
@@ -181,13 +167,7 @@ export class Session extends React.Component<ISession, ISessionState> {
 		});
 
 		console.log(value);
-		this.props.parentUpdate();
+		this.context.reload();
 		// browser.windows.remove(this.props.session.windowsInfo.id);
-	}
-	maximize(e) {
-		e.stopPropagation();
-		// browser.windows.update(this.props.session.windowsInfo.id, {
-		// 	"state": "normal" },
-		// function (a) {this.props.parentUpdate();}.bind(this));
 	}
 }

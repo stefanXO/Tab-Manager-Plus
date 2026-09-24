@@ -1,9 +1,10 @@
 ﻿import {RefObject} from "react";
+import {FaviconTone} from "@helpers/favicon";
 
 export interface ITabState {
 	draggingOver: string,
 	dragFavIcon: string,
 	favIcon: string,
-	hovered: boolean,
-	tabRef: RefObject<HTMLDivElement>
+	iconTone: FaviconTone,
+	hovered: boolean
 }

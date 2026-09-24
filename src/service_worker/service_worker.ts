@@ -55,6 +55,6 @@ async function setup() {
 }
 
 setInterval(setupDebounced, 300000);
-setTimeout(cleanUp.bind(this, true), 2000000);
+setTimeout(() => cleanUp(true), 2000000);
 
 setup();

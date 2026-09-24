@@ -12,7 +12,7 @@ html{
 	padding:0;
 	margin:0px;
 	user-select:none;
-	font-family:  "interfont",'Graphik', -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", 'Helvetica', Roboto, "Helvetica Neue", Arial, sans-serif;
+	font-family: "interfont",'Graphik', -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", 'Helvetica', Roboto, "Helvetica Neue", Arial, sans-serif;
 	min-width: 450px;
 	min-height: 400px;
 	font-weight: 400;
@@ -24,7 +24,7 @@ body{
 	-webkit-user-select:none;
 	min-width: 450px;
 	min-height:400px;
-	font-family:  "interfont",'Graphik', -apple-system, system-ui, BlinkMacSystemFont, "interfont", "Segoe UI", 'Helvetica', Roboto, "Helvetica Neue", Arial, sans-serif;
+	font-family: "interfont",'Graphik', -apple-system, system-ui, BlinkMacSystemFont, "interfont", "Segoe UI", 'Helvetica', Roboto, "Helvetica Neue", Arial, sans-serif;
 	font-weight: 400;
 }
 body {
@@ -97,7 +97,8 @@ input, textarea {
 	vertical-align:top;
 	margin: 0.125rem 0rem 0.125rem;
 	padding: 0;
-	box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.14),0 1px 5px 0 rgba(0, 0, 0, 0.12),0 3px 1px -2px rgba(0, 0, 0, 0.2);
+	/* a hairline ring, not a blurred shadow */
+	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.08);
 	cursor: pointer;
 /*	-webkit-transform: translate3d(0, 0, 0);
 	-moz-transform: translate3d(0, 0, 0);
@@ -128,7 +129,7 @@ input, textarea {
 	width: 100%;
 }
 .focused {
-	box-shadow: 0 2px 2px 0 rgba(102, 51, 153, 0.56),0 1px 5px 0 rgba(102, 51, 153, 0.48),0 3px 1px -2px rgba(102, 51, 153, 0.8) !important;
+	box-shadow: 0 0 0 2px rgba(102, 51, 153, 0.55) !important;
 /*	background: linear-gradient(#def9ff66, #def9ff66, #fffedc66);
 	background-color: white;
 */}
@@ -152,6 +153,56 @@ input, textarea {
 	-moz-transform: translate3d(0, 0, 0);
 	-ms-transform: translate3d(0, 0, 0);
 	transform: translate3d(0, 0, 0);*/
+}
+/* Favicon visibility. Tab.tsx sets --fav (the icon) and tags the tile with an
+   icon-* class from src/helpers/favicon.ts:
+     icon-mono-light  only white/grey → the icon is inverted with a CSS filter
+     icon-light       mostly white but not only (white card with a coloured
+                      mark, black-and-white…) → tint the tile so the white
+                      shape has an edge, like Chrome's dark tab strip does
+     icon-mono-dark / icon-dark  the same for black icons, handled in dark.css
+   The tile draws its icon on ::after (so a filter can hit the icon alone, not
+   the tile); the list layout uses the .iconoverlay child the same way. Size and
+   position come from the tile's own background-* rules via inherit.
+   The tint rules sit before .highlighted / .selected so those still win. */
+.icon.tab {
+	position: relative;
+	background-image: none;
+}
+.icon.tab::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	background-image: var(--fav, url(../images/generic.png));
+	background-size: inherit;
+	background-position: inherit;
+	background-repeat: inherit;
+}
+.iconoverlay {
+	background-image: var(--fav, url(../images/generic.png));
+}
+/* the list layout draws the icon on .iconoverlay, not on the row */
+.icon.tab.full::after {
+	content: none;
+}
+.icon.icon-mono-light::after, .iconoverlay.icon-mono-light {
+	filter: invert(1);
+}
+.icon.icon-light, .iconoverlay.icon-light {
+	background-color: #cfd4db;
+}
+.icon.icon-light.highlighted {
+	background-color: #b9d6e6;
+}
+.icon.icon-light.pinned {
+	background-color: #f0b9cb;
+}
+.icon.icon-light.selected {
+	background-color: yellow;
+}
+.icon.icon-light.selected:hover {
+	background-color: #ffff97;
 }
 .center {
 	text-align: center;
@@ -192,8 +243,11 @@ h1,h2,h3,h4,h5,h6 {
 	transform: scale(1.1);
 	filter: none;
 }
-.animations .window.blocks-big .tab.search-active{
-	transform: scale(0.9);
+.animations .window.blocks-big .tab.search-active {
+	transform: scale(1.1);
+}
+.animations .window.blocks-big .tab.search-faded{
+	transform: scale(0.75);
 }
 .animations .window.blocks-big .tab.selected {
 	transform: scale(1.05);
@@ -268,7 +322,7 @@ h1,h2,h3,h4,h5,h6 {
 	/*image-rendering: -webkit-optimize-contrast;*/
 	z-index: 99999;
 }
-.tab.search-active{
+.tab.search-faded{
 	opacity:0.25;
 	/*image-rendering: -webkit-optimize-contrast;*/
 }
@@ -297,11 +351,14 @@ h1,h2,h3,h4,h5,h6 {
 	transform: scale(1);
 }
 .tab.highlighted {
-	border-color: purple;
-	box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05) inset, 0px 0px 4px rgba(102, 51, 153, 0.6);
+	border-color: rgba(0, 0, 0, 0.75);
+	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
 }
-.animations .tab.search-active{
-	transform: scale(0.8);
+.animations .tab.search-active {
+	transform: scale(1.1);
+}
+.animations .tab.search-faded{
+	transform: scale(0.65);
 }
 .animations .tab.selected {
 	transform: scale(1.3);
@@ -328,7 +385,6 @@ h1,h2,h3,h4,h5,h6 {
 }
 .tab{
 	float:left;
-	background-image:url(../images/generic.png);
 	position:relative;
 }
 .animations .tab{
@@ -348,7 +404,6 @@ h1,h2,h3,h4,h5,h6 {
 	float:left;
 	margin: 0;
 	transition: none;
-	background-image:url(../images/generic.png);
 }
 .icon.vertical {
 	background-image: none;
@@ -452,6 +507,15 @@ h1,h2,h3,h4,h5,h6 {
 	margin: auto;
 	display: block;
 }
+/* palette in reading order regardless of layout (no per-icon floats) */
+.colors-box {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+}
+.colors-box .icon {
+	float: none;
+}
 .colors{
 	background-image:url(../images/dna64.png);
 	background-color: transparent;
@@ -506,20 +570,22 @@ h1,h2,h3,h4,h5,h6 {
 	background-image:url(../images/show64.png);
 }
 .tab.left > .limiter, .tab.right > .limiter{
-	width:2px;
-	height:20px;
+	position:absolute;
+	top:-3px;
+	bottom:-3px;
+	width:3px;
+	border-radius:2px;
 	background-color:#000000;
-	margin-top:-2px;
 }
 .tab.left > .limiter{
-	margin-left:-4px;
+	left:-5px;
 }
 .tab.right > .limiter{
-	float:right;
-	margin-right:-4px;
+	right:-5px;
 }
 .tab.top > .limiter, .tab.bottom > .limiter{
-	height:2px;
+	height:3px;
+	border-radius:2px;
 	left:0px;
 	right:0px;
 	position:absolute;
@@ -784,58 +850,57 @@ h1,h2,h3,h4,h5,h6 {
 	margin-right: auto;
 }
 
-.color1 { background-color: rgba(142, 166, 4, 0.25) !important; }
-.color2 { background-color: rgba(245, 187, 0, 0.25) !important; }
-.color3 { background-color: rgba(236, 159, 5, 0.25) !important; }
-.color4 { background-color: rgba(215, 106, 3, 0.25) !important; }
-.color5 { background-color: rgba(191, 49, 0, 0.25) !important; }
-.color6 { background-color: rgba(251, 80, 18, 0.25) !important; }
-.color7 { background-color: rgba(1, 253, 246, 0.25) !important; }
-.color8 { background-color: rgba(233, 223, 0, 0.25) !important; }
-.color9 { background-color: rgba(237, 234, 208, 0.25) !important; }
-.color10 { background-color: rgba(3, 252, 186, 0.25) !important; }
-.color11 { background-color: rgba(162, 102, 111, 0.25) !important; }
-.color12 { background-color: rgba(244, 147, 144, 0.25) !important; }
-.color13 { background-color: rgba(244, 88, 102, 0.25) !important; }
-.color14 { background-color: rgba(196, 90, 179, 0.25) !important; }
-.color15 { background-color: rgba(99, 26, 134, 0.25) !important; }
-.color16 { background-color: rgba(58, 183, 149, 0.25) !important; }
-.color17 { background-color: rgba(160, 232, 175, 0.25) !important; }
-.color18 { background-color: rgba(134, 186, 161, 0.25) !important; }
-.color19 { background-color: rgba(237, 234, 208, 0.25) !important; }
-.color20 { background-color: rgba(255, 207, 86, 0.25) !important; }
-.color21 { background-color: rgba(204, 251, 254, 0.25) !important; }
-.color22 { background-color: rgba(205, 214, 221, 0.25) !important; }
-.color23 { background-color: rgba(205, 202, 204, 0.25) !important; }
-.color24 { background-color: rgba(205, 172, 161, 0.25) !important; }
-.color25 { background-color: rgba(205, 137, 135, 0.25) !important; }
+.color1 { background-color: #ffdad6 !important; } /* red soft */
+.color2 { background-color: #ffdec8 !important; } /* orange soft */
+.color3 { background-color: #ffe2c1 !important; } /* amber soft */
+.color4 { background-color: #f3e8bf !important; } /* yellow soft */
+.color5 { background-color: #dfefc7 !important; } /* lime soft */
+.color6 { background-color: #cff3d5 !important; } /* green soft */
+.color7 { background-color: #c2f5e6 !important; } /* teal soft */
+.color8 { background-color: #bff2ff !important; } /* cyan soft */
+.color9 { background-color: #d0eaff !important; } /* blue soft */
+.color10 { background-color: #dde6ff !important; } /* indigo soft */
+.color11 { background-color: #f0dfff !important; } /* violet soft */
+.color12 { background-color: #ffdaf0 !important; } /* pink soft */
+.color13 { background-color: #ffbbb3 !important; } /* red strong */
+.color14 { background-color: #ffc199 !important; } /* orange strong */
+.color15 { background-color: #ffc98b !important; } /* amber strong */
+.color16 { background-color: #e9d487 !important; } /* yellow strong */
+.color17 { background-color: #c5e097 !important; } /* lime strong */
+.color18 { background-color: #a4e7b2 !important; } /* green strong */
+.color19 { background-color: #89ead0 !important; } /* teal strong */
+.color20 { background-color: #80e5fd !important; } /* cyan strong */
+.color21 { background-color: #a8d8ff !important; } /* blue strong */
+.color22 { background-color: #c1d0ff !important; } /* indigo strong */
+.color23 { background-color: #e3c4ff !important; } /* violet strong */
+.color24 { background-color: #ffbae3 !important; } /* pink strong */
+.color25 { background-color: #dedede !important; } /* grey */
 
-
-.color1:hover { background-color: rgba(142, 166, 4, 0.35) !important; }
-.color2:hover { background-color: rgba(245, 187, 0, 0.35) !important; }
-.color3:hover { background-color: rgba(236, 159, 5, 0.35) !important; }
-.color4:hover { background-color: rgba(215, 106, 3, 0.35) !important; }
-.color5:hover { background-color: rgba(191, 49, 0, 0.35) !important; }
-.color6:hover { background-color: rgba(251, 80, 18, 0.35) !important; }
-.color7:hover { background-color: rgba(1, 253, 246, 0.35) !important; }
-.color8:hover { background-color: rgba(233, 223, 0, 0.35) !important; }
-.color9:hover { background-color: rgba(237, 234, 208, 0.35) !important; }
-.color10:hover { background-color: rgba(3, 252, 186, 0.35) !important; }
-.color11:hover { background-color: rgba(162, 102, 111, 0.35) !important; }
-.color12:hover { background-color: rgba(244, 147, 144, 0.35) !important; }
-.color13:hover { background-color: rgba(244, 88, 102, 0.35) !important; }
-.color14:hover { background-color: rgba(196, 90, 179, 0.35) !important; }
-.color15:hover { background-color: rgba(99, 26, 134, 0.35) !important; }
-.color16:hover { background-color: rgba(58, 183, 149, 0.35) !important; }
-.color17:hover { background-color: rgba(160, 232, 175, 0.35) !important; }
-.color18:hover { background-color: rgba(134, 186, 161, 0.35) !important; }
-.color19:hover { background-color: rgba(237, 234, 208, 0.35) !important; }
-.color20:hover { background-color: rgba(255, 207, 86, 0.35) !important; }
-.color21:hover { background-color: rgba(204, 251, 254, 0.35) !important; }
-.color22:hover { background-color: rgba(205, 214, 221, 0.35) !important; }
-.color23:hover { background-color: rgba(205, 202, 204, 0.35) !important; }
-.color24:hover { background-color: rgba(205, 172, 161, 0.35) !important; }
-.color25:hover { background-color: rgba(205, 137, 135, 0.35) !important; }
+.color1:hover { background-color: #fdcdc9 !important; }
+.color2:hover { background-color: #fad1bb !important; }
+.color3:hover { background-color: #f3d5b4 !important; }
+.color4:hover { background-color: #e6dbb2 !important; }
+.color5:hover { background-color: #d2e2ba !important; }
+.color6:hover { background-color: #c2e6c8 !important; }
+.color7:hover { background-color: #b6e7d9 !important; }
+.color8:hover { background-color: #b2e5f2 !important; }
+.color9:hover { background-color: #c3ddff !important; }
+.color10:hover { background-color: #d0d9ff !important; }
+.color11:hover { background-color: #e3d2f9 !important; }
+.color12:hover { background-color: #f7cde3 !important; }
+.color13:hover { background-color: #ffaea7 !important; }
+.color14:hover { background-color: #fdb48c !important; }
+.color15:hover { background-color: #f1bc7e !important; }
+.color16:hover { background-color: #dbc77a !important; }
+.color17:hover { background-color: #b8d38b !important; }
+.color18:hover { background-color: #98daa5 !important; }
+.color19:hover { background-color: #7bddc4 !important; }
+.color20:hover { background-color: #73d8f0 !important; }
+.color21:hover { background-color: #9bcbff !important; }
+.color22:hover { background-color: #b4c3ff !important; }
+.color23:hover { background-color: #d6b7fc !important; }
+.color24:hover { background-color: #f7add6 !important; }
+.color25:hover { background-color: #d1d1d1 !important; }
 
 .hrCont {
 	padding-top: 20px; padding-bottom: 20px;
@@ -875,4 +940,305 @@ h1,h2,h3,h4,h5,h6 {
 
 table td {
 	vertical-align: top;
+}
+/* ---------------------------------------------------------------------------
+   Block layouts as a grid.
+   Cards share one width and the browser picks the column count from the popup
+   width; `dense` backfills gaps with later, smaller cards. Inside a card the
+   title and its action icons share the first row, the tiles wrap below them.
+   Tokens differ per layout and for compact mode; structure is the same.
+   --------------------------------------------------------------------------- */
+.window-container.blocks, .window-container.blocks-big {
+	--card-min: 15rem;
+	--card-gap: 8px;
+	--card-pad: 0.6rem 0.75rem 0.5rem;
+	--title-size: 12.5px;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(var(--card-min), 1fr));
+	/* 8px rows; src/popup/masonry.ts sets each card's row span from its height,
+	   so cards pack under shorter neighbours while keeping their order */
+	grid-auto-rows: 8px;
+	grid-auto-flow: row;
+	align-items: start;
+	gap: var(--card-gap);
+	padding: var(--card-gap) var(--card-gap) 1rem;
+	box-sizing: border-box;
+}
+.window-container.blocks-big {
+	--card-min: 17rem;
+}
+.compact .window-container.blocks, .compact .window-container.blocks-big {
+	--card-min: 12.5rem;
+	--card-pad: 0.35rem 0.5rem 0.35rem;
+	--title-size: 12px;
+}
+.compact .window-container.blocks-big {
+	--card-min: 14.5rem;
+}
+/* section dividers span the whole grid */
+.window-container.blocks .hrCont, .window-container.blocks-big .hrCont {
+	grid-column: 1 / -1;
+	padding: 0.6rem 0 0.4rem;
+}
+.window-container.blocks .window.block, .window-container.blocks-big .window.block {
+	display: block;
+	width: auto;
+	margin: 0;
+	padding: var(--card-pad);
+	min-width: 0;
+}
+.window-container.blocks .window.block .windowcontainer,
+.window-container.blocks-big .window.block .windowcontainer {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	width: 100%;
+	padding: 0;
+}
+/* title on its own line (centred, truncated), tiles below, actions on a last line at the right */
+.window.block .windowTitle {
+	flex: 1 1 100%;
+	min-width: 0;
+	display: block;
+	margin: 0 0 0.25rem 0;
+	text-align: center;
+	font-size: var(--title-size);
+	line-height: 1.5rem;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.window.block .window-actions {
+	flex: 0 0 auto;
+	display: flex;
+	float: none;
+	margin: 0.25rem 0 0 auto;
+}
+/* the newliner before the actions bar becomes a real line break; the tiles never carry one now */
+.window.block .newliner {
+	flex: 1 1 100%;
+	height: 0;
+	clear: none;
+}
+.compact .window.block .windowcontainer {
+	padding: 0 !important;
+}
+
+/* ---------------------------------------------------------------------------
+   Horizontal layout as a strip view: one compact row per window, tabs in strip
+   order, so every window is a full-width drop lane.
+   [ title (fixed column) | tabs, wrapping | actions ]
+   --------------------------------------------------------------------------- */
+.window-container.horizontal {
+	--strip-title: 11rem;
+	--strip-pad: 0.35rem 0.6rem;
+	padding: 0.5rem 0 1rem;
+}
+.compact .window-container.horizontal {
+	--strip-title: 9rem;
+	--strip-pad: 0.15rem 0.4rem;
+}
+.window-container.horizontal .window.horizontal {
+	display: block;
+	width: calc(100% - 1rem);
+	margin: 0.4rem 0.5rem;
+	padding: 0;
+}
+.compact .window-container.horizontal .window.horizontal {
+	margin: 0.2rem 0.5rem;
+}
+.window-container.horizontal .window.horizontal .windowcontainer {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	width: 100%;
+	box-sizing: border-box;
+	padding: var(--strip-pad) !important;
+}
+.window.horizontal .windowTitle {
+	flex: 0 0 var(--strip-title);
+	min-width: 0;
+	display: block;
+	margin: 0 0.5rem 0 0;
+	text-align: left;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	align-self: center;
+}
+/* actions keep their DOM order at the right end of the row */
+.window.horizontal .window-actions {
+	display: flex;
+	float: none;
+	margin-left: auto;
+	padding-left: 0.5rem;
+}
+.window.horizontal .window-actions .windowaction {
+	float: none;
+	margin: 0 0.1rem;
+}
+.window.horizontal .newliner {
+	display: none;
+}
+/* the tiles wrapper is invisible to layout everywhere except the strip view */
+.tabs {
+	display: contents;
+}
+.window.horizontal .tabs {
+	display: flex;
+	flex-wrap: wrap;
+	flex: 1 1 0;
+	min-width: 0;
+	align-items: center;
+}
+
+/* ---------------------------------------------------------------------------
+   Vertical layout as a list: window cards in a grid (one column in the popup,
+   more when there is room), each a header plus compact rows. Rows are flex:
+   favicon, title (truncated), state chips at the end. The active tab gets a
+   left accent instead of an outlined box.
+   --------------------------------------------------------------------------- */
+.window-container.vertical {
+	/* 30rem = one column in the 800px popup, two from about 1000px: titles stay readable */
+	--card-min: 30rem;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(var(--card-min), 1fr));
+	grid-auto-rows: 8px;
+	grid-auto-flow: row;
+	align-items: start;
+	gap: 8px;
+	padding: 8px 8px 1rem;
+	box-sizing: border-box;
+}
+.window-container.vertical .hrCont {
+	grid-column: 1 / -1;
+	padding: 0.6rem 0 0.4rem;
+}
+.window-container.vertical .window.vertical {
+	display: block;
+	float: none;
+	width: auto;
+	margin: 0;
+	padding: 0.35rem 0.5rem 0.4rem;
+	min-width: 0;
+}
+.window-container.vertical .window.vertical .windowcontainer {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	padding: 0 !important;
+	box-sizing: border-box;
+}
+/* header */
+.window.vertical .windowTitle {
+	display: block;
+	margin: 0 0 0.3rem;
+	padding: 0.15rem 0.4rem 0.35rem;
+	text-align: left;
+	font-size: 12.5px;
+	line-height: 1.4;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+/* rows */
+.window.vertical .tab.full {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	min-width: 0;
+	height: 1.75rem;
+	margin: 0;
+	padding: 0 0.4rem;
+	border-radius: 4px;
+	border-left: 3px solid transparent;
+	background-position: initial;
+}
+.window.vertical .tab.full > .iconoverlay {
+	order: 0;
+	flex: none;
+	width: 1.1rem;
+	height: 1.1rem;
+	margin: 0;
+	border: 0;
+	border-radius: 3px;
+	background-size: 1rem 1rem;
+	background-color: transparent;
+}
+.window.vertical .tab.full > .tabtitle {
+	order: 1;
+	flex: 1 1 auto;
+	min-width: 0;
+	position: static;
+	height: auto;
+	max-width: none;
+	padding: 0;
+	line-height: 1.75rem;
+	font-size: 13px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.window.vertical .tab.full > .tab-pinned,
+.window.vertical .tab.full > .tab-highlighted,
+.window.vertical .tab.full > .tab-selected {
+	order: 2;
+	position: static;
+	flex: none;
+	height: auto;
+	margin: 0;
+	padding: 1px 4px;
+	font-size: 9px;
+	line-height: 1.2;
+	border: 1px solid currentColor;
+	border-radius: 3px;
+	background: transparent;
+	box-shadow: none;
+	opacity: 0.55;
+}
+/* a chip that is not on: the generic .hidden loses to the chip rule above by cascade order */
+.window.vertical .tab.full > .tab-pinned.hidden,
+.window.vertical .tab.full > .tab-highlighted.hidden,
+.window.vertical .tab.full > .tab-selected.hidden,
+.window.vertical .tab.full > .limiter {
+	display: none;
+}
+/* hairline between rows, no ring on the active row: the accent and tint mark it */
+.window.vertical .tab.full + .tab.full {
+	border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+.window.vertical .tab.full {
+	box-shadow: none;
+	border-radius: 0;
+}
+.window.vertical .tab.full:hover {
+	background-color: rgba(0, 0, 0, 0.07);
+}
+.window.vertical .tab.full.highlighted {
+	border-left-color: rgba(102, 51, 153, 0.8);
+	background-color: rgba(102, 51, 153, 0.06);
+}
+.window.vertical .tab.full.highlighted:hover {
+	background-color: rgba(102, 51, 153, 0.14);
+}
+.window.vertical .tab.full.selected {
+	background-color: rgba(255, 230, 0, 0.45);
+}
+.window.vertical .tab.full.selected:hover {
+	background-color: rgba(255, 230, 0, 0.6);
+}
+/* actions: last line, right, no per-icon floats */
+.window.vertical .window-actions {
+	display: flex;
+	float: none;
+	align-self: flex-end;
+	margin-top: 0.35rem;
+}
+.window.vertical .window-actions .windowaction {
+	float: none;
+	margin: 0 0.1rem;
+}
+.window.vertical .newliner {
+	display: none;
 }

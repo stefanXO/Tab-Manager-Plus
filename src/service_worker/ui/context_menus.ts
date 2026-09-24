@@ -3,6 +3,7 @@
 import {openPopup, openAsOwnTab, openSidebar} from "@ui/open";
 import * as S from "@strings";
 import * as browser from 'webextension-polyfill';
+import {IS_FIREFOX} from "@helpers/browser";
 
 export async function setupContextMenus() {
 	await browser.contextMenus.removeAll();
@@ -152,7 +153,7 @@ async function contextListeners(info: browser.Menus.OnClickData, tab?: browser.T
 			await browser.tabs.create({url: 'mailto:markus+tmp@stefanxo.com'});
 			break;
 		case S.review:
-			if (navigator.userAgent.search("Firefox") > -1) {
+			if (IS_FIREFOX) {
 				await browser.tabs.create({url: 'https://addons.mozilla.org/en-US/firefox/addon/tab-manager-plus-for-firefox/'});
 			} else {
 				await browser.tabs.create({url: 'https://chrome.google.com/webstore/detail/tab-manager-plus-for-chro/cnkdjjdmfiffagllbiiilooaoofcoeff'});

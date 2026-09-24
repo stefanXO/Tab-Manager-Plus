@@ -1,0 +1,28 @@
+name: build
+
+on:
+  push:
+    branches: [master, "[0-9]_[0-9]_[0-9]"]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    # skip pull requests that come from a fork: no minutes, no untrusted scripts on our runner
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run check-version
+      - run: npm run build   # tsc --noEmit && node build.mjs
