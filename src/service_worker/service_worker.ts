@@ -12,27 +12,6 @@ import * as browser from 'webextension-polyfill';
 
 const CLEANUP_ALARM = "cleanup_old_windows";
 
-// cleanUp(true) deletes the names, colors and hashes of windows it cannot find.
-// A periodic alarm that came due while the browser was closed fires right at
-// startup, before session restore has recreated the windows, and would throw
-// away exactly the entries the restore is about to re-attach. So the
-// destructive pass is skipped for a while after the browser started.
-const STARTUP_GRACE = 10 * 60 * 1000;
-
-// The worker restarts all the time, so the first wake after a browser start
-// is recorded in storage.session, which the browser clears on restart.
-async function noteBrowserStart() {
-	const stored = await browser.storage.session.get({startedAt: 0});
-	if (!stored.startedAt) await browser.storage.session.set({startedAt: Date.now()});
-}
-
-async function browserStartedRecently() : Promise<boolean> {
-	const stored = await browser.storage.session.get({startedAt: 0});
-	// nothing recorded yet: this is the first wake since the browser started
-	if (!stored.startedAt) return true;
-	return Date.now() - (stored.startedAt as number) < STARTUP_GRACE;
-}
-
 // Every listener must be registered synchronously in the first event loop
 // turn: an MV3 service worker is woken BY events, and a listener added after
 // an await can miss the very event that woke the worker.
@@ -45,10 +24,12 @@ _o.setupPopupListeners();
 
 // A suspended worker discards its timers, which is why the old
 // setTimeout/setInterval based cleanup never ran; alarms survive suspension.
+// The hourly pass only drops entries that have been without a window for over
+// a day, so an alarm that fires right at browser start, before the session is
+// restored, cannot take anything the restore is about to re-attach.
 browser.alarms.onAlarm.addListener(async function (alarm) {
 	if (alarm.name !== CLEANUP_ALARM) return;
 	try {
-		if (await browserStartedRecently()) return;
 		await cleanUp(true);
 	} catch (e) {
 		console.error(e);
@@ -100,11 +81,6 @@ async function reconcileWindowAge() {
 
 async function setup() {
 	try {
-		await noteBrowserStart();
-	} catch (e) {
-		console.error(e);
-	}
-	try {
 		await _c.setupContextMenus();
 	} catch (e) {
 		console.error(e);
@@ -121,7 +97,7 @@ async function setup() {
 	// worker wake and it might never fire, so only create it once
 	const existing = await browser.alarms.get(CLEANUP_ALARM);
 	if (!existing) {
-		await browser.alarms.create(CLEANUP_ALARM, { delayInMinutes: 33, periodInMinutes: 30 });
+		await browser.alarms.create(CLEANUP_ALARM, { delayInMinutes: 60, periodInMinutes: 60 });
 	}
 
 	setTimeout(cleanupDebounce, 2500);

@@ -9,6 +9,15 @@ import {ICommand} from "@types";
 
 export const cleanupDebounce = debounce(cleanUp, 500);
 
+// A name or color whose window has been gone this long is dropped for good.
+// Shorter and a window reopened from the history would lose its name; the
+// browser restart case is unaffected, restored windows get their entries back
+// within seconds through the hash match below.
+const ORPHAN_MAX_AGE = 24 * 60 * 60 * 1000;
+
+// Re-attaches window names, colors and hashes after the browser gave the
+// windows new ids (restart, reopen from history), and with remove_old purges
+// the entries that have been without a window for over ORPHAN_MAX_AGE.
 export async function cleanUp(remove_old = false) {
 	let activewindows = await browser.windows.getAll({populate: true});
 	let windowids: number[] = [];
@@ -56,10 +65,10 @@ export async function cleanUp(remove_old = false) {
 		}
 	}
 
-	if (to_check.size > 0) {
-		let hashes : Map<number, number> = await getLocalStorageMap<number, number>(S.windowHashes);
-		let found = false;
+	let hashes : Map<number, number> = await getLocalStorageMap<number, number>(S.windowHashes);
+	let found = false;
 
+	if (to_check.size > 0) {
 		for (let w of activewindows) {
 			// a window that already has a name or color must not adopt a stale one
 			if (names.has(w.id) || colors.has(w.id)) continue;
@@ -87,28 +96,61 @@ export async function cleanUp(remove_old = false) {
 				}
 			}
 		}
+	}
 
-		let save = false;
-		if (remove_old) {
-			for (const _id of to_check) {
-				console.log("should delete from to check " + _id);
-				colors.delete(_id);
-				names.delete(_id);
-				hashes.delete(_id);
+	// remember when each still unmatched entry was first seen without a
+	// window, forget the ones that got a window back (window ids are small
+	// numbers the browser reuses after a restart, a stale timestamp would
+	// purge a new window's name on the first pass)
+	const orphaned : Map<number, number> = await getLocalStorageMap<number, number>(S.windowOrphaned);
+	const now = Date.now();
+	let orphanedChanged = false;
+	for (const id of to_check) {
+		if (!orphaned.has(id)) {
+			orphaned.set(id, now);
+			orphanedChanged = true;
+		}
+	}
+	for (const id of orphaned.keys()) {
+		if (!to_check.has(id)) {
+			orphaned.delete(id);
+			orphanedChanged = true;
+		}
+	}
+
+	let save = false;
+	if (remove_old) {
+		for (const _id of to_check) {
+			if (now - orphaned.get(_id) < ORPHAN_MAX_AGE) continue;
+			console.log("dropping window " + _id + ", gone for over a day");
+			colors.delete(_id);
+			names.delete(_id);
+			hashes.delete(_id);
+			orphaned.delete(_id);
+			orphanedChanged = true;
+			save = true;
+		}
+		// a hash without a name or color carries nothing worth keeping
+		for (const id of hashes.keys()) {
+			if (windowids.indexOf(id) < 0 && !names.has(id) && !colors.has(id)) {
+				hashes.delete(id);
 				save = true;
 			}
 		}
+	}
 
-		if (found || save) {
-			await setLocalStorageMap<number, string>(S.windowNames, names);
-			await setLocalStorageMap<number, string>(S.windowColors, colors);
-			await setLocalStorageMap<number, number>(S.windowHashes, hashes);
-			if (found) {
-				browser.runtime.sendMessage<ICommand>({
-					command: S.refresh_windows,
-					window_ids: to_refresh
-				});
-			}
+	if (orphanedChanged) {
+		await setLocalStorageMap<number, number>(S.windowOrphaned, orphaned);
+	}
+	if (found || save) {
+		await setLocalStorageMap<number, string>(S.windowNames, names);
+		await setLocalStorageMap<number, string>(S.windowColors, colors);
+		await setLocalStorageMap<number, number>(S.windowHashes, hashes);
+		if (found) {
+			browser.runtime.sendMessage<ICommand>({
+				command: S.refresh_windows,
+				window_ids: to_refresh
+			});
 		}
 	}
 }
