@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["../../src/popup/options.js"],
-  "sourcesContent": ["\"use strict\";\nwindow.optionPage = true;"],
-  "mappings": ";;;AACA,SAAO,aAAa;",
-  "names": []
-}
