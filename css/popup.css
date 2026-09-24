@@ -420,7 +420,7 @@ h1,h2,h3,h4,h5,h6 {
 	background-color: purple;
 	color: yellow;
 }
-.animations .icon.audible.blocks, .animations .icon.audible .iconoverlay{
+.animations .icon.audible:not(.muted).blocks, .animations .icon.audible:not(.muted) .iconoverlay{
 	animation-name: audible;
 	animation-duration: 3s;
 	animation-iteration-count: infinite;
@@ -779,7 +779,7 @@ h1,h2,h3,h4,h5,h6 {
 	padding: 0.1rem;
 	margin: 0.1rem;
 }
-.tab-pinned, .tab-highlighted, .tab-selected {
+.tab-pinned, .tab-highlighted, .tab-selected, .tab-audible {
 	position: absolute;
 	right: 0.3rem;
 	top: 0.3rem;
@@ -797,7 +797,7 @@ h1,h2,h3,h4,h5,h6 {
 	box-shadow: 0px 0px 1px 2px rgba(255,255,255,0.5);
 	z-index: 100;
 }
-.incognito .tab-pinned, .incognito .tab-highlighted, .incognito .tab-selected {
+.incognito .tab-pinned, .incognito .tab-highlighted, .incognito .tab-selected, .incognito .tab-audible {
 	color: black;
 }
 .tab-pinned {}
@@ -1182,7 +1182,8 @@ table td {
 }
 .window.vertical .tab.full > .tab-pinned,
 .window.vertical .tab.full > .tab-highlighted,
-.window.vertical .tab.full > .tab-selected {
+.window.vertical .tab.full > .tab-selected,
+.window.vertical .tab.full > .tab-audible {
 	order: 2;
 	position: static;
 	flex: none;
@@ -1201,6 +1202,7 @@ table td {
 .window.vertical .tab.full > .tab-pinned.hidden,
 .window.vertical .tab.full > .tab-highlighted.hidden,
 .window.vertical .tab.full > .tab-selected.hidden,
+.window.vertical .tab.full > .tab-audible.hidden,
 .window.vertical .tab.full > .limiter {
 	display: none;
 }

@@ -155,7 +155,7 @@ body.dark a {
 body.dark .editName:hover {
 	background-color: var(--dk-tile-hover);
 }
-body.dark .tab-pinned, body.dark .tab-highlighted, body.dark .tab-selected {
+body.dark .tab-pinned, body.dark .tab-highlighted, body.dark .tab-selected, body.dark .tab-audible {
 	background-color: transparent;
 	color: inherit;
 }
@@ -257,12 +257,6 @@ body.dark .icon.vertical .iconoverlay, body.dark .window.vertical .tab.full > .i
 	background-color: transparent;
 	border: 0;
 }
-body.dark .window.vertical .tab.full.pinned {
-	background-color: rgba(255, 17, 119, 0.12);
-}
-body.dark .window.vertical .tab.full.pinned:hover {
-	background-color: rgba(255, 17, 119, 0.2);
-}
 body.dark .window.vertical .windowTitle {
 	border-bottom-color: rgba(255, 255, 255, 0.1);
 }
@@ -272,12 +266,43 @@ body.dark .window.vertical .tab.full + .tab.full {
 body.dark .window.vertical .tab.full:hover {
 	background-color: rgba(255, 255, 255, 0.08);
 }
+body.dark .icon.tab.audible::before, body.dark .icon.tab.muted::before {
+	background: rgba(21, 26, 31, 0.85);
+}
+/* row states, same precedence as popup.css: pinned < active < playing < muted < selected */
+body.dark .window.vertical .tab.full.pinned {
+	border-left-color: rgba(255, 17, 119, 0.85);
+	background-color: rgba(255, 17, 119, 0.12);
+}
+body.dark .window.vertical .tab.full.pinned:hover {
+	background-color: rgba(255, 17, 119, 0.2);
+}
 body.dark .window.vertical .tab.full.highlighted {
 	border-left-color: rgba(183, 154, 232, 0.9);
 	background-color: rgba(183, 154, 232, 0.1);
 }
 body.dark .window.vertical .tab.full.highlighted:hover {
 	background-color: rgba(183, 154, 232, 0.2);
+}
+body.dark .window.vertical .tab.full.audible {
+	border-left-color: #4285f4;
+	background-color: rgba(66, 133, 244, 0.12);
+}
+body.dark .window.vertical .tab.full.audible:hover {
+	background-color: rgba(66, 133, 244, 0.2);
+}
+body.dark .window.vertical .tab.full.audible > .iconoverlay {
+	background-color: #4285f4;
+}
+body.dark .window.vertical .tab.full.muted {
+	border-left-color: rgba(255, 255, 255, 0.35);
+	background-color: transparent;
+}
+body.dark .window.vertical .tab.full.muted:hover {
+	background-color: rgba(255, 255, 255, 0.08);
+}
+body.dark .window.vertical .tab.full.muted > .iconoverlay {
+	background-color: transparent;
 }
 body.dark .window.vertical .tab.full.selected {
 	background-color: rgba(255, 230, 0, 0.25);
