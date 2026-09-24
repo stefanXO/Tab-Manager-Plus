@@ -290,13 +290,28 @@ export class Window extends React.Component<IWindow, IWindowState> {
 			if (!!titleAdded) {
 				children.push(tabs.shift());
 			}
-			let z = -1;
+			// the tab tiles go in one wrapper, so a layout can treat them as a single
+			// column (strip view: title | tiles, wrapping | actions); elsewhere the
+			// wrapper is display: contents and changes nothing
+			let tiles = [];
 			for (let j = 0; j < tabs.length; j++) {
 				let tab = tabs[j].props.tab;
-				let isHidden = !!tab && !!tab.id && this.props.hiddenTabs.has(tab.id) && this.props.filterTabs;
-				if (isHidden || (!tab && tabs[j].key.startsWith("windowtab_"))) continue;
-				z++;
-				children.push(tabs[j]);
+				if (!tab) {
+					// not a tile (the newliner and the actions bar): flush the tiles first
+					if (tabs[j].key.startsWith("windowtab_")) continue;
+					if (tiles.length) {
+						children.push(<div key={"tabs_" + this.props.window.id} className="tabs">{tiles}</div>);
+						tiles = [];
+					}
+					children.push(tabs[j]);
+					continue;
+				}
+				let isHidden = !!tab.id && this.props.hiddenTabs.has(tab.id) && this.props.filterTabs;
+				if (isHidden) continue;
+				tiles.push(tabs[j]);
+			}
+			if (tiles.length) {
+				children.push(<div key={"tabs_" + this.props.window.id} className="tabs">{tiles}</div>);
 			}
 			// one definition of "current", decided in TabManager.update()
 			const focused = this.props.lastOpenWindow === this.props.window.id;
