@@ -54,8 +54,6 @@ export async function openAsOwnTab() {
 // fires while no popup url is set, so registering unconditionally is safe -
 // setupPopup() below decides which mode is active via setPopup.
 export function setupPopupListeners() {
-	// browser.action does not exist on Firefox MV2 (browser_action there)
-	if (!browser.action) return;
 	browser.action.onClicked.removeListener(openAsOwnTab);
 	browser.action.onClicked.addListener(openAsOwnTab);
 }

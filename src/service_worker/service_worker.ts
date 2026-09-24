@@ -19,27 +19,18 @@ const CLEANUP_ALARM = "cleanup_old_windows";
 // destructive pass is skipped for a while after the browser started.
 const STARTUP_GRACE = 10 * 60 * 1000;
 
-// Firefox MV2 (persistent page, no storage.session): the page start is the
-// browser start. Under MV3 the worker restarts all the time, so the first wake
-// after a browser start is recorded in storage.session, which the browser
-// clears on restart.
-const bootedAt = Date.now();
-
+// The worker restarts all the time, so the first wake after a browser start
+// is recorded in storage.session, which the browser clears on restart.
 async function noteBrowserStart() {
-	if (!browser.storage.session) return;
 	const stored = await browser.storage.session.get({startedAt: 0});
 	if (!stored.startedAt) await browser.storage.session.set({startedAt: Date.now()});
 }
 
 async function browserStartedRecently() : Promise<boolean> {
-	let startedAt = bootedAt;
-	if (browser.storage.session) {
-		const stored = await browser.storage.session.get({startedAt: 0});
-		// nothing recorded yet: this is the first wake since the browser started
-		if (!stored.startedAt) return true;
-		startedAt = stored.startedAt as number;
-	}
-	return Date.now() - startedAt < STARTUP_GRACE;
+	const stored = await browser.storage.session.get({startedAt: 0});
+	// nothing recorded yet: this is the first wake since the browser started
+	if (!stored.startedAt) return true;
+	return Date.now() - (stored.startedAt as number) < STARTUP_GRACE;
 }
 
 // Every listener must be registered synchronously in the first event loop
@@ -52,23 +43,17 @@ _w.setupWindowListeners();
 _c.setupContextMenuListeners();
 _o.setupPopupListeners();
 
-if (browser.alarms) {
-	browser.alarms.onAlarm.addListener(async function (alarm) {
-		if (alarm.name !== CLEANUP_ALARM) return;
-		try {
-			if (await browserStartedRecently()) return;
-			await cleanUp(true);
-		} catch (e) {
-			console.error(e);
-		}
-	});
-} else {
-	// MV2 persistent background page: plain timers stay alive there.
-	// Under MV3 a suspended worker discards its timers, which is why the
-	// old setTimeout/setInterval based cleanup never ran - alarms above
-	// are the replacement.
-	setTimeout(cleanUp.bind(null, true), 2000000);
-}
+// A suspended worker discards its timers, which is why the old
+// setTimeout/setInterval based cleanup never ran; alarms survive suspension.
+browser.alarms.onAlarm.addListener(async function (alarm) {
+	if (alarm.name !== CLEANUP_ALARM) return;
+	try {
+		if (await browserStartedRecently()) return;
+		await cleanUp(true);
+	} catch (e) {
+		console.error(e);
+	}
+});
 
 browser.runtime.onInstalled.addListener(async function () {
 	console.log(" ON INSTALLED");
@@ -132,13 +117,11 @@ async function setup() {
 
 	_t.updateTabCountDebounce();
 
-	if (browser.alarms) {
-		// recreating an existing alarm would reset its countdown on every
-		// worker wake and it might never fire, so only create it once
-		const existing = await browser.alarms.get(CLEANUP_ALARM);
-		if (!existing) {
-			await browser.alarms.create(CLEANUP_ALARM, { delayInMinutes: 33, periodInMinutes: 30 });
-		}
+	// recreating an existing alarm would reset its countdown on every
+	// worker wake and it might never fire, so only create it once
+	const existing = await browser.alarms.get(CLEANUP_ALARM);
+	if (!existing) {
+		await browser.alarms.create(CLEANUP_ALARM, { delayInMinutes: 33, periodInMinutes: 30 });
 	}
 
 	setTimeout(cleanupDebounce, 2500);
