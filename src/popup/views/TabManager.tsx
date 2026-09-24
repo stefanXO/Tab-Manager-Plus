@@ -148,28 +148,25 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		var tabWidth = 800;
 		var tabHeight = 600;
 
-		var storage = await browser.storage.local.get(null);
+		const defaults : Record<string, unknown> = {
+			layout, tabLimit, tabWidth, tabHeight,
+			animations, windowTitles, tabactions, badge,
+			openInOwnTab, compact, dark, sessionsFeature, hideWindows,
+			"filter-tabs": filterTabs
+		};
+		const stored = await browser.storage.local.get(Object.keys(defaults));
 
-		if (!storage["layout"]) storage["layout"] = layout;
-		if (typeof storage["tabLimit"] === "undefined") storage["tabLimit"] = tabLimit;
-		if (typeof storage["tabWidth"] === "undefined") storage["tabWidth"] = tabWidth;
-		if (typeof storage["tabHeight"] === "undefined") storage["tabHeight"] = tabHeight;
+		// write back only the settings that are missing, plus the version.
+		// Writing every key from a snapshot (the old get(null) / set(all))
+		// overwrote whatever the worker had changed in the meantime: window
+		// names, colors, the window order.
+		const missing : Record<string, unknown> = { version: window.extensionVersion };
+		for (const key in defaults) {
+			if (stored[key] === undefined || (key === "layout" && !stored[key])) missing[key] = defaults[key];
+		}
+		await browser.storage.local.set(missing);
 
-		if (typeof storage["animations"] === "undefined") storage["animations"] = animations;
-		if (typeof storage["windowTitles"] === "undefined") storage["windowTitles"] = windowTitles;
-		if (typeof storage["tabactions"] === "undefined") storage["tabactions"] = tabactions;
-		if (typeof storage["badge"] === "undefined") storage["badge"] = badge;
-
-		if (typeof storage["openInOwnTab"] === "undefined") storage["openInOwnTab"] = openInOwnTab;
-		if (typeof storage["compact"] === "undefined") storage["compact"] = compact;
-		if (typeof storage["dark"] === "undefined") storage["dark"] = dark;
-		if (typeof storage["sessionsFeature"] === "undefined") storage["sessionsFeature"] = sessionsFeature;
-		if (typeof storage["hideWindows"] === "undefined") storage["hideWindows"] = hideWindows;
-		if (typeof storage["filter-tabs"] === "undefined") storage["filter-tabs"] = filterTabs;
-
-		storage["version"] = window.extensionVersion;
-
-		await browser.storage.local.set(storage);
+		const storage : Record<string, unknown> = { ...stored, ...missing };
 
 		layout = storage["layout"] as string;
 		tabLimit = storage["tabLimit"] as number;
