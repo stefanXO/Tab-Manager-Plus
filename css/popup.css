@@ -425,6 +425,49 @@ h1,h2,h3,h4,h5,h6 {
 	animation-duration: 3s;
 	animation-iteration-count: infinite;
 }
+/* A tab that plays sound: the tile takes the blue the animation pulses to,
+   so the state shows with animations off as well, and it beats the active
+   tab's tint (a selected tile stays yellow). A small speaker sits in the
+   corner, crossed when muted; a muted tab gets only that, no blue. The list
+   layout shows the blue as a left accent and on the favicon box, plus a chip
+   (.tab-audible) at the end of the row. */
+.icon.tab.audible:not(.muted):not(.selected),
+.icon.tab.audible:not(.muted) > .iconoverlay {
+	background-color: #4285f4;
+}
+/* State badges: small SVG marks, white glyph on the state's colour, used in
+   the corner of a tile (playing / muted) and inside the list chips. Drawn as
+   data URIs so they need no extra files and scale crisply. */
+:root {
+	--badge-playing: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 12 12%22%3E%3Crect width=%2212%22 height=%2212%22 rx=%223%22 fill=%22%234285f4%22/%3E%3Crect x=%222.5%22 y=%224%22 width=%222%22 height=%226%22 fill=%22%23fff%22/%3E%3Crect x=%225%22 y=%222%22 width=%222%22 height=%228%22 fill=%22%23fff%22/%3E%3Crect x=%227.5%22 y=%225%22 width=%222%22 height=%225%22 fill=%22%23fff%22/%3E%3C/svg%3E");
+	--badge-playing-anim: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 12 12%22%3E%3Crect width=%2212%22 height=%2212%22 rx=%223%22 fill=%22%234285f4%22/%3E%3Crect x=%222.5%22 y=%224%22 width=%222%22 height=%226%22 fill=%22%23fff%22%3E%3Canimate attributeName=%22y%22 values=%224;7;3;4%22 dur=%220.9s%22 begin=%220s%22 repeatCount=%22indefinite%22/%3E%3Canimate attributeName=%22height%22 values=%226;3;7;6%22 dur=%220.9s%22 begin=%220s%22 repeatCount=%22indefinite%22/%3E%3C/rect%3E%3Crect x=%225%22 y=%222%22 width=%222%22 height=%228%22 fill=%22%23fff%22%3E%3Canimate attributeName=%22y%22 values=%222;5;3;2%22 dur=%220.9s%22 begin=%22-0.3s%22 repeatCount=%22indefinite%22/%3E%3Canimate attributeName=%22height%22 values=%228;5;7;8%22 dur=%220.9s%22 begin=%22-0.3s%22 repeatCount=%22indefinite%22/%3E%3C/rect%3E%3Crect x=%227.5%22 y=%225%22 width=%222%22 height=%225%22 fill=%22%23fff%22%3E%3Canimate attributeName=%22y%22 values=%225;3;7;5%22 dur=%220.9s%22 begin=%22-0.6s%22 repeatCount=%22indefinite%22/%3E%3Canimate attributeName=%22height%22 values=%225;7;3;5%22 dur=%220.9s%22 begin=%22-0.6s%22 repeatCount=%22indefinite%22/%3E%3C/rect%3E%3C/svg%3E");
+	--badge-muted: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 12 12%22%3E%3Crect width=%2212%22 height=%2212%22 rx=%223%22 fill=%22%238a8f98%22/%3E%3Cpath d=%22M2 4.5h1.8L6 2.5v7L3.8 7.5H2z%22 fill=%22%23fff%22/%3E%3Cpath d=%22M7.5 4.5l3 3M10.5 4.5l-3 3%22 stroke=%22%23fff%22 stroke-width=%221.3%22 stroke-linecap=%22round%22/%3E%3C/svg%3E");
+	--badge-pinned: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 12 12%22%3E%3Crect width=%2212%22 height=%2212%22 rx=%223%22 fill=%22%23e0287a%22/%3E%3Cpath d=%22M7.5 2l2.5 2.5-1 1-.4-.4-1.9 1.9.3 1.7-1 1L4.4 8.1 2.5 10 2 9.5l1.9-1.9-1.6-1.6 1-1 1.7.3 1.9-1.9-.4-.4z%22 fill=%22%23fff%22/%3E%3C/svg%3E");
+	--badge-active: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 12 12%22%3E%3Crect width=%2212%22 height=%2212%22 rx=%223%22 fill=%22%237a4fb5%22/%3E%3Cpath d=%22M1.5 6c1.2-2 2.7-3 4.5-3s3.3 1 4.5 3c-1.2 2-2.7 3-4.5 3S2.7 8 1.5 6z%22 fill=%22%23fff%22/%3E%3Ccircle cx=%226%22 cy=%226%22 r=%221.6%22 fill=%22%237a4fb5%22/%3E%3C/svg%3E");
+	--badge-selected: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 12 12%22%3E%3Crect width=%2212%22 height=%2212%22 rx=%223%22 fill=%22%23e6b800%22/%3E%3Cpath d=%22M2.5 6.2l2.3 2.3 4.7-4.7%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E");
+}
+.icon.tab.audible::before, .icon.tab.muted::before {
+	content: "";
+	position: absolute;
+	right: -3px;
+	bottom: -3px;
+	z-index: 2;
+	width: 12px;
+	height: 12px;
+	background: var(--badge-playing) center / 12px 12px no-repeat;
+	box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.9);
+	border-radius: 3px;
+	pointer-events: none;
+}
+.animations .icon.tab.audible::before {
+	background-image: var(--badge-playing-anim);
+}
+.icon.tab.muted::before, .animations .icon.tab.muted::before {
+	background-image: var(--badge-muted);
+}
+.icon.tab.full::before {
+	content: none;
+}
 .icon.discarded.blocks, .icon.discarded .iconoverlay {
 	opacity: 0.65;
 	background-blend-mode: luminosity;
@@ -1187,16 +1230,45 @@ table td {
 	order: 2;
 	position: static;
 	flex: none;
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
 	height: auto;
 	margin: 0;
-	padding: 1px 4px;
+	padding: 1px 5px 1px 2px;
 	font-size: 9px;
 	line-height: 1.2;
-	border: 1px solid currentColor;
-	border-radius: 3px;
-	background: transparent;
+	border: 1px solid rgba(0, 0, 0, 0.15);
+	border-radius: 4px;
+	background: rgba(255, 255, 255, 0.7);
 	box-shadow: none;
-	opacity: 0.55;
+	opacity: 0.85;
+}
+/* the badge in front of the chip text */
+.window.vertical .tab.full > .tab-pinned::before,
+.window.vertical .tab.full > .tab-highlighted::before,
+.window.vertical .tab.full > .tab-selected::before,
+.window.vertical .tab.full > .tab-audible::before {
+	content: "";
+	width: 11px;
+	height: 11px;
+	border-radius: 3px;
+	background: var(--badge-pinned) center / 11px 11px no-repeat;
+}
+.window.vertical .tab.full > .tab-highlighted::before {
+	background-image: var(--badge-active);
+}
+.window.vertical .tab.full > .tab-selected::before {
+	background-image: var(--badge-selected);
+}
+.window.vertical .tab.full > .tab-audible::before {
+	background-image: var(--badge-playing);
+}
+.animations .window.vertical .tab.full > .tab-audible::before {
+	background-image: var(--badge-playing-anim);
+}
+.window.vertical .tab.full.muted > .tab-audible::before {
+	background-image: var(--badge-muted);
 }
 /* a chip that is not on: the generic .hidden loses to the chip rule above by cascade order */
 .window.vertical .tab.full > .tab-pinned.hidden,
