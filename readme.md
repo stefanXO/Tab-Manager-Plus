@@ -20,6 +20,28 @@ Your patronage means that my work was able to help you - and that's already very
 [<img src="images/paypal.jpg" alt="Donate to keep extensions alive">](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=67TZLSEGYQFFW)
 [<img src="images/donate.gif" alt="Donate to keep extensions alive">](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=67TZLSEGYQFFW)
 
+## Building from source
+
+The extension is written in TypeScript and bundled with esbuild into `dist/`, which is not part of the repository. You need [Node.js](https://nodejs.org/) 24 or newer.
+
+```
+git clone https://github.com/stefanXO/Tab-Manager-Plus.git
+cd Tab-Manager-Plus
+npm ci
+npm run build
+```
+
+Then load the folder as an unpacked extension:
+
+* **Chrome / Edge / Brave:** open `chrome://extensions`, turn on *Developer mode*, click *Load unpacked* and pick the repository folder.
+* **Firefox:** the 7.x Firefox build is not ready yet; the current Firefox release is built from the `firefox_521` branch.
+
+Useful scripts:
+
+* `npm run watch` rebuilds on every change (`npm run watch:dev` for an unminified build with source maps). After a rebuild, click *Reload* on the extension card.
+* `npm run build:dev` builds once without minification.
+* `npm run check-version` verifies that the version number is the same in every file; `npm version <x.y.z>` bumps it everywhere.
+
 ## Other Notes
 
 You can find and install this extension at the [Chrome Web Store](https://chrome.google.com/webstore/detail/tab-manager-plus-for-chro/cnkdjjdmfiffagllbiiilooaoofcoeff) or the [Firefox Add-Ons](https://addons.mozilla.org/en-US/firefox/addon/tab-manager-plus-for-firefox/).
