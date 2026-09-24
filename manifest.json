@@ -17,6 +17,7 @@
 		"tabs",
 		"contextMenus",
 		"storage",
+		"unlimitedStorage",
 		"favicon"
 	],
 	"optional_permissions": [
