@@ -35,6 +35,7 @@ Line numbers refer to `master` at the time of review and will drift as the PRs a
 | 1.16 | Incremental search narrows the candidate set based only on query length (`lastSearchLen`), so paste, mid-string edits or `or`/`and` queries search the wrong subset until cleared | `src/popup/views/TabManager.tsx:958-967` | Always search the full tab set (it is small); drop the length heuristic |
 | 1.17 | `Session.close`/`Window.save` log `value` from a `.catch`-ed await that is `undefined` on error; triple-logging (`console.error(e); console.log(e); console.log(e.message)`) is copy-pasted ~5× | `Session.tsx:178-183`, `Window.tsx`, `background/windows.ts` | Consolidate into one error helper |
 | 1.18 | `scrollTo` after session restore passes `WINDOW_ID_CURRENT` (`-2`), looking up `#window--2` — a no-op | `src/popup/views/Session.tsx:168` | Use the id of the newly created window (needs the restore message to return it) |
+| 1.19 | `checkWindowDebounced` (PR #268) can fire after its window closed (`windows.get` rejects, logged as noise) and drops the last <500ms of tab changes before a window close or browser quit, so that window's stored hash can be stale on restart | `background/tabs.ts` | Cancel the window's pending timer in `windowRemoved`; on `tabs.onRemoved` with `isWindowClosing` flush the hash immediately instead of skipping (the window is still queryable at that point on Chrome; verify Firefox) |
 
 ## P2 — Tooling & build
 
