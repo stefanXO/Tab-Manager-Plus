@@ -37,3 +37,5 @@ yarn.lock -diff
 # Exclude these files from the git archive export (.zip)
 .gitattributes export-ignore
 .gitignore export-ignore
+# Built output: skip diff rendering (huge one-line bundles/sourcemaps)
+dist/** -diff linguist-generated=true

@@ -1,5 +1,7 @@
 ﻿import * as browser from "webextension-polyfill";
-import {ISavedSession} from "@types";
+import { ISavedSession} from "@types";
+import { Window } from "@views";
+import * as React from "react";
 
 export interface ITabManagerState {
 	tabCount: number,
@@ -27,6 +29,7 @@ export interface ITabManagerState {
 	hiddenTabs: Set<number>,
 	tabsbyid: Map<number, browser.Tabs.Tab>,
 	windowsbyid: Map<number, browser.Windows.Window>,
+	windowrefs: Map<number, React.RefObject<Window>>,
 
 	lastSelect: number,
 	searchLen: number,
@@ -40,6 +43,9 @@ export interface ITabManagerState {
 	dupTabs: boolean,
 	dragFavicon: string,
 	colorsActive: number,
+	colorsAutoName: string,
 
-	resetTimeout: number
+	resetTimeout: number,
+
+	dirty: boolean
 }

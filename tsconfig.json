@@ -1,34 +1,50 @@
 ﻿{
 	"compilerOptions": {
-		"jsx": "react",
+		"jsx": "react-jsx",
 		"outDir": "ts-built",
 		"rootDir": "src",
-		"baseUrl": "./src",
 		"skipLibCheck": true,
+		"esModuleInterop": true,
+		"module": "ESNext",
+		"moduleResolution": "Bundler",
+		"resolveJsonModule": true,
+		"isolatedModules": true,
+		"noEmit": true,
 		"paths": {
 			"@views": [
-				"popup/views/index"
+				"./src/popup/views/index"
 			],
 			"@background/*": [
-				"service_worker/background/*"
+				"./src/service_worker/background/*"
 			],
 			"@helpers/*": [
-				"helpers/*"
+				"./src/helpers/*"
 			],
 			"@types": [
-				"types/index"
+				"./src/types/index"
 			],
 			"@ui/*": [
-				"service_worker/ui/*"
+				"./src/service_worker/ui/*"
 			],
 			"@strings": [
-				"strings/strings"
+				"./src/strings/strings"
 			],
 			"@context": [
-				"service_worker/context"
+				"./src/service_worker/context"
 			]
 		},
-		"target": "es6"
+		"target": "ES2020",
+		"strict": true,
+		"strictNullChecks": false,
+		"noImplicitAny": false,
+		"types": [
+			"chrome"
+		],
+		"lib": [
+			"ES2020",
+			"DOM",
+			"DOM.Iterable"
+		]
 	},
 	"include": [
 		"src/**/*"

@@ -1,6 +1,6 @@
 {
   "name": "tab-manager-plus",
-  "version": "6.0.0",
+  "version": "7.0.0",
   "description": "This is an extended version of the old Tab Manager Google Chrome extension. Should work on both Chrome and Firefox. Malware free, with a new view type and many new features.",
   "main": "index.js",
   "directories": {
@@ -8,36 +8,45 @@
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "watch": "tsc --noEmit && node watch.mjs",
-    "build": "tsc --noEmit && node build.mjs"
+    "build": "tsc --noEmit && node build.mjs",
+    "build:dev": "tsc --noEmit && node build.mjs --dev",
+    "watch": "tsc --noEmit && node build.mjs --watch",
+    "watch:dev": "tsc --noEmit && node build.mjs --watch --dev",
+    "version": "node scripts/sync-version.mjs && git add manifest.json manifest-firefox.json readme.md changelog.html",
+    "check-version": "node scripts/sync-version.mjs --check",
+    "release": "bash babelit.sh"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/stefanXO/Tab-Manager.git"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MPL-2.0",
+  "engines": {
+    "node": ">=24"
+  },
   "bugs": {
     "url": "https://github.com/stefanXO/Tab-Manager/issues"
   },
   "homepage": "https://github.com/stefanXO/Tab-Manager#readme",
   "devDependencies": {
-    "@types/chrome": "^0.0.272",
-    "@types/node": "^22.7.2",
-    "@types/react": "^18.3.9",
-    "@types/react-dom": "^18.3.0",
+    "@types/chrome": "^0.3.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "@types/webextension-polyfill": "^0.12.1",
     "crx3": "^1.1.3",
-    "esbuild": "0.24.0",
-    "typescript": "^5.6.2",
+    "esbuild": "^0.28.2",
+    "typescript": "^7.0.2",
     "webextension-polyfill": "^0.12.0"
   },
   "dependencies": {
-    "react": "16.11.0",
-    "react-dom": "16.11.0",
-    "react-jsx": "^1.0.0"
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
   },
   "browserslist": [
     "Chrome >= 88"
-  ]
+  ],
+  "allowScripts": {
+    "esbuild@0.28.2": true
+  }
 }

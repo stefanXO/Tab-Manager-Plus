@@ -9,7 +9,7 @@ import { updateTabCount, discardTabs, moveTabsToWindow, closeTabs, focusOnTabAnd
 import * as browser from 'webextension-polyfill';
 import { ICommand } from '@types';
 
-export async function handleMessages(message, sender, sendResponse) {
+export async function handleMessages(message : unknown, sender : browser.Runtime.MessageSender) {
 	const request = message as ICommand;
 
 	switch (request.command) {

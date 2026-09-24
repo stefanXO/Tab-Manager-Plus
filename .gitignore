@@ -5,7 +5,6 @@
 *.tar.gz
 *.sh
 node_modules
-package-lock.json
 build/
 source/
 tab-manager*/

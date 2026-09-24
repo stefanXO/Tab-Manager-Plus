@@ -1,3 +1,27 @@
+7.0.0
+=====
+- New design for all layouts! Block view is a tidy grid, vertical view is a proper list and horizontal view is a compact strip with one window per row
+- Dark theme redesigned: consistent colors, icons are no longer inverted and window colors show as a colored edge
+- New window color palette, with a matching set for the dark theme
+- White favicons are visible now in the bright theme: only-white icons get inverted, icons with a white background get a tinted tile
+- Highlight Duplicates now only selects the extra copies and keeps one tab per URL, so "Delete" closes only the duplicates at once
+- The header shows how many tabs have duplicates and how many are selected
+- Searching while duplicates are highlighted searches within them
+- Improvements: The popup loads faster, its script is about 40% smaller
+- Improvements: Tab changes show up immediately, rapid updates are batched
+- Fix: Favicons will update when a tab finishes loading or changes its icon
+- Fix: Pasting a search term, or editing in the middle of it, would search the wrong tabs
+- Fix: The current window is always listed first and marked, also when opened as a popup
+- Fix: Window names and colors changed in the background did not refresh in the popup
+- Fix: Enabling the sessions feature shows your saved windows right away
+- Fix: Hover text is restored when moving the mouse from a tab back to its window
+- Fix: Sessions have a hover text now, too
+- Fix: Hover texts counted the window buttons as tabs
+- Fix: Hover texts had the wrong pluralization for tabs
+- Fix: Drop indicator when dragging a tab fits every layout now and shows in the dark theme
+- Fix: Window color picker listed the colors right-to-left in some layouts
+- Firefox: Firefox-based browsers (LibreWolf, Zen, Waterfox) are detected as Firefox
+
 6.0.0
 =====
 - You can now open single tabs from your saved sessions

@@ -66,7 +66,7 @@ export async function moveTabsToWindow(windowId, tabs) {
 }
 
 export function focusOnTabAndWindowDelayed(tabId: number, windowId: number) {
-	setTimeout(focusOnTabAndWindow.bind(this, tabId, windowId), 125);
+	setTimeout(() => focusOnTabAndWindow(tabId, windowId), 125);
 }
 
 export async function focusOnTabAndWindow(tabId : number, windowId : number) {
