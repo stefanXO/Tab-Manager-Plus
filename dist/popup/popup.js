@@ -1484,11 +1484,11 @@
           actScopeDepth = prevActScopeDepth;
         }
         function recursivelyFlushAsyncActWork(returnValue, resolve, reject) {
-          var queue = ReactSharedInternals.actQueue;
-          if (null !== queue)
-            if (0 !== queue.length)
+          var queue2 = ReactSharedInternals.actQueue;
+          if (null !== queue2)
+            if (0 !== queue2.length)
               try {
-                flushActQueue(queue);
+                flushActQueue(queue2);
                 enqueueTask(function() {
                   return recursivelyFlushAsyncActWork(returnValue, resolve, reject);
                 });
@@ -1497,31 +1497,31 @@
                 ReactSharedInternals.thrownErrors.push(error);
               }
             else ReactSharedInternals.actQueue = null;
-          0 < ReactSharedInternals.thrownErrors.length ? (queue = aggregateErrors(ReactSharedInternals.thrownErrors), ReactSharedInternals.thrownErrors.length = 0, reject(queue)) : resolve(returnValue);
+          0 < ReactSharedInternals.thrownErrors.length ? (queue2 = aggregateErrors(ReactSharedInternals.thrownErrors), ReactSharedInternals.thrownErrors.length = 0, reject(queue2)) : resolve(returnValue);
         }
-        function flushActQueue(queue) {
+        function flushActQueue(queue2) {
           if (!isFlushing) {
             isFlushing = true;
             var i = 0;
             try {
-              for (; i < queue.length; i++) {
-                var callback = queue[i];
+              for (; i < queue2.length; i++) {
+                var callback = queue2[i];
                 do {
                   ReactSharedInternals.didUsePromise = false;
                   var continuation = callback(false);
                   if (null !== continuation) {
                     if (ReactSharedInternals.didUsePromise) {
-                      queue[i] = callback;
-                      queue.splice(0, i);
+                      queue2[i] = callback;
+                      queue2.splice(0, i);
                       return;
                     }
                     callback = continuation;
                   } else break;
                 } while (1);
               }
-              queue.length = 0;
+              queue2.length = 0;
             } catch (error) {
-              queue.splice(0, i + 1), ReactSharedInternals.thrownErrors.push(error);
+              queue2.splice(0, i + 1), ReactSharedInternals.thrownErrors.push(error);
             } finally {
               isFlushing = false;
             }
@@ -1669,7 +1669,7 @@
         exports.act = function(callback) {
           var prevActQueue = ReactSharedInternals.actQueue, prevActScopeDepth = actScopeDepth;
           actScopeDepth++;
-          var queue = ReactSharedInternals.actQueue = null !== prevActQueue ? prevActQueue : [], didAwaitActCall = false;
+          var queue2 = ReactSharedInternals.actQueue = null !== prevActQueue ? prevActQueue : [], didAwaitActCall = false;
           try {
             var result = callback();
           } catch (error) {
@@ -1692,7 +1692,7 @@
                     popActScope(prevActQueue, prevActScopeDepth);
                     if (0 === prevActScopeDepth) {
                       try {
-                        flushActQueue(queue), enqueueTask(function() {
+                        flushActQueue(queue2), enqueueTask(function() {
                           return recursivelyFlushAsyncActWork(
                             returnValue,
                             resolve,
@@ -1723,7 +1723,7 @@
           }
           var returnValue$jscomp$0 = result;
           popActScope(prevActQueue, prevActScopeDepth);
-          0 === prevActScopeDepth && (flushActQueue(queue), 0 !== queue.length && queueSeveralMicrotasks(function() {
+          0 === prevActScopeDepth && (flushActQueue(queue2), 0 !== queue2.length && queueSeveralMicrotasks(function() {
             didAwaitActCall || didWarnNoAwaitAct || (didWarnNoAwaitAct = true, console.error(
               "A component suspended inside an `act` scope, but the `act` call was not awaited. When testing React components that depend on asynchronous data, you must await the result:\n\nawait act(() => ...)"
             ));
@@ -1733,7 +1733,7 @@
           return {
             then: function(resolve, reject) {
               didAwaitActCall = true;
-              0 === prevActScopeDepth ? (ReactSharedInternals.actQueue = queue, enqueueTask(function() {
+              0 === prevActScopeDepth ? (ReactSharedInternals.actQueue = queue2, enqueueTask(function() {
                 return recursivelyFlushAsyncActWork(
                   returnValue$jscomp$0,
                   resolve,
@@ -6268,23 +6268,23 @@
           for (var endIndex = concurrentQueuesIndex, i = concurrentlyUpdatedLanes = concurrentQueuesIndex = 0; i < endIndex; ) {
             var fiber = concurrentQueues[i];
             concurrentQueues[i++] = null;
-            var queue = concurrentQueues[i];
+            var queue2 = concurrentQueues[i];
             concurrentQueues[i++] = null;
             var update = concurrentQueues[i];
             concurrentQueues[i++] = null;
             var lane = concurrentQueues[i];
             concurrentQueues[i++] = null;
-            if (null !== queue && null !== update) {
-              var pending2 = queue.pending;
+            if (null !== queue2 && null !== update) {
+              var pending2 = queue2.pending;
               null === pending2 ? update.next = update : (update.next = pending2.next, pending2.next = update);
-              queue.pending = update;
+              queue2.pending = update;
             }
             0 !== lane && markUpdateLaneFromFiberToRoot(fiber, update, lane);
           }
         }
-        function enqueueUpdate$1(fiber, queue, update, lane) {
+        function enqueueUpdate$1(fiber, queue2, update, lane) {
           concurrentQueues[concurrentQueuesIndex++] = fiber;
-          concurrentQueues[concurrentQueuesIndex++] = queue;
+          concurrentQueues[concurrentQueuesIndex++] = queue2;
           concurrentQueues[concurrentQueuesIndex++] = update;
           concurrentQueues[concurrentQueuesIndex++] = lane;
           concurrentlyUpdatedLanes |= lane;
@@ -6292,8 +6292,8 @@
           fiber = fiber.alternate;
           null !== fiber && (fiber.lanes |= lane);
         }
-        function enqueueConcurrentHookUpdate(fiber, queue, update, lane) {
-          enqueueUpdate$1(fiber, queue, update, lane);
+        function enqueueConcurrentHookUpdate(fiber, queue2, update, lane) {
+          enqueueUpdate$1(fiber, queue2, update, lane);
           return getRootForUpdatedFiber(fiber);
         }
         function enqueueConcurrentRenderForLane(fiber, lane) {
@@ -8153,37 +8153,37 @@
           }
         }
         function enqueueCapturedUpdate(workInProgress2, capturedUpdate) {
-          var queue = workInProgress2.updateQueue, current2 = workInProgress2.alternate;
-          if (null !== current2 && (current2 = current2.updateQueue, queue === current2)) {
+          var queue2 = workInProgress2.updateQueue, current2 = workInProgress2.alternate;
+          if (null !== current2 && (current2 = current2.updateQueue, queue2 === current2)) {
             var newFirst = null, newLast = null;
-            queue = queue.firstBaseUpdate;
-            if (null !== queue) {
+            queue2 = queue2.firstBaseUpdate;
+            if (null !== queue2) {
               do {
                 var clone = {
-                  lane: queue.lane,
-                  tag: queue.tag,
-                  payload: queue.payload,
+                  lane: queue2.lane,
+                  tag: queue2.tag,
+                  payload: queue2.payload,
                   callback: null,
                   next: null
                 };
                 null === newLast ? newFirst = newLast = clone : newLast = newLast.next = clone;
-                queue = queue.next;
-              } while (null !== queue);
+                queue2 = queue2.next;
+              } while (null !== queue2);
               null === newLast ? newFirst = newLast = capturedUpdate : newLast = newLast.next = capturedUpdate;
             } else newFirst = newLast = capturedUpdate;
-            queue = {
+            queue2 = {
               baseState: current2.baseState,
               firstBaseUpdate: newFirst,
               lastBaseUpdate: newLast,
               shared: current2.shared,
               callbacks: current2.callbacks
             };
-            workInProgress2.updateQueue = queue;
+            workInProgress2.updateQueue = queue2;
             return;
           }
-          workInProgress2 = queue.lastBaseUpdate;
-          null === workInProgress2 ? queue.firstBaseUpdate = capturedUpdate : workInProgress2.next = capturedUpdate;
-          queue.lastBaseUpdate = capturedUpdate;
+          workInProgress2 = queue2.lastBaseUpdate;
+          null === workInProgress2 ? queue2.firstBaseUpdate = capturedUpdate : workInProgress2.next = capturedUpdate;
+          queue2.lastBaseUpdate = capturedUpdate;
         }
         function suspendIfUpdateReadFromEntangledAsyncAction() {
           if (didReadFromEntangledAsyncAction) {
@@ -8193,12 +8193,12 @@
         }
         function processUpdateQueue(workInProgress2, props, instance$jscomp$0, renderLanes2) {
           didReadFromEntangledAsyncAction = false;
-          var queue = workInProgress2.updateQueue;
+          var queue2 = workInProgress2.updateQueue;
           hasForceUpdate = false;
-          currentlyProcessingQueue = queue.shared;
-          var firstBaseUpdate = queue.firstBaseUpdate, lastBaseUpdate = queue.lastBaseUpdate, pendingQueue = queue.shared.pending;
+          currentlyProcessingQueue = queue2.shared;
+          var firstBaseUpdate = queue2.firstBaseUpdate, lastBaseUpdate = queue2.lastBaseUpdate, pendingQueue = queue2.shared.pending;
           if (null !== pendingQueue) {
-            queue.shared.pending = null;
+            queue2.shared.pending = null;
             var lastPendingUpdate = pendingQueue, firstPendingUpdate = lastPendingUpdate.next;
             lastPendingUpdate.next = null;
             null === lastBaseUpdate ? firstBaseUpdate = firstPendingUpdate : lastBaseUpdate.next = firstPendingUpdate;
@@ -8207,7 +8207,7 @@
             null !== current2 && (current2 = current2.updateQueue, pendingQueue = current2.lastBaseUpdate, pendingQueue !== lastBaseUpdate && (null === pendingQueue ? current2.firstBaseUpdate = firstPendingUpdate : pendingQueue.next = firstPendingUpdate, current2.lastBaseUpdate = lastPendingUpdate));
           }
           if (null !== firstBaseUpdate) {
-            var newState = queue.baseState;
+            var newState = queue2.baseState;
             lastBaseUpdate = 0;
             current2 = firstPendingUpdate = lastPendingUpdate = null;
             pendingQueue = firstBaseUpdate;
@@ -8279,7 +8279,7 @@
                   }
                 }
                 updateLane = pendingQueue.callback;
-                null !== updateLane && (workInProgress2.flags |= 64, isHiddenUpdate && (workInProgress2.flags |= 8192), isHiddenUpdate = queue.callbacks, null === isHiddenUpdate ? queue.callbacks = [updateLane] : isHiddenUpdate.push(updateLane));
+                null !== updateLane && (workInProgress2.flags |= 64, isHiddenUpdate && (workInProgress2.flags |= 8192), isHiddenUpdate = queue2.callbacks, null === isHiddenUpdate ? queue2.callbacks = [updateLane] : isHiddenUpdate.push(updateLane));
               } else
                 isHiddenUpdate = {
                   lane: updateLane,
@@ -8290,16 +8290,16 @@
                 }, null === current2 ? (firstPendingUpdate = current2 = isHiddenUpdate, lastPendingUpdate = newState) : current2 = current2.next = isHiddenUpdate, lastBaseUpdate |= updateLane;
               pendingQueue = pendingQueue.next;
               if (null === pendingQueue)
-                if (pendingQueue = queue.shared.pending, null === pendingQueue)
+                if (pendingQueue = queue2.shared.pending, null === pendingQueue)
                   break;
                 else
-                  isHiddenUpdate = pendingQueue, pendingQueue = isHiddenUpdate.next, isHiddenUpdate.next = null, queue.lastBaseUpdate = isHiddenUpdate, queue.shared.pending = null;
+                  isHiddenUpdate = pendingQueue, pendingQueue = isHiddenUpdate.next, isHiddenUpdate.next = null, queue2.lastBaseUpdate = isHiddenUpdate, queue2.shared.pending = null;
             } while (1);
             null === current2 && (lastPendingUpdate = newState);
-            queue.baseState = lastPendingUpdate;
-            queue.firstBaseUpdate = firstPendingUpdate;
-            queue.lastBaseUpdate = current2;
-            null === firstBaseUpdate && (queue.shared.lanes = 0);
+            queue2.baseState = lastPendingUpdate;
+            queue2.firstBaseUpdate = firstPendingUpdate;
+            queue2.lastBaseUpdate = current2;
+            null === firstBaseUpdate && (queue2.shared.lanes = 0);
             workInProgressRootSkippedLanes |= lastBaseUpdate;
             workInProgress2.lanes = lastBaseUpdate;
             workInProgress2.memoizedState = newState;
@@ -8588,8 +8588,8 @@
         function resetHooksOnUnwind(workInProgress2) {
           if (didScheduleRenderPhaseUpdate) {
             for (workInProgress2 = workInProgress2.memoizedState; null !== workInProgress2; ) {
-              var queue = workInProgress2.queue;
-              null !== queue && (queue.pending = null);
+              var queue2 = workInProgress2.queue;
+              null !== queue2 && (queue2.pending = null);
               workInProgress2 = workInProgress2.next;
             }
             didScheduleRenderPhaseUpdate = false;
@@ -8731,13 +8731,13 @@
           return updateReducerImpl(hook, currentHook, reducer);
         }
         function updateReducerImpl(hook, current2, reducer) {
-          var queue = hook.queue;
-          if (null === queue)
+          var queue2 = hook.queue;
+          if (null === queue2)
             throw Error(
               "Should have a queue. You are likely calling Hooks conditionally, which is not allowed. (https://react.dev/link/invalid-hook-call)"
             );
-          queue.lastRenderedReducer = reducer;
-          var baseQueue = hook.baseQueue, pendingQueue = queue.pending;
+          queue2.lastRenderedReducer = reducer;
+          var baseQueue = hook.baseQueue, pendingQueue = queue2.pending;
           if (null !== pendingQueue) {
             if (null !== baseQueue) {
               var baseFirst = baseQueue.next;
@@ -8748,7 +8748,7 @@
               "Internal error: Expected work-in-progress queue to be a clone. This is a bug in React."
             );
             current2.baseQueue = baseQueue = pendingQueue;
-            queue.pending = null;
+            queue2.pending = null;
           }
           pendingQueue = hook.baseState;
           if (null === baseQueue) hook.memoizedState = pendingQueue;
@@ -8804,21 +8804,21 @@
             hook.memoizedState = pendingQueue;
             hook.baseState = baseFirst;
             hook.baseQueue = newBaseQueueLast;
-            queue.lastRenderedState = pendingQueue;
+            queue2.lastRenderedState = pendingQueue;
           }
-          null === baseQueue && (queue.lanes = 0);
-          return [hook.memoizedState, queue.dispatch];
+          null === baseQueue && (queue2.lanes = 0);
+          return [hook.memoizedState, queue2.dispatch];
         }
         function rerenderReducer(reducer) {
-          var hook = updateWorkInProgressHook(), queue = hook.queue;
-          if (null === queue)
+          var hook = updateWorkInProgressHook(), queue2 = hook.queue;
+          if (null === queue2)
             throw Error(
               "Should have a queue. You are likely calling Hooks conditionally, which is not allowed. (https://react.dev/link/invalid-hook-call)"
             );
-          queue.lastRenderedReducer = reducer;
-          var dispatch = queue.dispatch, lastRenderPhaseUpdate = queue.pending, newState = hook.memoizedState;
+          queue2.lastRenderedReducer = reducer;
+          var dispatch = queue2.dispatch, lastRenderPhaseUpdate = queue2.pending, newState = hook.memoizedState;
           if (null !== lastRenderPhaseUpdate) {
-            queue.pending = null;
+            queue2.pending = null;
             var update = lastRenderPhaseUpdate = lastRenderPhaseUpdate.next;
             do
               newState = reducer(newState, update.action), update = update.next;
@@ -8826,7 +8826,7 @@
             objectIs(newState, hook.memoizedState) || (didReceiveUpdate = true);
             hook.memoizedState = newState;
             null === hook.baseQueue && (hook.baseState = newState);
-            queue.lastRenderedState = newState;
+            queue2.lastRenderedState = newState;
           }
           return [newState, dispatch];
         }
@@ -8975,28 +8975,28 @@
         }
         function mountState(initialState) {
           initialState = mountStateImpl(initialState);
-          var queue = initialState.queue, dispatch = dispatchSetState.bind(null, currentlyRenderingFiber, queue);
-          queue.dispatch = dispatch;
+          var queue2 = initialState.queue, dispatch = dispatchSetState.bind(null, currentlyRenderingFiber, queue2);
+          queue2.dispatch = dispatch;
           return [initialState.memoizedState, dispatch];
         }
         function mountOptimistic(passthrough) {
           var hook = mountWorkInProgressHook();
           hook.memoizedState = hook.baseState = passthrough;
-          var queue = {
+          var queue2 = {
             pending: null,
             lanes: 0,
             dispatch: null,
             lastRenderedReducer: null,
             lastRenderedState: null
           };
-          hook.queue = queue;
+          hook.queue = queue2;
           hook = dispatchOptimisticSetState.bind(
             null,
             currentlyRenderingFiber,
             true,
-            queue
+            queue2
           );
-          queue.dispatch = hook;
+          queue2.dispatch = hook;
           return [passthrough, hook];
         }
         function updateOptimistic(passthrough, reducer) {
@@ -9445,14 +9445,14 @@
         function releaseAsyncTransition() {
           ReactSharedInternals.asyncTransitions--;
         }
-        function startTransition(fiber, queue, pendingState, finishedState, callback) {
+        function startTransition(fiber, queue2, pendingState, finishedState, callback) {
           var previousPriority = ReactDOMSharedInternals.p;
           ReactDOMSharedInternals.p = 0 !== previousPriority && previousPriority < ContinuousEventPriority ? previousPriority : ContinuousEventPriority;
           var prevTransition = ReactSharedInternals.T, currentTransition = {};
           currentTransition.types = null !== prevTransition ? prevTransition.types : null;
           currentTransition._updatedFibers = /* @__PURE__ */ new Set();
           ReactSharedInternals.T = currentTransition;
-          dispatchOptimisticSetState(fiber, false, queue, pendingState);
+          dispatchOptimisticSetState(fiber, false, queue2, pendingState);
           try {
             var returnValue = callback(), onStartTransitionFinish = ReactSharedInternals.S;
             null !== onStartTransitionFinish && onStartTransitionFinish(currentTransition, returnValue);
@@ -9465,21 +9465,21 @@
               );
               dispatchSetStateInternal(
                 fiber,
-                queue,
+                queue2,
                 thenableForFinishedState,
                 requestUpdateLane(fiber)
               );
             } else
               dispatchSetStateInternal(
                 fiber,
-                queue,
+                queue2,
                 finishedState,
                 requestUpdateLane(fiber)
               );
           } catch (error) {
             dispatchSetStateInternal(
               fiber,
-              queue,
+              queue2,
               { then: function() {
               }, status: "rejected", reason: error },
               requestUpdateLane(fiber)
@@ -9497,11 +9497,11 @@
             throw Error(
               "Expected the form instance to be a HostComponent. This is a bug in React."
             );
-          var queue = ensureFormComponentIsStateful(formFiber).queue;
+          var queue2 = ensureFormComponentIsStateful(formFiber).queue;
           startHostActionTimer(formFiber);
           startTransition(
             formFiber,
-            queue,
+            queue2,
             pendingState,
             NotPendingTransition,
             null === action ? noop : function() {
@@ -9624,7 +9624,7 @@
             provider = provider.return;
           }
         }
-        function dispatchReducerAction(fiber, queue, action) {
+        function dispatchReducerAction(fiber, queue2, action) {
           var args = arguments;
           "function" === typeof args[3] && console.error(
             "State updates from the useState() and useReducer() Hooks don't support the second callback argument. To execute a side effect after rendering, declare it in the component body with useEffect()."
@@ -9639,17 +9639,17 @@
             eagerState: null,
             next: null
           };
-          isRenderPhaseUpdate(fiber) ? enqueueRenderPhaseUpdate(queue, update) : (update = enqueueConcurrentHookUpdate(fiber, queue, update, args), null !== update && (startUpdateTimerByLane(args, "dispatch()", fiber), scheduleUpdateOnFiber(update, fiber, args), entangleTransitionUpdate(update, queue, args)));
+          isRenderPhaseUpdate(fiber) ? enqueueRenderPhaseUpdate(queue2, update) : (update = enqueueConcurrentHookUpdate(fiber, queue2, update, args), null !== update && (startUpdateTimerByLane(args, "dispatch()", fiber), scheduleUpdateOnFiber(update, fiber, args), entangleTransitionUpdate(update, queue2, args)));
         }
-        function dispatchSetState(fiber, queue, action) {
+        function dispatchSetState(fiber, queue2, action) {
           var args = arguments;
           "function" === typeof args[3] && console.error(
             "State updates from the useState() and useReducer() Hooks don't support the second callback argument. To execute a side effect after rendering, declare it in the component body with useEffect()."
           );
           args = requestUpdateLane(fiber);
-          dispatchSetStateInternal(fiber, queue, action, args) && startUpdateTimerByLane(args, "setState()", fiber);
+          dispatchSetStateInternal(fiber, queue2, action, args) && startUpdateTimerByLane(args, "setState()", fiber);
         }
-        function dispatchSetStateInternal(fiber, queue, action, lane) {
+        function dispatchSetStateInternal(fiber, queue2, action, lane) {
           var update = {
             lane,
             revertLane: 0,
@@ -9659,30 +9659,30 @@
             eagerState: null,
             next: null
           };
-          if (isRenderPhaseUpdate(fiber)) enqueueRenderPhaseUpdate(queue, update);
+          if (isRenderPhaseUpdate(fiber)) enqueueRenderPhaseUpdate(queue2, update);
           else {
             var alternate = fiber.alternate;
-            if (0 === fiber.lanes && (null === alternate || 0 === alternate.lanes) && (alternate = queue.lastRenderedReducer, null !== alternate)) {
+            if (0 === fiber.lanes && (null === alternate || 0 === alternate.lanes) && (alternate = queue2.lastRenderedReducer, null !== alternate)) {
               var prevDispatcher = ReactSharedInternals.H;
               ReactSharedInternals.H = InvalidNestedHooksDispatcherOnUpdateInDEV;
               try {
-                var currentState = queue.lastRenderedState, eagerState = alternate(currentState, action);
+                var currentState = queue2.lastRenderedState, eagerState = alternate(currentState, action);
                 update.hasEagerState = true;
                 update.eagerState = eagerState;
                 if (objectIs(eagerState, currentState))
-                  return enqueueUpdate$1(fiber, queue, update, 0), null === workInProgressRoot && finishQueueingConcurrentUpdates(), false;
+                  return enqueueUpdate$1(fiber, queue2, update, 0), null === workInProgressRoot && finishQueueingConcurrentUpdates(), false;
               } catch (error) {
               } finally {
                 ReactSharedInternals.H = prevDispatcher;
               }
             }
-            action = enqueueConcurrentHookUpdate(fiber, queue, update, lane);
+            action = enqueueConcurrentHookUpdate(fiber, queue2, update, lane);
             if (null !== action)
-              return scheduleUpdateOnFiber(action, fiber, lane), entangleTransitionUpdate(action, queue, lane), true;
+              return scheduleUpdateOnFiber(action, fiber, lane), entangleTransitionUpdate(action, queue2, lane), true;
           }
           return false;
         }
-        function dispatchOptimisticSetState(fiber, throwIfDuringRender, queue, action) {
+        function dispatchOptimisticSetState(fiber, throwIfDuringRender, queue2, action) {
           null === ReactSharedInternals.T && 0 === currentEntangledLane && console.error(
             "An optimistic state update occurred outside a transition or action. To fix, move the update to an action, or wrap with startTransition."
           );
@@ -9702,7 +9702,7 @@
           } else
             throwIfDuringRender = enqueueConcurrentHookUpdate(
               fiber,
-              queue,
+              queue2,
               action,
               2
             ), null !== throwIfDuringRender && (startUpdateTimerByLane(2, "setOptimistic()", fiber), scheduleUpdateOnFiber(throwIfDuringRender, fiber, 2));
@@ -9711,18 +9711,18 @@
           var alternate = fiber.alternate;
           return fiber === currentlyRenderingFiber || null !== alternate && alternate === currentlyRenderingFiber;
         }
-        function enqueueRenderPhaseUpdate(queue, update) {
+        function enqueueRenderPhaseUpdate(queue2, update) {
           didScheduleRenderPhaseUpdateDuringThisPass = didScheduleRenderPhaseUpdate = true;
-          var pending2 = queue.pending;
+          var pending2 = queue2.pending;
           null === pending2 ? update.next = update : (update.next = pending2.next, pending2.next = update);
-          queue.pending = update;
+          queue2.pending = update;
         }
-        function entangleTransitionUpdate(root2, queue, lane) {
+        function entangleTransitionUpdate(root2, queue2, lane) {
           if (0 !== (lane & 4194048)) {
-            var queueLanes = queue.lanes;
+            var queueLanes = queue2.lanes;
             queueLanes &= root2.pendingLanes;
             lane |= queueLanes;
-            queue.lanes = lane;
+            queue2.lanes = lane;
             markRootEntangled(root2, lane);
           }
         }
@@ -24907,7 +24907,7 @@
     "hideWindows",
     "filter-tabs"
   ];
-  (async function() {
+  var migrated = (async function() {
     let needsMigration = false;
     for (const key of stringkeys) {
       if (!!localStorage[key]) {
@@ -24929,17 +24929,23 @@
     }
     if (needsMigration) {
       let keyValue = {};
+      let oldSessionKeys = [];
       let values = await browser.storage.local.get(null);
       if (!!values) {
+        let sessions = {};
+        if (!!values["sessions"] && typeof values["sessions"] === "object") {
+          sessions = values["sessions"];
+        }
         for (const key in values) {
-          if (!!values[key].tabs) {
-            console.log("session deleting " + key);
-            await browser.storage.local.remove(key);
-          } else {
-            delete values[key];
+          if (key === "sessions") continue;
+          const value = values[key];
+          if (!!value && typeof value === "object" && !!value.tabs) {
+            console.log("session migrating " + key);
+            sessions[key] = value;
+            oldSessionKeys.push(key);
           }
         }
-        keyValue["sessions"] = values;
+        keyValue["sessions"] = sessions;
       }
       for (const key of stringkeys) {
         if (!!localStorage[key]) keyValue[key] = localStorage[key];
@@ -24951,11 +24957,16 @@
         if (!!localStorage[key]) keyValue[key] = JSON.parse(localStorage[key]);
       }
       await browser.storage.local.set(keyValue);
+      if (oldSessionKeys.length > 0) {
+        await browser.storage.local.remove(oldSessionKeys);
+      }
       for (const key of stringkeys) localStorage.removeItem(key);
       for (const key of boolkeys) localStorage.removeItem(key);
       for (const key of jsonkeys) localStorage.removeItem(key);
     }
-  })();
+  })().catch(function(e) {
+    console.error("migration failed", e);
+  });
 
   // src/helpers/storage.ts
   var browser2 = __toESM(require_browser_polyfill());
@@ -24981,6 +24992,7 @@
     obj[key] = value;
     return browser2.storage.local.set(obj);
   }
+  var queue = Promise.resolve();
 
   // src/popup/views/Session.tsx
   var React2 = __toESM(require_react());
@@ -25026,37 +25038,36 @@
       };
     }
     render() {
-      let _this = this;
       let hideWindow = true;
       let titleAdded = false;
-      let tabs4 = this.props.tabs.map(function(tab) {
+      let tabs4 = this.props.tabs.map((tab) => {
         let tabId = tab.id * tab.id * tab.id * 100;
-        let isHidden = _this.props.hiddenTabs.has(tabId) && _this.props.filterTabs;
-        let isSelected = _this.props.selection.has(tabId);
-        let isFaded = _this.props.hiddenTabs.has(tab.id) && !_this.props.filterTabs;
-        tab.id = tab.index;
+        let isHidden = this.props.hiddenTabs.has(tabId) && this.props.filterTabs;
+        let isSelected = this.props.selection.has(tabId);
+        let isFaded = this.props.hiddenTabs.has(tab.id) && !this.props.filterTabs;
+        const sessionTab = Object.assign({}, tab, { id: tab.index });
         if (!isHidden) hideWindow = false;
         return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
           Tab,
           {
-            id: "sessiontab_" + _this.props.session.id + "_" + tab.index,
-            onOpen: _this.openTab,
-            session: _this.props.session,
-            layout: _this.props.layout,
-            tab,
+            id: "sessiontab_" + this.props.session.id + "_" + tab.index,
+            onOpen: this.openTab,
+            session: this.props.session,
+            layout: this.props.layout,
+            tab: sessionTab,
             selected: isSelected,
             hidden: isHidden,
             faded: isFaded,
             draggable: false,
-            searchActive: _this.props.searchActive
+            searchActive: this.props.searchActive
           },
-          "sessiontab_" + _this.props.session.id + "_" + tab.index
+          "sessiontab_" + this.props.session.id + "_" + tab.index
         );
       });
       if (!hideWindow) {
         if (!!this.props.tabactions) {
           tabs4.push(
-            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "newliner" }, "sessionnl_" + _this.props.session.id),
+            /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "newliner" }, "sessionnl_" + this.props.session.id),
             /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { className: "window-actions", children: [
               /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
                 "div",
@@ -25074,7 +25085,7 @@
                   onClick: this.close
                 }
               )
-            ] }, "sessionwa_" + _this.props.session.id)
+            ] }, "sessionwa_" + this.props.session.id)
           );
         }
         if (this.props.windowTitles) {
@@ -25115,17 +25126,16 @@
     }
     async restoreSession(e, tabId) {
       e.stopPropagation();
-      var _this = this;
-      await browser3.runtime.sendMessage({
+      const windowId = await browser3.runtime.sendMessage({
         command: create_window_with_session_tabs,
         session: this.props.session,
         tab_id: tabId
       });
       if (!!window.inPopup) {
         window.close();
-      } else {
-        setTimeout(function() {
-          _this.context.scrollTo("window", browser3.windows.WINDOW_ID_CURRENT.toString());
+      } else if (windowId !== void 0) {
+        setTimeout(() => {
+          this.context.scrollTo("window", windowId.toString());
         }, 500);
       }
     }
@@ -25483,6 +25493,27 @@
       // row-span packing for the block layouts, attached to whatever container is mounted
       this.masonry = null;
       this.masonryTarget = null;
+      this.runUpdate = () => this.setState({ dirty: true });
+      this.runSlowUpdate = debounce(this.runUpdate, 250);
+      this.onRuntimeMessage = (message) => {
+        var _a;
+        const request = message;
+        switch (request.command) {
+          case refresh_windows:
+            const window_ids = request.window_ids;
+            for (const window_id of window_ids) {
+              const _window = (_a = this.state.windowrefs.get(window_id)) == null ? void 0 : _a.current;
+              if (!_window) continue;
+              _window.checkSettings();
+            }
+            break;
+        }
+      };
+      // the worker records window focus order (windowAge) after the same focus event
+      // the popup reacts to; when its write lands, re-sort so the order is never stale
+      this.onStorageChanged = (changes, area) => {
+        if (area === "local" && "windowAge" in changes) this.runUpdate();
+      };
       this.hoverOver = (e) => {
         const el = e.target.closest("[data-hover], [title]");
         this.hoverIcon(el ? el.dataset.hover ?? el.title : "");
@@ -25535,9 +25566,9 @@
         });
       };
       this.update = async () => {
-        const windows5 = await browser6.windows.getAll({ populate: true });
+        const windows4 = await browser6.windows.getAll({ populate: true });
         const sort_windows = await getLocalStorage("windowAge", []);
-        windows5.sort(function(a, b) {
+        windows4.sort(function(a, b) {
           var aSort = sort_windows.indexOf(a.id);
           var bSort = sort_windows.indexOf(b.id);
           if (a.state === "minimized" && b.state !== "minimized") return 1;
@@ -25548,13 +25579,13 @@
         });
         this.state.windowsbyid.clear();
         this.state.tabsbyid.clear();
-        const focusedWindow = windows5.find((w) => w.focused);
+        const focusedWindow = windows4.find((w) => w.focused);
         this.setState({
-          lastOpenWindow: focusedWindow ? focusedWindow.id : windows5.length > 0 ? windows5[0].id : -1,
-          windows: windows5
+          lastOpenWindow: focusedWindow ? focusedWindow.id : windows4.length > 0 ? windows4[0].id : -1,
+          windows: windows4
         });
         let tabCount = 0;
-        for (const window2 of windows5) {
+        for (const window2 of windows4) {
           this.state.windowsbyid.set(window2.id, window2);
           for (const tab of window2.tabs) {
             this.state.tabsbyid.set(tab.id, tab);
@@ -25575,10 +25606,7 @@
         });
       };
       this.deleteTabs = async () => {
-        const _this = this;
-        const tabs4 = [...this.state.selection.keys()].map(function(id) {
-          return _this.state.tabsbyid.get(id);
-        });
+        const tabs4 = this.selectedTabs();
         if (tabs4.length) {
           browser6.runtime.sendMessage({ command: close_tabs, tabs: tabs4 });
         } else {
@@ -25589,21 +25617,15 @@
         }
       };
       this.discardTabs = async () => {
-        const _this = this;
-        const tabs4 = [...this.state.selection.keys()].map(function(id) {
-          return _this.state.tabsbyid.get(id);
-        });
+        const tabs4 = this.selectedTabs();
         if (tabs4.length) {
           browser6.runtime.sendMessage({ command: discard_tabs, tabs: tabs4 });
         }
         this.clearSelection();
       };
       this.addWindow = async () => {
-        const _this = this;
-        const count = this.state.selection.size;
-        const tabs4 = [...this.state.selection.keys()].map(function(id) {
-          return _this.state.tabsbyid.get(id);
-        });
+        const tabs4 = this.selectedTabs();
+        const count = tabs4.length;
         const incognito_tabs = tabs4.filter(function(tab) {
           return tab.incognito;
         });
@@ -25629,10 +25651,7 @@
         if (!!window.inPopup) window.close();
       };
       this.pinTabs = async () => {
-        const _this = this;
-        const tabs4 = [...this.state.selection.keys()].map(function(id) {
-          return _this.state.tabsbyid.get(id);
-        }).sort(function(a, b) {
+        const tabs4 = this.selectedTabs().sort(function(a, b) {
           return a.index - b.index;
         });
         if (tabs4.length) {
@@ -26177,6 +26196,20 @@
     componentWillUnmount() {
       var _a;
       (_a = this.masonry) == null ? void 0 : _a.disconnect();
+      browser6.tabs.onCreated.removeListener(this.runUpdate);
+      browser6.tabs.onUpdated.removeListener(this.runSlowUpdate);
+      browser6.tabs.onMoved.removeListener(this.runSlowUpdate);
+      browser6.tabs.onRemoved.removeListener(this.runUpdate);
+      browser6.tabs.onReplaced.removeListener(this.runSlowUpdate);
+      browser6.tabs.onDetached.removeListener(this.runUpdate);
+      browser6.tabs.onAttached.removeListener(this.runUpdate);
+      browser6.tabs.onActivated.removeListener(this.runSlowUpdate);
+      browser6.windows.onFocusChanged.removeListener(this.runUpdate);
+      browser6.windows.onCreated.removeListener(this.runUpdate);
+      browser6.windows.onRemoved.removeListener(this.runUpdate);
+      browser6.runtime.onMessage.removeListener(this.onRuntimeMessage);
+      browser6.storage.onChanged.removeListener(this.sessionSync);
+      browser6.storage.onChanged.removeListener(this.onStorageChanged);
     }
     syncMasonry() {
       var _a;
@@ -26202,23 +26235,29 @@
       var openInOwnTab = false;
       var tabWidth = 800;
       var tabHeight = 600;
-      var storage4 = await browser6.storage.local.get(null);
-      if (!storage4["layout"]) storage4["layout"] = layout;
-      if (typeof storage4["tabLimit"] === "undefined") storage4["tabLimit"] = tabLimit;
-      if (typeof storage4["tabWidth"] === "undefined") storage4["tabWidth"] = tabWidth;
-      if (typeof storage4["tabHeight"] === "undefined") storage4["tabHeight"] = tabHeight;
-      if (typeof storage4["animations"] === "undefined") storage4["animations"] = animations;
-      if (typeof storage4["windowTitles"] === "undefined") storage4["windowTitles"] = windowTitles;
-      if (typeof storage4["tabactions"] === "undefined") storage4["tabactions"] = tabactions;
-      if (typeof storage4["badge"] === "undefined") storage4["badge"] = badge;
-      if (typeof storage4["openInOwnTab"] === "undefined") storage4["openInOwnTab"] = openInOwnTab;
-      if (typeof storage4["compact"] === "undefined") storage4["compact"] = compact;
-      if (typeof storage4["dark"] === "undefined") storage4["dark"] = dark;
-      if (typeof storage4["sessionsFeature"] === "undefined") storage4["sessionsFeature"] = sessionsFeature;
-      if (typeof storage4["hideWindows"] === "undefined") storage4["hideWindows"] = hideWindows;
-      if (typeof storage4["filter-tabs"] === "undefined") storage4["filter-tabs"] = filterTabs;
-      storage4["version"] = window.extensionVersion;
-      await browser6.storage.local.set(storage4);
+      const defaults = {
+        layout,
+        tabLimit,
+        tabWidth,
+        tabHeight,
+        animations,
+        windowTitles,
+        tabactions,
+        badge,
+        openInOwnTab,
+        compact,
+        dark,
+        sessionsFeature,
+        hideWindows,
+        "filter-tabs": filterTabs
+      };
+      const stored = await browser6.storage.local.get(Object.keys(defaults));
+      const missing = { version: window.extensionVersion };
+      for (const key in defaults) {
+        if (stored[key] === void 0 || key === "layout" && !stored[key]) missing[key] = defaults[key];
+      }
+      await browser6.storage.local.set(missing);
+      const storage4 = { ...stored, ...missing };
       layout = storage4["layout"];
       tabLimit = storage4["tabLimit"];
       tabWidth = storage4["tabWidth"];
@@ -26259,7 +26298,6 @@
       this.setState({ [key]: value });
     }
     render() {
-      let _this = this;
       let tabCount = this.state.tabCount;
       let haveMin = false;
       let haveSess = false;
@@ -26305,16 +26343,16 @@
                     window: window2,
                     tabs: window2.tabs,
                     incognito: window2.incognito,
-                    layout: _this.state.layout,
-                    selection: _this.state.selection,
-                    searchActive: _this.state.searchLen > 0,
-                    sessionsFeature: _this.state.sessionsFeature,
-                    tabactions: _this.state.tabactions,
-                    hiddenTabs: _this.state.hiddenTabs,
-                    filterTabs: _this.state.filterTabs,
+                    layout: this.state.layout,
+                    selection: this.state.selection,
+                    searchActive: this.state.searchLen > 0,
+                    sessionsFeature: this.state.sessionsFeature,
+                    tabactions: this.state.tabactions,
+                    hiddenTabs: this.state.hiddenTabs,
+                    filterTabs: this.state.filterTabs,
                     draggable: true,
-                    windowTitles: _this.state.windowTitles,
-                    lastOpenWindow: _this.state.lastOpenWindow,
+                    windowTitles: this.state.windowTitles,
+                    lastOpenWindow: this.state.lastOpenWindow,
                     ref: windowRef
                   },
                   "window" + window2.id
@@ -26333,16 +26371,16 @@
                     window: window2,
                     tabs: window2.tabs,
                     incognito: window2.incognito,
-                    layout: _this.state.layout,
-                    selection: _this.state.selection,
-                    searchActive: _this.state.searchLen > 0,
-                    sessionsFeature: _this.state.sessionsFeature,
-                    tabactions: _this.state.tabactions,
-                    hiddenTabs: _this.state.hiddenTabs,
-                    filterTabs: _this.state.filterTabs,
+                    layout: this.state.layout,
+                    selection: this.state.selection,
+                    searchActive: this.state.searchLen > 0,
+                    sessionsFeature: this.state.sessionsFeature,
+                    tabactions: this.state.tabactions,
+                    hiddenTabs: this.state.hiddenTabs,
+                    filterTabs: this.state.filterTabs,
                     draggable: true,
-                    windowTitles: _this.state.windowTitles,
-                    lastOpenWindow: _this.state.lastOpenWindow,
+                    windowTitles: this.state.windowTitles,
+                    lastOpenWindow: this.state.lastOpenWindow,
                     ref: windowRef
                   },
                   "window" + window2.id
@@ -26356,14 +26394,14 @@
                     session: window2,
                     tabs: window2.tabs,
                     incognito: window2.incognito,
-                    layout: _this.state.layout,
-                    selection: _this.state.selection,
-                    searchActive: _this.state.searchLen > 0,
-                    tabactions: _this.state.tabactions,
-                    hiddenTabs: _this.state.hiddenTabs,
-                    filterTabs: _this.state.filterTabs,
-                    windowTitles: _this.state.windowTitles,
-                    lastOpenWindow: _this.state.lastOpenWindow,
+                    layout: this.state.layout,
+                    selection: this.state.selection,
+                    searchActive: this.state.searchLen > 0,
+                    tabactions: this.state.tabactions,
+                    hiddenTabs: this.state.hiddenTabs,
+                    filterTabs: this.state.filterTabs,
+                    windowTitles: this.state.windowTitles,
+                    lastOpenWindow: this.state.lastOpenWindow,
                     draggable: false
                   },
                   "session" + window2.id
@@ -26494,42 +26532,20 @@
           });
         }
       }
-      let _this = this;
-      var runUpdate = () => {
-        _this.setState({ dirty: true });
-      };
-      var runSlowUpdate = debounce(() => {
-        _this.setState({ dirty: true });
-      }, 250);
-      browser6.tabs.onCreated.addListener(runUpdate);
-      browser6.tabs.onUpdated.addListener(runSlowUpdate);
-      browser6.tabs.onMoved.addListener(runSlowUpdate);
-      browser6.tabs.onRemoved.addListener(runUpdate);
-      browser6.tabs.onReplaced.addListener(runSlowUpdate);
-      browser6.tabs.onDetached.addListener(runUpdate);
-      browser6.tabs.onAttached.addListener(runUpdate);
-      browser6.tabs.onActivated.addListener(runSlowUpdate);
-      browser6.windows.onFocusChanged.addListener(runUpdate);
-      browser6.windows.onCreated.addListener(runUpdate);
-      browser6.windows.onRemoved.addListener(runUpdate);
-      browser6.runtime.onMessage.addListener((message) => {
-        var _a2;
-        const request = message;
-        switch (request.command) {
-          case refresh_windows:
-            const window_ids = request.window_ids;
-            for (const window_id of window_ids) {
-              const _window = (_a2 = this.state.windowrefs.get(window_id)) == null ? void 0 : _a2.current;
-              if (!_window) continue;
-              _window.checkSettings();
-            }
-            break;
-        }
-      });
+      browser6.tabs.onCreated.addListener(this.runUpdate);
+      browser6.tabs.onUpdated.addListener(this.runSlowUpdate);
+      browser6.tabs.onMoved.addListener(this.runSlowUpdate);
+      browser6.tabs.onRemoved.addListener(this.runUpdate);
+      browser6.tabs.onReplaced.addListener(this.runSlowUpdate);
+      browser6.tabs.onDetached.addListener(this.runUpdate);
+      browser6.tabs.onAttached.addListener(this.runUpdate);
+      browser6.tabs.onActivated.addListener(this.runSlowUpdate);
+      browser6.windows.onFocusChanged.addListener(this.runUpdate);
+      browser6.windows.onCreated.addListener(this.runUpdate);
+      browser6.windows.onRemoved.addListener(this.runUpdate);
+      browser6.runtime.onMessage.addListener(this.onRuntimeMessage);
       browser6.storage.onChanged.addListener(this.sessionSync);
-      browser6.storage.onChanged.addListener((changes, area) => {
-        if (area === "local" && "windowAge" in changes) runUpdate();
-      });
+      browser6.storage.onChanged.addListener(this.onStorageChanged);
       await this.sessionSync();
       (_a = this.rootRef.current) == null ? void 0 : _a.focus();
       this.focusRoot();
@@ -26637,6 +26653,17 @@
         default:
           return "Vertical";
       }
+    }
+    // The selection may hold ids of tabs that closed since they were selected,
+    // and of session tabs, which are not open tabs; neither is in tabsbyid.
+    // Sending those on as undefined crashed the worker's close/move/discard.
+    selectedTabs() {
+      const tabs4 = [];
+      for (const id of this.state.selection.keys()) {
+        const tab = this.state.tabsbyid.get(id);
+        if (!!tab) tabs4.push(tab);
+      }
+      return tabs4;
     }
     select(id) {
       if (this.state.selection.has(id)) {
@@ -26803,11 +26830,9 @@
       }
     }
     async drop(id, before) {
-      var _this = this;
       var tab = this.state.tabsbyid.get(id);
-      var tabs4 = [...this.state.selection.keys()].map(function(id2) {
-        return _this.state.tabsbyid.get(id2);
-      });
+      if (!tab) return;
+      var tabs4 = this.selectedTabs();
       var index = tab.index + (before ? 0 : 1);
       for (let i = 0; i < tabs4.length; i++) {
         const t = tabs4[i];
@@ -26818,10 +26843,7 @@
       this.update();
     }
     async dropWindow(windowId) {
-      var _this = this;
-      var tabs4 = [...this.state.selection.keys()].map(function(id) {
-        return _this.state.tabsbyid.get(id);
-      });
+      var tabs4 = this.selectedTabs();
       browser6.runtime.sendMessage({ command: move_tabs_to_window, window_id: windowId, tabs: tabs4 });
       this.state.selection.clear();
     }
@@ -27566,7 +27588,6 @@
       };
       this.save = async (e) => {
         this.stopProp(e);
-        var _this = this;
         console.log("session name", this.state.name);
         let sessionName = this.state.name || this.topEntries(this.state.windowTitles).join("");
         let sessionColor = this.state.color || "default";
@@ -27608,8 +27629,8 @@
         });
         this.context.reload();
         console.log("Value is set to " + value);
-        setTimeout(function() {
-          _this.context.scrollTo("session", session.id);
+        setTimeout(() => {
+          this.context.scrollTo("session", session.id);
         }, 150);
       };
       this.minimize = async (e) => {
@@ -27752,45 +27773,44 @@
     }
     render() {
       if (this.state.hidden) return null;
-      let _this = this;
       let color = this.state.color || "default";
       let hideWindow = true;
       let titleAdded = false;
-      let tabs4 = this.props.tabs.map(function(tab) {
-        const isHidden = _this.props.hiddenTabs.has(tab.id) && _this.props.filterTabs;
-        let isSelected = _this.props.selection.has(tab.id);
-        let isFaded = _this.props.hiddenTabs.has(tab.id) && !_this.props.filterTabs;
+      let tabs4 = this.props.tabs.map((tab) => {
+        const isHidden = this.props.hiddenTabs.has(tab.id) && this.props.filterTabs;
+        let isSelected = this.props.selection.has(tab.id);
+        let isFaded = this.props.hiddenTabs.has(tab.id) && !this.props.filterTabs;
         if (!isHidden) hideWindow = false;
         if (isHidden) {
-          return /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("div", {}, "windowtab_" + _this.props.window.id + "_" + tab.id);
+          return /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("div", {}, "windowtab_" + this.props.window.id + "_" + tab.id);
         }
-        let tabRef = _this.state.tabrefs.get(tab.id) || React6.createRef();
-        if (!_this.state.tabrefs.has(tab.id)) {
-          _this.state.tabrefs.set(tab.id, tabRef);
+        let tabRef = this.state.tabrefs.get(tab.id) || React6.createRef();
+        if (!this.state.tabrefs.has(tab.id)) {
+          this.state.tabrefs.set(tab.id, tabRef);
         }
         return /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
           Tab,
           {
-            tabs: _this.props.tabs,
-            onDragChange: _this.refreshTabs,
-            window: _this.props.window,
-            layout: _this.props.layout,
+            tabs: this.props.tabs,
+            onDragChange: this.refreshTabs,
+            window: this.props.window,
+            layout: this.props.layout,
             tab,
             selected: isSelected,
             hidden: isHidden,
             faded: isFaded,
-            searchActive: _this.props.searchActive,
+            searchActive: this.props.searchActive,
             draggable: true,
             ref: tabRef,
             id: "tab-" + tab.id
           },
-          "windowtab_" + _this.props.window.id + "_" + tab.id
+          "windowtab_" + this.props.window.id + "_" + tab.id
         );
       });
       if (!hideWindow) {
         if (!!this.props.tabactions) {
           tabs4.push(
-            /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("div", { className: "newliner" }, "windownl_" + _this.props.window.id),
+            /* @__PURE__ */ (0, import_jsx_runtime5.jsx)("div", { className: "newliner" }, "windownl_" + this.props.window.id),
             /* @__PURE__ */ (0, import_jsx_runtime5.jsxs)("div", { className: "window-actions", children: [
               this.props.sessionsFeature ? /* @__PURE__ */ (0, import_jsx_runtime5.jsx)(
                 "div",
@@ -28068,6 +28088,7 @@
     if (!!window.loading) return;
     try {
       window.loading = true;
+      await migrated;
       let height = await getLocalStorage("tabHeight", 600);
       let width = await getLocalStorage("tabWidth", 800);
       console.log(height, width);

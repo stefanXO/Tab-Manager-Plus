@@ -1049,9 +1049,43 @@
     obj[key] = Object.fromEntries(value);
     return browser.storage.local.set(obj);
   }
+  var queue = Promise.resolve();
+  function serialized(fn) {
+    const run = queue.then(fn, fn);
+    queue = run.catch(function() {
+    });
+    return run;
+  }
 
   // src/service_worker/context.ts
+  var browser2 = __toESM(require_browser_polyfill());
   var globalTabsActive = [];
+  var tabsActiveLoaded = (async function() {
+    try {
+      const stored = await browser2.storage.session.get({ globalTabsActive: [] });
+      if (stored.globalTabsActive instanceof Array && globalTabsActive.length === 0) {
+        globalTabsActive.push(...stored.globalTabsActive);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  })();
+  function persistTabsActive() {
+    return browser2.storage.session.set({ globalTabsActive }).catch(function(e) {
+      console.error(e);
+    });
+  }
+  async function forgetTab(tabId) {
+    await tabsActiveLoaded;
+    let changed = false;
+    for (let i = globalTabsActive.length - 1; i >= 0; i--) {
+      if (globalTabsActive[i].tabId === tabId) {
+        globalTabsActive.splice(i, 1);
+        changed = true;
+      }
+    }
+    if (changed) await persistTabsActive();
+  }
 
   // src/strings/strings.ts
   var reload_popup_controls = "reload_popup_controls";
@@ -1085,6 +1119,7 @@
   var report = "report";
   var send = "send";
   var windowHashes = "windowHashes";
+  var windowOrphaned = "windowOrphaned";
   var windowColors = "windowColors";
   var windowNames = "windowNames";
 
@@ -1123,101 +1158,129 @@
   }
 
   // src/service_worker/background/tracking.ts
-  var browser2 = __toESM(require_browser_polyfill());
+  var browser3 = __toESM(require_browser_polyfill());
   var cleanupDebounce = debounce(cleanUp, 500);
-  async function cleanUp(remove_old = false) {
-    let activewindows = await browser2.windows.getAll({ populate: true });
-    let windowids = [];
-    for (let _w of activewindows) {
+  var ORPHAN_MAX_AGE = 24 * 60 * 60 * 1e3;
+  async function forgetWindowIds() {
+    await serialized(async function() {
+      for (const key of [windowNames, windowColors, windowHashes, windowOrphaned]) {
+        const map = await getLocalStorageMap(key);
+        const moved = /* @__PURE__ */ new Map();
+        for (const [id, value] of map) {
+          moved.set(id > 0 ? -id : id, value);
+        }
+        await setLocalStorageMap(key, moved);
+      }
+    });
+  }
+  function cleanUp(remove_old = false) {
+    return serialized(function() {
+      return cleanUpLocked(remove_old);
+    });
+  }
+  async function cleanUpLocked(remove_old) {
+    const activewindows = await browser3.windows.getAll({ populate: true });
+    const windowids = [];
+    for (const _w of activewindows) {
+      if (_w.id === void 0) continue;
       windowids.push(_w.id);
     }
     let windows7 = await getLocalStorage("windowAge", []);
     if (!(windows7 instanceof Array)) windows7 = [];
+    let windowsChanged = false;
     for (let i = windows7.length - 1; i >= 0; i--) {
       if (windowids.indexOf(windows7[i]) < 0) {
         windows7.splice(i, 1);
+        windowsChanged = true;
       }
     }
-    await setLocalStorage("windowAge", windows7);
-    let names = await getLocalStorageMap(windowNames);
-    let colors = await getLocalStorageMap(windowColors);
-    let to_check = /* @__PURE__ */ new Set();
-    let exists = /* @__PURE__ */ new Set();
-    let to_refresh = [];
-    for (const [id, _name] of names) {
-      if (windowids.indexOf(id) < 0) {
-        to_check.add(id);
-      } else {
-        exists.add(id);
-      }
+    if (windowsChanged) await setLocalStorage("windowAge", windows7);
+    const names = await getLocalStorageMap(windowNames);
+    const colors = await getLocalStorageMap(windowColors);
+    const hashes = await getLocalStorageMap(windowHashes);
+    const orphaned = await getLocalStorageMap(windowOrphaned);
+    const to_check = /* @__PURE__ */ new Set();
+    for (const id of names.keys()) {
+      if (windowids.indexOf(id) < 0) to_check.add(id);
     }
-    for (const [id, _color] of colors) {
-      if (windowids.indexOf(id) < 0) {
-        to_check.add(id);
-      } else {
-        exists.add(id);
-      }
+    for (const id of colors.keys()) {
+      if (windowids.indexOf(id) < 0) to_check.add(id);
     }
+    let namesChanged = false, colorsChanged = false, hashesChanged = false, orphanedChanged = false;
+    const to_refresh = [];
     if (to_check.size > 0) {
-      let hashes = await getLocalStorageMap(windowHashes);
-      let found = false;
-      for (let w of activewindows) {
+      for (const w of activewindows) {
+        if (w.id === void 0) continue;
+        if (names.has(w.id) || colors.has(w.id)) continue;
         const windowhash = hashcode(w);
         for (const [id, _hash] of hashes) {
           if (!to_check.has(id)) continue;
-          if (exists.has(id)) continue;
-          if (w.id === id) break;
-          if (_hash === windowhash) {
-            console.log("found by hash, old id " + id + " new id " + w.id);
-            to_refresh.push(w.id);
-            if (!!names.get(id)) {
-              names.set(w.id, names.get(id));
-              names.delete(id);
-            }
-            if (!!colors.get(id)) {
-              colors.set(w.id, colors.get(id));
-              colors.delete(id);
-            }
-            hashes.set(w.id, _hash);
-            hashes.delete(id);
-            found = true;
-            to_check.delete(id);
-            break;
+          if (_hash !== windowhash) continue;
+          console.log("found by hash, old id " + id + " new id " + w.id);
+          to_refresh.push(w.id);
+          if (names.has(id)) {
+            names.set(w.id, names.get(id));
+            names.delete(id);
+            namesChanged = true;
           }
-        }
-      }
-      let save = false;
-      if (remove_old) {
-        for (const _id of to_check) {
-          console.log("should delete from to check " + _id);
-          colors.delete(_id);
-          names.delete(_id);
-          hashes.delete(_id);
-          save = true;
-        }
-      }
-      if (found || save) {
-        await setLocalStorageMap(windowNames, names);
-        await setLocalStorageMap(windowColors, colors);
-        await setLocalStorageMap(windowHashes, hashes);
-        if (found) {
-          browser2.runtime.sendMessage({
-            command: refresh_windows,
-            window_ids: to_refresh
-          });
+          if (colors.has(id)) {
+            colors.set(w.id, colors.get(id));
+            colors.delete(id);
+            colorsChanged = true;
+          }
+          hashes.set(w.id, _hash);
+          hashes.delete(id);
+          hashesChanged = true;
+          to_check.delete(id);
+          break;
         }
       }
     }
+    const now = Date.now();
+    for (const id of to_check) {
+      if (!orphaned.has(id)) {
+        orphaned.set(id, now);
+        orphanedChanged = true;
+      }
+    }
+    for (const id of orphaned.keys()) {
+      if (!to_check.has(id)) {
+        orphaned.delete(id);
+        orphanedChanged = true;
+      }
+    }
+    if (remove_old) {
+      for (const id of to_check) {
+        if (now - orphaned.get(id) < ORPHAN_MAX_AGE) continue;
+        console.log("dropping window " + id + ", gone for over a day");
+        if (names.delete(id)) namesChanged = true;
+        if (colors.delete(id)) colorsChanged = true;
+        if (hashes.delete(id)) hashesChanged = true;
+        orphaned.delete(id);
+        orphanedChanged = true;
+      }
+      for (const id of hashes.keys()) {
+        if (windowids.indexOf(id) < 0 && !names.has(id) && !colors.has(id)) {
+          hashes.delete(id);
+          hashesChanged = true;
+        }
+      }
+    }
+    if (namesChanged) await setLocalStorageMap(windowNames, names);
+    if (colorsChanged) await setLocalStorageMap(windowColors, colors);
+    if (hashesChanged) await setLocalStorageMap(windowHashes, hashes);
+    if (orphanedChanged) await setLocalStorageMap(windowOrphaned, orphaned);
+    if (to_refresh.length > 0) notifyRefresh(to_refresh);
   }
 
   // src/service_worker/background/windows.ts
-  var browser4 = __toESM(require_browser_polyfill());
+  var browser5 = __toESM(require_browser_polyfill());
 
   // src/helpers/browser.ts
-  var browser3 = __toESM(require_browser_polyfill());
+  var browser4 = __toESM(require_browser_polyfill());
   function detectFirefox() {
     try {
-      return browser3.runtime.getURL("").startsWith("moz-extension://");
+      return browser4.runtime.getURL("").startsWith("moz-extension://");
     } catch {
       return navigator.userAgent.indexOf("Firefox") > -1;
     }
@@ -1225,13 +1288,13 @@
   var IS_FIREFOX = detectFirefox();
 
   // src/service_worker/background/windows.ts
-  async function setupWindowListeners() {
-    browser4.windows.onFocusChanged.removeListener(windowFocus);
-    browser4.windows.onCreated.removeListener(windowCreated);
-    browser4.windows.onRemoved.removeListener(windowRemoved);
-    browser4.windows.onFocusChanged.addListener(windowFocus);
-    browser4.windows.onCreated.addListener(windowCreated);
-    browser4.windows.onRemoved.addListener(windowRemoved);
+  function setupWindowListeners() {
+    browser5.windows.onFocusChanged.removeListener(windowFocus);
+    browser5.windows.onCreated.removeListener(windowCreated);
+    browser5.windows.onRemoved.removeListener(windowRemoved);
+    browser5.windows.onFocusChanged.addListener(windowFocus);
+    browser5.windows.onCreated.addListener(windowCreated);
+    browser5.windows.onRemoved.addListener(windowRemoved);
   }
   async function createWindowWithTabs(tabs5, isIncognito = false) {
     var pinnedIndex = 0;
@@ -1241,22 +1304,22 @@
       t.push(_tab.id);
     }
     var firstPinned = firstTab.pinned;
-    var w = await browser4.windows.create({ tabId: firstTab.id, incognito: !!isIncognito });
+    var w = await browser5.windows.create({ tabId: firstTab.id, incognito: !!isIncognito });
     if (firstPinned) {
-      await browser4.tabs.update(w.tabs[0].id, { pinned: firstPinned });
+      await browser5.tabs.update(w.tabs[0].id, { pinned: firstPinned });
       pinnedIndex++;
     }
     if (t.length > 0) {
       var i = 0;
       for (let oldTabId of t) {
         i++;
-        var oldTab = await browser4.tabs.get(oldTabId);
+        var oldTab = await browser5.tabs.get(oldTabId);
         var tabPinned = oldTab.pinned;
         var movedTabs = [];
         if (!tabPinned) {
-          movedTabs = await browser4.tabs.move(oldTabId, { windowId: w.id, index: -1 });
+          movedTabs = await browser5.tabs.move(oldTabId, { windowId: w.id, index: -1 });
         } else {
-          movedTabs = await browser4.tabs.move(oldTabId, { windowId: w.id, index: pinnedIndex++ });
+          movedTabs = await browser5.tabs.move(oldTabId, { windowId: w.id, index: pinnedIndex++ });
         }
         let firstTab2;
         if (Array.isArray(movedTabs)) {
@@ -1266,12 +1329,12 @@
         }
         if (!!firstTab2) {
           if (tabPinned) {
-            await browser4.tabs.update(firstTab2.id, { pinned: tabPinned });
+            await browser5.tabs.update(firstTab2.id, { pinned: tabPinned });
           }
         }
       }
     }
-    await browser4.windows.update(w.id, { focused: true });
+    await browser5.windows.update(w.id, { focused: true });
   }
   async function createWindowWithSessionTabs(session, tabId) {
     var customName;
@@ -1301,12 +1364,12 @@
     if (filteredWindow.width > 800) filteredWindow.width = 800;
     if (filteredWindow.height > 600) filteredWindow.height = 600;
     filteredWindow.type = "normal";
-    const newWindow = await browser4.windows.create(filteredWindow).catch(function(error) {
+    const newWindow = await browser5.windows.create(filteredWindow).catch(function(error) {
       console.error(error);
       console.log(error);
       console.log(error.message);
     });
-    if (!newWindow) return;
+    if (!newWindow) return void 0;
     let emptyTab = newWindow.tabs[0].id;
     for (let i = 0; i < session.tabs.length; i++) {
       let newTab = Object.keys(session.tabs[i]).filter(function(key) {
@@ -1327,7 +1390,7 @@
         }
       }
       try {
-        await browser4.tabs.create(fTab).catch(function(error) {
+        await browser5.tabs.create(fTab).catch(function(error) {
           console.error(error);
           console.log(error);
           console.log(error.message);
@@ -1337,7 +1400,7 @@
         console.error(e);
       }
     }
-    await browser4.tabs.remove(emptyTab).catch(function(error) {
+    await browser5.tabs.remove(emptyTab).catch(function(error) {
       console.error(error);
       console.log(error);
       console.log(error.message);
@@ -1350,20 +1413,21 @@
       console.log("setting color");
       await setWindowColor(newWindow.id, color);
     }
-    await browser4.windows.update(newWindow.id, { focused: true });
+    await browser5.windows.update(newWindow.id, { focused: true });
+    return newWindow.id;
   }
   function focusOnWindowDelayed(windowId) {
     setTimeout(() => focusOnWindow(windowId), 125);
   }
   async function focusOnWindow(windowId) {
-    await browser4.windows.update(windowId, { focused: true });
+    await browser5.windows.update(windowId, { focused: true });
   }
   async function hideWindows(windowId) {
     if (IS_FIREFOX) return;
     if (!windowId || windowId < 0) return;
     let hide_windows = await getLocalStorage("hideWindows", false);
     if (!hide_windows) return;
-    let has_permission = await browser4.permissions.contains({ permissions: ["system.display"] });
+    let has_permission = await browser5.permissions.contains({ permissions: ["system.display"] });
     if (!has_permission) return;
     let displaylayouts = await chrome.system.display.getInfo();
     let monitor_bounds = [];
@@ -1375,7 +1439,7 @@
       console.error(err);
       return;
     }
-    let windows7 = await browser4.windows.getAll({ populate: true });
+    let windows7 = await browser5.windows.getAll({ populate: true });
     let monitor = null;
     for (let window of windows7) {
       if (window.id === windowId) {
@@ -1393,19 +1457,21 @@
     for (let window of windows7) {
       if (window.id !== windowId) {
         if (is_in_bounds(window, monitor)) {
-          await browser4.windows.update(window.id, { "state": "minimized" });
+          await browser5.windows.update(window.id, { "state": "minimized" });
         }
       }
     }
   }
   async function windowActive(windowId) {
     if (windowId < 0) return;
-    var windows7 = [];
-    var windowAge = await getLocalStorage("windowAge", []);
-    if (windowAge instanceof Array) windows7 = windowAge;
-    if (windows7.indexOf(windowId) > -1) windows7.splice(windows7.indexOf(windowId), 1);
-    windows7.unshift(windowId);
-    await setLocalStorage("windowAge", windows7);
+    await serialized(async function() {
+      var windows7 = [];
+      var windowAge = await getLocalStorage("windowAge", []);
+      if (windowAge instanceof Array) windows7 = windowAge;
+      if (windows7.indexOf(windowId) > -1) windows7.splice(windows7.indexOf(windowId), 1);
+      windows7.unshift(windowId);
+      await setLocalStorage("windowAge", windows7);
+    });
   }
   async function windowFocus(windowId) {
     try {
@@ -1428,25 +1494,40 @@
   async function windowRemoved(windowId) {
     try {
       if (!!windowId) {
-        await windowActive(windowId);
+        await windowInactive(windowId);
       }
     } catch (e) {
     }
+  }
+  async function windowInactive(windowId) {
+    await serialized(async function() {
+      var windows7 = [];
+      var windowAge = await getLocalStorage("windowAge", []);
+      if (windowAge instanceof Array) windows7 = windowAge;
+      if (windows7.indexOf(windowId) > -1) {
+        windows7.splice(windows7.indexOf(windowId), 1);
+        await setLocalStorage("windowAge", windows7);
+      }
+    });
   }
   async function checkWindow(windowId) {
     if (!windowId) return;
     const colors = await getLocalStorageMap(windowColors);
     const names = await getLocalStorageMap(windowNames);
-    if (!names[windowId] && !colors[windowId]) return;
-    const hashes = await getLocalStorageMap(windowHashes);
+    if (!names.has(windowId) && !colors.has(windowId)) return;
+    let window;
     try {
-      const window = await browser4.windows.get(windowId, { populate: true });
-      let newHash = hashcode(window);
+      window = await browser5.windows.get(windowId, { populate: true });
+    } catch (e) {
+      return;
+    }
+    const newHash = hashcode(window);
+    await serialized(async function() {
+      const hashes = await getLocalStorageMap(windowHashes);
+      if (hashes.get(windowId) === newHash) return;
       hashes.set(windowId, newHash);
       await setLocalStorageMap(windowHashes, hashes);
-    } catch (e) {
-      console.log(e);
-    }
+    });
   }
   function hashcode(window) {
     let urls = [];
@@ -1465,41 +1546,43 @@
   }
 
   // src/service_worker/background/tabs.ts
-  var browser5 = __toESM(require_browser_polyfill());
-  async function setupTabListeners() {
-    browser5.tabs.onCreated.removeListener(tabAdded);
-    browser5.tabs.onUpdated.removeListener(tabCountChanged);
-    browser5.tabs.onRemoved.removeListener(tabCountChanged);
-    browser5.tabs.onReplaced.removeListener(tabCountChanged);
-    browser5.tabs.onDetached.removeListener(tabCountChanged);
-    browser5.tabs.onAttached.removeListener(tabCountChanged);
-    browser5.tabs.onActivated.removeListener(tabActiveChanged);
-    browser5.tabs.onMoved.removeListener(tabCountChanged);
-    browser5.tabs.onCreated.removeListener(checkTabCreate);
-    browser5.tabs.onUpdated.removeListener(checkTabUpdate);
-    browser5.tabs.onRemoved.removeListener(checkTabRemove);
-    browser5.tabs.onDetached.removeListener(checkTabDetached);
-    browser5.tabs.onAttached.removeListener(checkTabAttached);
-    browser5.tabs.onMoved.removeListener(checkTabMoved);
-    browser5.tabs.onCreated.addListener(tabAdded);
-    browser5.tabs.onUpdated.addListener(tabCountChanged);
-    browser5.tabs.onRemoved.addListener(tabCountChanged);
-    browser5.tabs.onReplaced.addListener(tabCountChanged);
-    browser5.tabs.onDetached.addListener(tabCountChanged);
-    browser5.tabs.onAttached.addListener(tabCountChanged);
-    browser5.tabs.onActivated.addListener(tabActiveChanged);
-    browser5.tabs.onMoved.addListener(tabCountChanged);
-    browser5.tabs.onCreated.addListener(checkTabCreate);
-    browser5.tabs.onUpdated.addListener(checkTabUpdate);
-    browser5.tabs.onRemoved.addListener(checkTabRemove);
-    browser5.tabs.onDetached.addListener(checkTabDetached);
-    browser5.tabs.onAttached.addListener(checkTabAttached);
-    browser5.tabs.onMoved.addListener(checkTabMoved);
+  var browser6 = __toESM(require_browser_polyfill());
+  function setupTabListeners() {
+    browser6.tabs.onCreated.removeListener(tabAdded);
+    browser6.tabs.onUpdated.removeListener(tabCountChanged);
+    browser6.tabs.onRemoved.removeListener(tabCountChanged);
+    browser6.tabs.onReplaced.removeListener(tabCountChanged);
+    browser6.tabs.onDetached.removeListener(tabCountChanged);
+    browser6.tabs.onAttached.removeListener(tabCountChanged);
+    browser6.tabs.onActivated.removeListener(tabActiveChanged);
+    browser6.tabs.onMoved.removeListener(tabCountChanged);
+    browser6.tabs.onRemoved.removeListener(tabRemoved);
+    browser6.tabs.onCreated.removeListener(checkTabCreate);
+    browser6.tabs.onUpdated.removeListener(checkTabUpdate);
+    browser6.tabs.onRemoved.removeListener(checkTabRemove);
+    browser6.tabs.onDetached.removeListener(checkTabDetached);
+    browser6.tabs.onAttached.removeListener(checkTabAttached);
+    browser6.tabs.onMoved.removeListener(checkTabMoved);
+    browser6.tabs.onCreated.addListener(tabAdded);
+    browser6.tabs.onUpdated.addListener(tabCountChanged);
+    browser6.tabs.onRemoved.addListener(tabCountChanged);
+    browser6.tabs.onReplaced.addListener(tabCountChanged);
+    browser6.tabs.onDetached.addListener(tabCountChanged);
+    browser6.tabs.onAttached.addListener(tabCountChanged);
+    browser6.tabs.onActivated.addListener(tabActiveChanged);
+    browser6.tabs.onMoved.addListener(tabCountChanged);
+    browser6.tabs.onRemoved.addListener(tabRemoved);
+    browser6.tabs.onCreated.addListener(checkTabCreate);
+    browser6.tabs.onUpdated.addListener(checkTabUpdate);
+    browser6.tabs.onRemoved.addListener(checkTabRemove);
+    browser6.tabs.onDetached.addListener(checkTabDetached);
+    browser6.tabs.onAttached.addListener(checkTabAttached);
+    browser6.tabs.onMoved.addListener(checkTabMoved);
   }
   async function discardTabs(tabs5) {
     for (const tab of tabs5) {
       if (!tab.discarded) {
-        browser5.tabs.discard(tab.id).catch(function(e) {
+        browser6.tabs.discard(tab.id).catch(function(e) {
           console.error(e);
           console.log(e.message);
         });
@@ -1508,21 +1591,21 @@
   }
   async function closeTabs(tabs5) {
     for (const tab of tabs5) {
-      await browser5.tabs.remove(tab.id);
+      await browser6.tabs.remove(tab.id);
     }
   }
   async function moveTabsToWindow(windowId, tabs5) {
     for (const tab of tabs5) {
-      await browser5.tabs.move(tab.id, { windowId, index: -1 });
-      await browser5.tabs.update(tab.id, { pinned: tab.pinned });
+      await browser6.tabs.move(tab.id, { windowId, index: -1 });
+      await browser6.tabs.update(tab.id, { pinned: tab.pinned });
     }
   }
   function focusOnTabAndWindowDelayed(tabId, windowId) {
     setTimeout(() => focusOnTabAndWindow(tabId, windowId), 125);
   }
   async function focusOnTabAndWindow(tabId, windowId) {
-    await browser5.windows.update(windowId, { focused: true });
-    await browser5.tabs.update(tabId, { active: true });
+    await browser6.windows.update(windowId, { focused: true });
+    await browser6.tabs.update(tabId, { active: true });
     await tabActiveChanged({ tabId, windowId });
   }
   async function updateTabCount() {
@@ -1530,14 +1613,15 @@
     const badge = await getLocalStorage("badge", true);
     if (!badge) run = false;
     if (run) {
-      let result = await browser5.tabs.query({});
+      let result = await browser6.tabs.query({});
       let count = 0;
       if (!!result && !!result.length) {
         count = result.length;
       }
-      await browser5.action.setBadgeText({ text: count + "" });
-      await browser5.action.setBadgeBackgroundColor({ color: "purple" });
+      await browser6.action.setBadgeText({ text: count + "" });
+      await browser6.action.setBadgeBackgroundColor({ color: "purple" });
       const _to_remove = [];
+      await tabsActiveLoaded;
       if (!!globalTabsActive) {
         for (let i = 0; i < globalTabsActive.length; i++) {
           const t = globalTabsActive[i];
@@ -1550,14 +1634,16 @@
           if (!found) _to_remove.push(i);
         }
       }
+      const pruned = _to_remove.length > 0;
       while (_to_remove.length > 0) {
         let index = _to_remove.pop();
         if (!!globalTabsActive && globalTabsActive.length > 0) {
           if (!!globalTabsActive[index]) globalTabsActive.splice(index, 1);
         }
       }
+      if (pruned) persistTabsActive();
     } else {
-      await browser5.action.setBadgeText({ text: "" });
+      await browser6.action.setBadgeText({ text: "" });
     }
   }
   function tabCountChanged() {
@@ -1567,8 +1653,8 @@
   async function tabAdded(tab) {
     const tabLimit = await getLocalStorage("tabLimit", 0);
     if (tabLimit > 0) {
-      if (tab.id !== browser5.tabs.TAB_ID_NONE) {
-        const tabCount = await browser5.tabs.query({ currentWindow: true });
+      if (tab.id !== browser6.tabs.TAB_ID_NONE) {
+        const tabCount = await browser6.tabs.query({ currentWindow: true });
         if (tabCount.length > tabLimit) {
           await createWindowWithTabs([tab], tab.incognito);
         }
@@ -1577,49 +1663,65 @@
     updateTabCountDebounce();
   }
   function tabActiveChanged(tab) {
-    trackLastTab(tab);
     updateTabCountDebounce();
+    return trackLastTab(tab);
+  }
+  function tabRemoved(tabId) {
+    return forgetTab(tabId);
+  }
+  var checkWindowTimers = /* @__PURE__ */ new Map();
+  function checkWindowDebounced(windowId) {
+    if (!windowId) return;
+    const timer = checkWindowTimers.get(windowId);
+    if (timer) clearTimeout(timer);
+    checkWindowTimers.set(windowId, setTimeout(function() {
+      checkWindowTimers.delete(windowId);
+      checkWindow(windowId).catch(function(e) {
+        console.error(e);
+      });
+    }, 500));
   }
   async function checkTabCreate(tab) {
-    await checkWindow(tab.windowId);
+    checkWindowDebounced(tab.windowId);
   }
   async function checkTabUpdate(tabid, changeinfo, tab) {
-    await checkWindow(tab.windowId);
+    checkWindowDebounced(tab.windowId);
   }
   async function checkTabRemove(tabid, removeinfo) {
     if (removeinfo.isWindowClosing) return;
-    await checkWindow(removeinfo.windowId);
+    checkWindowDebounced(removeinfo.windowId);
   }
   async function checkTabDetached(tabid, detachinfo) {
-    await checkWindow(detachinfo.oldWindowId);
+    checkWindowDebounced(detachinfo.oldWindowId);
   }
   async function checkTabAttached(tabid, attachinfo) {
-    await checkWindow(attachinfo.newWindowId);
+    checkWindowDebounced(attachinfo.newWindowId);
   }
   async function checkTabMoved(tabid, moveinfo) {
-    await checkWindow(moveinfo.windowId);
+    checkWindowDebounced(moveinfo.windowId);
   }
 
   // src/service_worker/ui/open.ts
-  var browser6 = __toESM(require_browser_polyfill());
+  var browser7 = __toESM(require_browser_polyfill());
   async function openSidebar() {
-    await browser6.sidebarAction.open();
+    await browser7.sidebarAction.open();
   }
   async function openPopup() {
     const openInOwnTab = await getLocalStorage("openInOwnTab", false);
     if (openInOwnTab) {
-      await browser6.action.setPopup({ popup: "popup.html?popup=true" });
-      await browser6.action.openPopup();
-      await browser6.action.setPopup({ popup: "" });
+      await browser7.action.setPopup({ popup: "popup.html?popup=true" });
+      await browser7.action.openPopup();
+      await browser7.action.setPopup({ popup: "" });
     } else {
-      await browser6.action.openPopup();
+      await browser7.action.openPopup();
     }
   }
   async function openAsOwnTab() {
-    const popup_page = await browser6.runtime.getURL("popup.html");
-    const tabs5 = await browser6.tabs.query({});
+    const popup_page = await browser7.runtime.getURL("popup.html");
+    const tabs5 = await browser7.tabs.query({});
     let currentTab;
     let previousTab;
+    await tabsActiveLoaded;
     if (!!globalTabsActive && globalTabsActive.length > 1) {
       currentTab = globalTabsActive[globalTabsActive.length - 1];
       previousTab = globalTabsActive[globalTabsActive.length - 2];
@@ -1631,52 +1733,62 @@
           await focusOnTabAndWindow(previousTab.tabId, previousTab.windowId);
           return;
         } else {
-          await browser6.windows.update(tab.windowId, { focused: true });
-          await browser6.tabs.highlight({ windowId: tab.windowId, tabs: tab.index });
+          await browser7.windows.update(tab.windowId, { focused: true });
+          await browser7.tabs.highlight({ windowId: tab.windowId, tabs: tab.index });
           return;
         }
       }
     }
-    await browser6.tabs.create({ url: "popup.html" });
+    await browser7.tabs.create({ url: "popup.html" });
+  }
+  function setupPopupListeners() {
+    browser7.action.onClicked.removeListener(openAsOwnTab);
+    browser7.action.onClicked.addListener(openAsOwnTab);
   }
   async function setupPopup() {
     const openInOwnTab = await getLocalStorage("openInOwnTab", false);
-    browser6.action.onClicked.removeListener(openAsOwnTab);
     if (openInOwnTab) {
-      await browser6.action.setPopup({ popup: "" });
-      browser6.action.onClicked.addListener(openAsOwnTab);
+      await browser7.action.setPopup({ popup: "" });
     } else {
-      await browser6.action.setPopup({ popup: "popup.html?popup=true" });
+      await browser7.action.setPopup({ popup: "popup.html?popup=true" });
     }
-    if (browser6.sidebarAction) {
-      await browser6.sidebarAction.setPanel({ panel: "popup.html?panel=true" });
+    if (browser7.sidebarAction) {
+      await browser7.sidebarAction.setPanel({ panel: "popup.html?panel=true" });
     }
   }
 
   // src/service_worker/background/actions.ts
-  var browser7 = __toESM(require_browser_polyfill());
-  async function handleMessages(message, sender) {
-    const request = message;
+  var browser8 = __toESM(require_browser_polyfill());
+  function handleMessages(message, sender) {
+    if (!message || typeof message !== "object") return;
+    let result;
+    try {
+      result = dispatch(message);
+    } catch (e) {
+      console.error(e);
+      return;
+    }
+    if (!result) return;
+    return result.catch(function(e) {
+      console.error(e);
+    });
+  }
+  function dispatch(request) {
     switch (request.command) {
       case reload_popup_controls:
-        setupPopup();
-        break;
+        return setupPopup();
       case update_tab_count:
-        updateTabCount();
-        break;
+        return updateTabCount();
       case discard_tabs:
-        discardTabs(request.tabs);
-        break;
+        return discardTabs(request.tabs);
       case move_tabs_to_window:
-        moveTabsToWindow(request.window_id, request.tabs);
-        break;
+        return moveTabsToWindow(request.window_id, request.tabs);
       case focus_on_tab_and_window:
         if (!!request.tab) {
-          focusOnTabAndWindow(request.tab.id, request.tab.windowId);
+          return focusOnTabAndWindow(request.tab.id, request.tab.windowId);
         } else {
-          focusOnTabAndWindow(request.saved_tab.tabId, request.saved_tab.windowId);
+          return focusOnTabAndWindow(request.saved_tab.tabId, request.saved_tab.windowId);
         }
-        break;
       case focus_on_tab_and_window_delayed:
         if (!!request.tab) {
           focusOnTabAndWindowDelayed(request.tab.id, request.tab.windowId);
@@ -1685,38 +1797,40 @@
         }
         break;
       case focus_on_window:
-        focusOnWindow(request.window_id);
-        break;
+        return focusOnWindow(request.window_id);
       case focus_on_window_delayed:
         focusOnWindowDelayed(request.window_id);
         break;
       case set_window_color:
-        setWindowColor(request.window_id, request.color);
-        break;
+        return setWindowColor(request.window_id, request.color);
       case set_window_name:
-        setWindowName(request.window_id, request.name);
-        break;
+        return setWindowName(request.window_id, request.name);
       case create_window_with_tabs:
-        createWindowWithTabs(request.tabs, request.incognito);
-        break;
+        return createWindowWithTabs(request.tabs, request.incognito);
       case create_window_with_session_tabs:
-        createWindowWithSessionTabs(request.session, request.tab_id);
-        break;
+        return createWindowWithSessionTabs(request.session, request.tab_id);
       case close_tabs:
-        closeTabs(request.tabs);
-        break;
+        return closeTabs(request.tabs);
     }
   }
-  function handleCommands(command) {
+  async function handleCommands(command) {
     if (command === switch_to_previous_active_tab) {
-      if (!!globalTabsActive && globalTabsActive.length > 1) {
-        var _tab = globalTabsActive[globalTabsActive.length - 2];
-        focusOnTabAndWindow(_tab.tabId, _tab.windowId);
+      await tabsActiveLoaded;
+      while (globalTabsActive.length > 1) {
+        const _tab = globalTabsActive[globalTabsActive.length - 2];
+        try {
+          await focusOnTabAndWindow(_tab.tabId, _tab.windowId);
+          return;
+        } catch (e) {
+          globalTabsActive.splice(globalTabsActive.length - 2, 1);
+          await persistTabsActive();
+        }
       }
     }
   }
-  function trackLastTab(tab) {
+  async function trackLastTab(tab) {
     if (!!tab && !!tab.tabId) {
+      await tabsActiveLoaded;
       if (!!globalTabsActive && globalTabsActive.length > 0) {
         var lastActive = globalTabsActive[globalTabsActive.length - 1];
         if (!!lastActive && lastActive.tabId === tab.tabId && lastActive.windowId === tab.windowId) {
@@ -1732,38 +1846,44 @@
         }
       }
       globalTabsActive.push(tab);
+      await persistTabsActive();
     }
   }
   async function setWindowColor(windowId, color) {
-    var colors = await getLocalStorageMap(windowColors);
-    if (!!color) {
-      colors.set(windowId, color);
-    } else {
-      colors.delete(windowId);
-    }
-    await setLocalStorageMap(windowColors, colors);
-    await updateWindowHash(windowId);
-    browser7.runtime.sendMessage({
-      command: refresh_windows,
-      window_ids: [windowId]
+    await serialized(async function() {
+      var colors = await getLocalStorageMap(windowColors);
+      if (!!color) {
+        colors.set(windowId, color);
+      } else {
+        colors.delete(windowId);
+      }
+      await setLocalStorageMap(windowColors, colors);
+      await updateWindowHash(windowId);
     });
+    notifyRefresh([windowId]);
   }
   async function setWindowName(windowId, name) {
-    var names = await getLocalStorageMap(windowNames);
-    if (!!name) {
-      names.set(windowId, name);
-    } else {
-      names.delete(windowId);
-    }
-    await setLocalStorageMap(windowNames, names);
-    await updateWindowHash(windowId);
-    browser7.runtime.sendMessage({
+    await serialized(async function() {
+      var names = await getLocalStorageMap(windowNames);
+      if (!!name) {
+        names.set(windowId, name);
+      } else {
+        names.delete(windowId);
+      }
+      await setLocalStorageMap(windowNames, names);
+      await updateWindowHash(windowId);
+    });
+    notifyRefresh([windowId]);
+  }
+  function notifyRefresh(windowIds) {
+    browser8.runtime.sendMessage({
       command: refresh_windows,
-      window_ids: [windowId]
+      window_ids: windowIds
+    }).catch(function() {
     });
   }
   async function updateWindowHash(windowId) {
-    const window = await browser7.windows.get(windowId, { populate: true });
+    const window = await browser8.windows.get(windowId, { populate: true });
     const hash = hashcode(window);
     const hashes = await getLocalStorageMap(windowHashes);
     hashes.set(windowId, hash);
@@ -1771,99 +1891,101 @@
   }
 
   // src/service_worker/ui/context_menus.ts
-  var browser8 = __toESM(require_browser_polyfill());
+  var browser9 = __toESM(require_browser_polyfill());
   async function setupContextMenus() {
-    await browser8.contextMenus.removeAll();
-    browser8.contextMenus.create({
+    await browser9.contextMenus.removeAll();
+    browser9.contextMenus.create({
       id: open_in_own_tab,
       title: "\u{1F4D4} Open in own tab",
       contexts: ["action"]
     });
-    if (!!browser8.action.openPopup) {
-      browser8.contextMenus.create({
+    if (!!browser9.action.openPopup) {
+      browser9.contextMenus.create({
         id: open_popup,
         title: "\u{1F4D1} Open popup",
         contexts: ["action"]
       });
     }
-    if (!!browser8.sidebarAction) {
-      browser8.contextMenus.create({
+    if (!!browser9.sidebarAction) {
+      browser9.contextMenus.create({
         id: open_sidebar,
         title: "\u{1F5C2} Open sidebar",
         contexts: ["action"]
       });
     }
-    browser8.contextMenus.create({
+    browser9.contextMenus.create({
       id: sep1,
       type: "separator",
       contexts: ["action"]
     });
-    browser8.contextMenus.create({
+    browser9.contextMenus.create({
       title: "\u{1F60D} Support this extension",
       id: support_menu,
       "contexts": ["action"]
     });
-    browser8.contextMenus.create({
+    browser9.contextMenus.create({
       id: review,
       title: "\u2B50 Leave a review",
       "contexts": ["action"],
       parentId: "support_menu"
     });
-    browser8.contextMenus.create({
+    browser9.contextMenus.create({
       id: donate,
       title: "\u2615 Donate to keep Extensions Alive",
       "contexts": ["action"],
       parentId: "support_menu"
     });
-    browser8.contextMenus.create({
+    browser9.contextMenus.create({
       id: patron,
       title: "\u{1F4B0} Become a Patron",
       "contexts": ["action"],
       parentId: "support_menu"
     });
-    browser8.contextMenus.create({
+    browser9.contextMenus.create({
       id: twitter,
       title: "\u{1F426} Follow on Twitter",
       "contexts": ["action"],
       parentId: "support_menu"
     });
-    browser8.contextMenus.create({
+    browser9.contextMenus.create({
       title: "\u{1F914} Issues and Suggestions",
       id: code_menu,
       "contexts": ["action"]
     });
-    browser8.contextMenus.create({
+    browser9.contextMenus.create({
       id: changelog,
       title: "\u{1F195} View recent changes",
       "contexts": ["action"],
       parentId: "code_menu"
     });
-    browser8.contextMenus.create({
+    browser9.contextMenus.create({
       id: options,
       title: "\u2699 Edit Options",
       "contexts": ["action"],
       parentId: "code_menu"
     });
-    browser8.contextMenus.create({
+    browser9.contextMenus.create({
       id: source,
       title: "\u{1F4BB} View source code",
       "contexts": ["action"],
       parentId: "code_menu"
     });
-    browser8.contextMenus.create({
+    browser9.contextMenus.create({
       id: report,
       title: "\u{1F914} Report an issue",
       "contexts": ["action"],
       parentId: "code_menu"
     });
-    browser8.contextMenus.create({
+    browser9.contextMenus.create({
       id: send,
       title: "\u{1F4A1} Send a suggestion",
       "contexts": ["action"],
       parentId: "code_menu"
     });
-    browser8.contextMenus.onClicked.removeListener(contextListeners);
-    browser8.contextMenus.onClicked.addListener(contextListeners);
+  }
+  function setupContextMenuListeners() {
+    browser9.contextMenus.onClicked.removeListener(contextListeners);
+    browser9.contextMenus.onClicked.addListener(contextListeners);
   }
   async function contextListeners(info, tab) {
     switch (info.menuItemId) {
@@ -1877,79 +1999,116 @@
         await openSidebar();
         break;
       case donate:
-        await browser8.tabs.create({ url: "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=67TZLSEGYQFFW" });
+        await browser9.tabs.create({ url: "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=67TZLSEGYQFFW" });
         break;
       case patron:
-        await browser8.tabs.create({ url: "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=67TZLSEGYQFFW" });
+        await browser9.tabs.create({ url: "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=67TZLSEGYQFFW" });
         break;
       case changelog:
-        await browser8.tabs.create({ url: "changelog.html" });
+        await browser9.tabs.create({ url: "changelog.html" });
         break;
       case options:
-        await browser8.tabs.create({ url: "options.html" });
+        await browser9.tabs.create({ url: "options.html" });
         break;
       case report:
-        await browser8.tabs.create({ url: "https://github.com/stefanXO/Tab-Manager-Plus/issues" });
+        await browser9.tabs.create({ url: "https://github.com/stefanXO/Tab-Manager-Plus/issues" });
         break;
       case source:
-        await browser8.tabs.create({ url: "https://github.com/stefanXO/Tab-Manager-Plus" });
+        await browser9.tabs.create({ url: "https://github.com/stefanXO/Tab-Manager-Plus" });
         break;
       case twitter:
-        await browser8.tabs.create({ url: "https://www.twitter.com/mastef" });
+        await browser9.tabs.create({ url: "https://www.twitter.com/mastef" });
         break;
       case send:
-        await browser8.tabs.create({ url: "https://github.com/stefanXO/Tab-Manager-Plus/issues" });
-        await browser8.tabs.create({ url: "mailto:markus+tmp@stefanxo.com" });
+        await browser9.tabs.create({ url: "https://github.com/stefanXO/Tab-Manager-Plus/issues" });
+        await browser9.tabs.create({ url: "mailto:markus+tmp@stefanxo.com" });
         break;
       case review:
         if (IS_FIREFOX) {
-          await browser8.tabs.create({ url: "https://addons.mozilla.org/en-US/firefox/addon/tab-manager-plus-for-firefox/" });
+          await browser9.tabs.create({ url: "https://addons.mozilla.org/en-US/firefox/addon/tab-manager-plus-for-firefox/" });
         } else {
-          await browser8.tabs.create({ url: "https://chrome.google.com/webstore/detail/tab-manager-plus-for-chro/cnkdjjdmfiffagllbiiilooaoofcoeff" });
+          await browser9.tabs.create({ url: "https://chrome.google.com/webstore/detail/tab-manager-plus-for-chro/cnkdjjdmfiffagllbiiilooaoofcoeff" });
         }
         break;
     }
   }
 
   // src/service_worker/service_worker.ts
-  var browser9 = __toESM(require_browser_polyfill());
-  browser9.runtime.onStartup.addListener(
-    async function() {
-      console.log(" ON STARTUP");
+  var browser10 = __toESM(require_browser_polyfill());
+  var CLEANUP_ALARM = "cleanup_old_windows";
+  browser10.commands.onCommand.addListener(handleCommands);
+  browser10.runtime.onMessage.addListener(handleMessages);
+  setupTabListeners();
+  setupWindowListeners();
+  setupContextMenuListeners();
+  setupPopupListeners();
+  browser10.alarms.onAlarm.addListener(async function(alarm) {
+    if (alarm.name !== CLEANUP_ALARM) return;
+    try {
+      await cleanUp(true);
+    } catch (e) {
+      console.error(e);
     }
-  );
-  browser9.runtime.onSuspend.addListener(
-    async function() {
-      console.log(" ON SUSPEND");
+  });
+  browser10.runtime.onInstalled.addListener(async function() {
+    console.log(" ON INSTALLED");
+    try {
+      await setupContextMenus();
+    } catch (e) {
+      console.error(e);
     }
-  );
-  browser9.commands.onCommand.addListener(handleCommands);
-  browser9.runtime.onMessage.addListener(handleMessages);
-  (async function() {
-    let windows7 = await browser9.windows.getAll({ populate: true });
-    await setLocalStorage("windowAge", []);
-    if (!!windows7 && windows7.length > 0) {
-      windows7.sort(function(a, b) {
-        if (a.id < b.id) return 1;
-        if (a.id > b.id) return -1;
-        return 0;
-      });
-      for (let i = 0; i < windows7.length; i++) {
-        if (!!windows7[i].id) await windowActive(windows7[i].id);
+    await reconcileWindowAge();
+  });
+  browser10.runtime.onStartup.addListener(async function() {
+    console.log(" ON STARTUP");
+    try {
+      await forgetWindowIds();
+    } catch (e) {
+      console.error(e);
+    }
+    await reconcileWindowAge();
+    try {
+      await cleanUp();
+    } catch (e) {
+      console.error(e);
+    }
+  });
+  async function reconcileWindowAge() {
+    try {
+      const windows7 = await browser10.windows.getAll({});
+      const liveIds = [];
+      for (const w of windows7) {
+        if (w.id !== void 0) liveIds.push(w.id);
       }
+      if (liveIds.length === 0) return;
+      await serialized(async function() {
+        let windowAge = await getLocalStorage("windowAge", []);
+        if (!(windowAge instanceof Array)) windowAge = [];
+        windowAge = windowAge.filter(function(id) {
+          return liveIds.indexOf(id) > -1;
+        });
+        for (const id of liveIds) {
+          if (windowAge.indexOf(id) < 0) windowAge.push(id);
+        }
+        await setLocalStorage("windowAge", windowAge);
+      });
+    } catch (e) {
+      console.error(e);
     }
-  })();
-  var setupDebounced = debounce(setup, 2e3);
+  }
   async function setup() {
-    await setupContextMenus();
-    await setupPopup();
-    await setupTabListeners();
-    await setupWindowListeners();
+    try {
+      await setupPopup();
+    } catch (e) {
+      console.error(e);
+    }
     updateTabCountDebounce();
+    const existing = await browser10.alarms.get(CLEANUP_ALARM);
+    if (!existing) {
+      await browser10.alarms.create(CLEANUP_ALARM, { delayInMinutes: 60, periodInMinutes: 60 });
+    }
     setTimeout(cleanupDebounce, 2500);
   }
-  setInterval(setupDebounced, 3e5);
-  setTimeout(() => cleanUp(true), 2e6);
   setup();
 })();
 //# sourceMappingURL=service_worker.js.map
