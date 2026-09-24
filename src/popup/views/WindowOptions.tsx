@@ -28,7 +28,6 @@ export class WindowOptions extends React.Component<IWindowOptions, IWindowOption
 	}
 
 	render() {
-		const actionClass = this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction";
 		return (
 			<div className="window-colors" onClick={this.stop} onKeyDown={this.checkKey}>
 				<h2 className="window-x" onClick={this.close}>
@@ -49,7 +48,7 @@ export class WindowOptions extends React.Component<IWindowOptions, IWindowOption
 					{WINDOW_COLORS.map((color) => (
 						<div
 							key={color}
-							className={"icon tabaction " + color + " " + actionClass}
+							className={"icon tabaction " + color}
 							title="Change background color"
 							onClick={() => this.changeColor(color)}
 						/>

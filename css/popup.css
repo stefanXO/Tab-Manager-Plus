@@ -507,6 +507,15 @@ h1,h2,h3,h4,h5,h6 {
 	margin: auto;
 	display: block;
 }
+/* palette in reading order regardless of layout (no per-icon floats) */
+.colors-box {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+}
+.colors-box .icon {
+	float: none;
+}
 .colors{
 	background-image:url(../images/dna64.png);
 	background-color: transparent;
