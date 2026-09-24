@@ -22,6 +22,9 @@
   },
   "author": "",
   "license": "MPL-2.0",
+  "engines": {
+    "node": ">=22"
+  },
   "bugs": {
     "url": "https://github.com/stefanXO/Tab-Manager/issues"
   },
