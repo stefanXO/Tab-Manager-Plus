@@ -1,6 +1,6 @@
 {
   "name": "tab-manager-plus",
-  "version": "6.0.0",
+  "version": "7.0.0",
   "description": "This is an extended version of the old Tab Manager Google Chrome extension. Should work on both Chrome and Firefox. Malware free, with a new view type and many new features.",
   "main": "index.js",
   "directories": {
@@ -11,6 +11,7 @@
     "build": "tsc --noEmit && node build.mjs",
     "build:dev": "tsc --noEmit && node build.mjs --dev",
     "watch": "tsc --noEmit && node build.mjs --watch",
+    "watch:dev": "tsc --noEmit && node build.mjs --watch --dev",
     "version": "node scripts/sync-version.mjs && git add manifest.json manifest-firefox.json readme.md changelog.html",
     "check-version": "node scripts/sync-version.mjs --check",
     "release": "bash babelit.sh"
