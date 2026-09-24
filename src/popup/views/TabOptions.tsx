@@ -42,6 +42,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 							value={this.props.tabLimit}
 							id="enable_tabLimit"
 							name="enable_tabLimit"
+							min={"0"}
 						/>
 						<label onMouseEnter={this.tabLimitText} htmlFor="enable_tabLimit" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
 						<label className="textlabel" htmlFor="enable_tabLimit" style={{ textAlign: "left", whiteSpace: "pre", lineHeight: "2rem" }}>
