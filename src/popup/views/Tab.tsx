@@ -46,17 +46,23 @@ export class Tab extends React.Component<ITab, ITabState> {
 		if (this.props.layout === "vertical") {
 			children.push(
 				<div key={"tab-pinned-" + this.props.tab.id} className={"tab-pinned " + (!this.props.tab.pinned ? "hidden" : "")}>
-					Pinned
+					📌 Pinned
 				</div>
 			);
 			children.push(
 				<div key={"tab-highlighted-" + this.props.tab.id} className={"tab-highlighted " + (!this.props.tab.highlighted ? "hidden" : "")}>
-					Active
+					👁 Active
 				</div>
 			);
 			children.push(
 				<div key={"tab-selected-" + this.props.tab.id} className={"tab-selected " + (!this.props.selected ? "hidden" : "")}>
-					Selected
+					✅ Selected
+				</div>
+			);
+			const muted = !!this.props.tab.mutedInfo && this.props.tab.mutedInfo.muted;
+			children.push(
+				<div key={"tab-audible-" + this.props.tab.id} className={"tab-audible " + (!this.props.tab.audible && !muted ? "hidden" : "")}>
+					{muted ? "🔇 Muted" : "🔊 Media"}
 				</div>
 			);
 			children.push(
