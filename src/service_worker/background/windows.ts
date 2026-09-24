@@ -66,7 +66,8 @@ export async function createWindowWithTabs(tabs : browser.Tabs.Tab[], isIncognit
 	await browser.windows.update(w.id, {focused: true});
 }
 
-export async function createWindowWithSessionTabs(session: ISavedSession, tabId: number) {
+// resolves with the id of the new window, so the popup can scroll to it
+export async function createWindowWithSessionTabs(session: ISavedSession, tabId: number) : Promise<number | undefined> {
 
 	var customName : string;
 	if (session && session.name && session.customName) {
@@ -113,7 +114,7 @@ export async function createWindowWithSessionTabs(session: ISavedSession, tabId:
 		console.log(error.message);
 	});
 
-	if (!newWindow) return;
+	if (!newWindow) return undefined;
 
 	let emptyTab = newWindow.tabs[0].id;
 
@@ -169,6 +170,7 @@ export async function createWindowWithSessionTabs(session: ISavedSession, tabId:
 	}
 
 	await browser.windows.update(newWindow.id, {focused: true});
+	return newWindow.id;
 }
 
 export function focusOnWindowDelayed(windowId: number) {

@@ -141,7 +141,8 @@ export class Session extends React.Component<ISession, ISessionState> {
 	async restoreSession(e : React.MouseEvent<HTMLDivElement>, tabId : number) {
 		e.stopPropagation();
 
-		await browser.runtime.sendMessage<ICommand>({
+		// the worker answers with the id of the window it created
+		const windowId : number | undefined = await browser.runtime.sendMessage<ICommand, number | undefined>({
 			command: S.create_window_with_session_tabs,
 			session: this.props.session,
 			tab_id: tabId
@@ -149,9 +150,10 @@ export class Session extends React.Component<ISession, ISessionState> {
 
 		if (!!window.inPopup) {
 			window.close();
-		}else{
+		} else if (windowId !== undefined) {
+			// give the popup a moment to pick up the new window and render it
 			setTimeout(() => {
-				this.context.scrollTo("window", browser.windows.WINDOW_ID_CURRENT.toString());
+				this.context.scrollTo("window", windowId.toString());
 			}, 500);
 		}
 	}
