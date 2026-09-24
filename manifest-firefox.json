@@ -16,7 +16,8 @@
 		"tabs",
 		"contextMenus",
 		"storage",
-		"unlimitedStorage"
+		"unlimitedStorage",
+		"alarms"
 	],
 	"incognito": "spanning",
 	"background": {

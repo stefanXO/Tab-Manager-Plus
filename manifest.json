@@ -18,7 +18,8 @@
 		"contextMenus",
 		"storage",
 		"unlimitedStorage",
-		"favicon"
+		"favicon",
+		"alarms"
 	],
 	"optional_permissions": [
 		"system.display"

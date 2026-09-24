@@ -1,7 +1,7 @@
 ﻿"use strict";
 
 import {cleanupDebounce} from "@background/tracking";
-import {getLocalStorage, getLocalStorageMap, setLocalStorage, setLocalStorageMap} from "@helpers/storage";
+import {getLocalStorage, getLocalStorageMap, setLocalStorage, setLocalStorageMap, serialized} from "@helpers/storage";
 import {is_in_bounds, stringHashcode} from "@helpers/utils";
 import {setWindowColor, setWindowName} from "@background/actions";
 import * as S from "@strings";
@@ -9,7 +9,9 @@ import * as browser from 'webextension-polyfill';
 import {ISavedSession} from "@types";
 import {IS_FIREFOX} from "@helpers/browser";
 
-export async function setupWindowListeners() {
+// must stay synchronous: it runs during the service worker's first event loop
+// turn so that the events that woke the worker are not missed
+export function setupWindowListeners() {
 	browser.windows.onFocusChanged.removeListener(windowFocus);
 	browser.windows.onCreated.removeListener(windowCreated);
 	browser.windows.onRemoved.removeListener(windowRemoved);
@@ -229,13 +231,15 @@ async function hideWindows(windowId : number) {
 export async function windowActive(windowId : number) {
 	if (windowId < 0) return;
 
-	var windows = [];
-	var windowAge = await getLocalStorage("windowAge", []);
-	if (windowAge instanceof Array) windows = windowAge;
+	await serialized(async function () {
+		var windows = [];
+		var windowAge = await getLocalStorage("windowAge", []);
+		if (windowAge instanceof Array) windows = windowAge;
 
-	if (windows.indexOf(windowId) > -1) windows.splice(windows.indexOf(windowId), 1);
-	windows.unshift(windowId);
-	await setLocalStorage("windowAge", windows);
+		if (windows.indexOf(windowId) > -1) windows.splice(windows.indexOf(windowId), 1);
+		windows.unshift(windowId);
+		await setLocalStorage("windowAge", windows);
+	});
 
 	// browser.windows.getLastFocused({ populate: true }, function (w) {
 	// 	for (let i = 0; i < w.tabs.length; i++) {
@@ -288,14 +292,16 @@ async function windowRemoved(windowId : number) {
 }
 
 async function windowInactive(windowId : number) {
-	var windows = [];
-	var windowAge = await getLocalStorage("windowAge", []);
-	if (windowAge instanceof Array) windows = windowAge;
+	await serialized(async function () {
+		var windows = [];
+		var windowAge = await getLocalStorage("windowAge", []);
+		if (windowAge instanceof Array) windows = windowAge;
 
-	if (windows.indexOf(windowId) > -1) {
-		windows.splice(windows.indexOf(windowId), 1);
-		await setLocalStorage("windowAge", windows);
-	}
+		if (windows.indexOf(windowId) > -1) {
+			windows.splice(windows.indexOf(windowId), 1);
+			await setLocalStorage("windowAge", windows);
+		}
+	});
 }
 
 export async function checkWindow(windowId : number) {
@@ -306,17 +312,21 @@ export async function checkWindow(windowId : number) {
 
 	if (!names.has(windowId) && !colors.has(windowId)) return;
 
-	const hashes: Map<number, number> = await getLocalStorageMap<number, number>(S.windowHashes);
-
+	let window : browser.Windows.Window;
 	try {
-		const window = await browser.windows.get(windowId, {populate: true});
+		window = await browser.windows.get(windowId, {populate: true});
+	} catch (e) {
+		// closed since the tab event that queued this check
+		return;
+	}
+	const newHash = hashcode(window);
 
-		let newHash = hashcode(window);
+	await serialized(async function () {
+		const hashes: Map<number, number> = await getLocalStorageMap<number, number>(S.windowHashes);
+		if (hashes.get(windowId) === newHash) return;
 		hashes.set(windowId, newHash);
 		await setLocalStorageMap(S.windowHashes, hashes);
-	} catch (e) {
-		console.log(e);
-	}
+	});
 }
 
 export function hashcode(window : browser.Windows.Window) : number {

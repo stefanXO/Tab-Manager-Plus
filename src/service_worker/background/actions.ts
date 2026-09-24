@@ -1,37 +1,51 @@
 ﻿"use strict";
 
-import { globalTabsActive } from '@context'
+import { globalTabsActive, tabsActiveLoaded, persistTabsActive } from '@context'
 import * as S from "@strings";
 import { focusOnWindow, focusOnWindowDelayed, createWindowWithTabs, createWindowWithSessionTabs, hashcode } from '@background/windows';
-import { getLocalStorageMap, setLocalStorageMap } from "@helpers/storage";
+import { getLocalStorageMap, setLocalStorageMap, serialized } from "@helpers/storage";
 import { setupPopup } from "@ui/open";
 import { updateTabCount, discardTabs, moveTabsToWindow, closeTabs, focusOnTabAndWindow, focusOnTabAndWindowDelayed } from "@background/tabs";
 import * as browser from 'webextension-polyfill';
 import { ICommand } from '@types';
 
-export async function handleMessages(message : unknown, sender : browser.Runtime.MessageSender) {
-	const request = message as ICommand;
+// Returning the handler's promise keeps the message channel open until the
+// work is done, which also keeps the MV3 service worker alive for the whole
+// operation (e.g. restoring a large session). Unknown commands return nothing
+// so the channel is released immediately. A failed handler (say, focusing a
+// tab that was closed meanwhile) is logged here; the popup's sendMessage
+// resolves either way, none of its callers can do anything with the error.
+export function handleMessages(message : unknown, sender : browser.Runtime.MessageSender) {
+	if (!message || typeof message !== "object") return;
+	let result : Promise<unknown> | void;
+	try {
+		result = dispatch(message as ICommand);
+	} catch (e) {
+		console.error(e);
+		return;
+	}
+	if (!result) return;
+	return result.catch(function (e) {
+		console.error(e);
+	});
+}
 
+function dispatch(request : ICommand) : Promise<unknown> | void {
 	switch (request.command) {
 		case S.reload_popup_controls:
-			setupPopup();
-			break;
+			return setupPopup();
 		case S.update_tab_count:
-			updateTabCount();
-			break;
+			return updateTabCount();
 		case S.discard_tabs:
-			discardTabs(request.tabs);
-			break;
+			return discardTabs(request.tabs);
 		case S.move_tabs_to_window:
-			moveTabsToWindow(request.window_id, request.tabs);
-			break;
+			return moveTabsToWindow(request.window_id, request.tabs);
 		case S.focus_on_tab_and_window:
 			if (!!request.tab) {
-				focusOnTabAndWindow(request.tab.id, request.tab.windowId);
+				return focusOnTabAndWindow(request.tab.id, request.tab.windowId);
 			} else {
-				focusOnTabAndWindow(request.saved_tab.tabId, request.saved_tab.windowId);
+				return focusOnTabAndWindow(request.saved_tab.tabId, request.saved_tab.windowId);
 			}
-			break;
 		case S.focus_on_tab_and_window_delayed:
 			if (!!request.tab) {
 				focusOnTabAndWindowDelayed(request.tab.id, request.tab.windowId);
@@ -40,40 +54,44 @@ export async function handleMessages(message : unknown, sender : browser.Runtime
 			}
 			break;
 		case S.focus_on_window:
-			focusOnWindow(request.window_id);
-			break;
+			return focusOnWindow(request.window_id);
 		case S.focus_on_window_delayed:
 			focusOnWindowDelayed(request.window_id);
 			break;
 		case S.set_window_color:
-			setWindowColor(request.window_id, request.color);
-			break;
+			return setWindowColor(request.window_id, request.color);
 		case S.set_window_name:
-			setWindowName(request.window_id, request.name);
-			break;
+			return setWindowName(request.window_id, request.name);
 		case S.create_window_with_tabs:
-			createWindowWithTabs(request.tabs, request.incognito);
-			break;
+			return createWindowWithTabs(request.tabs, request.incognito);
 		case S.create_window_with_session_tabs:
-			createWindowWithSessionTabs(request.session, request.tab_id);
-			break;
+			return createWindowWithSessionTabs(request.session, request.tab_id);
 		case S.close_tabs:
-			closeTabs(request.tabs);
-			break;
+			return closeTabs(request.tabs);
 	}
 }
 
-export function handleCommands(command : string) {
+export async function handleCommands(command : string) {
 	if (command === S.switch_to_previous_active_tab) {
-		if (!!globalTabsActive && globalTabsActive.length > 1) {
-			var _tab = globalTabsActive[globalTabsActive.length - 2];
-			focusOnTabAndWindow(_tab.tabId, _tab.windowId);
+		await tabsActiveLoaded;
+		// the last entry is the current tab; walk back past entries whose tab
+		// is gone (closed while the history could not be pruned)
+		while (globalTabsActive.length > 1) {
+			const _tab = globalTabsActive[globalTabsActive.length - 2];
+			try {
+				await focusOnTabAndWindow(_tab.tabId, _tab.windowId);
+				return;
+			} catch (e) {
+				globalTabsActive.splice(globalTabsActive.length - 2, 1);
+				await persistTabsActive();
+			}
 		}
 	}
 }
 
-export function trackLastTab(tab : browser.Tabs.OnActivatedActiveInfoType) {
+export async function trackLastTab(tab : browser.Tabs.OnActivatedActiveInfoType) {
 	if (!!tab && !!tab.tabId) {
+		await tabsActiveLoaded;
 		if (!!globalTabsActive && globalTabsActive.length > 0) {
 			var lastActive = globalTabsActive[globalTabsActive.length - 1];
 			if (!!lastActive && lastActive.tabId === tab.tabId && lastActive.windowId === tab.windowId) {
@@ -89,37 +107,45 @@ export function trackLastTab(tab : browser.Tabs.OnActivatedActiveInfoType) {
 			}
 		}
 		globalTabsActive.push(tab);
+		await persistTabsActive();
 	}
 }
 
 export async function setWindowColor(windowId : number, color : string) {
-	var colors : Map<number, string> = await getLocalStorageMap<number, string>(S.windowColors);
-	if (!!color) {
-		colors.set(windowId, color);
-	} else {
-		colors.delete(windowId);
-	}
-	await setLocalStorageMap(S.windowColors, colors);
-	await updateWindowHash(windowId);
-	browser.runtime.sendMessage<ICommand>({
-		command: S.refresh_windows,
-		window_ids: [windowId]
+	await serialized(async function () {
+		var colors : Map<number, string> = await getLocalStorageMap<number, string>(S.windowColors);
+		if (!!color) {
+			colors.set(windowId, color);
+		} else {
+			colors.delete(windowId);
+		}
+		await setLocalStorageMap(S.windowColors, colors);
+		await updateWindowHash(windowId);
 	});
+	notifyRefresh([windowId]);
 }
 
 export async function setWindowName(windowId: number, name : string) {
-	var names : Map<number, string> = await getLocalStorageMap<number, string>(S.windowNames);
-	if (!!name) {
-		names.set(windowId, name);
-	} else {
-		names.delete(windowId);
-	}
-	await setLocalStorageMap(S.windowNames, names);
-	await updateWindowHash(windowId);
+	await serialized(async function () {
+		var names : Map<number, string> = await getLocalStorageMap<number, string>(S.windowNames);
+		if (!!name) {
+			names.set(windowId, name);
+		} else {
+			names.delete(windowId);
+		}
+		await setLocalStorageMap(S.windowNames, names);
+		await updateWindowHash(windowId);
+	});
+	notifyRefresh([windowId]);
+}
+
+// tells the popup to re-read the names and colors of these windows; nobody
+// listens while the popup is closed, which is the common case
+export function notifyRefresh(windowIds : number[]) {
 	browser.runtime.sendMessage<ICommand>({
 		command: S.refresh_windows,
-		window_ids: [windowId]
-	});
+		window_ids: windowIds
+	}).catch(function () {});
 }
 
 async function updateWindowHash(windowId : number) {
