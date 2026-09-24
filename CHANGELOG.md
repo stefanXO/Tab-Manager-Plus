@@ -4,6 +4,8 @@
 - Dark theme redesigned: consistent colors, icons are no longer inverted and window colors show as a colored edge
 - New window color palette, with a matching set for the dark theme
 - White favicons are visible now in the bright theme: only-white icons get inverted, icons with a white background get a tinted tile
+- Tabs playing sound get a blue tile and a small equalizer badge, muted tabs a crossed speaker, also with animations off
+- Vertical view: pinned, active, selected, playing and muted tabs get a colored edge on the left and a chip with a matching badge
 - Highlight Duplicates now only selects the extra copies and keeps one tab per URL, so "Delete" closes only the duplicates at once
 - The header shows how many tabs have duplicates and how many are selected
 - Searching while duplicates are highlighted searches within them
@@ -30,6 +32,8 @@
 - Fix: Closing, discarding or moving selected tabs failed when one of them had been closed in the meantime
 - Fix: Saved sessions were changed by just being displayed, which could corrupt exports
 - Fix: Restoring a saved window in own-tab mode now scrolls to the new window
+- Fix: Dark theme: scrollbars and form controls are dark too
+- Fix: The window name and color screen covers the whole popup, its close button shows a pointer and Escape closes only that screen
 - Firefox: Firefox-based browsers (LibreWolf, Zen, Waterfox) are detected as Firefox
 
 6.0.0
