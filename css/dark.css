@@ -144,6 +144,9 @@ body.dark .window-x {
 	background-color: var(--dk-tile);
 	color: var(--dk-text);
 }
+body.dark .window-x:hover {
+	background-color: var(--dk-tile-hover);
+}
 body.dark .optionsBox {
 	background: var(--dk-panel);
 }

@@ -994,6 +994,13 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		}
 		// escape key
 		if (e.keyCode === 27) {
+			if (!!this.state.colorsActive) {
+				// the window name / color overlay is open: close that, not the popup
+				e.nativeEvent.preventDefault();
+				e.nativeEvent.stopPropagation();
+				this.actions.closeWindowOptions();
+				return;
+			}
 			if(this.state.searchLen > 0 || this.state.selection.size > 0) {
 				// stop popup from closing if we have search text or selection active
 				e.nativeEvent.preventDefault();

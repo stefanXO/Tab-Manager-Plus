@@ -217,6 +217,11 @@ input, textarea {
 	background: #eee;
 	border-radius: 50%;
 	margin: 20px;
+	cursor: pointer;
+	user-select: none;
+}
+.window-x:hover {
+	background: #ddd;
 }
 h1,h2,h3,h4,h5,h6 {
 	padding: 0;
@@ -869,16 +874,12 @@ h1,h2,h3,h4,h5,h6 {
 }
 
 .window-colors {
-    top: 5px;
-    right: 5px;
-    left: 5px;
-    padding: 60px 110px;
-    bottom: 5px;
-    background-color: white;
-    position: fixed;
-    margin: auto;
-    vertical-align: middle;
-    z-index: 9999999;
+	position: fixed;
+	inset: 0;
+	padding: 60px 110px;
+	background-color: white;
+	z-index: 9999999;
+	outline: none;
 }
 .window-colors h2, .window-colors h3 {
 	text-align: center;

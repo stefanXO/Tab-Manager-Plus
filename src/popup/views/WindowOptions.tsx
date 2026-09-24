@@ -29,7 +29,7 @@ export class WindowOptions extends React.Component<IWindowOptions, IWindowOption
 
 	render() {
 		return (
-			<div className="window-colors" onClick={this.stop} onKeyDown={this.checkKey}>
+			<div className="window-colors" onClick={this.stop} onKeyDown={this.checkKey} tabIndex={-1}>
 				<h2 className="window-x" onClick={this.close}>
 					x
 				</h2>
@@ -58,8 +58,11 @@ export class WindowOptions extends React.Component<IWindowOptions, IWindowOption
 		);
 	}
 
-	stop = (e : React.MouseEvent) => {
+	// a click on the overlay's background must not reach the windows behind
+	// it, and keeps the focus inside the overlay so Escape closes only this
+	stop = (e : React.MouseEvent<HTMLDivElement>) => {
 		e.stopPropagation();
+		if (e.target === e.currentTarget) e.currentTarget.focus();
 	}
 
 	checkKey = (e : React.KeyboardEvent) => {
