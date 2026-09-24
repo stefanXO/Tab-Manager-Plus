@@ -23,6 +23,13 @@
 - Fix: Window names and colors are restored after a browser restart, even when the window's tabs changed since it was named
 - Fix: Saved sessions could be lost when the storage update from version 5 was interrupted, e.g. by closing the popup
 - Fix: Saved sessions are no longer limited by the browser's 10 MB extension storage quota
+- Fix: The "switch to previous tab" shortcut works again, it forgot its history after a few seconds
+- Fix: The window order in the popup no longer resets on its own
+- Fix: Names and colors of windows that have been closed for a day are cleaned up, so a new window can't inherit an old name
+- Fix: Settings, window names and colors could revert to an older state when the popup was opened while they were being changed
+- Fix: Closing, discarding or moving selected tabs failed when one of them had been closed in the meantime
+- Fix: Saved sessions were changed by just being displayed, which could corrupt exports
+- Fix: Restoring a saved window in own-tab mode now scrolls to the new window
 - Firefox: Firefox-based browsers (LibreWolf, Zen, Waterfox) are detected as Firefox
 
 6.0.0
