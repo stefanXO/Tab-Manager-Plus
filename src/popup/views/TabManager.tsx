@@ -675,7 +675,6 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		// this.forceUpdate();
 	}
 	deleteTabs = async () => {
-		const _this = this;
 		const tabs = this.selectedTabs();
 		if (tabs.length) {
 			browser.runtime.sendMessage<ICommand>({command: S.close_tabs, tabs: tabs});
@@ -690,7 +689,6 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		browser.tabs.remove(tabId);
 	}
 	discardTabs = async () => {
-		const _this = this;
 		const tabs = this.selectedTabs();
 		if (tabs.length) {
 			browser.runtime.sendMessage<ICommand>({command: S.discard_tabs, tabs: tabs});
@@ -701,9 +699,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		browser.tabs.discard(tabId);
 	}
 	addWindow = async () => {
-		const _this = this;
-		const count = this.state.selection.size;
 		const tabs = this.selectedTabs();
+		const count = tabs.length;
 
 		const incognito_tabs = tabs.filter(function(tab) {
 			return tab.incognito;
@@ -732,7 +729,6 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		if (!!window.inPopup) window.close();
 	}
 	pinTabs = async () => {
-		const _this = this;
 		const tabs = this.selectedTabs()
 			.sort(function(a, b) {
 				return a.index - b.index;
@@ -1480,8 +1476,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		}
 	}
 	async drop(id : number, before : boolean) {
-		var _this = this;
 		var tab : browser.Tabs.Tab = this.state.tabsbyid.get(id);
+		if (!tab) return;
 		var tabs = this.selectedTabs();
 		var index = tab.index + (before ? 0 : 1);
 
@@ -1494,7 +1490,6 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		this.update();
 	}
 	async dropWindow(windowId : number) {
-		var _this = this;
 		var tabs = this.selectedTabs();
 
 		browser.runtime.sendMessage<ICommand>({command: S.move_tabs_to_window, window_id: windowId, tabs: tabs});
