@@ -20,6 +20,9 @@
 - Fix: Hover texts had the wrong pluralization for tabs
 - Fix: Drop indicator when dragging a tab fits every layout now and shows in the dark theme
 - Fix: Window color picker listed the colors right-to-left in some layouts
+- Fix: Window names and colors are restored after a browser restart, even when the window's tabs changed since it was named
+- Fix: Saved sessions could be lost when the storage update from version 5 was interrupted, e.g. by closing the popup
+- Fix: Saved sessions are no longer limited by the browser's 10 MB extension storage quota
 - Firefox: Firefox-based browsers (LibreWolf, Zen, Waterfox) are detected as Firefox
 
 6.0.0
