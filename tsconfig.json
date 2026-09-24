@@ -34,6 +34,9 @@
 			]
 		},
 		"target": "ES2020",
+		"strict": true,
+		"strictNullChecks": false,
+		"noImplicitAny": false,
 		"types": [
 			"chrome"
 		],
