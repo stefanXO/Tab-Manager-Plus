@@ -1,239 +1,288 @@
-body.dark,body.dark #root,body.dark #TMP {
-	background-color: #19272c;
-	color: #fff;
+/* Dark theme. One set of tokens, no image inversion or blend tricks: favicons
+   and the toolbar icons are shown as they are, tiles are a lighter panel with a
+   hairline, and the header / search bar are panels, not a coloured band. */
+body.dark {
+	--dk-ground: #151a1f;
+	--dk-panel: #1e252b;
+	--dk-panel-2: #242c33;
+	--dk-tile: #2b343c;
+	--dk-tile-hover: #37424b;
+	--dk-line: rgba(255, 255, 255, 0.12);
+	--dk-line-strong: rgba(255, 255, 255, 0.24);
+	--dk-text: #e6eaee;
+	--dk-text-2: #a7b1ba;
+	--dk-accent: #b79ae8;
+	--dk-select: #f2c94c;
 }
-
-body.dark .window{
-	background-color: #203238;
+body.dark, body.dark #root, body.dark #TMP {
+	background-color: var(--dk-ground);
+	color: var(--dk-text);
 }
-body.dark .icon, body.dark .iconoverlay{
-	border:1px solid #b2b2b2;
-	background-color: #07222b;
+body.dark .window {
+	background-color: var(--dk-panel);
+	color: var(--dk-text);
+	box-shadow: 0 0 0 1px var(--dk-line);
 }
-body.dark .icon.icon-mono-light::after, body.dark .iconoverlay.icon-mono-light {
-	filter: none;
+body.dark .focused {
+	box-shadow: 0 0 0 2px rgba(183, 154, 232, 0.6) !important;
 }
-body.dark .icon.icon-light, body.dark .iconoverlay.icon-light {
-	background-color: #07222b;
-}
-body.dark .icon.icon-mono-dark::after, body.dark .iconoverlay.icon-mono-dark {
-	filter: invert(1);
-}
-
-body.dark input.tabtitle::placeholder, body.dark input.taburl::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
-  color: white;
-  opacity: 1; /* Firefox */
-}
-
-body.dark .window-colors {
-	background-color: #203238;
-}
-body.dark .window-x {
+body.dark .window.incognito {
 	background-color: #111;
 }
-
-body.dark .icon.highlighted{
-	background-color: #333;
-}
-body.dark .icon.incognito.highlighted{
-	background-color: #333;
-	border-color: yellow;
-}
-body.dark .icon.selected .iconoverlay{
-	border-color: purple;
-}
-body.dark .icon.pinned {
-	background-color: #FF117733;
+body.dark .window.minimized, body.dark .window.session {
+	opacity: 0.85;
 }
 
-body.dark .window.incognito{
-	background-color:#111;
+/* tiles */
+body.dark .icon, body.dark .iconoverlay {
+	border: 1px solid var(--dk-line);
+	background-color: var(--dk-tile);
 }
-body.dark .icon.vertical {
-	box-shadow: none;
-}
-body.dark .icon.vertical:hover {
-	background-color:#111;
-}
-body.dark .icon.pinned.vertical:hover {
-	background-color: #FF117788;
-}
-body.dark .tab.selected {
-    background-color: yellow;
-    color: black;
-}
-body.dark .tab.selected.vertical:hover{
-	background-color: yellow;
-	color: black;
-}
-body.dark .tab.selected:hover{
-	background-color: #607268;
-}
-body.dark .tab-pinned, body.dark .tab-highlighted, body.dark .tab-selected {
-	background-color: #111;
-	color: white;
-}
-body.dark .icon.incognito.vertical {
-	background-color: #111111;
-	color: white;
-}
-body.dark .icon.incognito.vertical.selected {
-	background-color: yellow;
-	color: black;
-}
-body.dark .icon.incognito.vertical:hover {
-	background-color: purple;
-	color: orange;
+body.dark .icon.tab:hover {
+	background-color: var(--dk-tile-hover);
 }
 body.dark .icon .iconoverlay {
 	border: 0;
 	box-shadow: none;
 }
-body.dark .icon.vertical .iconoverlay {
-	background-color: transparent;
+body.dark .icon.highlighted, body.dark .icon.incognito.highlighted {
+	background-color: var(--dk-tile-hover);
 }
-body.dark .windowaction:hover{
-	background-color: yellow;
+body.dark .tab.highlighted {
+	border-color: rgba(255, 255, 255, 0.8);
+	box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25);
 }
-body.dark .tabaction:hover {
-	background-color:#111;
+body.dark .icon.pinned {
+	background-color: rgba(255, 17, 119, 0.25);
 }
-body.dark .windowaction + .enabled{
-	background-color:#DDEEEE;
+body.dark .tab.selected, body.dark .tab.selected.vertical:hover, body.dark .icon.incognito.vertical.selected {
+	background-color: var(--dk-select);
+	color: #111;
 }
-body.dark .add:hover{
-	background-color: #111;
+body.dark .tab.selected:hover {
+	background-color: #f7d872;
 }
-body.dark .close:hover{
-	background-color: #111;
-}
-body.dark .window.top {
-	color: #fff;
-}
-body.dark .window.top .taburl {
-	color: #fff;
-}
-
-body.dark .window.top input {
-	background: #009a88;
-	color: #fff;
-}
-body.dark .window.searchbox{
-	background-color:#19272c;
-}
-body.dark .window.searchbox input,
-body.dark .window-colors input,
-body.dark .optionsBox input {
-	background-color:#19272c;
-	color: white;
-}
-body.dark .optionsBox {
-  background: #203238;
-}
-body.dark .hrSpan {
-	background-color: #333; color: #eee;
-}
-body.dark img {
-  filter: invert(100%) hue-rotate(180deg);
-  mix-blend-mode: difference;
-}
-
-body.dark .icon {
-	background-blend-mode: difference;
-}
-/*body.dark .icon {
-	background-blend-mode: color-dodge;
-}*/
-body.dark .icon.selected {
-	background-blend-mode: unset;
-}
-
-body.dark .licenses {
-	background-color: #19272c;
-	color: #fff;
-}
-
-body.dark a {
-	color: #009a88;
-}
-
-body.dark .editName:hover {
-	background-color: #444;
-}
-
-body.dark .color1 { background-color: #3e2725 !important; }
-body.dark .color2 { background-color: #3c291e !important; }
-body.dark .color3 { background-color: #392b1a !important; }
-body.dark .color4 { background-color: #332e19 !important; }
-body.dark .color5 { background-color: #2a311d !important; }
-body.dark .color6 { background-color: #213324 !important; }
-body.dark .color7 { background-color: #19342d !important; }
-body.dark .color8 { background-color: #173239 !important; }
-body.dark .color9 { background-color: #222f3f !important; }
-body.dark .color10 { background-color: #292c40 !important; }
-body.dark .color11 { background-color: #32293c !important; }
-body.dark .color12 { background-color: #3b2732 !important; }
-body.dark .color13 { background-color: #532b28 !important; }
-body.dark .color14 { background-color: #512e1a !important; }
-body.dark .color15 { background-color: #4c3211 !important; }
-body.dark .color16 { background-color: #42370d !important; }
-body.dark .color17 { background-color: #313d18 !important; }
-body.dark .color18 { background-color: #1f4127 !important; }
-body.dark .color19 { background-color: #084236 !important; }
-body.dark .color20 { background-color: #003f4b !important; }
-body.dark .color21 { background-color: #223956 !important; }
-body.dark .color22 { background-color: #2f3557 !important; }
-body.dark .color23 { background-color: #3f3051 !important; }
-body.dark .color24 { background-color: #4e2b3f !important; }
-body.dark .color25 { background-color: #303030 !important; }
-
-body.dark .color1:hover { background-color: #49312f !important; }
-body.dark .color2:hover { background-color: #473328 !important; }
-body.dark .color3:hover { background-color: #443524 !important; }
-body.dark .color4:hover { background-color: #3e3823 !important; }
-body.dark .color5:hover { background-color: #343b27 !important; }
-body.dark .color6:hover { background-color: #2b3d2e !important; }
-body.dark .color7:hover { background-color: #243e37 !important; }
-body.dark .color8:hover { background-color: #213d43 !important; }
-body.dark .color9:hover { background-color: #2c394a !important; }
-body.dark .color10:hover { background-color: #32374a !important; }
-body.dark .color11:hover { background-color: #3c3347 !important; }
-body.dark .color12:hover { background-color: #45313c !important; }
-body.dark .color13:hover { background-color: #5e3532 !important; }
-body.dark .color14:hover { background-color: #5c3824 !important; }
-body.dark .color15:hover { background-color: #573c1c !important; }
-body.dark .color16:hover { background-color: #4c4219 !important; }
-body.dark .color17:hover { background-color: #3b4823 !important; }
-body.dark .color18:hover { background-color: #294b31 !important; }
-body.dark .color19:hover { background-color: #174d40 !important; }
-body.dark .color20:hover { background-color: #114a56 !important; }
-body.dark .color21:hover { background-color: #2c4462 !important; }
-body.dark .color22:hover { background-color: #394062 !important; }
-body.dark .color23:hover { background-color: #4a3a5c !important; }
-body.dark .color24:hover { background-color: #59354a !important; }
-body.dark .color25:hover { background-color: #3a3a3a !important; }
 body.dark .tab > .limiter {
 	background-color: #ffffff;
 }
 
-/* list layout on the dark theme */
-body.dark .window {
-	box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+/* favicon visibility (see popup.css): no inversion of white icons on the dark
+   tile, black-only icons inverted instead, coloured-dark icons left alone */
+body.dark .icon.icon-mono-light::after, body.dark .iconoverlay.icon-mono-light {
+	filter: none;
 }
-body.dark .focused {
-	box-shadow: 0 0 0 2px rgba(183, 154, 232, 0.6) !important;
+body.dark .icon.icon-light, body.dark .iconoverlay.icon-light {
+	background-color: var(--dk-tile);
+}
+body.dark .icon.icon-mono-dark::after, body.dark .iconoverlay.icon-mono-dark {
+	filter: invert(1);
+}
+
+/* action icons (window bar and toolbar) keep their own colours; only the hover well changes */
+body.dark .tabaction:hover, body.dark .add:hover, body.dark .close:hover {
+	background-color: var(--dk-tile-hover);
+}
+body.dark .windowaction:hover {
+	background-color: var(--dk-tile-hover);
+}
+body.dark .windowaction + .enabled {
+	background-color: var(--dk-tile-hover);
+}
+body.dark .window.searchbox .icon.enabled {
+	background-color: var(--dk-tile-hover);
+	border-color: var(--dk-line-strong);
+}
+
+/* header and search bar: panels with a hairline, not a coloured band */
+body.dark .window.top {
+	background-color: var(--dk-panel);
+	color: var(--dk-text);
+	box-shadow: 0 1px 0 var(--dk-line);
+}
+body.dark .window.top input {
+	background: transparent;
+	color: var(--dk-text);
+}
+body.dark .window.top .taburl {
+	color: var(--dk-text-2);
+}
+body.dark input.tabtitle::placeholder, body.dark input.taburl::placeholder {
+	color: var(--dk-text-2);
+	opacity: 1;
+}
+body.dark .window.searchbox {
+	background-color: var(--dk-panel);
+	box-shadow: 0 -1px 0 var(--dk-line);
+}
+body.dark .window.searchbox input,
+body.dark .window-colors input,
+body.dark .optionsBox input {
+	background-color: var(--dk-ground);
+	color: var(--dk-text);
+	border-color: var(--dk-line);
+}
+body.dark .window input::placeholder {
+	color: var(--dk-text-2);
+}
+
+/* section dividers */
+body.dark .hrDiv {
+	border-bottom-color: var(--dk-line-strong);
+}
+body.dark .hrSpan {
+	background-color: var(--dk-ground);
+	color: var(--dk-text-2);
+}
+
+/* window name / colour screen, options, misc */
+body.dark .window-colors {
+	background-color: var(--dk-panel);
+}
+body.dark .window-x {
+	background-color: var(--dk-tile);
+	color: var(--dk-text);
+}
+body.dark .optionsBox {
+	background: var(--dk-panel);
+}
+body.dark .licenses {
+	background-color: var(--dk-ground);
+	color: var(--dk-text);
+}
+body.dark a {
+	color: var(--dk-accent);
+}
+body.dark .editName:hover {
+	background-color: var(--dk-tile-hover);
+}
+body.dark .tab-pinned, body.dark .tab-highlighted, body.dark .tab-selected {
+	background-color: transparent;
+	color: inherit;
+}
+
+/* dark-theme window colours, same hue order as popup.css. A dark ground carries a
+   colour badly as a fill (yellows go olive), so every colour is the same faint
+   wash plus a top edge in the hue: soft edge for row 1, vivid for row 2. */
+body.dark .color1 { background-color: #2f2828 !important; border-top: 3px solid #cd7670; }
+body.dark .color2 { background-color: #2e2926 !important; border-top: 3px solid #c87d52; }
+body.dark .color3 { background-color: #2d2925 !important; border-top: 3px solid #bd853f; }
+body.dark .color4 { background-color: #2c2a25 !important; border-top: 3px solid #a79139; }
+body.dark .color5 { background-color: #292b26 !important; border-top: 3px solid #839e4f; }
+body.dark .color6 { background-color: #272c27 !important; border-top: 3px solid #5da56e; }
+body.dark .color7 { background-color: #252c2a !important; border-top: 3px solid #32a88e; }
+body.dark .color8 { background-color: #252b2d !important; border-top: 3px solid #21a3bc; }
+body.dark .color9 { background-color: #272a2f !important; border-top: 3px solid #6295d4; }
+body.dark .color10 { background-color: #282a2f !important; border-top: 3px solid #7f8cd5; }
+body.dark .color11 { background-color: #2b292e !important; border-top: 3px solid #a280c8; }
+body.dark .color12 { background-color: #2e282b !important; border-top: 3px solid #c276a2; }
+body.dark .color13 { background-color: #2f2828 !important; border-top: 3px solid #ff877f; }
+body.dark .color14 { background-color: #2e2926 !important; border-top: 3px solid #ff9246; }
+body.dark .color15 { background-color: #2d2925 !important; border-top: 3px solid #fba100; }
+body.dark .color16 { background-color: #2c2a25 !important; border-top: 3px solid #dab400; }
+body.dark .color17 { background-color: #292b26 !important; border-top: 3px solid #9fc93e; }
+body.dark .color18 { background-color: #272c27 !important; border-top: 3px solid #56d57b; }
+body.dark .color19 { background-color: #252c2a !important; border-top: 3px solid #00d9b1; }
+body.dark .color20 { background-color: #252b2d !important; border-top: 3px solid #00d1fa; }
+body.dark .color21 { background-color: #272a2f !important; border-top: 3px solid #66b9ff; }
+body.dark .color22 { background-color: #282a2f !important; border-top: 3px solid #99acff; }
+body.dark .color23 { background-color: #2b292e !important; border-top: 3px solid #d198ff; }
+body.dark .color24 { background-color: #2e282b !important; border-top: 3px solid #ff87d0; }
+body.dark .color25 { background-color: #2a2a2a !important; border-top: 3px solid #9e9e9e; }
+
+body.dark .color1:hover { background-color: #393231 !important; }
+body.dark .color2:hover { background-color: #393330 !important; }
+body.dark .color3:hover { background-color: #38332f !important; }
+body.dark .color4:hover { background-color: #36342e !important; }
+body.dark .color5:hover { background-color: #333530 !important; }
+body.dark .color6:hover { background-color: #313631 !important; }
+body.dark .color7:hover { background-color: #2f3634 !important; }
+body.dark .color8:hover { background-color: #2f3537 !important; }
+body.dark .color9:hover { background-color: #313439 !important; }
+body.dark .color10:hover { background-color: #323439 !important; }
+body.dark .color11:hover { background-color: #353338 !important; }
+body.dark .color12:hover { background-color: #383235 !important; }
+body.dark .color13:hover { background-color: #393231 !important; }
+body.dark .color14:hover { background-color: #393330 !important; }
+body.dark .color15:hover { background-color: #38332f !important; }
+body.dark .color16:hover { background-color: #36342e !important; }
+body.dark .color17:hover { background-color: #333530 !important; }
+body.dark .color18:hover { background-color: #313631 !important; }
+body.dark .color19:hover { background-color: #2f3634 !important; }
+body.dark .color20:hover { background-color: #2f3537 !important; }
+body.dark .color21:hover { background-color: #313439 !important; }
+body.dark .color22:hover { background-color: #323439 !important; }
+body.dark .color23:hover { background-color: #353338 !important; }
+body.dark .color24:hover { background-color: #383235 !important; }
+body.dark .color25:hover { background-color: #343434 !important; }
+
+/* the picker shows the edge colour as the swatch itself */
+body.dark .colors-box .icon[class*="color"] {
+	border-top-width: 1px;
+}
+body.dark .colors-box .icon.color1 { background-color: #cd7670 !important; }
+body.dark .colors-box .icon.color2 { background-color: #c87d52 !important; }
+body.dark .colors-box .icon.color3 { background-color: #bd853f !important; }
+body.dark .colors-box .icon.color4 { background-color: #a79139 !important; }
+body.dark .colors-box .icon.color5 { background-color: #839e4f !important; }
+body.dark .colors-box .icon.color6 { background-color: #5da56e !important; }
+body.dark .colors-box .icon.color7 { background-color: #32a88e !important; }
+body.dark .colors-box .icon.color8 { background-color: #21a3bc !important; }
+body.dark .colors-box .icon.color9 { background-color: #6295d4 !important; }
+body.dark .colors-box .icon.color10 { background-color: #7f8cd5 !important; }
+body.dark .colors-box .icon.color11 { background-color: #a280c8 !important; }
+body.dark .colors-box .icon.color12 { background-color: #c276a2 !important; }
+body.dark .colors-box .icon.color13 { background-color: #ff877f !important; }
+body.dark .colors-box .icon.color14 { background-color: #ff9246 !important; }
+body.dark .colors-box .icon.color15 { background-color: #fba100 !important; }
+body.dark .colors-box .icon.color16 { background-color: #dab400 !important; }
+body.dark .colors-box .icon.color17 { background-color: #9fc93e !important; }
+body.dark .colors-box .icon.color18 { background-color: #56d57b !important; }
+body.dark .colors-box .icon.color19 { background-color: #00d9b1 !important; }
+body.dark .colors-box .icon.color20 { background-color: #00d1fa !important; }
+body.dark .colors-box .icon.color21 { background-color: #66b9ff !important; }
+body.dark .colors-box .icon.color22 { background-color: #99acff !important; }
+body.dark .colors-box .icon.color23 { background-color: #d198ff !important; }
+body.dark .colors-box .icon.color24 { background-color: #ff87d0 !important; }
+body.dark .colors-box .icon.color25 { background-color: #9e9e9e !important; }
+
+
+/* list layout on the dark theme: rows are lines of text, not tiles */
+body.dark .icon.vertical, body.dark .window.vertical .tab.full {
+	border: 0;
+	border-left: 3px solid transparent;
+	background-color: transparent;
+	box-shadow: none;
+}
+body.dark .icon.vertical .iconoverlay, body.dark .window.vertical .tab.full > .iconoverlay {
+	background-color: transparent;
+	border: 0;
+}
+body.dark .window.vertical .tab.full.pinned {
+	background-color: rgba(255, 17, 119, 0.12);
+}
+body.dark .window.vertical .tab.full.pinned:hover {
+	background-color: rgba(255, 17, 119, 0.2);
 }
 body.dark .window.vertical .windowTitle {
 	border-bottom-color: rgba(255, 255, 255, 0.1);
 }
+body.dark .window.vertical .tab.full + .tab.full {
+	border-top-color: rgba(255, 255, 255, 0.08);
+}
 body.dark .window.vertical .tab.full:hover {
-	background-color: rgba(255, 255, 255, 0.07);
+	background-color: rgba(255, 255, 255, 0.08);
 }
 body.dark .window.vertical .tab.full.highlighted {
 	border-left-color: rgba(183, 154, 232, 0.9);
 	background-color: rgba(183, 154, 232, 0.1);
 }
+body.dark .window.vertical .tab.full.highlighted:hover {
+	background-color: rgba(183, 154, 232, 0.2);
+}
 body.dark .window.vertical .tab.full.selected {
 	background-color: rgba(255, 230, 0, 0.25);
 	color: #fff;
+}
+body.dark .window.vertical .tab.full {
+	box-shadow: none;
 }
