@@ -286,12 +286,16 @@ export class Window extends React.Component<IWindow, IWindowState> {
 				tabs.unshift(
 					<h3
 						key={"window-" + this.props.window.id + "-windowTitle"}
-						className="editName center windowTitle"
-						onClick={this.openOptions}
-						title="Change the name of this window"
+						className="center windowTitle"
 					>
-						{this.props.window.incognito ? "🕵" : ""}
-						{!!this.state.name ? this.state.name : this.state.auto_name}
+						<span
+							className="editName windowName"
+							onClick={this.openOptions}
+							title="Change the name of this window"
+						>
+							{this.props.window.incognito ? "🕵" : ""}
+							{!!this.state.name ? this.state.name : this.state.auto_name}
+						</span>
 					</h3>
 				);
 			}

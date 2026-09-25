@@ -996,6 +996,18 @@ h1,h2,h3,h4,h5,h6 {
 	margin-left: auto;
 	margin-right: auto;
 }
+/* the name inside the title bar: shrinks to its text, truncates like the bar */
+.windowName {
+	display: inline-block;
+	max-width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	vertical-align: top;
+	margin: 0;
+	padding: 0 0.3rem;
+	border-radius: 3px;
+}
 
 .editName:hover {
 	background-color: yellow;
