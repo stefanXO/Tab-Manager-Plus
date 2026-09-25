@@ -262,6 +262,9 @@ body.dark .icon.vertical .iconoverlay, body.dark .window.vertical .tab.full > .i
 	background-color: transparent;
 	border: 0;
 }
+body.dark .window-age {
+	color: rgba(255, 255, 255, 0.4);
+}
 body.dark .window.vertical .windowTitle {
 	border-bottom-color: rgba(255, 255, 255, 0.1);
 }
