@@ -2,7 +2,9 @@
 
 import {cleanupDebounce} from "@background/tracking";
 import {getLocalStorage, getLocalStorageMap, setLocalStorage, setLocalStorageMap, serialized} from "@helpers/storage";
-import {is_in_bounds, stringHashcode} from "@helpers/utils";
+import {is_in_bounds} from "@helpers/utils";
+import {placeWindow, usableBounds} from "@helpers/geometry";
+import {hashcode} from "@helpers/windows";
 import {setWindowColor, setWindowName} from "@background/actions";
 import * as S from "@strings";
 import * as browser from 'webextension-polyfill';
@@ -180,14 +182,10 @@ async function windowGeometry(saved : browser.Windows.Window, screen? : IScreenB
 		return create;
 	}
 	const bounds = { left: saved.left, top: saved.top, width: saved.width, height: saved.height };
-	const numbers = Object.values(bounds).every((v) => typeof v === "number" && isFinite(v));
-	if (!numbers || bounds.width < 100 || bounds.height < 100) return create;
-
-	const displays = await knownDisplays(screen);
-	if (displays.length === 0) return create;   // nothing to fit into: browser default placement
-	// the display the saved window was on, if it is still there; else the popup's
-	const home = displays.find((d) => is_in_bounds(bounds, d)) || displays[0];
-	Object.assign(create, fitInto(bounds, home));
+	if (!usableBounds(bounds)) return create;
+	const placed = placeWindow(bounds, await knownDisplays(screen));
+	// no display known: the browser's default placement
+	if (placed) Object.assign(create, placed);
 	return create;
 }
 
