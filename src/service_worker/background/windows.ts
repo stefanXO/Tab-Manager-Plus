@@ -89,11 +89,19 @@ export async function createWindowWithSessionTabs(session: ISavedSession, tabId:
 
 	// console.log("filtered window", filteredWindow);
 
-	const newWindow = await browser.windows.create(filteredWindow).catch(function (error) {
-		console.error(error);
-		console.log(error);
-		console.log(error.message);
+	let newWindow : browser.Windows.Window | void = await browser.windows.create(filteredWindow).catch(function (error) {
+		console.error("restoring with the saved geometry failed, using the fallback", filteredWindow, error);
 	});
+	if (!newWindow) {
+		// the browser refused the geometry: the old, always-accepted 800x600 at the corner
+		newWindow = await browser.windows.create({
+			type: "normal",
+			incognito: !!session.windowsInfo.incognito,
+			left: 0, top: 0, width: 800, height: 600
+		}).catch(function (error) {
+			console.error(error);
+		});
+	}
 
 	if (!newWindow) return undefined;
 
