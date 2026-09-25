@@ -1,6 +1,7 @@
 import {getLocalStorage, setLocalStorage, getLocalStorageMap} from "@helpers/storage";
 import {readSettings, writeBootCache, SETTING_DEFAULTS, Settings, Layout, LAYOUT, getSetting, saveSetting} from "@helpers/settings";
 import {sortWindows} from "@helpers/windows";
+import {parseQuery, matchTab, searchable} from "../search";
 import {debounce, maybePluralize} from "@helpers/utils";
 import {Window, Session, TabOptions, Tab, WindowOptions} from "@views";
 import * as React from "react";
@@ -10,6 +11,13 @@ import {ICommand, ITabManager, ITabManagerState, ISavedSession} from "@types";
 import {ManagerContext, ITabManagerActions, ISettings} from "../context";
 import {IS_FIREFOX} from "@helpers/browser";
 import {attachMasonry, Masonry} from "../masonry";
+
+// shown on hover over the search box
+const SEARCH_HELP = [
+	"Search titles and urls. Every word must match, or use OR:  foo bar   foo OR bar",
+	"t:foo  title only     u:foo  url only     -foo  must not match     \"foo bar\"  one term",
+	"/regex/  regular expression, also t:/^\\d+/",
+].join("\n");
 
 export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 
@@ -411,7 +419,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 						<tbody>
 							<tr>
 								<td className="one">
-									<input className="searchBoxInput" type="text" placeholder="Start typing to search tabs..." tabIndex={1} onChange={this.search} ref={this.searchBoxRef} />
+									<input className="searchBoxInput" type="text" placeholder="Start typing to search tabs..." title={SEARCH_HELP} tabIndex={1} onChange={this.search} ref={this.searchBoxRef} />
 								</td>
 								<td className="two">
 									<div
@@ -829,21 +837,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		let hiddenCount = this.state.hiddenCount || 0;
 		const searchQuery = query || "";
 		const searchLen = searchQuery.length;
-
-		let searchType = "normal";
-		let searchTerms = [];
-		if(searchQuery.indexOf(" ") === -1) {
-			searchType = "normal";
-		}else if(searchQuery.indexOf(" OR ") > -1) {
-			searchTerms = searchQuery.split(" OR ");
-			searchType = "OR";
-		}else if(searchQuery.indexOf(" ") > -1) {
-			searchTerms = searchQuery.split(" ");
-			searchType = "AND";
-		}
-		if(searchType !== "normal") {
-			searchTerms = searchTerms.filter(function(entry) { return entry.trim() !== ''; });
-		}
+		// see src/popup/search.ts for the grammar
+		const parsed = parseQuery(searchQuery);
 
 		if (!searchLen) {
 			this.state.selection.clear();
@@ -855,18 +850,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			this.clearHiddenTabs();
 			hiddenCount = 0;
 		} else {
-			let idList : number[];
-			const lastSearchLen = this.state.searchLen;
-			idList = [ ...this.state.tabsbyid.keys() ];
-			// if(searchType === "normal") {
-			// 	if (!lastSearchLen) {
-			// 		idList = [ ...this.state.tabsbyid.keys() ];
-			// 	} else if (lastSearchLen > searchLen) {
-			// 		idList = [ ...this.state.hiddenTabs.keys() ];
-			// 	} else if (lastSearchLen < searchLen) {
-			// 		idList = [ ...this.state.selection.keys() ];
-			// 	}
-			// }
+			let idList : number[] = [ ...this.state.tabsbyid.keys() ];
 			if(this.state.dupTabs) {
 				const duplicates = this.getDuplicates();
 				const dup = duplicates.duplicates;
@@ -875,34 +859,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			}
 			for (const id of idList) {
 				const tab = this.state.tabsbyid.get(id);
-				let tabSearchTerm;
-				if (!!tab.title) tabSearchTerm = tab.title;
-				if (!!tab.url) tabSearchTerm += " " + tab.url;
-				tabSearchTerm = tabSearchTerm.toLowerCase();
-				let match = false;
-				if(searchType === "normal") {
-					match = (tabSearchTerm.indexOf(searchQuery.toLowerCase()) >= 0);
-				}else if(searchType === "OR") {
-					for (let searchOR of searchTerms) {
-						searchOR = searchOR.trim().toLowerCase();
-						if(tabSearchTerm.indexOf(searchOR) >= 0) {
-							match = true;
-							break;
-						}
-					}
-				}else if(searchType === "AND") {
-					let andMatch = true;
-					for (let searchAND of searchTerms) {
-						searchAND = searchAND.trim().toLowerCase();
-						if(tabSearchTerm.indexOf(searchAND) >= 0) {
-
-						}else{
-							andMatch = false;
-							break;
-						}
-					}
-					match = andMatch;
-				}
+				const match = matchTab(searchable(tab.title, tab.url || tab.pendingUrl), parsed);
 				if (match) {
 					hiddenCount -= this.state.hiddenTabs.has(id) ? 1 : 0;
 					this.state.selection.add(id);
@@ -1503,7 +1460,14 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			"To see incognito tabs, enable incognito access in the extension settings",
 			"You can drag and drop tabs to other windows",
 			"You can type to search right away",
-			"You can search for different tabs : google OR yahoo"
+			"Search for either of two things: google OR yahoo",
+			"Search titles only with t:news, urls only with u:github",
+			"Exclude with a minus: reddit -u:old.reddit",
+			"Put a phrase in quotes: \"pull request\"",
+			"Search with a regular expression: /issue\\/\\d+/",
+			"Hover the search box for the whole search syntax",
+			"Highlight Duplicates selects the extra copies, Delete closes them all",
+			"Search while duplicates are highlighted to narrow them down"
 		];
 
 		return "Tip: " + tips[Math.floor(Math.random() * tips.length)];
