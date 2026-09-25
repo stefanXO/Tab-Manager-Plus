@@ -7,7 +7,7 @@
     "src": "src"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node --test \"tests/**/*.test.ts\"",
     "build": "tsc --noEmit && node build.mjs",
     "build:dev": "tsc --noEmit && node build.mjs --dev",
     "watch": "tsc --noEmit && node build.mjs --watch",
@@ -25,6 +25,7 @@
   },
   "author": "",
   "license": "MPL-2.0",
+  "type": "module",
   "engines": {
     "node": ">=24"
   },
