@@ -24,7 +24,7 @@ Searching And Duplicates
 - Search in titles only with `t:word`, in urls only with `u:word`
 - Exclude tabs from a search with `-word`, also `-u:word`
 - Search for a phrase with a space by quoting it: `"pull request"` (#224)
-- Search with a regular expression: `/regex/`, also `t:/^\d+/` (#247, #156)
+- Search with a regular expression: `/\(\d+\)/` finds tabs with an unread count, `/localhost:\d+/` local dev servers, `/\.pdf$/` open PDFs (#247, #156)
 - Hover the search box for the whole search syntax
 
 Windows And Sessions
