@@ -413,7 +413,24 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 						<tbody>
 							<tr>
 								<td className="one">
-									<input className="searchBoxInput" type="text" placeholder="Start typing to search tabs..." title={SEARCH_HELP} tabIndex={1} onChange={this.search} ref={this.searchBoxRef} />
+									<input className="searchBoxInput" type="text" placeholder="Start typing to search tabs..." aria-describedby="search-help" tabIndex={1} onChange={this.search} ref={this.searchBoxRef} />
+									<div className="search-help" role="tooltip" id="search-help">
+										<p className="search-help-intro">Type to search titles and urls. Every word must match.</p>
+										<table className="search-help-table">
+											<tbody>
+												<tr><td><code>github issue</code></td><td>both words, anywhere</td></tr>
+												<tr><td><code>github OR reddit</code></td><td>either word matches</td></tr>
+												<tr><td><code>t:release</code></td><td>title only</td></tr>
+												<tr><td><code>u:youtube</code></td><td>url only</td></tr>
+												<tr><td><code>-reddit</code></td><td>leave out matching tabs</td></tr>
+												<tr><td><code>-u:old.reddit</code></td><td>leave out by url</td></tr>
+												<tr><td><code>"pull request"</code></td><td>exact phrase</td></tr>
+												<tr><td><code>/issue\/\d+/</code></td><td>regular expression</td></tr>
+												<tr><td><code>Enter</code></td><td>move matches to new window</td></tr>
+												<tr><td><code>Esc</code></td><td>clear the search</td></tr>
+											</tbody>
+										</table>
+									</div>
 								</td>
 								<td className="two">
 									<div
@@ -935,6 +952,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			(e.keyCode >= 65 && e.keyCode <= 90) || // a-z
 			(e.keyCode >= 186 && e.keyCode <= 192) || // ;=,-./`
 			(e.keyCode >= 219 && e.keyCode <= 222) || // [ ] \ '
+			(e.keyCode >= 96 && e.keyCode <= 111) || // numpad
+			(e.keyCode >= 186 && e.keyCode <= 192) || // ;=,-./`
+			(e.keyCode >= 219 && e.keyCode <= 222) || // [\]'
 			e.keyCode === 8 || // backspace
 			e.keyCode === 46 || // delete
 			e.keyCode === 32 // space bar

@@ -1044,6 +1044,72 @@ h1,h2,h3,h4,h5,h6 {
 	width: 300px;
 }
 
+.window.searchbox td.one {
+	position: relative;
+}
+
+/* hover help panel for the search box: shown only on pointer hover, after a
+   short delay, so it never pops up just because the input has focus */
+.search-help {
+	position: absolute;
+	bottom: 100%;
+	left: 0.25rem;
+	margin-bottom: 0.5rem;
+	max-width: 26rem;
+	padding: 0.6rem 0.8rem;
+	border: 1px solid rgba(0, 0, 0, 0.15);
+	border-radius: 8px;
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+	background: white;
+	color: #222;
+	font-size: 12px;
+	line-height: 1.5;
+	z-index: 100000;
+	opacity: 0;
+	visibility: hidden;
+	pointer-events: none;
+	transition: opacity 120ms, visibility 0s linear 120ms;
+}
+.window.searchbox td.one:hover .search-help {
+	opacity: 1;
+	visibility: visible;
+	pointer-events: auto;
+	transition-delay: 400ms;
+}
+.no-animations .search-help {
+	transition: none;
+}
+.no-animations .window.searchbox td.one:hover .search-help {
+	transition-delay: 0s;
+}
+.search-help-intro {
+	margin: 0 0 0.4rem 0;
+}
+.search-help-table {
+	width: auto;
+	border-collapse: collapse;
+}
+.search-help-table td {
+	padding: 0.1rem 0;
+	vertical-align: top;
+	white-space: nowrap;
+}
+.search-help-table td:first-child {
+	padding-right: 0.6rem;
+}
+.search-help-table td:last-child {
+	white-space: normal;
+	color: rgba(0, 0, 0, 0.65);
+}
+.search-help code {
+	padding: 1px 5px;
+	font-size: 11px;
+	font-family: monospace;
+	border: 1px solid rgba(0, 0, 0, 0.15);
+	border-radius: 4px;
+	background: rgba(255, 255, 255, 0.7);
+}
+
 .editName {
 	cursor: text;
 	display: table;

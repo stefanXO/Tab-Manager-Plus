@@ -126,6 +126,20 @@ body.dark .optionsBox input {
 body.dark .window input::placeholder {
 	color: var(--dk-text-2);
 }
+body.dark .search-help {
+	background: var(--dk-panel);
+	border-color: var(--dk-line);
+	color: var(--dk-text);
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+}
+body.dark .search-help-table td:last-child {
+	color: var(--dk-text-2);
+}
+body.dark .search-help code {
+	background: var(--dk-tile);
+	border-color: var(--dk-line);
+	color: var(--dk-text);
+}
 
 /* section dividers */
 body.dark .hrDiv {
