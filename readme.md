@@ -22,7 +22,7 @@ Your patronage means that my work was able to help you - and that's already very
 
 ## Building from source
 
-The extension is written in TypeScript and bundled with esbuild into `dist/`, which is not part of the repository. You need [Node.js](https://nodejs.org/) 24 or newer.
+The extension is written in TypeScript and bundled with esbuild into `dist/`, which is not part of the repository. You need [Node.js](https://nodejs.org/) 22.18 or newer (24 recommended; the tests run the TypeScript sources directly, which older versions cannot).
 
 ```
 git clone https://github.com/stefanXO/Tab-Manager-Plus.git

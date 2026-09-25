@@ -17,11 +17,15 @@ jobs:
     # skip pull requests that come from a fork: no minutes, no untrusted scripts on our runner
     if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # 22 is the floor in package.json engines, 24 what we develop on
+        node: [22, 24]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: ${{ matrix.node }}
           cache: npm
       - run: npm ci
       - run: npm run check-version
