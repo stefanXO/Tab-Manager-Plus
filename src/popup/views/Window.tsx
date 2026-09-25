@@ -400,6 +400,8 @@ export class Window extends React.Component<IWindow, IWindowState> {
 			if (!tabRef) continue;
 			let currentRef = tabRef.current?.tabRef?.current;
 			if (!currentRef) continue;
+			// hidden by the search filter: mounted but display none, no position
+			if (currentRef.offsetParent === null) continue;
 			let tabRect = currentRef.getBoundingClientRect();
 			let x = e.nativeEvent.clientX;
 			let y = e.nativeEvent.clientY;

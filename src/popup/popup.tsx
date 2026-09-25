@@ -1,7 +1,8 @@
 "use strict";
 
 import {migrated} from '@helpers/migrate';
-import {getLocalStorage} from "@helpers/storage";
+import {readBootCache} from "@helpers/settings";
+import {fetchBootData} from "./boot";
 import * as browser from 'webextension-polyfill';
 import {TabManager} from '@views';
 import * as React from 'react';
@@ -51,59 +52,67 @@ async function switchToOwnTab() : Promise<boolean> {
 	return true;
 }
 
+// the popup's own size comes from the settings; the browser action popup has
+// no size of its own until the body has one
+function sizePopup(width : number, height : number) {
+	if (height > 0 && width > 0) {
+		document.body.style.width = width + "px";
+		document.body.style.height = height + "px";
+	}
+	let minHeight = parseInt(document.body.style.height.split("px")[0]) || 0;
+	if (minHeight < 300) {
+		minHeight = 400;
+	} else {
+		minHeight++;
+		if (minHeight > 600) minHeight = 600;
+	}
+	document.body.style.minHeight = minHeight + "px";
+}
+
+// own tab and sidebar fill the page
+function sizePage() {
+	if (window.inPanel) {
+		document.documentElement.style.maxHeight = "auto";
+		document.documentElement.style.maxWidth = "auto";
+		document.body.style.maxHeight = "auto";
+		document.body.style.maxWidth = "auto";
+	}
+	document.documentElement.style.maxHeight = "100%";
+	document.documentElement.style.maxWidth = "100%";
+	document.documentElement.style.height = "100%";
+	document.documentElement.style.width = "100%";
+	document.body.style.maxHeight = "100%";
+	document.body.style.maxWidth = "100%";
+	document.body.style.height = "100%";
+	document.body.style.width = "100%";
+}
+
 async function loadApp() {
 	if (!!window.loaded) return;
 	if (!!window.loading) return;
 	try {
 		window.loading = true;
-		// A Tab Manager tab is already open (opened from the icon's menu or by
-		// the "open in own tab" setting): the popup is the wrong place, switch
-		// to that tab instead. The tab's url is popup.html without a query.
-		if (window.inPopup && await switchToOwnTab()) {
+
+		// 1. synchronous: size and theme from the cache of the last run, so the
+		//    very first frame has the right popup size and colours
+		const cache = readBootCache();
+		if (cache.dark) document.body.className = "dark";
+		if (window.inPopup) sizePopup(cache.tabWidth || 0, cache.tabHeight || 0);
+		else sizePage();
+
+		// 2. everything the first render needs, in parallel: the own-tab check
+		//    (a Tab Manager tab already open means the popup closes instead),
+		//    settings, windows, their order and last-active times
+		const [own, boot] = await Promise.all([
+			window.inPopup ? switchToOwnTab() : Promise.resolve(false),
+			migrated.then(() => fetchBootData(window.extensionVersion))
+		]);
+		if (own) {
 			window.close();
 			return;
 		}
-		// the migration writes tabHeight/tabWidth and the TabManager settings;
-		// reading them earlier would race it and write defaults on top
-		await migrated;
-		let height : number = await getLocalStorage("tabHeight", 600);
-		let width : number = await getLocalStorage("tabWidth", 800);
-		console.log(height, width);
-		if (window.inPopup) {
-
-			if (height > 0 && width > 0) {
-				document.body.style.width = width + "px";
-				document.body.style.height = height + "px";
-			}
-
-			const _root = document.getElementById("root");
-			if (_root != null) {
-				var _height = parseInt(document.body.style.height.split("px")[0]) || 0;
-				if (_height < 300) {
-					_height = 400;
-					document.body.style.minHeight = _height + "px";
-				} else {
-					_height++;
-					if (_height > 600) _height = 600;
-					document.body.style.minHeight = _height + "px";
-				}
-			}
-		} else {
-			if (window.inPanel) {
-				document.documentElement.style.maxHeight = "auto";
-				document.documentElement.style.maxWidth = "auto";
-				document.body.style.maxHeight = "auto";
-				document.body.style.maxWidth = "auto";
-			}
-			document.documentElement.style.maxHeight = "100%";
-			document.documentElement.style.maxWidth = "100%";
-			document.documentElement.style.height = "100%";
-			document.documentElement.style.width = "100%";
-			document.body.style.maxHeight = "100%";
-			document.body.style.maxWidth = "100%";
-			document.body.style.height = "100%";
-			document.body.style.width = "100%";
-		}
+		document.body.className = boot.settings.dark ? "dark" : "";
+		if (window.inPopup) sizePopup(boot.settings.tabWidth, boot.settings.tabHeight);
 
 		if (!!window.loaded) return;
 		window.loaded = true;
@@ -111,7 +120,7 @@ async function loadApp() {
 		const container = document.getElementById('TMP');
 		const root = createRoot(container!);
 		root.render(
-			<TabManager optionsActive={!!window.optionPage}/>
+			<TabManager optionsActive={!!window.optionPage} boot={boot}/>
 		);
 	} catch (err) {
 		console.error(err);

@@ -1,3 +1,4 @@
+import {Layout} from "../helpers/settings";
 import * as browser from "webextension-polyfill";
 
 export interface IWindow {
@@ -13,5 +14,6 @@ export interface IWindow {
 	filterTabs: boolean,
 	lastOpenWindow: number,
 	incognito: boolean,
-	draggable: boolean
+	draggable: boolean,
+	lastActive?: number
 }

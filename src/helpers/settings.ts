@@ -69,3 +69,31 @@ export async function getSetting<K extends keyof Settings>(key : K) : Promise<Se
 export function saveSetting<K extends keyof Settings>(key : K, value : Settings[K]) : Promise<void> {
 	return browser.storage.local.set({ [key]: value });
 }
+
+// What the very first paint needs, mirrored in localStorage so the popup can
+// size and theme itself synchronously, before any storage read resolves.
+export interface BootCache {
+	tabWidth : number;
+	tabHeight : number;
+	dark : boolean;
+	layout : Layout;
+	compact : boolean;
+}
+const BOOT_CACHE = "tmpBootCache";
+
+export function readBootCache() : Partial<BootCache> {
+	try {
+		return JSON.parse(localStorage.getItem(BOOT_CACHE) || "{}");
+	} catch (e) {
+		return {};
+	}
+}
+
+export function writeBootCache(s : Pick<Settings, "tabWidth" | "tabHeight" | "dark" | "layout" | "compact">) {
+	try {
+		const cache : BootCache = { tabWidth: s.tabWidth, tabHeight: s.tabHeight, dark: s.dark, layout: s.layout, compact: s.compact };
+		localStorage.setItem(BOOT_CACHE, JSON.stringify(cache));
+	} catch (e) {
+		// storage full or blocked: the next open just takes the slow path
+	}
+}

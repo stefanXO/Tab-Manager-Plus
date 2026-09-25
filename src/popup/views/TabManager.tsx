@@ -1,4 +1,6 @@
 import {getLocalStorage, setLocalStorage, getLocalStorageMap} from "@helpers/storage";
+import {readSettings, writeBootCache, SETTING_DEFAULTS, Settings, Layout, LAYOUT, getSetting, saveSetting} from "@helpers/settings";
+import {sortWindows} from "@helpers/windows";
 import {debounce, maybePluralize} from "@helpers/utils";
 import {Window, Session, TabOptions, Tab, WindowOptions} from "@views";
 import * as React from "react";
@@ -47,23 +49,26 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	constructor(props : ITabManager) {
 		super(props);
 
-		let layout = "blocks";
-		let animations = true;
-		let windowTitles = true;
-		let compact = false;
-		let dark = false;
-		let tabactions = true;
-		let badge = true;
-		let sessionsFeature = false;
-		let hideWindows = false;
-		let filterTabs = false;
-		let tabLimit = 0;
-		let openInOwnTab = false;
-		let tabWidth = 800;
-		let tabHeight = 600;
+		// the first render is complete when popup.tsx fetched everything up
+		// front; the defaults only apply when the popup is mounted without it
+		const boot = props.boot;
+		const s = boot ? boot.settings : SETTING_DEFAULTS;
+		let layout = s.layout;
+		let animations = s.animations;
+		let windowTitles = s.windowTitles;
+		let compact = s.compact;
+		let dark = s.dark;
+		let tabactions = s.tabactions;
+		let badge = s.badge;
+		let sessionsFeature = s.sessionsFeature;
+		let hideWindows = s.hideWindows;
+		let filterTabs = s["filter-tabs"];
+		let tabLimit = s.tabLimit;
+		let openInOwnTab = s.openInOwnTab;
+		let tabWidth = s.tabWidth;
+		let tabHeight = s.tabHeight;
 
 		let resetTimeout = -1;
-		// var closeTimeout;
 
 		this.state = {
 			layout: layout,
@@ -81,7 +86,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			sessionsFeature: sessionsFeature,
 			lastOpenWindow: -1,
 			windows: [],
-			lastActive: new Map(),
+			lastActive: boot ? boot.lastActive : new Map(),
 			sessions: [],
 			selection: new Set(),
 			lastSelect: 0,
@@ -109,6 +114,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 
 			dirty: false
 		};
+
+		if (boot) Object.assign(this.state, this.windowState(sortWindows(boot.windows, boot.windowAge)));
 
 		this.rootRef = React.createRef();
 		this.windowContainerRef = React.createRef();
@@ -174,82 +181,35 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	}
 
 	async loadStorage() {
-		var layout = "blocks";
-		var animations = true;
-		var windowTitles = true;
-		var compact = false;
-		var dark = false;
-		var tabactions = true;
-		var badge = true;
-		var sessionsFeature = false;
-		var hideWindows = false;
-		var filterTabs = false;
-		var tabLimit = 0;
-		var openInOwnTab = false;
-		var tabWidth = 800;
-		var tabHeight = 600;
+		this.applySettings(await readSettings(window.extensionVersion));
+	}
 
-		const defaults : Record<string, unknown> = {
-			layout, tabLimit, tabWidth, tabHeight,
-			animations, windowTitles, tabactions, badge,
-			openInOwnTab, compact, dark, sessionsFeature, hideWindows,
-			"filter-tabs": filterTabs
-		};
-		const stored = await browser.storage.local.get(Object.keys(defaults));
-
-		// write back only the settings that are missing, plus the version.
-		// Writing every key from a snapshot (the old get(null) / set(all))
-		// overwrote whatever the worker had changed in the meantime: window
-		// names, colors, the window order.
-		const missing : Record<string, unknown> = { version: window.extensionVersion };
-		for (const key in defaults) {
-			if (stored[key] === undefined || (key === "layout" && !stored[key])) missing[key] = defaults[key];
-		}
-		await browser.storage.local.set(missing);
-
-		const storage : Record<string, unknown> = { ...stored, ...missing };
-
-		layout = storage["layout"] as string;
-		tabLimit = storage["tabLimit"] as number;
-		tabWidth = storage["tabWidth"] as number;
-		tabHeight = storage["tabHeight"] as number;
-		openInOwnTab = storage["openInOwnTab"] as boolean;
-		animations = storage["animations"] as boolean;
-		windowTitles = storage["windowTitles"] as boolean;
-		compact = storage["compact"] as boolean;
-		dark = storage["dark"] as boolean;
-		tabactions = storage["tabactions"] as boolean;
-		badge = storage["badge"] as boolean;
-		sessionsFeature = storage["sessionsFeature"] as boolean;
-		hideWindows = storage["hideWindows"] as boolean;
-		filterTabs = storage["filter-tabs"] as boolean;
-
-		if (dark) {
-			document.body.className = "dark";
-		} else {
-			document.body.className = "";
-		}
-
+	applySettings(s : Settings) {
+		document.body.className = s.dark ? "dark" : "";
+		writeBootCache(s);
 		this.setState({
-			layout: layout,
-			animations: animations,
-			windowTitles: windowTitles,
-			tabLimit: tabLimit,
-			openInOwnTab: openInOwnTab,
-			tabWidth: tabWidth,
-			tabHeight: tabHeight,
-			compact: compact,
-			dark: dark,
-			tabactions: tabactions,
-			badge: badge,
-			hideWindows: hideWindows,
-			sessionsFeature: sessionsFeature,
-			filterTabs: filterTabs
+			layout: s.layout,
+			animations: s.animations,
+			windowTitles: s.windowTitles,
+			tabLimit: s.tabLimit,
+			openInOwnTab: s.openInOwnTab,
+			tabWidth: s.tabWidth,
+			tabHeight: s.tabHeight,
+			compact: s.compact,
+			dark: s.dark,
+			tabactions: s.tabactions,
+			badge: s.badge,
+			hideWindows: s.hideWindows,
+			sessionsFeature: s.sessionsFeature,
+			filterTabs: s["filter-tabs"]
 		});
 	}
 
 	setSetting<K extends keyof ISettings>(key : K, value : ISettings[K]) {
-		this.setState({ [key]: value } as Pick<ITabManagerState, K>);
+		this.setState({ [key]: value } as Pick<ITabManagerState, K>, () => {
+			// keep the synchronous boot cache current for the next open
+			writeBootCache({ tabWidth: this.state.tabWidth, tabHeight: this.state.tabHeight, dark: this.state.dark, layout: this.state.layout, compact: this.state.compact });
+		});
 	}
 	hoverOver = (e : React.MouseEvent<HTMLDivElement>) => {
 		const el = (e.target as HTMLElement).closest<HTMLElement>("[data-hover], [title]");
@@ -316,8 +276,10 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 					layout={this.state.layout}
 					autoName={this.state.colorsAutoName}
 				/>}
-				{!this.state.optionsActive && !this.state.colorsActive && <div className={"window-container " + this.state.layout} ref={this.windowContainerRef} tabIndex={2}>
 					{this.state.windows.map((window : browser.Windows.Window) => {
+				{/* keyed by layout: switching layouts remounts every card and tile, so the
+				    entrance animation plays again for the new arrangement */}
+				{!this.state.optionsActive && !this.state.colorsActive && <div key={"container-" + this.state.layout} className={"window-container " + this.state.layout} ref={this.windowContainerRef} tabIndex={2}>
 						if (window.state === "minimized") return;
 
 						let windowRef = this.state.windowrefs.get(window.id) || React.createRef<Window>();
@@ -529,7 +491,12 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	{
 		this.update();
 		this.syncMasonry();
-		await this.loadStorage();
+		// with boot data the settings are already in place (and cached)
+		if (this.props.boot) {
+			writeBootCache(this.props.boot.settings);
+		} else {
+			await this.loadStorage();
+		}
 
 		if (IS_FIREFOX) {
 		} else {
@@ -647,35 +614,28 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		});
 	}
 	update = async () => {
-		const windows : browser.Windows.Window[] = await browser.windows.getAll({ populate: true });
-		const sort_windows = await getLocalStorage("windowAge", []);
-		const lastActive = await getLocalStorageMap<number, number>(S.windowLastActive);
-
-		windows.sort(function(a, b) {
-			var aSort = sort_windows.indexOf(a.id);
-			var bSort = sort_windows.indexOf(b.id);
-			if (a.state === "minimized" && b.state !== "minimized") return 1;
-			if (b.state === "minimized" && a.state !== "minimized") return -1;
-			if (aSort < bSort) return -1;
-			if (aSort > bSort) return 1;
-			return 0;
-		});
-
+		const [windows, sort_windows, lastActive] = await Promise.all([
+			browser.windows.getAll({ populate: true }),
+			getLocalStorage(S.windowAge, []) as Promise<number[]>,
+			// when each window was last active, recorded by the worker on focus changes
+			getLocalStorageMap<number, number>(S.windowLastActive)
+		]);
+		const patch = this.windowState(sortWindows(windows, sort_windows instanceof Array ? sort_windows : []));
+		for (let id of this.state.selection.keys()) {
+			if (!this.state.tabsbyid.has(id)) {
+				this.state.selection.delete(id);
+				this.setState({lastSelect: id});
+			}
+		}
+		this.setState({ ...patch, lastActive: lastActive });
+	}
+	// Fills the id maps from a sorted window list and returns the state that
+	// describes it. Used by update() and, through the constructor, for the
+	// first render.
+	windowState(windows : browser.Windows.Window[]) : Pick<ITabManagerState, "windows" | "lastOpenWindow" | "tabCount"> {
 		this.state.windowsbyid.clear();
 		this.state.tabsbyid.clear();
-
-		// The "current" window. In own-tab mode the browser reports it as focused; as
-		// a browser-action popup every window reports focused: false (the popup has
-		// the focus), so fall back to the most recently active one from windowAge.
-		const focusedWindow = windows.find((w) => w.focused);
-		this.setState({
-			lastOpenWindow: focusedWindow ? focusedWindow.id : (windows.length > 0 ? windows[0].id : -1),
-			windows: windows,
-			lastActive: lastActive
-		});
-
 		let tabCount = 0;
-
 		for (const window of windows) {
 			this.state.windowsbyid.set(window.id, window);
 			for (const tab of window.tabs) {
@@ -686,17 +646,15 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		for (const id of this.state.windowrefs.keys()) {
 			if (!this.state.windowsbyid.has(id)) this.state.windowrefs.delete(id);
 		}
-		for (let id of this.state.selection.keys()) {
-			if (!this.state.tabsbyid.has(id)) {
-				this.state.selection.delete(id);
-				this.setState({lastSelect: id});
-			}
-		}
-		this.setState({
+		// The "current" window. In own-tab mode the browser reports it as focused; as
+		// a browser-action popup every window reports focused: false (the popup has
+		// the focus), so fall back to the most recently active one from windowAge.
+		const focusedWindow = windows.find((w) => w.focused);
+		return {
+			windows: windows,
+			lastOpenWindow: focusedWindow ? focusedWindow.id : (windows.length > 0 ? windows[0].id : -1),
 			tabCount: tabCount
-		});
-		//this.state.searchLen = 0;
-		// this.forceUpdate();
+		};
 	}
 	deleteTabs = async () => {
 		const tabs = this.selectedTabs();
@@ -1290,12 +1248,12 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		const newLayout : Layout = (typeof layout === "string") ? layout : this.nextlayout();
 		await saveSetting("layout", newLayout);
 
+		// no dirty: the windows did not change, only how they are drawn
 		this.setState({
 			layout: newLayout,
 			topText: "Switched to " + this.readablelayout(newLayout) + " view",
-			bottomText: " ",
-			dirty: true
-		});
+			bottomText: " "
+		}, () => writeBootCache({ tabWidth: this.state.tabWidth, tabHeight: this.state.tabHeight, dark: this.state.dark, layout: this.state.layout, compact: this.state.compact }));
 	}
 	nextlayout() : Layout {
 		switch (this.state.layout) {

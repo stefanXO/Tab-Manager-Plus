@@ -1,3 +1,4 @@
+import {Layout} from "../helpers/settings";
 ﻿import * as browser from "webextension-polyfill";
 import { ISavedSession} from "@types";
 import { Window } from "@views";
@@ -24,6 +25,7 @@ export interface ITabManagerState {
 	windowTitles: boolean,
 
 	windows: browser.Windows.Window[],
+	lastActive: Map<number, number>,
 	sessions: ISavedSession[],
 	selection: Set<number>,
 	hiddenTabs: Set<number>,
