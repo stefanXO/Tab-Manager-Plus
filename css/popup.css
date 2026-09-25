@@ -498,15 +498,20 @@ h1,h2,h3,h4,h5,h6 {
 .icon.tab.audible::before, .icon.tab.muted::before, .icon.tab.discarded::before {
 	content: "";
 	position: absolute;
-	right: -3px;
-	bottom: -3px;
+	right: -2px;
+	bottom: -2px;
 	z-index: 2;
-	width: 12px;
-	height: 12px;
-	background: var(--badge-playing) center / 12px 12px no-repeat;
-	box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.9);
-	border-radius: 3px;
+	width: 9px;
+	height: 9px;
+	background: var(--badge-playing) center / 100% 100% no-repeat;
+	box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9);
+	border-radius: 2px;
 	pointer-events: none;
+}
+.window.blocks-big .icon.tab::before {
+	width: 11px;
+	height: 11px;
+	border-radius: 3px;
 }
 .icon.tab.discarded::before {
 	background-image: var(--badge-suspended);
