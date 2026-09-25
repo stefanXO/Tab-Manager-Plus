@@ -38,7 +38,7 @@ export function searchable(title : string | undefined, url : string | undefined)
 // splits on whitespace, keeps "quoted phrases" and /regex bodies/ together
 function tokens(query : string) : string[] {
 	const out : string[] = [];
-	const re = /(-?(?:[tu]:)?)(?:"([^"]*)"|\/((?:\\\/|[^\/])+)\/(i?)|(\S+))/g;
+	const re = /(-?(?:[tuTU]:)?)(?:"([^"]*)"|\/((?:\\\/|[^\/])+)\/(i?)|(\S+))/g;
 	let m : RegExpExecArray | null;
 	while ((m = re.exec(query)) !== null) {
 		if (m[2] !== undefined) out.push(m[1] + '"' + m[2] + '"');
@@ -53,8 +53,10 @@ function term(token : string) : SearchTerm | null {
 	let field : SearchTerm["field"] = "any";
 	let rest = token;
 	if (rest.startsWith("-")) { negate = true; rest = rest.slice(1); }
-	if (rest.startsWith("t:")) { field = "title"; rest = rest.slice(2); }
-	else if (rest.startsWith("u:")) { field = "url"; rest = rest.slice(2); }
+	// prefixes are case-insensitive, T: is as good as t:
+	const prefix = rest.slice(0, 2).toLowerCase();
+	if (prefix === "t:") { field = "title"; rest = rest.slice(2); }
+	else if (prefix === "u:") { field = "url"; rest = rest.slice(2); }
 	if (rest.length === 0) return null;
 
 	let test : SearchTerm["test"];
@@ -65,7 +67,8 @@ function term(token : string) : SearchTerm | null {
 			const r = new RegExp(rx[1], "i");
 			test = (s) => r.test(s);
 		} catch (e) {
-			const lit = rest.toLowerCase();
+			// not a valid pattern: search for its text as it is
+			const lit = rx[1].toLowerCase();
 			test = (s) => s.indexOf(lit) >= 0;
 		}
 	} else {
