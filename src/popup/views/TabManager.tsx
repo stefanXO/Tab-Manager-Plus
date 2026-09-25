@@ -276,10 +276,10 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 					layout={this.state.layout}
 					autoName={this.state.colorsAutoName}
 				/>}
-					{this.state.windows.map((window : browser.Windows.Window) => {
 				{/* keyed by layout: switching layouts remounts every card and tile, so the
 				    entrance animation plays again for the new arrangement */}
 				{!this.state.optionsActive && !this.state.colorsActive && <div key={"container-" + this.state.layout} className={"window-container " + this.state.layout} ref={this.windowContainerRef} tabIndex={2}>
+					{this.state.windows.map((window : browser.Windows.Window, order : number) => {
 						if (window.state === "minimized") return;
 
 						let windowRef = this.state.windowrefs.get(window.id) || React.createRef<Window>();
@@ -304,6 +304,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 								windowTitles={this.state.windowTitles}
 								lastOpenWindow={this.state.lastOpenWindow}
 								lastActive={this.state.lastActive.get(window.id)}
+								order={order}
 								ref={windowRef}
 							/>
 						);
@@ -313,7 +314,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 							<span className="hrSpan">Minimized windows</span>
 						</div>
 					</div>
-					{this.state.windows.map((window : browser.Windows.Window) => {
+					{this.state.windows.map((window : browser.Windows.Window, order : number) => {
 						if (window.state !== "minimized") return;
 
 						let windowRef = this.state.windowrefs.get(window.id) || React.createRef<Window>();
@@ -338,6 +339,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 								windowTitles={this.state.windowTitles}
 								lastOpenWindow={this.state.lastOpenWindow}
 								lastActive={this.state.lastActive.get(window.id)}
+								order={order}
 								ref={windowRef}
 							/>
 						);

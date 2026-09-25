@@ -197,9 +197,6 @@ export class Window extends React.Component<IWindow, IWindowState> {
 			let isSelected : boolean = this.props.selection.has(tab.id);
 			let isFaded : boolean = this.props.hiddenTabs.has(tab.id) && !this.props.filterTabs;
 			if (!isHidden) hideWindow = false;
-			if (isHidden) {
-				return <div key={"windowtab_" + this.props.window.id + "_" + tab.id}></div>;
-			}
 
 			let tabRef = this.state.tabrefs.get(tab.id) || React.createRef<Tab>();
 			if (!this.state.tabrefs.has(tab.id)) {
@@ -352,6 +349,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 						" " +
 						(focused ? " focused" : "")
 					}
+					style={{ "--i": this.props.order || 0 } as React.CSSProperties}
 					onDragEnter={this.dragOver}
 					onDragOver={this.dragOver}
 					onDragLeave={this.dragLeave}

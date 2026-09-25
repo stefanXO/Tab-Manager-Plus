@@ -15,5 +15,7 @@ export interface IWindow {
 	lastOpenWindow: number,
 	incognito: boolean,
 	draggable: boolean,
+	// position in the list, staggers the entrance animation
+	order?: number,
 	lastActive?: number
 }

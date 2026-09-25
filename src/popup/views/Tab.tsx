@@ -22,13 +22,21 @@ export class Tab extends React.Component<ITab, ITabState> {
 			iconTone: "normal",
 			dragFavIcon: "",
 			draggingOver: "",
-			hovered: false
+			hovered: false,
+			entering: true
 		};
 
 	}
 
+	private enterTimer = 0;
+
 	componentDidMount() {
 		this.update();
+		this.enterTimer = window.setTimeout(() => this.setState({ entering: false }), 800);
+	}
+
+	componentWillUnmount() {
+		clearTimeout(this.enterTimer);
 	}
 
 	update = () => {
@@ -95,6 +103,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 				((this.props.tab.mutedInfo && this.props.tab.mutedInfo.muted) ? "muted " : "") +
 				(this.props.tab.audible ? "audible " : "") +
 				(this.props.tab.discarded ? "discarded " : "") +
+				(this.state.entering ? "enter " : "") +
 				(this.props.layout === LAYOUT.list ? "full " : "") +
 				(this.props.tab.incognito ? "incognito " : "") +
 				(this.state.draggingOver ? this.state.draggingOver + " " : "") +
