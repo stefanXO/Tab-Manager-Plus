@@ -16,14 +16,14 @@ Faster
 - Typing right after opening the popup no longer loses the first characters
 
 Searching And Duplicates
-- Highlight Duplicates selects only the extra copies and keeps one tab per URL, so Delete closes just the duplicates (#142, #188, #240, #248, #260)
+- Highlight Duplicates selects only the extra copies and keeps the one you used last, so Delete closes just the duplicates (#142, #188, #240, #248, #260)
 - The header shows how many tabs have duplicates and how many are selected
 - Searching while duplicates are highlighted searches within them
 - Pasting a search term, or editing in the middle of it, now searches the right tabs
 - Clearing the search field no longer shows matches for an empty search
-- Search in titles only with `t:word`, in urls only with `u:word` (#224)
+- Search in titles only with `t:word`, in urls only with `u:word`
 - Exclude tabs from a search with `-word`, also `-u:word`
-- Search for a phrase with a space by quoting it: `"pull request"`
+- Search for a phrase with a space by quoting it: `"pull request"` (#224)
 - Search with a regular expression: `/regex/`, also `t:/^\d+/` (#247, #156)
 - Hover the search box for the whole search syntax
 
