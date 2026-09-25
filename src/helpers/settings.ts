@@ -12,6 +12,11 @@ export const LAYOUT = {
 } as const;
 export type Layout = typeof LAYOUT[keyof typeof LAYOUT];
 
+// both block layouts: tiles in a grid, as opposed to the rows and list layouts
+export function isBlockLayout(layout : Layout) : boolean {
+	return layout === LAYOUT.blocks || layout === LAYOUT.blocksBig;
+}
+
 // The settings as stored in storage.local: one place for the keys and their
 // defaults, typed access for the popup and the worker alike.
 export interface Settings {

@@ -2,6 +2,7 @@
 
 import {getLocalStorage, setLocalStorage} from "@helpers/storage";
 import {Tab} from "@views";
+import {isBlockLayout} from "@helpers/settings";
 import * as React from "react";
 import {maybePluralize} from "@helpers/utils";
 import * as browser from 'webextension-polyfill';
@@ -59,12 +60,12 @@ export class Session extends React.Component<ISession, ISessionState> {
 					<div key={"sessionnl_" + this.props.session.id} className="newliner" />,
 					<div key={"sessionwa_" + this.props.session.id} className="window-actions">
 						<div
-							className={"icon tabaction restore " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+							className={"icon tabaction restore " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
 							title={"Restore this saved window\nWill restore " + maybePluralize(this.props.tabs.length, "tab") + ". Please note : The tabs will be restored without their history."}
 							onClick={this.windowClick}
 						/>
 						<div
-							className={"icon tabaction delete " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+							className={"icon tabaction delete " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
 							title={"Delete this saved window\nWill delete " + maybePluralize(this.props.tabs.length, "tab") + " permanently"}
 							onClick={this.close}
 						/>
@@ -103,7 +104,7 @@ export class Session extends React.Component<ISession, ISessionState> {
 						" " +
 						(focused ? "activeWindow" : "") +
 						" session " +
-						(this.props.layout.indexOf("blocks") > -1 ? "block" : "") +
+						(isBlockLayout(this.props.layout) ? "block" : "") +
 						" " +
 						this.props.layout +
 						" " +

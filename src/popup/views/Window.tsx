@@ -3,6 +3,7 @@
 import {getLocalStorage, setLocalStorage, getLocalStorageMap} from "@helpers/storage";
 import {Tab} from "@views";
 import * as S from "@strings";
+import {LAYOUT, isBlockLayout} from "@helpers/settings";
 import * as React from "react";
 import {maybePluralize, timeAgo} from "@helpers/utils";
 import * as browser from 'webextension-polyfill';
@@ -241,7 +242,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 					<div key={"windowactions_" + this.props.window.id} className="window-actions">
 						{this.props.sessionsFeature ? (
 							<div
-								className={"icon tabaction save " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+								className={"icon tabaction save " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
 								title={
 									"Save this window for later\nWill save " +
 									maybePluralize(this.props.tabs.length, "tab") +
@@ -251,30 +252,30 @@ export class Window extends React.Component<IWindow, IWindowState> {
 							/>
 						) : false}
 						<div
-							className={"icon tabaction add " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+							className={"icon tabaction add " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
 							title="Open a new tab"
 							onClick={this.addTab}
 						/>
 						<div
-							className={"icon tabaction colors " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+							className={"icon tabaction colors " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
 							title="Change window name or color"
 							onClick={this.openOptions}
 						/>
 						{this.props.window.state === "minimized" ? (
 							<div
-								className={"icon tabaction maximize " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+								className={"icon tabaction maximize " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
 								title={"Maximize this window\nWill maximize " + maybePluralize(this.props.tabs.length, "tab")}
 								onClick={this.maximize}
 							/>
 						) : (
 							<div
-								className={"icon tabaction minimize " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+								className={"icon tabaction minimize " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
 								title={"Minimize this window\nWill minimize " + maybePluralize(this.props.tabs.length, "tab")}
 								onClick={this.minimize}
 							/>
 						)}
 						<div
-							className={"icon tabaction close " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
+							className={"icon tabaction close " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
 							title={"Close this window\nWill close " + maybePluralize(this.props.tabs.length, "tab")}
 							onClick={this.close}
 						/>
@@ -343,7 +344,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 						" " +
 						color +
 						" " +
-						(this.props.layout.indexOf("blocks") > -1 ? "block" : "") +
+						(isBlockLayout(this.props.layout) ? "block" : "") +
 						" " +
 						this.props.layout +
 						" " +
@@ -420,7 +421,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 		if (closestTab != null) {
 			let before : boolean;
 			let boundingRect = closestRef.getBoundingClientRect();
-			if (this.props.layout === "vertical") {
+			if (this.props.layout === LAYOUT.list) {
 				before = e.nativeEvent.clientY < boundingRect.top;
 			} else {
 				before = e.nativeEvent.clientX < boundingRect.left;

@@ -1,6 +1,7 @@
 "use strict";
 
 import * as S from "@strings";
+import {LAYOUT} from "@helpers/settings";
 import * as React from "react";
 import * as browser from 'webextension-polyfill';
 import {ICommand, ITab, ITabState} from '@types';
@@ -43,7 +44,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 
 	render() {
 		const children = [];
-		if (this.props.layout === "vertical") {
+		if (this.props.layout === LAYOUT.list) {
 			children.push(
 				<div key={"tab-pinned-" + this.props.tab.id} className={"tab-pinned " + (!this.props.tab.pinned ? "hidden" : "")}>
 					Pinned
@@ -94,7 +95,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 				((this.props.tab.mutedInfo && this.props.tab.mutedInfo.muted) ? "muted " : "") +
 				(this.props.tab.audible ? "audible " : "") +
 				(this.props.tab.discarded ? "discarded " : "") +
-				(this.props.layout === "vertical" ? "full " : "") +
+				(this.props.layout === LAYOUT.list ? "full " : "") +
 				(this.props.tab.incognito ? "incognito " : "") +
 				(this.state.draggingOver ? this.state.draggingOver + " " : "") +
 				(this.props.searchActive ? "search-active " : "") +
@@ -103,13 +104,12 @@ export class Tab extends React.Component<ITab, ITabState> {
 				" tab-" +
 				this.props.tab.id +
 				" " +
-				(this.props.layout === "vertical" ? "vertical " : "blocks "),
-			style:
-				(this.props.layout === "vertical"
-					? { }
-					: this.favIconStyle()
-				)
-			,
+				(this.props.layout === LAYOUT.list ? "vertical " : "blocks "),
+			style: {
+				...(this.props.layout === LAYOUT.list ? {} : this.favIconStyle()),
+				// position in the window, staggers the entrance animation
+				"--i": this.props.tab.index
+			} as React.CSSProperties,
 			id: this.props.id,
 			title: this.props.tab.title,
 			onClick: this.click,
@@ -200,7 +200,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 		let draggingover;
 
 		var before = this.state.draggingOver;
-		if (this.props.layout === "vertical") {
+		if (this.props.layout === LAYOUT.list) {
 			draggingover = e.nativeEvent.offsetY > this.tabRef.current.clientHeight / 2 ? "bottom" : "top";
 		} else {
 			draggingover = e.nativeEvent.offsetX > this.tabRef.current.clientWidth / 2 ? "right" : "left";

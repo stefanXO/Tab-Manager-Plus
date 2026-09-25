@@ -173,7 +173,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 
 	syncMasonry() {
 		const el = this.windowContainerRef.current;
-		const wanted = el && this.state.layout !== "horizontal" ? el : null;
+		const wanted = el && this.state.layout !== LAYOUT.rows ? el : null;
 		if (wanted === this.masonryTarget) return;
 		this.masonry?.disconnect();
 		this.masonry = wanted ? attachMasonry(wanted) : null;
@@ -1032,7 +1032,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				let goRight = e.keyCode === 39;
 				let goUp = e.keyCode === 38;
 				let goDown = e.keyCode === 40;
-				if (this.state.layout === "vertical") {
+				if (this.state.layout === LAYOUT.list) {
 					goLeft = e.keyCode === 38;
 					goRight = e.keyCode === 40;
 					goUp = e.keyCode === 37;
