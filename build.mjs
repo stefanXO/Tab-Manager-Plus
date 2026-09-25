@@ -3,8 +3,12 @@
 //   node build.mjs            production: minified, no source maps
 //   node build.mjs --dev      development: readable output, source maps
 //   node build.mjs --watch    development + rebuild on change
+//   node build.mjs --firefox  the Firefox bundle (default: Chrome)
 //
-// npm scripts: build (prod), build:dev, watch.
+// The browser is a compile-time constant (process.env.BROWSER): esbuild folds
+// every IS_FIREFOX check, so a bundle carries only its own browser's code.
+//
+// npm scripts: build (prod), build:dev, watch, and :firefox variants.
 
 import * as esbuild from 'esbuild'
 import { readFileSync, rmSync } from 'node:fs'
@@ -12,6 +16,7 @@ import { readFileSync, rmSync } from 'node:fs'
 const args = new Set(process.argv.slice(2))
 const watch = args.has('--watch')
 const dev = watch || args.has('--dev')
+const browser = args.has('--firefox') ? 'firefox' : 'chrome'
 
 // version comes from package.json so this works outside `npm run` too
 const { version } = JSON.parse(readFileSync('package.json', 'utf8'))
@@ -33,6 +38,7 @@ const options = {
 	sourcemap: dev,
 	define: {
 		'process.env.VERSION': JSON.stringify(version),
+		'process.env.BROWSER': JSON.stringify(browser),
 		// React picks its production or development build from this
 		'process.env.NODE_ENV': JSON.stringify(dev ? 'development' : 'production'),
 	},
@@ -49,5 +55,5 @@ if (watch) {
 	console.log(`watching (${version}, development)…`)
 } else {
 	await esbuild.build(options)
-	console.log(`built ${version} (${dev ? 'development' : 'production'})`)
+	console.log(`built ${version} for ${browser} (${dev ? 'development' : 'production'})`)
 }
