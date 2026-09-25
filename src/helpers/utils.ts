@@ -46,12 +46,12 @@ export function timeAgo(at : number, now = Date.now()) : string {
 	const s = Math.max(0, Math.round((now - at) / 1000));
 	if (s < 45) return "just now";
 	const m = Math.round(s / 60);
-	if (m < 60) return m + " min ago";
+	if (m < 60) return maybePluralize(m, "minute") + " ago";
 	const h = Math.round(m / 60);
-	if (h < 24) return h + " h ago";
+	if (h < 24) return maybePluralize(h, "hour") + " ago";
 	const d = Math.round(h / 24);
 	if (d === 1) return "yesterday";
-	if (d < 7) return d + " days ago";
+	if (d < 7) return maybePluralize(d, "day") + " ago";
 	const w = Math.round(d / 7);
 	if (w < 5) return maybePluralize(w, "week") + " ago";
 	const mo = Math.round(d / 30.44);
