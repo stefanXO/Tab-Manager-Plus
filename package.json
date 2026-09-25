@@ -17,6 +17,8 @@
     "watch:firefox:dev": "tsc --noEmit && node build.mjs --firefox --watch --dev",
     "version": "node scripts/sync-version.mjs && git add manifest.json manifest-firefox.json readme.md changelog.html",
     "check-version": "node scripts/sync-version.mjs --check",
+    "changelog": "node scripts/changelog.mjs",
+    "check-changelog": "node scripts/changelog.mjs --check",
     "release": "bash babelit.sh"
   },
   "repository": {
