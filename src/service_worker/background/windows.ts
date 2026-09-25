@@ -10,7 +10,6 @@ import * as S from "@strings";
 import * as browser from 'webextension-polyfill';
 import {getSetting} from "@helpers/settings";
 import {ISavedSession, IScreenBounds} from "@types";
-import {IS_FIREFOX} from "@helpers/browser";
 
 // must stay synchronous: it runs during the service worker's first event loop
 // turn so that the events that woke the worker are not missed

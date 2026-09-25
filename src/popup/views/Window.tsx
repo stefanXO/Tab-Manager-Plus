@@ -9,7 +9,6 @@ import {maybePluralize, timeAgo} from "@helpers/utils";
 import * as browser from 'webextension-polyfill';
 import {ICommand, IWindow, IWindowState, ISavedSession} from '@types';
 import {ManagerContext, ITabManagerActions} from '../context';
-import {IS_FIREFOX} from "@helpers/browser";
 
 export class Window extends React.Component<IWindow, IWindowState> {
 	static contextType = ManagerContext;

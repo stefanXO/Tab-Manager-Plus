@@ -7,7 +7,6 @@ import * as browser from 'webextension-polyfill';
 import {ICommand, ITab, ITabState} from '@types';
 import {ManagerContext, ITabManagerActions} from '../context';
 import {faviconTone} from '@helpers/favicon';
-import {IS_FIREFOX} from "@helpers/browser";
 
 export class Tab extends React.Component<ITab, ITabState> {
 	static contextType = ManagerContext;

@@ -3,7 +3,6 @@
 import {openPopup, openAsOwnTab, openSidebar} from "@ui/open";
 import * as S from "@strings";
 import * as browser from 'webextension-polyfill';
-import {IS_FIREFOX} from "@helpers/browser";
 
 export async function setupContextMenus() {
 	await browser.contextMenus.removeAll();

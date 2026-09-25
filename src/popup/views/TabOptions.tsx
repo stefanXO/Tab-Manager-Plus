@@ -7,7 +7,6 @@ import {ManagerContext, ITabManagerActions} from "../context";
 import {getLocalStorage, setLocalStorage} from "@helpers/storage";
 import {getSetting, saveSetting} from "@helpers/settings";
 import * as S from "@strings";
-import {IS_FIREFOX} from "@helpers/browser";
 
 
 export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {

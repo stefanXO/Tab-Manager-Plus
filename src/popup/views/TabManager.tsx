@@ -10,7 +10,6 @@ import * as S from "@strings";
 import * as browser from 'webextension-polyfill';
 import {ICommand, ITabManager, ITabManagerState, ISavedSession} from "@types";
 import {ManagerContext, ITabManagerActions, ISettings} from "../context";
-import {IS_FIREFOX} from "@helpers/browser";
 import {attachMasonry, Masonry} from "../masonry";
 
 export class TabManager extends React.Component<ITabManager, ITabManagerState> {

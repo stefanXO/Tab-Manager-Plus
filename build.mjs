@@ -5,8 +5,8 @@
 //   node build.mjs --watch    development + rebuild on change
 //   node build.mjs --firefox  the Firefox bundle (default: Chrome)
 //
-// The browser is a compile-time constant (process.env.BROWSER): esbuild folds
-// every IS_FIREFOX check, so a bundle carries only its own browser's code.
+// The browser is a compile-time constant: IS_FIREFOX and IS_CHROME are replaced
+// by true/false before bundling, so a bundle carries only its own browser's code.
 //
 // npm scripts: build (prod), build:dev, watch, and :firefox variants.
 
@@ -40,6 +40,9 @@ const options = {
 	define: {
 		'process.env.VERSION': JSON.stringify(version),
 		'process.env.BROWSER': JSON.stringify(browser),
+		// compile-time constants, like C#'s #if: the other browser's branches are removed
+		IS_FIREFOX: String(browser === 'firefox'),
+		IS_CHROME: String(browser === 'chrome'),
 		// React picks its production or development build from this
 		'process.env.NODE_ENV': JSON.stringify(dev ? 'development' : 'production'),
 	},

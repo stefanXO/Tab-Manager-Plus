@@ -1,6 +1,5 @@
 "use strict";
 import {timeAgo} from "@helpers/utils";
-import {IS_FIREFOX} from "@helpers/browser";
 
 // changelog.html: every version heading carries an empty <time datetime>;
 // show how long ago that release was, the exact date stays in the title
