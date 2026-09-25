@@ -1,4 +1,4 @@
-import {getLocalStorage, setLocalStorage} from "@helpers/storage";
+import {getLocalStorage, setLocalStorage, getLocalStorageMap} from "@helpers/storage";
 import {debounce, maybePluralize} from "@helpers/utils";
 import {Window, Session, TabOptions, Tab, WindowOptions} from "@views";
 import * as React from "react";
@@ -81,6 +81,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			sessionsFeature: sessionsFeature,
 			lastOpenWindow: -1,
 			windows: [],
+			lastActive: new Map(),
 			sessions: [],
 			selection: new Set(),
 			lastSelect: 0,
@@ -340,6 +341,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 								draggable={true}
 								windowTitles={this.state.windowTitles}
 								lastOpenWindow={this.state.lastOpenWindow}
+								lastActive={this.state.lastActive.get(window.id)}
 								ref={windowRef}
 							/>
 						);
@@ -373,6 +375,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 								draggable={true}
 								windowTitles={this.state.windowTitles}
 								lastOpenWindow={this.state.lastOpenWindow}
+								lastActive={this.state.lastActive.get(window.id)}
 								ref={windowRef}
 							/>
 						);
@@ -646,6 +649,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	update = async () => {
 		const windows : browser.Windows.Window[] = await browser.windows.getAll({ populate: true });
 		const sort_windows = await getLocalStorage("windowAge", []);
+		const lastActive = await getLocalStorageMap<number, number>(S.windowLastActive);
 
 		windows.sort(function(a, b) {
 			var aSort = sort_windows.indexOf(a.id);
@@ -666,7 +670,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		const focusedWindow = windows.find((w) => w.focused);
 		this.setState({
 			lastOpenWindow: focusedWindow ? focusedWindow.id : (windows.length > 0 ? windows[0].id : -1),
-			windows: windows
+			windows: windows,
+			lastActive: lastActive
 		});
 
 		let tabCount = 0;

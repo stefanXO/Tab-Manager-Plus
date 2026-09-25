@@ -780,6 +780,18 @@ h1,h2,h3,h4,h5,h6 {
 	display: inline-block;
 	float:right;
 }
+.window-age {
+	position: absolute;
+	left: 0.75rem;
+	bottom: 0.7rem;
+	font-size: 11px;
+	line-height: 1;
+	color: rgba(0, 0, 0, 0.45);
+	white-space: nowrap;
+}
+.window.horizontal .window-age {
+	display: none;
+}
 .infobox{
 	position:fixed;
 	font-weight:bold;

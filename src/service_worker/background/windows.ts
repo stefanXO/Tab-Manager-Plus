@@ -241,6 +241,11 @@ export async function windowActive(windowId : number) {
 		if (windows.indexOf(windowId) > -1) windows.splice(windows.indexOf(windowId), 1);
 		windows.unshift(windowId);
 		await setLocalStorage("windowAge", windows);
+
+		// when each window was last active, shown on its card in the popup
+		const lastActive : Map<number, number> = await getLocalStorageMap<number, number>(S.windowLastActive);
+		lastActive.set(windowId, Date.now());
+		await setLocalStorageMap(S.windowLastActive, lastActive);
 	});
 
 	// browser.windows.getLastFocused({ populate: true }, function (w) {
@@ -303,6 +308,8 @@ async function windowInactive(windowId : number) {
 			windows.splice(windows.indexOf(windowId), 1);
 			await setLocalStorage("windowAge", windows);
 		}
+		const lastActive : Map<number, number> = await getLocalStorageMap<number, number>(S.windowLastActive);
+		if (lastActive.delete(windowId)) await setLocalStorageMap(S.windowLastActive, lastActive);
 	});
 }
 

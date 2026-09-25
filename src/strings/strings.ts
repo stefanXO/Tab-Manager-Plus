@@ -37,5 +37,6 @@ export const send = "send";
 // storage keys
 export const windowHashes = "windowHashes";
 export const windowOrphaned = "windowOrphaned";
+export const windowLastActive = "windowLastActive";
 export const windowColors = "windowColors";
 export const windowNames = "windowNames";

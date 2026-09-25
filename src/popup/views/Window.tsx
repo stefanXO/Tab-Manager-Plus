@@ -4,7 +4,7 @@ import {getLocalStorage, setLocalStorage, getLocalStorageMap} from "@helpers/sto
 import {Tab} from "@views";
 import * as S from "@strings";
 import * as React from "react";
-import {maybePluralize} from "@helpers/utils";
+import {maybePluralize, timeAgo} from "@helpers/utils";
 import * as browser from 'webextension-polyfill';
 import {ICommand, IWindow, IWindowState, ISavedSession} from '@types';
 import {ManagerContext, ITabManagerActions} from '../context';
@@ -224,6 +224,17 @@ export class Window extends React.Component<IWindow, IWindowState> {
 			);
 		});
 		if (!hideWindow) {
+			if (!!this.props.lastActive) {
+				tabs.push(
+					<div
+						key={"windowage_" + this.props.window.id}
+						className="window-age"
+						data-hover={"Last active " + timeAgo(this.props.lastActive) + "\n" + new Date(this.props.lastActive).toLocaleString() + "\n "}
+					>
+						{timeAgo(this.props.lastActive)}
+					</div>
+				);
+			}
 			if (!!this.props.tabactions) {
 				tabs.push(
 					<div key={"windownl_" + this.props.window.id} className="newliner"/>,
