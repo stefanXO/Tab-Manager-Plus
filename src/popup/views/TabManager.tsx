@@ -452,7 +452,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 								<td className="two">
 									<div
 										className={"icon windowaction " + this.state.layout + "-view"}
-										title={"Change to " + this.readablelayout(this.nextlayout()) + " View"}
+										title={this.readablelayout(this.state.layout) + " View is active\nChange to " + this.readablelayout(this.nextlayout()) + " View"}
 										onClick={this.changelayout}
 									/>
 									<div
@@ -1313,16 +1313,16 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				return "blocks";
 		}
 	}
-	readablelayout(layout) {
+	readablelayout(layout:string) {
 		switch (layout) {
 			case "blocks":
 				return "Block";
 			case "blocks-big":
 				return "Big Block";
 			case "horizontal":
-				return "Horizontal";
+				return "Rows";
 			default:
-				return "Vertical";
+				return "List";
 		}
 	}
 	// The selection may hold ids of tabs that closed since they were selected,
