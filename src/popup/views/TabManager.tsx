@@ -13,13 +13,6 @@ import {ManagerContext, ITabManagerActions, ISettings} from "../context";
 import {IS_FIREFOX} from "@helpers/browser";
 import {attachMasonry, Masonry} from "../masonry";
 
-// shown on hover over the search box
-const SEARCH_HELP = [
-	"Search titles and urls. Every word must match, or use OR:  foo bar   foo OR bar",
-	"t:foo  title only     u:foo  url only     -foo  must not match     \"foo bar\"  one term",
-	"/regex/  regular expression, also t:/^\\d+/",
-].join("\n");
-
 export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 
     private readonly rootRef: React.RefObject<HTMLDivElement>;
@@ -938,13 +931,13 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		}
 		// any typed keys
 		if (
-			(e.keyCode >= 48 && e.keyCode <= 57) ||
-			(e.keyCode >= 65 && e.keyCode <= 90) ||
-			(e.keyCode >= 186 && e.keyCode <= 192) ||
-			(e.keyCode >= 219 && e.keyCode <= 22) ||
-			e.keyCode === 8 ||
-			e.keyCode === 46 ||
-			e.keyCode === 32
+			(e.keyCode >= 48 && e.keyCode <= 57) || // 0-9
+			(e.keyCode >= 65 && e.keyCode <= 90) || // a-z
+			(e.keyCode >= 186 && e.keyCode <= 192) || // ;=,-./`
+			(e.keyCode >= 219 && e.keyCode <= 222) || // [ ] \ '
+			e.keyCode === 8 || // backspace
+			e.keyCode === 46 || // delete
+			e.keyCode === 32 // space bar
 		) {
 			if (document.activeElement !== this.searchBoxRef.current) {
 				var activeInputElement = document.activeElement as HTMLInputElement;
