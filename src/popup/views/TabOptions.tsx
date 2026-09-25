@@ -349,6 +349,12 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 						</a>
 						<div className="option-description">If you want to disable or change the shortcut key with which to open Tab Manager Plus, you can do so here.</div>
 					</div>
+					<div className="toggle-box">
+						<a href="changelog.html" target="_blank" rel="noopener">
+							What's new in this version
+						</a>
+						<div className="option-description">The changes of every release, and where to leave a review or report a problem.</div>
+					</div>
 				</div>
 				<div className="optionsBox">
 					<div className="toggle-box">

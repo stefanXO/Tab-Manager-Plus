@@ -1,51 +1,54 @@
 7.0.0
 =====
-- New design for all layouts! Block view is a tidy grid, vertical view is a proper list and horizontal view is a compact strip with one window per row
-- Dark theme redesigned: consistent colors, icons are no longer inverted and window colors show as a colored edge
+A Brand New Look!
+- Every layout redesigned: Block view is a grid, List view (was Vertical) shows one tab per line, Rows view (was Horizontal) one window per row (#58)
+- Dark theme rebuilt with consistent colors; window colors show as a colored edge; scrollbars and controls are dark too (#99, #151)
 - New window color palette, with a matching set for the dark theme
-- White favicons are visible now in the bright theme: only-white icons get inverted, icons with a white background get a tinted tile
-- Tabs playing sound get a blue tile and a small equalizer badge, muted tabs a crossed speaker, also with animations off
-- The horizontal and vertical layouts are renamed now to Rows view and List view
-- List view: pinned, active, selected, playing and muted tabs get a colored edge on the left and a chip with a matching badge
-- Each window shows when it was last active, and each saved session when it was saved
-- Tabs the browser put to sleep to save memory are marked with a moon badge, and the list view shows an Asleep chip
-- With animations on, windows and tabs fade in and state changes ease instead of snapping; a playing row in the list breathes
-- Improvements: Faster popup load. The popup opens with its final layout, theme and windows in the first frame instead of filling in afterward
-- Clicking the icon while Tab Manager Plus is already open in a tab switches to that tab
-- Highlight Duplicates now only selects the extra copies and keeps one tab per URL, so "Delete" closes only the duplicates at once
+- Favicons: white icons stay visible in the light theme, and icons refresh when a tab finishes loading (#251)
+- Badges show a tab's state: playing sound, muted, asleep (put to sleep by the browser), pinned, active, selected. In List view as chips with a colored edge on the left (#171)
+- Windows show when they were last active, saved sessions when they were saved
+- Subtle animations when they are on: windows and tabs fade in, state changes ease instead of snapping, a playing row breathes
+
+Faster
+- The popup opens with its final layout, theme and windows in the first frame instead of filling in afterwards
+- The popup script is about 40% smaller
+- Tab changes show up immediately
+- Typing right after opening the popup no longer loses the first characters
+
+Searching And Duplicates
+- Highlight Duplicates selects only the extra copies and keeps one tab per URL, so Delete closes just the duplicates (#142, #188, #240, #248, #260)
 - The header shows how many tabs have duplicates and how many are selected
 - Searching while duplicates are highlighted searches within them
-- Improvements: The popup loads faster, its script is about 40% smaller
-- Improvements: Tab changes show up immediately, rapid updates are batched
-- Fix: Favicons will update when a tab finishes loading or changes its icon
-- Fix: Pasting a search term, or editing in the middle of it, would search the wrong tabs
-- Fix: The current window is always listed first and marked, also when opened as a popup
-- Fix: Window names and colors changed in the background did not refresh in the popup
-- Fix: Enabling the sessions feature shows your saved windows right away
-- Fix: Hover text is restored when moving the mouse from a tab back to its window
-- Fix: Sessions have a hover text now, too
-- Fix: Hover texts counted the window buttons as tabs
-- Fix: Hover texts had the wrong pluralization for tabs
-- Fix: Drop indicator when dragging a tab fits every layout now and shows in the dark theme
-- Fix: Window color picker listed the colors right-to-left in some layouts
-- Fix: Window names and colors are restored after a browser restart, even when the window's tabs changed since it was named
-- Fix: Saved sessions could be lost when the storage update from version 5 was interrupted, e.g. by closing the popup
-- Fix: Saved sessions are no longer limited by the browser's 10 MB extension storage quota
-- Fix: The "switch to previous tab" shortcut works again, it forgot its history after a few seconds
-- Fix: The window order in the popup no longer resets on its own
-- Fix: Names and colors of windows that have been closed for a day are cleaned up, so a new window can't inherit an old name
-- Fix: Settings, window names and colors could revert to an older state when the popup was opened while they were being changed
-- Fix: Closing, discarding or moving selected tabs failed when one of them had been closed in the meantime
-- Fix: Saved sessions were changed by just being displayed, which could corrupt exports
-- Fix: Restoring a saved window in own-tab mode now scrolls to the new window
-- Fix: Dark theme: scrollbars and form controls are dark too
-- Fix: The window name and color screen covers the whole popup, its close button shows a pointer and Escape closes only that screen
-- Fix: Typing right after opening the popup no longer loses the first characters
-- Fix: Clearing the search field left the header showing matches for an empty search
-- Fix: Restored windows keep their saved size and position, fitted to the screen they are restored on, and a window saved maximized comes back maximized
-- Firefox: Firefox-based browsers (LibreWolf, Zen, Waterfox) are detected as Firefox
+- Pasting a search term, or editing in the middle of it, now searches the right tabs
+- Clearing the search field no longer shows matches for an empty search
+- Search in titles only with `t:word`, in urls only with `u:word` (#224)
+- Exclude tabs from a search with `-word`, also `-u:word`
+- Search for a phrase with a space by quoting it: `"pull request"`
+- Search with a regular expression: `/regex/`, also `t:/^\d+/` (#247, #156)
+- Hover the search box for the whole search syntax
 
-6.0.0
+Windows And Sessions
+- Window names and colors survive a browser restart, even when the window's tabs changed since
+- Names and colors of windows closed for more than a day are cleaned up, so a new window cannot inherit an old name (#103, #244)
+- Restored windows keep their size and position, fitted to the screen they are restored on; a window saved maximized comes back maximized (#205, #208)
+- Restoring a window in own-tab mode scrolls to it
+- Saved sessions could be lost when the update from version 5 was interrupted, e.g. by closing the popup
+- Saved sessions are no longer limited by the browser's 10 MB storage quota, and showing a session no longer changes it (which could corrupt exports)
+- Enabling the sessions feature shows your saved windows right away
+- The window order no longer resets on its own; the current window is always listed first and marked, also as a popup (#241)
+- Clicking the icon while Tab Manager Plus is already open in a tab switches to that tab
+- The "switch to previous tab" shortcut works again (#37, #108, #238)
+
+Smaller fixes
+- Settings, window names and colors no longer revert to an older state when the popup opens while they are being changed (#126, #131)
+- Closing, discarding or moving selected tabs works even when one of them was closed in the meantime
+- Window names and colors changed in the background refresh in the popup
+- Hover texts: restored when moving from a tab back to its window, sessions have one too, tab counts and plurals are right (#121, #183)
+- The drop indicator when dragging a tab fits every layout and shows in the dark theme; the color picker lists colors in order (#97)
+- The window name and color screen covers the whole popup, its close button shows a pointer and Escape closes only that screen
+- Firefox-based browsers (LibreWolf, Zen, Waterfox) are detected as Firefox
+
+6.0.0 (2024-10-01)
 =====
 - You can now open single tabs from your saved sessions
 - Experimental: Try to restore window names and colors after a browser restart
@@ -74,15 +77,15 @@
   would fail because they can't be mixed together. Now it will open 2 windows - one with normal tabs, one with incognito
   tabs.
 
-5.3.0
+5.3.0 (2024-09-22)
 =====
 - Fix: Move to manifest v3
 
-5.2.1
+5.2.1 (2024-09-22)
 =====
 - Fix: White page crash when tab had no hostname / title
 
-5.2.0
+5.2.0 (2020-06-22)
 =====
 - Improves search! Searching for "google mail" will highlight tabs that have both words included #107
 - Improves search! Searching for "google OR mail" will highlight tabs that have either of the worlds included #106
@@ -102,13 +105,13 @@
 - Fix: Pluralization fixes when only 1 tab was selected #87
 - Firefox: Fix: Don't allow to import from the popup due to a Firefox bug. Show warning instead #57 #96
 
-5.1.6
+5.1.6 (2020-04-28)
 =====
 - Fix: Pressing "enter" or "return" when only one tab is selected, should focus that tab properly in Firefox
 - Reduce options that would be restored in sessions, to limit conflicts
 - Make inputs selectable in Firefox! You can now select text again in title, search and option inputs, etc.
 
-5.1.5
+5.1.5 (2020-04-26)
 =====
 - Feature: Changing the name of a window will set change the windows' title in Firefox as well
 - Dark mode has now dark input fields, to ease the eye strain
@@ -120,16 +123,16 @@
 - Fix: Changed the way how tabs are counted - sometimes it was possible to open more tabs per window than allowed
 - Fix: When hovering in Firefox, the window help text would not be displayed in the top
 
-5.1.4
+5.1.4 (2020-04-16)
 =====
 - Moving multiple tabs would sometimes not work when using the button or [Enter] key. This should be fixed now
 
-5.1.3
+5.1.3 (2019-11-04)
 =====
 - Fix: Popup width adjustable again instead of stuck to 800px
 - Fix: Only open the popup from context menu if current browser supports it
 
-5.1.2
+5.1.2 (2019-11-04)
 =====
 - Overworked and more friendlier context menu. You can now open the popup from the context menu, if opening as own tab is the default. You can now also access the changelog from the context menu
 - Increase popup size/width steps to 25
@@ -139,12 +142,12 @@
 - Fix: Background color for dark mode.
 - Performance improvements, such as not rendering hidden tabs to the DOM
 
-5.1.1
+5.1.1 (2019-11-01)
 =====
 
 - Fix: The "highlight duplicate tabs" button may have disappeared - it should be back now
 
-5.1.0
+5.1.0 (2019-10-31)
 =====
 
 - You can now see which tabs are playing sounds and/or music. For this you need to have the "animations" option turned on. The tabs with active sounds will pulsate
@@ -163,7 +166,7 @@
 - General performance improvements
 - More options texts regarding shortcuts
 
-5.0.8
+5.0.8 (2019-10-28)
 =====
 
 - You can now backup and restore your saved windows
@@ -175,25 +178,25 @@
 - Fixes to dark mode in its' own tab - the background was not displayed in the full window
 - Removed buggy animation transitions that would get stuck on hover
 
-5.0.7
+5.0.7 (2019-10-25)
 =====
 
 - Dark mode - you can now enable the dark mode in the options!
 - Close the popup when clicking on a tab, window or restoring a session, but don't close it when we're in a Tab Manager page of its own
 
-5.0.6
+5.0.6 (2019-10-25)
 =====
 
 - Fixed issue where current tab wouldn't be closed when pressing the "close tabs" button
 - Backwards compatibility with older browser versions
 
-5.0.5
+5.0.5 (2019-10-23)
 =====
 
 - Removed unnecessary chrome permission
 - Slight performance improvements
 
-5.0.4
+5.0.4 (2019-10-23)
 =====
 
 - Save/restore windows ( beta ) - you can now save and restore windows into your local storage. Please note : History of the tabs will not be preserved. ( Disabled by default )
@@ -202,7 +205,7 @@
 - Various other small fixes
 - Close popup after pressing enter
 
-5.0.3
+5.0.3 (2019-08-15)
 =====
 
 - Added context menu to open Tab Manager in its' own tab
@@ -212,12 +215,12 @@
 - Disable popup auto-closing until we have a better solution
 - Fixed Firefox error where a new window would not be created
 
-5.0.2
+5.0.2 (2019-08-06)
 =====
 
 - Fixes for Chrome to support the browser based api
 
-5.0.1
+5.0.1 (2019-08-06)
 =====
 
 - Fixes to rate and review buttons
@@ -229,63 +232,63 @@
 - Adjust fonts, so they look nicer
 - Font changes in options menu
 
-5.0.0
+5.0.0 (2019-08-05)
 =====
 
 - Rate and review button
 - Updated depreciated chrome api calls to the new ones
 - Prepared Firefox compatibility
 
-4.9.9
+4.9.9 (2019-02-27)
 =====
 
 - If the current tab is not in the initial popup screen, then we'll scroll down to it
 - "Minimize inactive windows" will only minimize windows on the same monitor ( requires additional permission )
 - Small fixes to window titles from last update
 
-4.9.8
+4.9.8 (2019-02-27)
 =====
 
 - Add option to enable/disable window titles
 - Smarter window title detection, especially for super-long titles
 
-4.9.7
+4.9.7 (2019-01-24)
 =====
 
 - Fix small rendering issues
 - Re-arrange some options
 
-4.9.6
+4.9.6 (2019-01-24)
 =====
 
 - Nicer wrapping of windows
 - Show the tabs with the highest count first in the title
 - Fixes in list views for high width popups, sometimes the titles were cut off
 
-4.9.5
+4.9.5 (2019-01-23)
 =====
 
 - Unnamed windows will show now the top domains in it instead
 - Added a close option to the naming and color popups
 
-4.9.4
+4.9.4 (2019-01-23)
 =====
 
 - Fixes to stuck tab counters
 - Auto-close forgotten tab managers after 100 seconds
 - Various bugfixes and style changes
 
-4.9.3
+4.9.3 (2018-06-15)
 =====
 
 - Fixes for older browsers
 
-4.9.2
+4.9.2 (2018-06-15)
 =====
 
 - Fixes a bug when localStorage is empty
 
-4.9.1
+4.9.1 (2018-06-15)
 =====
 
 - New options page
@@ -294,7 +297,7 @@
 - clicking on a window will activate it now
 - minimized windows are now moved to their own section
 
-4.9.0
+4.9.0 (2019-01-24)
 =====
 
 - Allows you to give windows colors

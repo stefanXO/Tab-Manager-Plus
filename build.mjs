@@ -23,6 +23,7 @@ const { version } = JSON.parse(readFileSync('package.json', 'utf8'))
 
 const entries = {
 	'popup/early': 'src/popup/early.ts',
+	'popup/changelog': 'src/popup/changelog.ts',
 	'popup/popup': 'src/popup/popup.tsx',
 	'popup/options': 'src/popup/options.js',
 	'service_worker/service_worker': 'src/service_worker/service_worker.ts',

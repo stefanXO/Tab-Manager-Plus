@@ -23,67 +23,81 @@
 			</div>
 			<div class="toggle-options">
 				<div class="optionsBox">
-					<!-- <h4>Tab Manager Plus has been updated to the latest version!</h4> -->
+					<div class="updated-banner" hidden>
+						<strong>Tab Manager Plus has been updated to the all new <!-- VERSION -->7.0.0<!-- /VERSION -->!</strong>
+						Here is what changed. Your windows, saved sessions and settings are all still there. Enjoy an all new look, faster performance and better search!
+					</div>
 					<p><strong>A free browser extension for your tabs - no tracking, open source and as much support as
 						we can do!</strong></p>
 
-					<h3>Here's what's planned for future versions</h3>
+					<h3>Like it? Found a problem?</h3>
 					<ul>
-						<li>Auto-backups</li>
+						<li class="only-chrome">A short review helps others find it: <a href="https://chrome.google.com/webstore/detail/tab-manager-plus-for-chro/cnkdjjdmfiffagllbiiilooaoofcoeff/reviews" target="_blank" rel="noopener">rate it on the Chrome Web Store</a></li>
+						<li class="only-firefox">A short review helps others find it: <a href="https://addons.mozilla.org/en-US/firefox/addon/tab-manager-plus-for-firefox/reviews/" target="_blank" rel="noopener">rate it on Firefox Add-ons</a></li>
+						<li>Something broken or missing? <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues" target="_blank" rel="noopener">Open an issue on GitHub</a>, that is where the work gets planned</li>
+						<li>I made this extension because I need it myself, and I keep it going for the other tab junkies out there. It will never pay for itself, and that is fine. If you want to chip in anyway, small donations cover the running costs (tools, AI, store fees): <a href="https://www.patreon.com/bePatron?u=26287710" target="_blank" rel="noopener">Patreon</a> or <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&amp;hosted_button_id=67TZLSEGYQFFW" target="_blank" rel="noopener">PayPal</a>. A review or a good bug report helps just as much. 🙏</li>
+						<li>To the people emailing about buying the extension or "partnering" for its data: it is not for sale, there is no data, it never leaves your browser. Please buzz off.</li>
 					</ul>
 
-					<h3>Here's what's new since the last time</h3>
+					<h3>What's new</h3>
 					<div class="toggle-box">
 
 						<h3>7.0.0</h3>
+						<h4>New look</h4>
 						<ul>
-							<li>New design for all layouts! Block view is a tidy grid, vertical view is a proper list and horizontal view is a compact strip with one window per row</li>
-							<li>Dark theme redesigned: consistent colors, icons are no longer inverted and window colors show as a colored edge</li>
+							<li>Every layout redesigned: Block view is a grid, List view (was Vertical) shows one tab per line, Rows view (was Horizontal) one window per row (<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/58" target="_blank" rel="noopener">#58</a>)</li>
+							<li>Dark theme rebuilt with consistent colors; window colors show as a colored edge; scrollbars and controls are dark too (<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/99" target="_blank" rel="noopener">#99</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/151" target="_blank" rel="noopener">#151</a>)</li>
 							<li>New window color palette, with a matching set for the dark theme</li>
-							<li>White favicons are visible now in the bright theme: only-white icons get inverted, icons with a white background get a tinted tile</li>
-							<li>Tabs playing sound get a blue tile and a small equalizer badge, muted tabs a crossed speaker, also with animations off</li>
-							<li>The horizontal and vertical layouts are renamed now to Rows view and List view</li>
-							<li>List view: pinned, active, selected, playing and muted tabs get a colored edge on the left and a chip with a matching badge</li>
-							<li>Each window shows when it was last active, and each saved session when it was saved</li>
-							<li>Tabs the browser put to sleep to save memory are marked with a moon badge, and the list view shows an Asleep chip</li>
-							<li>With animations on, windows and tabs fade in and state changes ease instead of snapping; a playing row in the list breathes</li>
-							<li>Improvements: Faster popup load. The popup opens with its final layout, theme and windows in the first frame instead of filling in afterward</li>
-							<li>Clicking the icon while Tab Manager Plus is already open in a tab switches to that tab</li>
-							<li>Highlight Duplicates now only selects the extra copies and keeps one tab per URL, so "Delete" closes only the duplicates at once</li>
+							<li>Favicons: white icons stay visible in the light theme, and icons refresh when a tab finishes loading (<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/251" target="_blank" rel="noopener">#251</a>)</li>
+							<li>Badges show a tab's state: playing sound, muted, asleep (put to sleep by the browser), pinned, active, selected. In List view as chips with a colored edge on the left (<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/171" target="_blank" rel="noopener">#171</a>)</li>
+							<li>Windows show when they were last active, saved sessions when they were saved</li>
+							<li>Subtle animations when they are on: windows and tabs fade in, state changes ease instead of snapping, a playing row breathes</li>
+						</ul>
+						<h4>Faster</h4>
+						<ul>
+							<li>The popup opens with its final layout, theme and windows in the first frame instead of filling in afterwards</li>
+							<li>The popup script is about 40% smaller</li>
+							<li>Tab changes show up immediately</li>
+							<li>Typing right after opening the popup no longer loses the first characters</li>
+						</ul>
+						<h4>Search and duplicates</h4>
+						<ul>
+							<li>Highlight Duplicates selects only the extra copies and keeps one tab per URL, so Delete closes just the duplicates (<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/142" target="_blank" rel="noopener">#142</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/188" target="_blank" rel="noopener">#188</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/240" target="_blank" rel="noopener">#240</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/248" target="_blank" rel="noopener">#248</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/260" target="_blank" rel="noopener">#260</a>)</li>
 							<li>The header shows how many tabs have duplicates and how many are selected</li>
 							<li>Searching while duplicates are highlighted searches within them</li>
-							<li>Improvements: The popup loads faster, its script is about 40% smaller</li>
-							<li>Improvements: Tab changes show up immediately, rapid updates are batched</li>
-							<li>Fix: Favicons will update when a tab finishes loading or changes its icon</li>
-							<li>Fix: Pasting a search term, or editing in the middle of it, would search the wrong tabs</li>
-							<li>Fix: The current window is always listed first and marked, also when opened as a popup</li>
-							<li>Fix: Window names and colors changed in the background did not refresh in the popup</li>
-							<li>Fix: Enabling the sessions feature shows your saved windows right away</li>
-							<li>Fix: Hover text is restored when moving the mouse from a tab back to its window</li>
-							<li>Fix: Sessions have a hover text now, too</li>
-							<li>Fix: Hover texts counted the window buttons as tabs</li>
-							<li>Fix: Hover texts had the wrong pluralization for tabs</li>
-							<li>Fix: Drop indicator when dragging a tab fits every layout now and shows in the dark theme</li>
-							<li>Fix: Window color picker listed the colors right-to-left in some layouts</li>
-							<li>Fix: Window names and colors are restored after a browser restart, even when the window's tabs changed since it was named</li>
-							<li>Fix: Saved sessions could be lost when the storage update from version 5 was interrupted, e.g. by closing the popup</li>
-							<li>Fix: Saved sessions are no longer limited by the browser's 10 MB extension storage quota</li>
-							<li>Fix: The "switch to previous tab" shortcut works again, it forgot its history after a few seconds</li>
-							<li>Fix: The window order in the popup no longer resets on its own</li>
-							<li>Fix: Names and colors of windows that have been closed for a day are cleaned up, so a new window can't inherit an old name</li>
-							<li>Fix: Settings, window names and colors could revert to an older state when the popup was opened while they were being changed</li>
-							<li>Fix: Closing, discarding or moving selected tabs failed when one of them had been closed in the meantime</li>
-							<li>Fix: Saved sessions were changed by just being displayed, which could corrupt exports</li>
-							<li>Fix: Restoring a saved window in own-tab mode now scrolls to the new window</li>
-							<li>Fix: Dark theme: scrollbars and form controls are dark too</li>
-							<li>Fix: The window name and color screen covers the whole popup, its close button shows a pointer and Escape closes only that screen</li>
-							<li>Fix: Typing right after opening the popup no longer loses the first characters</li>
-							<li>Fix: Clearing the search field left the header showing matches for an empty search</li>
-							<li>Fix: Restored windows keep their saved size and position, fitted to the screen they are restored on, and a window saved maximized comes back maximized</li>
-							<li>Firefox: Firefox-based browsers (LibreWolf, Zen, Waterfox) are detected as Firefox</li>
+							<li>Pasting a search term, or editing in the middle of it, now searches the right tabs</li>
+							<li>Clearing the search field no longer shows matches for an empty search</li>
+							<li>Search in titles only with <code>t:word</code>, in urls only with <code>u:word</code> (<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/224" target="_blank" rel="noopener">#224</a>)</li>
+							<li>Exclude tabs from a search with <code>-word</code>, also <code>-u:word</code></li>
+							<li>Search for a phrase with a space by quoting it: <code>"pull request"</code></li>
+							<li>Search with a regular expression: <code>/regex/</code>, also <code>t:/^\d+/</code> (<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/247" target="_blank" rel="noopener">#247</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/156" target="_blank" rel="noopener">#156</a>)</li>
+							<li>Hover the search box for the whole search syntax</li>
+						</ul>
+						<h4>Windows and sessions</h4>
+						<ul>
+							<li>Window names and colors survive a browser restart, even when the window's tabs changed since</li>
+							<li>Names and colors of windows closed for more than a day are cleaned up, so a new window cannot inherit an old name (<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/103" target="_blank" rel="noopener">#103</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/244" target="_blank" rel="noopener">#244</a>)</li>
+							<li>Restored windows keep their size and position, fitted to the screen they are restored on; a window saved maximized comes back maximized (<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/205" target="_blank" rel="noopener">#205</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/208" target="_blank" rel="noopener">#208</a>)</li>
+							<li>Restoring a window in own-tab mode scrolls to it</li>
+							<li>Saved sessions could be lost when the update from version 5 was interrupted, e.g. by closing the popup</li>
+							<li>Saved sessions are no longer limited by the browser's 10 MB storage quota, and showing a session no longer changes it (which could corrupt exports)</li>
+							<li>Enabling the sessions feature shows your saved windows right away</li>
+							<li>The window order no longer resets on its own; the current window is always listed first and marked, also as a popup (<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/241" target="_blank" rel="noopener">#241</a>)</li>
+							<li>Clicking the icon while Tab Manager Plus is already open in a tab switches to that tab</li>
+							<li>The "switch to previous tab" shortcut works again (<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/37" target="_blank" rel="noopener">#37</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/108" target="_blank" rel="noopener">#108</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/238" target="_blank" rel="noopener">#238</a>)</li>
+						</ul>
+						<h4>Smaller fixes</h4>
+						<ul>
+							<li>Settings, window names and colors no longer revert to an older state when the popup opens while they are being changed (<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/126" target="_blank" rel="noopener">#126</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/131" target="_blank" rel="noopener">#131</a>)</li>
+							<li>Closing, discarding or moving selected tabs works even when one of them was closed in the meantime</li>
+							<li>Window names and colors changed in the background refresh in the popup</li>
+							<li>Hover texts: restored when moving from a tab back to its window, sessions have one too, tab counts and plurals are right (<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/121" target="_blank" rel="noopener">#121</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/183" target="_blank" rel="noopener">#183</a>)</li>
+							<li>The drop indicator when dragging a tab fits every layout and shows in the dark theme; the color picker lists colors in order (<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/97" target="_blank" rel="noopener">#97</a>)</li>
+							<li>The window name and color screen covers the whole popup, its close button shows a pointer and Escape closes only that screen</li>
+							<li>Firefox-based browsers (LibreWolf, Zen, Waterfox) are detected as Firefox</li>
 						</ul>
 
-						<h3>6.0.0</h3>
+						<h3>6.0.0 <time datetime="2024-10-01" title="2024-10-01"></time></h3>
 						<ul>
 							<li>You can now open single tabs from your saved sessions</li>
 							<li>Experimental: Try to restore window names and colors after a browser restart</li>
@@ -113,30 +127,30 @@
 							  tabs.</li>
 						</ul>
 
-						<h3>5.3.0</h3>
+						<h3>5.3.0 <time datetime="2024-09-22" title="2024-09-22"></time></h3>
 						<ul>
 							<li>Fix: Move to manifest v3</li>
 						</ul>
 
-						<h3>5.2.1</h3>
+						<h3>5.2.1 <time datetime="2024-09-22" title="2024-09-22"></time></h3>
 						<ul>
 							<li>Fix: White page crash when tab had no hostname / title</li>
 						</ul>
 
-						<h3>5.2.0</h3>
+						<h3>5.2.0 <time datetime="2020-06-22" title="2020-06-22"></time></h3>
 						<ul>
 							<li>Improves search! Searching for "google mail" will highlight tabs that have both words
-								included #107
+								included <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/107" target="_blank" rel="noopener">#107</a>
 							</li>
 							<li>Improves search! Searching for "google OR mail" will highlight tabs that have either of
-								the worlds included #106
+								the worlds included <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/106" target="_blank" rel="noopener">#106</a>
 							</li>
 							<li>Fix: Searching for the same string length would not trigger another search, but that
-								could have stopped an accent selection #93
+								could have stopped an accent selection <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/93" target="_blank" rel="noopener">#93</a>
 							</li>
-							<li>Shift-right click will now select tabs in between the last selected tab #104 #94</li>
+							<li>Shift-right click will now select tabs in between the last selected tab <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/104" target="_blank" rel="noopener">#104</a> <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/94" target="_blank" rel="noopener">#94</a></li>
 							<li>Design Fix: default font size set to 16px</li>
-							<li>Firefox: Experimental Sidebar/Panel support added! #60</li>
+							<li>Firefox: Experimental Sidebar/Panel support added! <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/60" target="_blank" rel="noopener">#60</a></li>
 							<li>Firefox: Restore sessions will throw warning when trying in the popup</li>
 							<li>Default popup size increased to 800x600</li>
 							<li>Default design changed to blocks</li>
@@ -144,18 +158,18 @@
 							<li>Improvements: Don't render windows in the background while the color/title selection is
 								active
 							</li>
-							<li>Improvements: Warn when trying to backup empty sessions #98</li>
+							<li>Improvements: Warn when trying to backup empty sessions <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/98" target="_blank" rel="noopener">#98</a></li>
 							<li>Fix: Doesn't allow users to export empty session files, shows a warning instead</li>
-							<li>Fix: Don't show import/export options for sessions if the feature is not enabled #98
+							<li>Fix: Don't show import/export options for sessions if the feature is not enabled <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/98" target="_blank" rel="noopener">#98</a>
 							</li>
-							<li>Fix: Make it more obvious that you can type right away #86</li>
-							<li>Fix: Pluralization fixes when only 1 tab was selected #87</li>
+							<li>Fix: Make it more obvious that you can type right away <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/86" target="_blank" rel="noopener">#86</a></li>
+							<li>Fix: Pluralization fixes when only 1 tab was selected <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/87" target="_blank" rel="noopener">#87</a></li>
 							<li>Firefox: Fix: Don't allow to import from the popup due to a Firefox bug. Show warning
-								instead #57 #96
+								instead <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/57" target="_blank" rel="noopener">#57</a> <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/96" target="_blank" rel="noopener">#96</a>
 							</li>
 						</ul>
 
-						<h3>5.1.6</h3>
+						<h3>5.1.6 <time datetime="2020-04-28" title="2020-04-28"></time></h3>
 						<ul>
 							<li>Fix: Pressing "enter" or "return" when only one tab is selected, should focus that tab
 								properly in Firefox
@@ -166,7 +180,7 @@
 							</li>
 						</ul>
 
-						<h3>5.1.5</h3>
+						<h3>5.1.5 <time datetime="2020-04-26" title="2020-04-26"></time></h3>
 						<ul>
 							<li>Feature: Changing the name of a window will set change the windows' title in Firefox as
 								well
@@ -187,20 +201,20 @@
 							</li>
 						</ul>
 
-						<h3>5.1.4</h3>
+						<h3>5.1.4 <time datetime="2020-04-16" title="2020-04-16"></time></h3>
 						<ul>
 							<li>Fix: Moving multiple tabs would sometimes not work when using the button or [Enter] key.
 								This should be fixed now
 							</li>
 						</ul>
 
-						<h3>5.1.3</h3>
+						<h3>5.1.3 <time datetime="2019-11-04" title="2019-11-04"></time></h3>
 						<ul>
 							<li>Fix: Popup width adjustable again instead of stuck to 800px</li>
 							<li>Fix: Only open the popup from context menu if current browser supports it</li>
 						</ul>
 
-						<h3>5.1.2</h3>
+						<h3>5.1.2 <time datetime="2019-11-04" title="2019-11-04"></time></h3>
 						<ul>
 							<li>Overworked and more friendlier context menu. You can now open the popup from the context
 								menu, if opening as own tab is the default. You can now also access the changelog from
@@ -216,14 +230,14 @@
 							<li>Performance improvements, such as not rendering hidden tabs to the DOM</li>
 						</ul>
 
-						<h3>5.1.1</h3>
+						<h3>5.1.1 <time datetime="2019-11-01" title="2019-11-01"></time></h3>
 						<ul>
 							<li>Fix: The "highlight duplicate tabs" button may have disappeared - it should be back
 								now
 							</li>
 						</ul>
 
-						<h3>5.1.0</h3>
+						<h3>5.1.0 <time datetime="2019-10-31" title="2019-10-31"></time></h3>
 						<ul>
 
 							<li>You can now see which tabs are playing sounds and/or music. For this you need to have
@@ -262,7 +276,7 @@
 
 						</ul>
 
-						<h3>5.0.8</h3>
+						<h3>5.0.8 <time datetime="2019-10-28" title="2019-10-28"></time></h3>
 						<ul>
 
 							<li>You can now backup and restore your saved windows</li>
@@ -284,7 +298,7 @@
 
 						</ul>
 
-						<h3>5.0.7</h3>
+						<h3>5.0.7 <time datetime="2019-10-25" title="2019-10-25"></time></h3>
 						<ul>
 
 							<li>Dark mode - you can now enable the dark mode in the options!</li>
@@ -294,7 +308,7 @@
 
 						</ul>
 
-						<h3>5.0.6</h3>
+						<h3>5.0.6 <time datetime="2019-10-25" title="2019-10-25"></time></h3>
 						<ul>
 
 							<li>Fixed issue where current tab wouldn't be closed when pressing the "close tabs" button
@@ -303,7 +317,7 @@
 
 						</ul>
 
-						<h3>5.0.5</h3>
+						<h3>5.0.5 <time datetime="2019-10-23" title="2019-10-23"></time></h3>
 						<ul>
 
 							<li>Removed unnecessary chrome permission</li>
@@ -312,7 +326,7 @@
 						</ul>
 
 
-						<h3>5.0.4</h3>
+						<h3>5.0.4 <time datetime="2019-10-23" title="2019-10-23"></time></h3>
 						<ul>
 
 							<li>Save/restore windows ( beta ) - you can now save and restore windows into your local
@@ -326,7 +340,7 @@
 
 						</ul>
 
-						<h3>5.0.3</h3>
+						<h3>5.0.3 <time datetime="2019-08-15" title="2019-08-15"></time></h3>
 						<ul>
 
 							<li>Added context menu to open Tab Manager in its' own tab</li>
@@ -337,13 +351,13 @@
 							<li>Fixed Firefox error where a new window would not be created</li>
 
 						</ul>
-						<h3>5.0.2</h3>
+						<h3>5.0.2 <time datetime="2019-08-06" title="2019-08-06"></time></h3>
 						<ul>
 
 							<li>Fixes for Chrome to support the browser based api</li>
 
 						</ul>
-						<h3>5.0.1</h3>
+						<h3>5.0.1 <time datetime="2019-08-06" title="2019-08-06"></time></h3>
 						<ul>
 
 							<li>Fixes to rate and review buttons</li>
@@ -358,7 +372,7 @@
 							<li>Font changes in options menu</li>
 
 						</ul>
-						<h3>5.0.0</h3>
+						<h3>5.0.0 <time datetime="2019-08-05" title="2019-08-05"></time></h3>
 						<ul>
 
 							<li>Rate and review button</li>
@@ -366,7 +380,7 @@
 							<li>Prepared Firefox compatibility</li>
 
 						</ul>
-						<h3>4.9.9</h3>
+						<h3>4.9.9 <time datetime="2019-02-27" title="2019-02-27"></time></h3>
 						<ul>
 
 							<li>If the current tab is not in the initial popup screen, then we'll scroll down to it</li>
@@ -376,21 +390,21 @@
 							<li>Small fixes to window titles from last update</li>
 
 						</ul>
-						<h3>4.9.8</h3>
+						<h3>4.9.8 <time datetime="2019-02-27" title="2019-02-27"></time></h3>
 						<ul>
 
 							<li>Add option to enable/disable window titles</li>
 							<li>Smarter window title detection, especially for super-long titles</li>
 
 						</ul>
-						<h3>4.9.7</h3>
+						<h3>4.9.7 <time datetime="2019-01-24" title="2019-01-24"></time></h3>
 						<ul>
 
 							<li>Fix small rendering issues</li>
 							<li>Re-arrange some options</li>
 
 						</ul>
-						<h3>4.9.6</h3>
+						<h3>4.9.6 <time datetime="2019-01-24" title="2019-01-24"></time></h3>
 						<ul>
 
 							<li>Nicer wrapping of windows</li>
@@ -398,14 +412,14 @@
 							<li>Fixes in list views for high width popups, sometimes the titles were cut off</li>
 
 						</ul>
-						<h3>4.9.5</h3>
+						<h3>4.9.5 <time datetime="2019-01-23" title="2019-01-23"></time></h3>
 						<ul>
 
 							<li>Unnamed windows will show now the top domains in it instead</li>
 							<li>Added a close option to the naming and color popups</li>
 
 						</ul>
-						<h3>4.9.4</h3>
+						<h3>4.9.4 <time datetime="2019-01-23" title="2019-01-23"></time></h3>
 						<ul>
 
 							<li>Fixes to stuck tab counters</li>
@@ -413,19 +427,19 @@
 							<li>Various bugfixes and style changes</li>
 
 						</ul>
-						<h3>4.9.3</h3>
+						<h3>4.9.3 <time datetime="2018-06-15" title="2018-06-15"></time></h3>
 						<ul>
 
 							<li>Fixes for older browsers</li>
 
 						</ul>
-						<h3>4.9.2</h3>
+						<h3>4.9.2 <time datetime="2018-06-15" title="2018-06-15"></time></h3>
 						<ul>
 
 							<li>Fixes a bug when localStorage is empty</li>
 
 						</ul>
-						<h3>4.9.1</h3>
+						<h3>4.9.1 <time datetime="2018-06-15" title="2018-06-15"></time></h3>
 						<ul>
 
 							<li>New options page</li>
@@ -435,7 +449,7 @@
 							<li>minimized windows are now moved to their own section</li>
 
 						</ul>
-						<h3>4.9.0</h3>
+						<h3>4.9.0 <time datetime="2019-01-24" title="2019-01-24"></time></h3>
 						<ul>
 
 							<li>Allows you to give windows colors</li>
@@ -472,5 +486,6 @@
 	</div>
 </div>
 
+<script src="dist/popup/changelog.js"></script>
 </body>
 </html>

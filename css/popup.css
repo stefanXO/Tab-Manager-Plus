@@ -77,6 +77,11 @@ input, textarea {
 	-ms-user-select: initial;
 	user-select: initial;
 }
+/* the options page and the changelog are text: let people copy from them */
+.optionsBox, .optionsBox * {
+	-webkit-user-select: text;
+	user-select: text;
+}
 /*.noscrollbar {
 	padding-right: 20px;
 }*/

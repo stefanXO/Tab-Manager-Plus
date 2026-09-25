@@ -37,8 +37,12 @@ browser.alarms.onAlarm.addListener(async function (alarm) {
 	}
 });
 
-browser.runtime.onInstalled.addListener(async function () {
+browser.runtime.onInstalled.addListener(async function (details) {
 	console.log(" ON INSTALLED");
+	// 7.0 is a big change from the 5.x.y and 6.x.y that people run: show them once
+	if (details.reason === "update" && /^[56]\.\d+\.\d+$/.test(details.previousVersion || "")) {
+		browser.tabs.create({ url: "changelog.html?update" }).catch(function (e) { console.error(e); });
+	}
 	// context menus persist in the browser, they only need creating here
 	try {
 		await _c.setupContextMenus();
