@@ -2,6 +2,7 @@
 
 import {migrated} from '@helpers/migrate';
 import {getLocalStorage} from "@helpers/storage";
+import * as browser from 'webextension-polyfill';
 import {TabManager} from '@views';
 import * as React from 'react';
 import { createRoot } from 'react-dom/client';
@@ -37,11 +38,31 @@ setTimeout(loadApp, 3000);
 setTimeout(loadApp, 5000);
 setTimeout(loadApp, 15000);
 
+async function switchToOwnTab() : Promise<boolean> {
+	const page = browser.runtime.getURL("popup.html");
+	const tabs = await browser.tabs.query({});
+	const current = await browser.windows.getLastFocused();
+	const own = tabs
+		.filter((tab) => (tab.url || tab.pendingUrl || "") === page)
+		.sort((a, b) => (a.windowId === current.id ? 0 : 1) - (b.windowId === current.id ? 0 : 1))[0];
+	if (!own) return false;
+	await browser.windows.update(own.windowId, {focused: true});
+	await browser.tabs.update(own.id, {active: true});
+	return true;
+}
+
 async function loadApp() {
 	if (!!window.loaded) return;
 	if (!!window.loading) return;
 	try {
 		window.loading = true;
+		// A Tab Manager tab is already open (opened from the icon's menu or by
+		// the "open in own tab" setting): the popup is the wrong place, switch
+		// to that tab instead. The tab's url is popup.html without a query.
+		if (window.inPopup && await switchToOwnTab()) {
+			window.close();
+			return;
+		}
 		// the migration writes tabHeight/tabWidth and the TabManager settings;
 		// reading them earlier would race it and write defaults on top
 		await migrated;

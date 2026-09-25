@@ -21,7 +21,7 @@ export async function openPopup() {
 }
 
 export async function openAsOwnTab() {
-	const popup_page = await browser.runtime.getURL("popup.html");
+	const popup_page = browser.runtime.getURL("popup.html");
 	const tabs = await browser.tabs.query({});
 
 	let currentTab : browser.Tabs.OnActivatedActiveInfoType;
@@ -33,18 +33,21 @@ export async function openAsOwnTab() {
 		previousTab = globalTabsActive[globalTabsActive.length - 2];
 	}
 
-	for (var i = 0; i < tabs.length; i++) {
-		const tab = tabs[i];
-		if (tab.url.indexOf("popup.html") > -1 && tab.url.indexOf(popup_page) > -1) {
-			if (currentTab && currentTab.tabId && tab.id === currentTab.tabId && previousTab && previousTab.tabId) {
-				await focusOnTabAndWindow(previousTab.tabId, previousTab.windowId);
-				return;
-			} else {
-				await browser.windows.update(tab.windowId, {focused: true});
-				await browser.tabs.highlight({windowId: tab.windowId, tabs: tab.index});
-				return;
-			}
+	// an open Tab Manager tab, the one in the current window first. url can be
+	// missing on tabs the extension may not see (incognito), hence the guard
+	const current = await browser.windows.getLastFocused();
+	const existing = tabs
+		.filter((tab) => (tab.url || tab.pendingUrl || "").startsWith(popup_page))
+		.sort((a, b) => (a.windowId === current.id ? 0 : 1) - (b.windowId === current.id ? 0 : 1))[0];
+
+	if (existing) {
+		// clicking the icon while already on the Tab Manager tab toggles back
+		if (currentTab && currentTab.tabId === existing.id && previousTab && previousTab.tabId) {
+			await focusOnTabAndWindow(previousTab.tabId, previousTab.windowId);
+		} else {
+			await focusOnTabAndWindow(existing.id, existing.windowId);
 		}
+		return;
 	}
 	await browser.tabs.create({url: "popup.html"});
 }
