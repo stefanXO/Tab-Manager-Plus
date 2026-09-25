@@ -105,8 +105,36 @@ input, textarea {
 	-ms-transform: translate3d(0, 0, 0);
 	transform: translate3d(0, 0, 0);*/
 }
-.animations .window{
-	/*transition: all 0.1s linear;*/
+/* Entrance. Nothing moves: every card and tile is at its final place and size
+   from the first frame. Cards fade in, tiles fade in from 92%, rows fade, each
+   a few ms after the previous one (--i, set by Window / Tab). Fill mode is
+   backwards, so once it has run the state transitions apply as usual. Runs
+   on mount, so a new window or tab gets it too. */
+@keyframes tmp-card {
+	from { opacity: 0; }
+	to { opacity: 1; }
+}
+/* from only: the end state is whatever the tile's own rules say (a suspended
+   tile ends at its dimmed opacity, not at 1) */
+@keyframes tmp-in {
+	from { opacity: 0; transform: scale(0.6); }
+}
+@keyframes tmp-row {
+	from { opacity: 0; }
+	to { opacity: 1; }
+}
+.animations .window {
+	--wdelay: calc(min(var(--i, 0), 8) * 30ms);
+	animation: tmp-card 160ms ease-out backwards;
+	animation-delay: var(--wdelay);
+}
+.animations .window .tab.enter {
+	animation: tmp-in 220ms cubic-bezier(0.3, 1.3, 0.5, 1) backwards;
+	animation-delay: calc(var(--wdelay, 0ms) + min(var(--i, 0), 16) * 10ms);
+}
+.animations .window.vertical .tab.full.enter {
+	animation: tmp-row 140ms ease-out backwards;
+	animation-delay: calc(var(--wdelay, 0ms) + min(var(--i, 0), 12) * 8ms);
 }
 .window.block{
 	border-top:none;
@@ -245,17 +273,16 @@ h1,h2,h3,h4,h5,h6 {
 	background-size:1.5rem 1.5rem;
 }
 .animations .window.blocks-big .tab:hover {
-	transform: scale(1.1);
-	filter: none;
+	transform: scale(1.12);
 }
 .animations .window.blocks-big .tab.search-active {
-	transform: scale(1.1);
+	transform: scale(1.08);
 }
-.animations .window.blocks-big .tab.search-faded{
-	transform: scale(0.75);
+.animations .window.blocks-big .tab.search-faded {
+	transform: scale(0.85);
 }
 .animations .window.blocks-big .tab.selected {
-	transform: scale(1.05);
+	transform: scale(1.1);
 }
 .window.searchbox .icon{
 	height: 2rem;
@@ -341,35 +368,52 @@ h1,h2,h3,h4,h5,h6 {
 	-ms-transform: translate3d(0, 0, 0);
 	transform: translate3d(0, 0, 0);*/
 }
+/* Motion. One quiet system: every state change of a tile is a short ease-out
+   on transform / opacity (160 ms, no overshoot), amplitudes small enough that
+   a whole window changing at once reads as a breath, not a jump. Search
+   results ripple through a window a few ms per tile. A tile selected by hand
+   gets one soft pulse ring; a selection made by the search (class
+   search-active) does not, typing would pulse the whole window per letter.
+   Same values in compact mode. */
+:root {
+	--motion: 220ms cubic-bezier(0.3, 1.3, 0.5, 1);
+}
 .animations .tab {
 	transform: scale(1);
 	filter: none;
+	transition: transform var(--motion), opacity var(--motion), background-color var(--motion), box-shadow var(--motion);
 }
 .animations .tab:hover {
-	transform: scale(1.4);
+	transform: scale(1.25);
 	filter: none;
 }
-.animations.compact .tab:hover {
-	transform: scale(1.1);
-}
-.animations.compact .tab.vertical:hover {
-	transform: scale(1);
-}
-.tab.highlighted {
-	border-color: rgba(0, 0, 0, 0.75);
-	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25);
+.animations .tab.search-active, .animations .tab.search-faded {
+	transition-delay: calc(min(var(--i, 0), 16) * 10ms);
 }
 .animations .tab.search-active {
-	transform: scale(1.1);
+	transform: scale(1.12);
 }
-.animations .tab.search-faded{
-	transform: scale(0.65);
+.animations .tab.search-faded {
+	transform: scale(0.75);
 }
 .animations .tab.selected {
-	transform: scale(1.3);
+	transform: scale(1.2);
 }
-.animations.compact .tab.selected {
-	transform: scale(1.05);
+@keyframes tmp-pulse {
+	0% { box-shadow: 0 0 0 0 rgba(255, 190, 0, 0.9); }
+	100% { box-shadow: 0 0 0 14px rgba(255, 190, 0, 0); }
+}
+/* not while entering: that rule owns the animation slot for the first moment */
+.animations .window:not(.vertical) .tab.selected:not(.search-active):not(.enter) {
+	animation: tmp-pulse 500ms ease-out;
+}
+.animations .window.vertical .tab.full {
+	transition: background-color var(--motion), border-color var(--motion);
+}
+/* the active tab's tile: dark edge and a hairline ring */
+.tab.highlighted {
+	border-color: rgba(102, 51, 153, 0.55);
+	box-shadow: 0 0 0 1px rgba(102, 51, 153, 0.2);
 }
 .tab.selected:hover{
 	background-color: #ffff97;
@@ -425,7 +469,7 @@ h1,h2,h3,h4,h5,h6 {
 	background-color: purple;
 	color: yellow;
 }
-.animations .icon.audible:not(.muted).blocks, .animations .icon.audible:not(.muted) .iconoverlay{
+.animations .icon.audible:not(.muted).blocks {
 	animation-name: audible;
 	animation-duration: 3s;
 	animation-iteration-count: infinite;
@@ -436,8 +480,7 @@ h1,h2,h3,h4,h5,h6 {
    corner, crossed when muted; a muted tab gets only that, no blue. The list
    layout shows the blue as a left accent and on the favicon box, plus a chip
    (.tab-audible) at the end of the row. */
-.icon.tab.audible:not(.muted):not(.selected),
-.icon.tab.audible:not(.muted) > .iconoverlay {
+.icon.tab.audible:not(.muted):not(.selected) {
 	background-color: #4285f4;
 }
 /* State badges: small SVG marks, white glyph on the state's colour, used in
@@ -787,6 +830,7 @@ h1,h2,h3,h4,h5,h6 {
 	display: inline-block;
 	float:right;
 }
+/* when the window was last active: bottom left of the card, in the actions row */
 .window-age {
 	position: absolute;
 	left: 0.75rem;
@@ -1318,7 +1362,7 @@ table td {
 }
 /* hairline between rows, no ring on the active row: the accent and tint mark it */
 .window.vertical .tab.full + .tab.full {
-	border-top: 1px solid rgba(0, 0, 0, 0.06);
+	border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 .window.vertical .tab.full {
 	box-shadow: none;
@@ -1351,8 +1395,13 @@ table td {
 .window.vertical .tab.full.audible:hover {
 	background-color: rgba(66, 133, 244, 0.16);
 }
-.window.vertical .tab.full.audible > .iconoverlay {
-	background-color: #4285f4;
+/* a playing row breathes: the tint swells a little and back, slow */
+@keyframes tmp-breathe {
+	0%, 100% { background-color: rgba(66, 133, 244, 0.08); }
+	50% { background-color: rgba(66, 133, 244, 0.22); }
+}
+.animations .window.vertical .tab.full.audible:not(.muted):not(.selected):not(:hover) {
+	animation: tmp-breathe 3s ease-in-out infinite;
 }
 .window.vertical .tab.full.muted {
 	border-left-color: rgba(0, 0, 0, 0.35);
