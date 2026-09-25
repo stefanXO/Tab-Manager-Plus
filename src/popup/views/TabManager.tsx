@@ -857,9 +857,12 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			dirty: true
 		});
 	}
-	search = (e) => {
+	search = (e : React.ChangeEvent<HTMLInputElement>) => {
+		this.runSearch(e.target.value);
+	}
+	runSearch(query : string) {
 		let hiddenCount = this.state.hiddenCount || 0;
-		const searchQuery = e.target.value || "";
+		const searchQuery = query || "";
 		const searchLen = searchQuery.length;
 
 		let searchType = "normal";
@@ -913,7 +916,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				tabSearchTerm = tabSearchTerm.toLowerCase();
 				let match = false;
 				if(searchType === "normal") {
-					match = (tabSearchTerm.indexOf(e.target.value.toLowerCase()) >= 0);
+					match = (tabSearchTerm.indexOf(searchQuery.toLowerCase()) >= 0);
 				}else if(searchType === "OR") {
 					for (let searchOR of searchTerms) {
 						searchOR = searchOR.trim().toLowerCase();
@@ -957,15 +960,15 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		})
 
 		const matches = this.state.tabsbyid.size - hiddenCount;
-		// var matchtext = "";
-		if (matches === 0 && searchLen > 0) {
+		if (searchLen === 0) {
+			// the field was cleared: no search, no header
 			this.setState({
-				topText: "No matches for '" + searchQuery + "'",
+				topText: "",
 				bottomText: ""
 			});
 		} else if (matches === 0) {
 			this.setState({
-				topText: "",
+				topText: "No matches for '" + searchQuery + "'",
 				bottomText: ""
 			});
 		} else if (matches > 1) {

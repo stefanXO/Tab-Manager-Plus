@@ -6,6 +6,7 @@
 - White favicons are visible now in the bright theme: only-white icons get inverted, icons with a white background get a tinted tile
 - Tabs playing sound get a blue tile and a small equalizer badge, muted tabs a crossed speaker, also with animations off
 - Vertical view: pinned, active, selected, playing and muted tabs get a colored edge on the left and a chip with a matching badge
+- Clicking the icon while Tab Manager Plus is already open in a tab switches to that tab
 - Highlight Duplicates now only selects the extra copies and keeps one tab per URL, so "Delete" closes only the duplicates at once
 - The header shows how many tabs have duplicates and how many are selected
 - Searching while duplicates are highlighted searches within them
@@ -34,6 +35,9 @@
 - Fix: Restoring a saved window in own-tab mode now scrolls to the new window
 - Fix: Dark theme: scrollbars and form controls are dark too
 - Fix: The window name and color screen covers the whole popup, its close button shows a pointer and Escape closes only that screen
+- Fix: Typing right after opening the popup no longer loses the first characters
+- Fix: Clearing the search field left the header showing matches for an empty search
+- Fix: Restored windows keep their saved size and position, and a window saved maximized comes back maximized
 - Firefox: Firefox-based browsers (LibreWolf, Zen, Waterfox) are detected as Firefox
 
 6.0.0
