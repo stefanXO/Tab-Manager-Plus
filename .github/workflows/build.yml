@@ -29,5 +29,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run check-version
+      - run: npm run check-changelog
       - run: npm test
       - run: npm run build   # tsc --noEmit && node build.mjs
