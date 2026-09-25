@@ -7,7 +7,7 @@ import {setWindowColor, setWindowName} from "@background/actions";
 import * as S from "@strings";
 import * as browser from 'webextension-polyfill';
 import {getSetting} from "@helpers/settings";
-import {ISavedSession} from "@types";
+import {ISavedSession, IScreenBounds} from "@types";
 import {IS_FIREFOX} from "@helpers/browser";
 
 // must stay synchronous: it runs during the service worker's first event loop
@@ -68,7 +68,7 @@ export async function createWindowWithTabs(tabs : browser.Tabs.Tab[], isIncognit
 }
 
 // resolves with the id of the new window, so the popup can scroll to it
-export async function createWindowWithSessionTabs(session: ISavedSession, tabId: number) : Promise<number | undefined> {
+export async function createWindowWithSessionTabs(session: ISavedSession, tabId: number, screen? : IScreenBounds) : Promise<number | undefined> {
 
 	var customName : string;
 	if (session && session.name && session.customName) {
@@ -79,33 +79,13 @@ export async function createWindowWithSessionTabs(session: ISavedSession, tabId:
 		color = session.color;
 	}
 
-	var whitelistWindow = ["left", "top", "width", "height", "incognito", "type"];
-
-	if (IS_FIREFOX) {
-		whitelistWindow = ["left", "top", "width", "height", "incognito", "type"];
-	}
-
 	var whitelistTab = ["url", "active", "selected", "pinned", "index"];
 
 	if (IS_FIREFOX) {
 		whitelistTab = ["url", "active", "pinned", "index"];
 	}
 
-	var filteredWindow : browser.Windows.CreateCreateDataType = Object.keys(session.windowsInfo)
-		.filter(function (key) {
-			return whitelistWindow.includes(key);
-		})
-		.reduce(function (obj, key) {
-			obj[key] = session.windowsInfo[key];
-			return obj;
-		}, {});
-
-	if (filteredWindow.left < 0 || filteredWindow.left > 800) filteredWindow.left = 0;
-	if (filteredWindow.top < 0 || filteredWindow.top > 600) filteredWindow.top = 0;
-	if (filteredWindow.width > 800) filteredWindow.width = 800;
-	if (filteredWindow.height > 600) filteredWindow.height = 600;
-
-	filteredWindow.type = "normal";
+	const filteredWindow = await windowGeometry(session.windowsInfo, screen);
 
 	// console.log("filtered window", filteredWindow);
 
@@ -172,6 +152,57 @@ export async function createWindowWithSessionTabs(session: ISavedSession, tabId:
 
 	await browser.windows.update(newWindow.id, {focused: true});
 	return newWindow.id;
+}
+
+// How a saved window comes back. A maximized window is restored maximized
+// (a window cannot be created with both a state and bounds). Anything else
+// gets its saved position and size, fitted into a display that exists now:
+// the monitor it was saved on may be gone or smaller (#208; a window saved
+// on an ultrawide, restored on a laptop). The displays come from the
+// system.display permission when granted, else the one display the popup
+// reported. The old fix squeezed every window into 800x600 at the top left
+// corner (#205).
+async function windowGeometry(saved : browser.Windows.Window, screen? : IScreenBounds) : Promise<browser.Windows.CreateCreateDataType> {
+	const create : browser.Windows.CreateCreateDataType = {
+		type: "normal",
+		incognito: !!saved.incognito
+	};
+	if (saved.state === "maximized" || saved.state === "fullscreen") {
+		create.state = "maximized";
+		return create;
+	}
+	const bounds = { left: saved.left, top: saved.top, width: saved.width, height: saved.height };
+	const numbers = Object.values(bounds).every((v) => typeof v === "number" && isFinite(v));
+	if (!numbers || bounds.width < 100 || bounds.height < 100) return create;
+
+	const displays = await knownDisplays(screen);
+	if (displays.length === 0) return create;   // nothing to fit into: browser default placement
+	// the display the saved window was on, if it is still there; else the popup's
+	const home = displays.find((d) => is_in_bounds(bounds, d)) || displays[0];
+	Object.assign(create, fitInto(bounds, home));
+	return create;
+}
+
+// the displays available now: all of them with the permission, else the one
+// the popup is on (first in the list, so it is the fallback target)
+async function knownDisplays(screen? : IScreenBounds) : Promise<IScreenBounds[]> {
+	const list : IScreenBounds[] = screen ? [screen] : [];
+	if (!IS_FIREFOX && await browser.permissions.contains({ permissions: ["system.display"] })) {
+		for (const d of await chrome.system.display.getInfo()) {
+			const b = d.workArea || d.bounds;
+			if (!list.some((s) => s.left === b.left && s.top === b.top)) list.push({ left: b.left, top: b.top, width: b.width, height: b.height });
+		}
+	}
+	return list;
+}
+
+// shrink to the display if needed, then move inside it
+function fitInto(bounds : IScreenBounds, display : IScreenBounds) : IScreenBounds {
+	const width = Math.min(bounds.width, display.width);
+	const height = Math.min(bounds.height, display.height);
+	const left = Math.min(Math.max(bounds.left, display.left), display.left + display.width - width);
+	const top = Math.min(Math.max(bounds.top, display.top), display.top + display.height - height);
+	return { left, top, width, height };
 }
 
 export function focusOnWindowDelayed(windowId: number) {

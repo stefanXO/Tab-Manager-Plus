@@ -146,7 +146,14 @@ export class Session extends React.Component<ISession, ISessionState> {
 		const windowId : number | undefined = await browser.runtime.sendMessage<ICommand, number | undefined>({
 			command: S.create_window_with_session_tabs,
 			session: this.props.session,
-			tab_id: tabId
+			tab_id: tabId,
+			// the worker has no screen; this is the display the popup is on
+			screen: {
+				left: (screen as Screen & { availLeft?: number }).availLeft || 0,
+				top: (screen as Screen & { availTop?: number }).availTop || 0,
+				width: screen.availWidth,
+				height: screen.availHeight
+			}
 		});
 
 		if (!!window.inPopup) {

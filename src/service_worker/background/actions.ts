@@ -65,7 +65,7 @@ function dispatch(request : ICommand) : Promise<unknown> | void {
 		case S.create_window_with_tabs:
 			return createWindowWithTabs(request.tabs, request.incognito);
 		case S.create_window_with_session_tabs:
-			return createWindowWithSessionTabs(request.session, request.tab_id);
+			return createWindowWithSessionTabs(request.session, request.tab_id, request.screen);
 		case S.close_tabs:
 			return closeTabs(request.tabs);
 	}

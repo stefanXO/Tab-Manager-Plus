@@ -7,6 +7,8 @@ export interface ICommand
 	window_ids?: number[],
 	window_id?: number,
 	tab_id?: number,
+	// the display the popup is on (screen.avail*), for placing a restored window
+	screen?: IScreenBounds,
 	color?: string,
 	name?: string,
 	session?: ISavedSession,
@@ -14,4 +16,11 @@ export interface ICommand
 	saved_tab?: browser.Tabs.OnActivatedActiveInfoType,
 	tabs?: browser.Tabs.Tab[],
 	incognito?: boolean
+}
+
+export interface IScreenBounds {
+	left: number,
+	top: number,
+	width: number,
+	height: number
 }
