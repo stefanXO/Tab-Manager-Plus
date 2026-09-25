@@ -1286,6 +1286,7 @@ table td {
 	height: 1.1rem;
 	margin: 0;
 	border: 0;
+	box-shadow: none;
 	border-radius: 3px;
 	background-size: 1rem 1rem;
 	background-color: transparent;
