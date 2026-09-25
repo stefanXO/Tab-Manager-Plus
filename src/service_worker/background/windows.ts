@@ -204,15 +204,6 @@ async function knownDisplays(screen? : IScreenBounds) : Promise<IScreenBounds[]>
 	return list;
 }
 
-// shrink to the display if needed, then move inside it
-function fitInto(bounds : IScreenBounds, display : IScreenBounds) : IScreenBounds {
-	const width = Math.min(bounds.width, display.width);
-	const height = Math.min(bounds.height, display.height);
-	const left = Math.min(Math.max(bounds.left, display.left), display.left + display.width - width);
-	const top = Math.min(Math.max(bounds.top, display.top), display.top + display.height - height);
-	return { left, top, width, height };
-}
-
 export function focusOnWindowDelayed(windowId: number) {
 	setTimeout(() => focusOnWindow(windowId), 125);
 }
@@ -376,21 +367,4 @@ export async function checkWindow(windowId : number) {
 		hashes.set(windowId, newHash);
 		await setLocalStorageMap(S.windowHashes, hashes);
 	});
-}
-
-export function hashcode(window : browser.Windows.Window) : number {
-	let urls = [];
-	for (let i = 0; i < window.tabs.length; i++) {
-		if (!window.tabs[i].url) continue;
-		urls.push(window.tabs[i].url);
-	}
-	urls.sort();
-
-	let hash = 0;
-	for (let i = 0; i < urls.length; i++) {
-		const code = stringHashcode(urls[i]);
-		hash = ((hash << 5) - hash) + code;
-		hash = hash & hash; // Convert to 32bit integer
-	}
-	return hash;
 }

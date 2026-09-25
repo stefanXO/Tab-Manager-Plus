@@ -1,6 +1,6 @@
 "use strict";
 
-import {hashcode} from "@background/windows"
+import {hashcode} from "@helpers/windows"
 import {notifyRefresh} from "@background/actions";
 import {debounce} from "@helpers/utils";
 import {getLocalStorageMap, setLocalStorageMap, getLocalStorage, setLocalStorage, serialized} from "@helpers/storage";
