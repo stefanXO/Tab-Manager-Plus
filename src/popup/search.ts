@@ -7,7 +7,7 @@
 //   t:foo          title only            u:foo   url only
 //   -foo           must not match        -u:foo  url must not contain
 //   "foo bar"      one term with a space
-//   /re+gex/       a term is a regular expression (t:/^\d+/ works too);
+//   /\(\d+\)/      a term is a regular expression (t:/\(\d+\)/ works too);
 //                  an invalid pattern falls back to a plain substring
 // Nothing else on purpose: every extra token is something to explain.
 
