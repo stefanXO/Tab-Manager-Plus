@@ -33,23 +33,40 @@ export class Window extends React.Component<IWindow, IWindowState> {
 	}
 
 	async componentDidMount() {
+		this.tabsSignature = this.signature(this.props.tabs);
 		await this.checkSettings();
 		await this.update();
 	}
 
-	async componentDidUpdate(prevProps, prevState) {
-		// if (prevProps.tabs !== this.props.tabs) {
-		// 	await this.update();
-		// }
+	// what the auto title depends on; props.tabs is a new array on every
+	// refresh, so compare content, not identity
+	private tabsSignature = "";
+	signature(tabs : browser.Tabs.Tab[]) : string {
+		return tabs.map((t) => t.id + ":" + t.status + ":" + (t.pendingUrl || t.url || "")).join("|");
 	}
 
-	checkSettings = async () => {
-		let colors = await getLocalStorageMap<number, string>(S.windowColors);
-		let color = colors.get(this.props.window.id) || "default";
+	async componentDidUpdate(prevProps : IWindow) {
+		const sig = this.signature(this.props.tabs);
+		if (sig !== this.tabsSignature) {
+			// tabs added, removed or navigated: the auto title may have changed
+			this.tabsSignature = sig;
+			await this.update();
+		}
+	}
 
-		this.setState({
-			color: color
-		});
+	// colour and name from storage; also the answer to refresh_windows, which
+	// the worker sends after it named or coloured a window (a restored session
+	// gets its name only after the window and its tabs exist)
+	checkSettings = async () => {
+		const [colors, names] = await Promise.all([
+			getLocalStorageMap<number, string>(S.windowColors),
+			getLocalStorageMap<number, string>(S.windowNames)
+		]);
+		const color = colors.get(this.props.window.id) || "default";
+		const name = names.get(this.props.window.id) || "";
+		if (color !== this.state.color) this.setState({ color: color });
+		// an empty name means "no custom name": fall back to the auto title
+		if (name !== this.state.name) this.setState({ name: name }, () => { if (!name) this.update(); });
 	}
 
 	async update() {
