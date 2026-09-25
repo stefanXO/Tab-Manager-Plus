@@ -12,16 +12,20 @@ const GAP = 8;   // px, must match --card-gap in popup.css
 const pending = new Set<HTMLElement>();
 let frame = 0;
 
+function measure(el : HTMLElement) {
+	// offsetHeight ignores transforms, so the entrance animation's
+	// scale does not make the row span jitter while it plays
+	const height = el.offsetHeight;
+	const value = "span " + Math.max(1, Math.ceil((height + GAP) / (ROW + GAP)));
+	if (el.style.gridRowEnd !== value) el.style.gridRowEnd = value;
+}
+
 function span(card : HTMLElement) {
 	pending.add(card);
 	if (frame) return;
 	frame = requestAnimationFrame(() => {
 		frame = 0;
-		for (const el of pending) {
-			const height = el.getBoundingClientRect().height;
-			const value = "span " + Math.max(1, Math.ceil((height + GAP) / (ROW + GAP)));
-			if (el.style.gridRowEnd !== value) el.style.gridRowEnd = value;
-		}
+		for (const el of pending) measure(el);
 		pending.clear();
 	});
 }
@@ -40,7 +44,13 @@ export function attachMasonry(container : HTMLElement) : Masonry {
 		// cards and the full-width section dividers ("Minimized windows", sessions)
 		if (el instanceof HTMLElement && (el.classList.contains("window") || el.classList.contains("hrCont"))) sizes.observe(el);
 	};
-	for (const el of Array.from(container.children)) watch(el);
+	// the cards already there are measured right away, not in the next frame:
+	// attach runs from componentDidUpdate, before the browser paints, so a
+	// layout switch shows the packed grid in its first frame
+	for (const el of Array.from(container.children)) {
+		watch(el);
+		if (el instanceof HTMLElement && el.classList.contains("window")) measure(el);
+	}
 	const children = new MutationObserver((records) => {
 		for (const r of records) {
 			r.addedNodes.forEach(watch);
