@@ -2,6 +2,7 @@ import {getLocalStorage, setLocalStorage, getLocalStorageMap} from "@helpers/sto
 import {readSettings, writeBootCache, SETTING_DEFAULTS, Settings, Layout, LAYOUT, getSetting, saveSetting} from "@helpers/settings";
 import {sortWindows} from "@helpers/windows";
 import {parseQuery, matchTab, searchable} from "../search";
+import {findDuplicates} from "../duplicates";
 import {debounce, maybePluralize} from "@helpers/utils";
 import {Window, Session, TabOptions, Tab, WindowOptions} from "@views";
 import * as React from "react";
@@ -739,27 +740,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	}
 
 	getDuplicates() {
-		const idList : number[] = [...this.state.tabsbyid.keys()];
-		const orig : Set<number> = new Set();
-		const dup : Set<number> = new Set();
-		for (const id of idList) {
-			if (dup.has(id)) continue;
-			var tab = this.state.tabsbyid.get(id);
-			for (const id2 of idList) {
-				if (id === id2) continue;
-				if (orig.has(id2)) continue;
-				var tab2 = this.state.tabsbyid.get(id2);
-				if (tab.url === tab2.url) {
-					dup.add(id2);
-					orig.add(id);
-				}
-			}
-		}
-		// return both original and duplicate tabs
-		return {
-			originals: orig,
-			duplicates: dup
-		};
+		return findDuplicates(this.state.tabsbyid.values());
 	}
 
 	highlightDuplicates = (e) => {
