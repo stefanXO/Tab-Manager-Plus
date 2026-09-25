@@ -10,8 +10,6 @@ import { createRoot } from 'react-dom/client';
 
 declare global {
 	interface Window {
-		loaded: boolean;
-		loading: boolean;
 		inPopup: boolean;
 		inPanel: boolean;
 		optionPage: boolean;
@@ -19,25 +17,10 @@ declare global {
 	}
 }
 
-window.loaded = false;
-window.loading = false;
 window.inPopup = window.location.search.indexOf("?popup") > -1;
 window.inPanel = window.location.search.indexOf("?panel") > -1;
 window.extensionVersion = process.env.VERSION;
 
-window.onload = () => window.requestAnimationFrame(loadApp);
-
-setTimeout(loadApp, 25);
-setTimeout(loadApp, 75);
-setTimeout(loadApp, 125);
-setTimeout(loadApp, 250);
-setTimeout(loadApp, 375);
-setTimeout(loadApp, 700);
-setTimeout(loadApp, 1000);
-setTimeout(loadApp, 2000);
-setTimeout(loadApp, 3000);
-setTimeout(loadApp, 5000);
-setTimeout(loadApp, 15000);
 
 async function switchToOwnTab() : Promise<boolean> {
 	const page = browser.runtime.getURL("popup.html");
@@ -87,11 +70,14 @@ function sizePage() {
 	document.body.style.width = "100%";
 }
 
+// set while a boot runs or once it succeeded; a failed boot clears it and retries
+let booting = false;
+let attempts = 0;
+
 async function loadApp() {
-	if (!!window.loaded) return;
-	if (!!window.loading) return;
+	if (booting) return;
 	try {
-		window.loading = true;
+		booting = true;
 
 		// 1. synchronous: size and theme from the cache of the last run, so the
 		//    very first frame has the right popup size and colours
@@ -114,9 +100,6 @@ async function loadApp() {
 		document.body.className = boot.settings.dark ? "dark" : "";
 		if (window.inPopup) sizePopup(boot.settings.tabWidth, boot.settings.tabHeight);
 
-		if (!!window.loaded) return;
-		window.loaded = true;
-
 		const container = document.getElementById('TMP');
 		const root = createRoot(container!);
 		root.render(
@@ -124,8 +107,11 @@ async function loadApp() {
 		);
 	} catch (err) {
 		console.error(err);
-		window.loading = false;
-		window.loaded = false;
+		booting = false;
+		// a storage or API call rejected at boot: try again a few times, then
+		// give up. A slow machine does not land here, its awaits just take
+		// longer and resolve.
+		if (attempts++ < 10) setTimeout(loadApp, 250 * attempts);
 	}
 }
 
