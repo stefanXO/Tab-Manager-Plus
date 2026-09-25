@@ -5,7 +5,12 @@
 - New window color palette, with a matching set for the dark theme
 - White favicons are visible now in the bright theme: only-white icons get inverted, icons with a white background get a tinted tile
 - Tabs playing sound get a blue tile and a small equalizer badge, muted tabs a crossed speaker, also with animations off
-- Vertical view: pinned, active, selected, playing and muted tabs get a colored edge on the left and a chip with a matching badge
+- The horizontal and vertical layouts are renamed now to Rows view and List view
+- List view: pinned, active, selected, playing and muted tabs get a colored edge on the left and a chip with a matching badge
+- Each window shows when it was last active
+- Tabs the browser put to sleep to save memory are marked with a moon badge, and the list view shows an Asleep chip
+- With animations on, windows and tabs fade in and state changes ease instead of snapping; a playing row in the list breathes
+- Improvements: Faster popup load. The popup opens with its final layout, theme and windows in the first frame instead of filling in afterward
 - Clicking the icon while Tab Manager Plus is already open in a tab switches to that tab
 - Highlight Duplicates now only selects the extra copies and keeps one tab per URL, so "Delete" closes only the duplicates at once
 - The header shows how many tabs have duplicates and how many are selected
@@ -37,7 +42,7 @@
 - Fix: The window name and color screen covers the whole popup, its close button shows a pointer and Escape closes only that screen
 - Fix: Typing right after opening the popup no longer loses the first characters
 - Fix: Clearing the search field left the header showing matches for an empty search
-- Fix: Restored windows keep their saved size and position, and a window saved maximized comes back maximized
+- Fix: Restored windows keep their saved size and position, fitted to the screen they are restored on, and a window saved maximized comes back maximized
 - Firefox: Firefox-based browsers (LibreWolf, Zen, Waterfox) are detected as Firefox
 
 6.0.0
