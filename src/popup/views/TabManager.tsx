@@ -468,8 +468,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 										className="icon windowaction discard"
 										title={
 											this.state.selection.size > 0
-												? "Discard selected tabs\nWill discard " + maybePluralize(this.state.selection.size, 'tab') + " - freeing memory"
-												: "Select tabs to discard them and free memory"
+												? "Discard selected tabs\nWill put " + maybePluralize(this.state.selection.size, 'tab') + " to sleep - freeing memory"
+												: "Select tabs to put them to sleep and free up memory"
 										}
 										style={
 											this.state.selection.size > 0

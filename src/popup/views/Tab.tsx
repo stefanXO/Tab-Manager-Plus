@@ -66,6 +66,11 @@ export class Tab extends React.Component<ITab, ITabState> {
 				</div>
 			);
 			children.push(
+				<div key={"tab-discarded-" + this.props.tab.id} className={"tab-discarded " + (!this.props.tab.discarded ? "hidden" : "")}>
+					Asleep
+				</div>
+			);
+			children.push(
 				<div
 					key={"tab-icon-" + this.props.tab.id}
 					className={"iconoverlay icon-" + this.state.iconTone}

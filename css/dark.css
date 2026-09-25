@@ -160,7 +160,7 @@ body.dark a {
 body.dark .editName:hover {
 	background-color: var(--dk-tile-hover);
 }
-body.dark .tab-pinned, body.dark .tab-highlighted, body.dark .tab-selected, body.dark .tab-audible {
+body.dark .tab-pinned, body.dark .tab-highlighted, body.dark .tab-selected, body.dark .tab-audible, body.dark .tab-discarded {
 	background-color: transparent;
 	color: inherit;
 }
@@ -271,13 +271,14 @@ body.dark .window.vertical .tab.full + .tab.full {
 body.dark .window.vertical .tab.full:hover {
 	background-color: rgba(255, 255, 255, 0.08);
 }
-body.dark .icon.tab.audible::before, body.dark .icon.tab.muted::before {
+body.dark .icon.tab.audible::before, body.dark .icon.tab.muted::before, body.dark .icon.tab.discarded::before {
 	box-shadow: 0 0 0 1.5px var(--dk-panel);
 }
 body.dark .window.vertical .tab.full > .tab-pinned,
 body.dark .window.vertical .tab.full > .tab-highlighted,
 body.dark .window.vertical .tab.full > .tab-selected,
-body.dark .window.vertical .tab.full > .tab-audible {
+body.dark .window.vertical .tab.full > .tab-audible,
+body.dark .window.vertical .tab.full > .tab-discarded {
 	border-color: rgba(255, 255, 255, 0.15);
 	background: rgba(255, 255, 255, 0.06);
 }

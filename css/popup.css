@@ -449,9 +449,10 @@ h1,h2,h3,h4,h5,h6 {
 	--badge-muted: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 12 12%22%3E%3Crect width=%2212%22 height=%2212%22 rx=%223%22 fill=%22%238a8f98%22/%3E%3Cpath d=%22M2 4.5h1.8L6 2.5v7L3.8 7.5H2z%22 fill=%22%23fff%22/%3E%3Cpath d=%22M7.5 4.5l3 3M10.5 4.5l-3 3%22 stroke=%22%23fff%22 stroke-width=%221.3%22 stroke-linecap=%22round%22/%3E%3C/svg%3E");
 	--badge-pinned: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 12 12%22%3E%3Crect width=%2212%22 height=%2212%22 rx=%223%22 fill=%22%23e0287a%22/%3E%3Cpath d=%22M7.5 2l2.5 2.5-1 1-.4-.4-1.9 1.9.3 1.7-1 1L4.4 8.1 2.5 10 2 9.5l1.9-1.9-1.6-1.6 1-1 1.7.3 1.9-1.9-.4-.4z%22 fill=%22%23fff%22/%3E%3C/svg%3E");
 	--badge-active: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 12 12%22%3E%3Crect width=%2212%22 height=%2212%22 rx=%223%22 fill=%22%237a4fb5%22/%3E%3Cpath d=%22M1.5 6c1.2-2 2.7-3 4.5-3s3.3 1 4.5 3c-1.2 2-2.7 3-4.5 3S2.7 8 1.5 6z%22 fill=%22%23fff%22/%3E%3Ccircle cx=%226%22 cy=%226%22 r=%221.6%22 fill=%22%237a4fb5%22/%3E%3C/svg%3E");
+	--badge-suspended: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 12 12%22%3E%3Crect width=%2212%22 height=%2212%22 rx=%223%22 fill=%22%235f7d95%22/%3E%3Cpath d=%22M7.6 2.2a3.9 3.9 0 1 0 2.2 6.6 4.4 4.4 0 0 1-2.2-6.6z%22 fill=%22%23fff%22/%3E%3C/svg%3E");
 	--badge-selected: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 12 12%22%3E%3Crect width=%2212%22 height=%2212%22 rx=%223%22 fill=%22%23e6b800%22/%3E%3Cpath d=%22M2.5 6.2l2.3 2.3 4.7-4.7%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E");
 }
-.icon.tab.audible::before, .icon.tab.muted::before {
+.icon.tab.audible::before, .icon.tab.muted::before, .icon.tab.discarded::before {
 	content: "";
 	position: absolute;
 	right: -3px;
@@ -464,6 +465,12 @@ h1,h2,h3,h4,h5,h6 {
 	border-radius: 3px;
 	pointer-events: none;
 }
+.icon.tab.discarded::before {
+	background-image: var(--badge-suspended);
+}
+.animations .icon.tab.audible::before, .icon.tab.audible::before {
+	background-image: var(--badge-playing);
+}
 .animations .icon.tab.audible::before {
 	background-image: var(--badge-playing-anim);
 }
@@ -474,7 +481,7 @@ h1,h2,h3,h4,h5,h6 {
 	content: none;
 }
 .icon.discarded.blocks, .icon.discarded .iconoverlay {
-	opacity: 0.65;
+	opacity: 0.8;
 	background-blend-mode: luminosity;
 }
 @keyframes audible {
@@ -839,7 +846,7 @@ h1,h2,h3,h4,h5,h6 {
 	padding: 0.1rem;
 	margin: 0.1rem;
 }
-.tab-pinned, .tab-highlighted, .tab-selected, .tab-audible {
+.tab-pinned, .tab-highlighted, .tab-selected, .tab-audible, .tab-discarded {
 	position: absolute;
 	right: 0.3rem;
 	top: 0.3rem;
@@ -857,7 +864,7 @@ h1,h2,h3,h4,h5,h6 {
 	box-shadow: 0px 0px 1px 2px rgba(255,255,255,0.5);
 	z-index: 100;
 }
-.incognito .tab-pinned, .incognito .tab-highlighted, .incognito .tab-selected, .incognito .tab-audible {
+.incognito .tab-pinned, .incognito .tab-highlighted, .incognito .tab-selected, .incognito .tab-audible, .incognito .tab-discarded {
 	color: black;
 }
 .tab-pinned {}
@@ -1239,7 +1246,8 @@ table td {
 .window.vertical .tab.full > .tab-pinned,
 .window.vertical .tab.full > .tab-highlighted,
 .window.vertical .tab.full > .tab-selected,
-.window.vertical .tab.full > .tab-audible {
+.window.vertical .tab.full > .tab-audible,
+.window.vertical .tab.full > .tab-discarded {
 	order: 2;
 	position: static;
 	flex: none;
@@ -1261,7 +1269,8 @@ table td {
 .window.vertical .tab.full > .tab-pinned::before,
 .window.vertical .tab.full > .tab-highlighted::before,
 .window.vertical .tab.full > .tab-selected::before,
-.window.vertical .tab.full > .tab-audible::before {
+.window.vertical .tab.full > .tab-audible::before,
+.window.vertical .tab.full > .tab-discarded::before {
 	content: "";
 	width: 11px;
 	height: 11px;
@@ -1283,11 +1292,15 @@ table td {
 .window.vertical .tab.full.muted > .tab-audible::before {
 	background-image: var(--badge-muted);
 }
+.window.vertical .tab.full > .tab-discarded::before {
+	background-image: var(--badge-suspended);
+}
 /* a chip that is not on: the generic .hidden loses to the chip rule above by cascade order */
 .window.vertical .tab.full > .tab-pinned.hidden,
 .window.vertical .tab.full > .tab-highlighted.hidden,
 .window.vertical .tab.full > .tab-selected.hidden,
 .window.vertical .tab.full > .tab-audible.hidden,
+.window.vertical .tab.full > .tab-discarded.hidden,
 .window.vertical .tab.full > .limiter {
 	display: none;
 }
