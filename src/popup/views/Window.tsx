@@ -507,10 +507,10 @@ export class Window extends React.Component<IWindow, IWindowState> {
 
 		console.log(session);
 
-		let sessions = await getLocalStorage('sessions', {});
+		let sessions = await getLocalStorage(S.sessions, {});
 		sessions[session.id] = session;
 
-		let value = await setLocalStorage('sessions', sessions).catch(function(err) {
+		let value = await setLocalStorage(S.sessions, sessions).catch(function(err) {
 			console.log(err);
 			console.error(err.message);
 		});

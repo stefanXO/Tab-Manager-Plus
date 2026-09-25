@@ -9,6 +9,7 @@ import { cleanupDebounce, cleanUp, forgetWindowIds } from '@background/tracking'
 import * as _c from '@ui/context_menus';
 import * as _o from '@ui/open';
 import * as browser from 'webextension-polyfill';
+import * as S from "@strings";
 
 const CLEANUP_ALARM = "cleanup_old_windows";
 
@@ -81,7 +82,7 @@ async function reconcileWindowAge() {
 		if (liveIds.length === 0) return;
 
 		await serialized(async function () {
-			let windowAge = await getLocalStorage("windowAge", []);
+			let windowAge = await getLocalStorage(S.windowAge, []);
 			if (!(windowAge instanceof Array)) windowAge = [];
 
 			windowAge = windowAge.filter(function (id) {
@@ -90,7 +91,7 @@ async function reconcileWindowAge() {
 			for (const id of liveIds) {
 				if (windowAge.indexOf(id) < 0) windowAge.push(id);
 			}
-			await setLocalStorage("windowAge", windowAge);
+			await setLocalStorage(S.windowAge, windowAge);
 		});
 	} catch (e) {
 		console.error(e);

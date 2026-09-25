@@ -6,6 +6,7 @@ import {is_in_bounds, stringHashcode} from "@helpers/utils";
 import {setWindowColor, setWindowName} from "@background/actions";
 import * as S from "@strings";
 import * as browser from 'webextension-polyfill';
+import {getSetting} from "@helpers/settings";
 import {ISavedSession} from "@types";
 import {IS_FIREFOX} from "@helpers/browser";
 
@@ -185,7 +186,7 @@ async function hideWindows(windowId : number) {
 	if (IS_FIREFOX) return;
 	if (!windowId || windowId < 0) return;
 
-	let hide_windows = await getLocalStorage("hideWindows", false);
+	let hide_windows = await getSetting("hideWindows");
 	if (!hide_windows) return;
 
 	let has_permission = await browser.permissions.contains({permissions: ['system.display']});
@@ -235,12 +236,12 @@ export async function windowActive(windowId : number) {
 
 	await serialized(async function () {
 		var windows = [];
-		var windowAge = await getLocalStorage("windowAge", []);
+		var windowAge = await getLocalStorage(S.windowAge, []);
 		if (windowAge instanceof Array) windows = windowAge;
 
 		if (windows.indexOf(windowId) > -1) windows.splice(windows.indexOf(windowId), 1);
 		windows.unshift(windowId);
-		await setLocalStorage("windowAge", windows);
+		await setLocalStorage(S.windowAge, windows);
 
 		// when each window was last active, shown on its card in the popup
 		const lastActive : Map<number, number> = await getLocalStorageMap<number, number>(S.windowLastActive);
@@ -301,12 +302,12 @@ async function windowRemoved(windowId : number) {
 async function windowInactive(windowId : number) {
 	await serialized(async function () {
 		var windows = [];
-		var windowAge = await getLocalStorage("windowAge", []);
+		var windowAge = await getLocalStorage(S.windowAge, []);
 		if (windowAge instanceof Array) windows = windowAge;
 
 		if (windows.indexOf(windowId) > -1) {
 			windows.splice(windows.indexOf(windowId), 1);
-			await setLocalStorage("windowAge", windows);
+			await setLocalStorage(S.windowAge, windows);
 		}
 		const lastActive : Map<number, number> = await getLocalStorageMap<number, number>(S.windowLastActive);
 		if (lastActive.delete(windowId)) await setLocalStorageMap(S.windowLastActive, lastActive);

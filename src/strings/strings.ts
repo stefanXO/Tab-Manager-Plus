@@ -40,3 +40,5 @@ export const windowOrphaned = "windowOrphaned";
 export const windowLastActive = "windowLastActive";
 export const windowColors = "windowColors";
 export const windowNames = "windowNames";
+export const windowAge = "windowAge";
+export const sessions = "sessions";

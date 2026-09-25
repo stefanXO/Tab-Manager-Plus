@@ -1,5 +1,6 @@
+import {Layout} from "../helpers/settings";
 export interface IWindowOptions {
 	windowId: number,
 	autoName: string,
-	layout: string
+	layout: Layout
 }

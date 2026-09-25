@@ -14,7 +14,7 @@ export interface ITabManagerState {
 	filterTabs: boolean,
 	hideWindows: boolean,
 	lastOpenWindow: number,
-	layout: string,
+	layout: Layout,
 	openInOwnTab: boolean,
 	sessionsFeature: boolean,
 	tabHeight: number,

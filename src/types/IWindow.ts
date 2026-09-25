@@ -5,7 +5,7 @@ export interface IWindow {
 	windowTitles: boolean,
 	tabs: browser.Tabs.Tab[],
 	searchActive: boolean,
-	layout: string,
+	layout: Layout,
 	tabactions: boolean,
 	sessionsFeature?: boolean,
 	hiddenTabs: Set<number>,

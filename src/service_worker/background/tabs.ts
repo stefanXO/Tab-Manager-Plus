@@ -6,6 +6,7 @@ import {globalTabsActive, tabsActiveLoaded, persistTabsActive, forgetTab} from '
 import {debounce} from "@helpers/utils";
 import {checkWindow, createWindowWithTabs} from '@background/windows';
 import * as browser from 'webextension-polyfill';
+import {getSetting} from "@helpers/settings";
 
 // must stay synchronous: it runs during the service worker's first event loop
 // turn so that the events that woke the worker are not missed
@@ -82,7 +83,7 @@ export async function focusOnTabAndWindow(tabId : number, windowId : number) {
 export async function updateTabCount() {
 	let run = true;
 
-	const badge = await getLocalStorage("badge", true);
+	const badge = await getSetting("badge");
 	if (!badge) run = false;
 
 	if (run) {
@@ -130,7 +131,7 @@ function tabCountChanged() {
 export const updateTabCountDebounce = debounce(updateTabCount, 250);
 
 async function tabAdded(tab) {
-	const tabLimit = await getLocalStorage("tabLimit", 0);
+	const tabLimit = await getSetting("tabLimit");
 	if (tabLimit > 0) {
 		if (tab.id !== browser.tabs.TAB_ID_NONE) {
 			const tabCount = await browser.tabs.query({currentWindow: true});

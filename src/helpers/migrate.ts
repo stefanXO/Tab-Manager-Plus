@@ -13,7 +13,7 @@ const jsonkeys = [
 	"tabLimit",
 	"tabWidth",
 	"tabHeight",
-	"windowAge",
+	S.windowAge,
 	S.windowNames,
 	S.windowColors
 ];
@@ -57,13 +57,13 @@ export const migrated : Promise<void> = (async function () {
 			// keep whatever an earlier (possibly interrupted) migration already
 			// consolidated - it must never be overwritten with an empty object
 			let sessions : Record<string, unknown> = {};
-			if (!!values["sessions"] && typeof values["sessions"] === "object") {
-				sessions = values["sessions"] as Record<string, unknown>;
+			if (!!values[S.sessions] && typeof values[S.sessions] === "object") {
+				sessions = values[S.sessions] as Record<string, unknown>;
 			}
 
 			// collect all old per-session entries (the values with a tabs array)
 			for (const key in values) {
-				if (key === "sessions") continue;
+				if (key === S.sessions) continue;
 				const value = values[key];
 				if (!!value && typeof value === "object" && !!(value as ISavedSession).tabs) {
 					console.log("session migrating " + key);
@@ -71,7 +71,7 @@ export const migrated : Promise<void> = (async function () {
 					oldSessionKeys.push(key);
 				}
 			}
-			keyValue["sessions"] = sessions;
+			keyValue[S.sessions] = sessions;
 		}
 
 		for (const key of stringkeys) {

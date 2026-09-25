@@ -1,3 +1,4 @@
+import {Layout} from "../helpers/settings";
 import * as browser from "webextension-polyfill";
 import {ISavedSession} from "./ISavedSession";
 import {MouseEvent} from "react";
@@ -12,7 +13,7 @@ export interface ITab {
 	id: string,
 
 	searchActive: boolean,
-	layout: string,
+	layout: Layout,
 	draggable: boolean,
 
 	tabs?: browser.Tabs.Tab[],

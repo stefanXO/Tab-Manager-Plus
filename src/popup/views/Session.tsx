@@ -160,10 +160,10 @@ export class Session extends React.Component<ISession, ISessionState> {
 	close = async (e) => {
 		e.stopPropagation();
 
-		var sessions = await getLocalStorage('sessions', {});
+		var sessions = await getLocalStorage(S.sessions, {});
 		delete sessions[this.props.session.id];
 
-		var value = await setLocalStorage('sessions', sessions).catch(function (err) {
+		var value = await setLocalStorage(S.sessions, sessions).catch(function (err) {
 			console.log(err);
 			console.error(err.message);
 		});

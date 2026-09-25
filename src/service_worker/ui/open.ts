@@ -4,13 +4,14 @@ import {getLocalStorage} from "@helpers/storage";
 import {globalTabsActive, tabsActiveLoaded} from '@context';
 import {focusOnTabAndWindow} from "@background/tabs";
 import * as browser from 'webextension-polyfill';
+import {getSetting} from "@helpers/settings";
 
 export async function openSidebar() {
 	await browser.sidebarAction.open();
 }
 
 export async function openPopup() {
-	const openInOwnTab : boolean = await getLocalStorage("openInOwnTab", false);
+	const openInOwnTab : boolean = await getSetting("openInOwnTab");
 	if (openInOwnTab) {
 		await browser.action.setPopup({popup: "popup.html?popup=true"});
 		await browser.action.openPopup();
@@ -63,7 +64,7 @@ export function setupPopupListeners() {
 
 export async function setupPopup() {
 
-	const openInOwnTab = await getLocalStorage("openInOwnTab", false);
+	const openInOwnTab = await getSetting("openInOwnTab");
 
 	if (openInOwnTab) {
 		await browser.action.setPopup({popup: ""});

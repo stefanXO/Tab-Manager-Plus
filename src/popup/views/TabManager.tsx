@@ -41,7 +41,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	// the worker records window focus order (windowAge) after the same focus event
 	// the popup reacts to; when its write lands, re-sort so the order is never stale
 	private readonly onStorageChanged = (changes : Record<string, unknown>, area : string) => {
-		if (area === "local" && "windowAge" in changes) this.runUpdate();
+		if (area === "local" && S.windowAge in changes) this.runUpdate();
 	}
 
 	constructor(props : ITabManager) {
@@ -535,7 +535,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		} else {
 			let result = await browser.permissions.contains({permissions: ["system.display"]});
 			if (!result) {
-				setLocalStorage("hideWindows", false);
+				saveSetting("hideWindows", false);
 				this.setState({
 					hideWindows: false
 				});
@@ -582,7 +582,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				if (!!activeTab && activeTab.length > 0) {
 					if (!!scrollArea && scrollArea.scrollTop > 0) {
 					} else {
-						var animations = await getLocalStorage("animations", false);
+						var animations = await getSetting("animations");
 						activeTab[0].scrollIntoView({ behavior: animations ? "smooth" : "instant", block: "center", inline: "nearest" });
 					}
 				}
@@ -593,7 +593,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		// box.focus();
 	}
 	sessionSync = async () => {
-		let values = await getLocalStorage('sessions', {});
+		let values = await getLocalStorage(S.sessions, {});
 		//console.log(values);
 		let sessions : ISavedSession[] = [];
 		for (let key in values) {
@@ -1285,14 +1285,10 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			}
 		}
 	}
-	changelayout = async (layout) => {
-		var newLayout;
-		if (layout && typeof (layout) === "string") {
-			newLayout = layout;
-		} else {
-			newLayout = this.nextlayout();
-		}
-		await setLocalStorage("layout", newLayout);
+	// called with a layout (options page) or with a click event (layout button)
+	changelayout = async (layout? : Layout | React.MouseEvent) => {
+		const newLayout : Layout = (typeof layout === "string") ? layout : this.nextlayout();
+		await saveSetting("layout", newLayout);
 
 		this.setState({
 			layout: newLayout,
@@ -1301,25 +1297,25 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			dirty: true
 		});
 	}
-	nextlayout() {
+	nextlayout() : Layout {
 		switch (this.state.layout) {
-			case "blocks":
-				return "blocks-big";
-			case "blocks-big":
-				return "horizontal";
-			case "horizontal":
-				return "vertical";
+			case LAYOUT.blocks:
+				return LAYOUT.blocksBig;
+			case LAYOUT.blocksBig:
+				return LAYOUT.rows;
+			case LAYOUT.rows:
+				return LAYOUT.list;
 			default:
-				return "blocks";
+				return LAYOUT.blocks;
 		}
 	}
-	readablelayout(layout:string) {
+	readablelayout(layout : Layout) : string {
 		switch (layout) {
-			case "blocks":
+			case LAYOUT.blocks:
 				return "Block";
-			case "blocks-big":
+			case LAYOUT.blocksBig:
 				return "Big Block";
-			case "horizontal":
+			case LAYOUT.rows:
 				return "Rows";
 			default:
 				return "List";
@@ -1536,7 +1532,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			filterTabs: _filter_tabs,
 			dirty: true
 		});
-		await setLocalStorage("filter-tabs", _filter_tabs);
+		await saveSetting("filter-tabs", _filter_tabs);
 	}
 	getTip = () => {
 		var tips = [

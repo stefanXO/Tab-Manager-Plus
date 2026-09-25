@@ -53,7 +53,7 @@ async function cleanUpLocked(remove_old : boolean) {
 	}
 
 	// forget closed windows in the recency order
-	let windows = await getLocalStorage("windowAge", []);
+	let windows = await getLocalStorage(S.windowAge, []);
 	if (!(windows instanceof Array)) windows = [];
 	let windowsChanged = false;
 	for (let i = windows.length - 1; i >= 0; i--) {
@@ -63,7 +63,7 @@ async function cleanUpLocked(remove_old : boolean) {
 		}
 	}
 	// the popup re-renders on every windowAge write, so only write a change
-	if (windowsChanged) await setLocalStorage("windowAge", windows);
+	if (windowsChanged) await setLocalStorage(S.windowAge, windows);
 
 	const names : Map<number, string> = await getLocalStorageMap<number, string>(S.windowNames);
 	const colors : Map<number, string> = await getLocalStorageMap<number, string>(S.windowColors);
