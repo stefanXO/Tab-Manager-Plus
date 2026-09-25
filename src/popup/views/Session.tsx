@@ -4,7 +4,7 @@ import {getLocalStorage, setLocalStorage} from "@helpers/storage";
 import {Tab} from "@views";
 import {isBlockLayout} from "@helpers/settings";
 import * as React from "react";
-import {maybePluralize} from "@helpers/utils";
+import {maybePluralize, timeAgo} from "@helpers/utils";
 import * as browser from 'webextension-polyfill';
 import {ICommand, ISession, ISessionState} from '@types';
 import * as S from "@strings";
@@ -58,6 +58,13 @@ export class Session extends React.Component<ISession, ISessionState> {
 			if (!!this.props.tabactions) {
 				tabs.push(
 					<div key={"sessionnl_" + this.props.session.id} className="newliner" />,
+					<div
+						key={"sessionage_" + this.props.session.id}
+						className="window-age"
+						data-hover={"Saved " + timeAgo(this.props.session.date) + "\n" + new Date(this.props.session.date).toLocaleString()}
+					>
+						{"saved " + timeAgo(this.props.session.date)}
+					</div>,
 					<div key={"sessionwa_" + this.props.session.id} className="window-actions">
 						<div
 							className={"icon tabaction restore " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}

@@ -7,7 +7,7 @@
 - Tabs playing sound get a blue tile and a small equalizer badge, muted tabs a crossed speaker, also with animations off
 - The horizontal and vertical layouts are renamed now to Rows view and List view
 - List view: pinned, active, selected, playing and muted tabs get a colored edge on the left and a chip with a matching badge
-- Each window shows when it was last active
+- Each window shows when it was last active, and each saved session when it was saved
 - Tabs the browser put to sleep to save memory are marked with a moon badge, and the list view shows an Asleep chip
 - With animations on, windows and tabs fade in and state changes ease instead of snapping; a playing row in the list breathes
 - Improvements: Faster popup load. The popup opens with its final layout, theme and windows in the first frame instead of filling in afterward
