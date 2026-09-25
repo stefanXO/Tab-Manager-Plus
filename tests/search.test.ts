@@ -412,6 +412,14 @@ describe("regular expressions", () => {
 		assert.deepEqual(ids("-/^fix/"), ALL.filter((i) => !fixTabs.includes(i)));
 	});
 
+	test("the search help examples find what they promise", () => {
+		// unread count, like "Inbox (42) - Gmail"; "(Official Video)" has no digits
+		assert.deepEqual(ids("/\\(\\d+\\)/"), [T.gmail]);
+		assert.deepEqual(ids("/localhost:\\d+/"), [T.localhost]);
+		// only report.pdf; the pattern is anchored, so ".pdf" mid-url would not count
+		assert.deepEqual(ids("/\\.pdf$/"), [T.pdfFile]);
+	});
+
 	test("regex matching is case-insensitive", () => {
 		assert.deepEqual(ids("/YOUTUBE/"), [T.astley, T.astleyDup, T.astleyFragment].sort((a, b) => a - b));
 		assert.deepEqual(ids("/ÜNÏCÖDÉ/"), [T.unicode]);
