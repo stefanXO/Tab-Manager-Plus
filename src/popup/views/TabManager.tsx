@@ -559,7 +559,16 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 
 		await this.sessionSync();
 
-		this.rootRef.current?.focus();
+		// keys typed while the popup was booting (see src/popup/early.ts)
+		const typed = window.takeEarlyKeys ? window.takeEarlyKeys() : "";
+		const box = this.searchBoxRef.current;
+		if (typed && box) {
+			box.value = typed;
+			box.focus();
+			this.runSearch(typed);
+		} else {
+			this.rootRef.current?.focus();
+		}
 		this.focusRoot();
 
 		setTimeout(async function() {
