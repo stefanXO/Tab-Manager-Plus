@@ -158,7 +158,7 @@ export class Session extends React.Component<ISession, ISessionState> {
 
 		if (!!window.inPopup) {
 			window.close();
-		} else if (windowId !== undefined) {
+		} else if (typeof windowId === "number") {
 			// give the popup a moment to pick up the new window and render it
 			setTimeout(() => {
 				this.context.scrollTo("window", windowId.toString());
