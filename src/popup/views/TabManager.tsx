@@ -425,7 +425,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 												<tr><td><code>-reddit</code></td><td>leave out matching tabs</td></tr>
 												<tr><td><code>-u:old.reddit</code></td><td>leave out by url</td></tr>
 												<tr><td><code>"pull request"</code></td><td>exact phrase</td></tr>
-												<tr><td><code>/issue\/\d+/</code></td><td>regular expression</td></tr>
+												<tr><td><code>/\(\d+\)/</code></td><td>unread count, like "Inbox (3)"</td></tr>
+												<tr><td><code>/localhost:\d+/</code></td><td>local dev servers, any port</td></tr>
+												<tr><td><code>/\.pdf$/</code></td><td>urls ending in .pdf</td></tr>
 												<tr><td><code>Enter</code></td><td>move matches to new window</td></tr>
 												<tr><td><code>Esc</code></td><td>clear the search</td></tr>
 											</tbody>
@@ -1458,7 +1460,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			"Search titles only with t:news, urls only with u:github",
 			"Exclude with a minus: reddit -u:old.reddit",
 			"Put a phrase in quotes: \"pull request\"",
-			"Search with a regular expression: /issue\\/\\d+/",
+			"Find tabs with an unread count, like \"Inbox (3)\": /\\(\\d+\\)/",
+			"Find your local dev servers on any port: /localhost:\\d+/",
+			"Find open PDFs with a regular expression: /\\.pdf$/",
 			"Hover the search box for the whole search syntax",
 			"Highlight Duplicates selects the extra copies, Delete closes them all",
 			"Search while duplicates are highlighted to narrow them down"
