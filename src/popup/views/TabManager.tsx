@@ -43,8 +43,15 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	}
 	// the worker records window focus order (windowAge) after the same focus event
 	// the popup reacts to; when its write lands, re-sort so the order is never stale
-	private readonly onStorageChanged = (changes : Record<string, unknown>, area : string) => {
-		if (area === "local" && S.windowAge in changes) this.runUpdate();
+	private readonly onStorageChanged = (changes : Record<string, browser.Storage.StorageChange>, area : string) => {
+		if (area !== "local") return;
+		if (S.windowAge in changes) this.runUpdate();
+		// another popup, sidebar or the options page changed a setting: follow it
+		const changed = (Object.keys(SETTING_DEFAULTS) as (keyof Settings)[]).filter((key) => key in changes);
+		if (changed.length === 0) return;
+		const next = this.currentSettings() as unknown as Record<string, unknown>;
+		for (const key of changed) next[key] = changes[key].newValue ?? SETTING_DEFAULTS[key];
+		this.applySettings(next as unknown as Settings);
 	}
 
 	constructor(props : ITabManager) {
@@ -183,6 +190,16 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 
 	async loadStorage() {
 		this.applySettings(await readSettings(window.extensionVersion));
+	}
+
+	currentSettings() : Settings {
+		const st = this.state;
+		return {
+			layout: st.layout, tabLimit: st.tabLimit, tabWidth: st.tabWidth, tabHeight: st.tabHeight,
+			animations: st.animations, windowTitles: st.windowTitles, tabactions: st.tabactions, badge: st.badge,
+			openInOwnTab: st.openInOwnTab, compact: st.compact, dark: st.dark, sessionsFeature: st.sessionsFeature,
+			hideWindows: st.hideWindows, "filter-tabs": st.filterTabs
+		};
 	}
 
 	applySettings(s : Settings) {
