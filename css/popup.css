@@ -1149,7 +1149,7 @@ table td {
 	--card-pad: 0.6rem 0.75rem 0.5rem;
 	--title-size: 12.5px;
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(var(--card-min), 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(min(var(--card-min), 100%), 1fr));
 	/* 8px rows; src/popup/masonry.ts sets each card's row span from its height,
 	   so cards pack under shorter neighbours while keeping their order */
 	grid-auto-rows: 8px;
@@ -1297,7 +1297,7 @@ table td {
 	/* 30rem = one column in the 800px popup, two from about 1000px: titles stay readable */
 	--card-min: 30rem;
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(var(--card-min), 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(min(var(--card-min), 100%), 1fr));
 	grid-auto-rows: 8px;
 	grid-auto-flow: row;
 	align-items: start;
