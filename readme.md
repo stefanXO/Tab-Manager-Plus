@@ -22,24 +22,26 @@ Your patronage means that my work was able to help you - and that's already very
 
 ## Building from source
 
-The extension is written in TypeScript and bundled with esbuild into `dist/`, which is not part of the repository. You need [Node.js](https://nodejs.org/) 22.18 or newer (24 recommended; the tests run the TypeScript sources directly, which older versions cannot).
+The extension is written in TypeScript and bundled with esbuild into `build/<browser>/`, which is not part of the repository. Each build is a complete, loadable extension folder: the manifest, the pages, `css/`, `images/` and the bundles under `dist/`. You need [Node.js](https://nodejs.org/) 22.18 or newer (24 recommended; the tests run the TypeScript sources directly, which older versions cannot).
 
 ```
 git clone https://github.com/stefanXO/Tab-Manager-Plus.git
 cd Tab-Manager-Plus
 npm ci
-npm run build
+npm run build            # -> build/chrome
+npm run build:firefox    # -> build/firefox
 ```
 
-Then load the folder as an unpacked extension:
+Then load the built folder as an unpacked extension:
 
-* **Chrome / Edge / Brave:** open `chrome://extensions`, turn on *Developer mode*, click *Load unpacked* and pick the repository folder.
-* **Firefox:** the 7.x Firefox build is not ready yet; the current Firefox release is built from the `firefox_521` branch.
+* **Chrome / Edge / Brave:** open `chrome://extensions`, turn on *Developer mode*, click *Load unpacked* and pick `build/chrome`.
+* **Firefox:** run `npx web-ext run --source-dir build/firefox`, or open `about:debugging` → *This Firefox* → *Load Temporary Add-on* and pick `build/firefox/manifest.json`. The 7.x Firefox port is still in progress; the published Firefox release is built from the `firefox_521` branch.
 
 Useful scripts:
 
-* `npm run watch` rebuilds on every change (`npm run watch:dev` for an unminified build with source maps). After a rebuild, click *Reload* on the extension card.
-* `npm run build:dev` builds once without minification.
+* `npm run watch` rebuilds on every change (`npm run watch:dev` for an unminified build with source maps). It writes into the same `build/chrome` folder and also re-copies the pages, css, images and the manifest, so a *Reload* on the extension card picks the change up.
+* `npm run build:dev` builds once without minification. Add `--devtools` (`node build.mjs --dev --devtools`) to give the dev build the `localhost:8097` content security policy that `npx react-devtools` needs; it is opt-in and never part of the committed manifest.
+* `npm run lint:firefox` runs `web-ext lint` over `build/firefox`.
 * `npm run check-version` verifies that the version number is the same in every file; `npm version <x.y.z>` bumps it everywhere.
 
 ## Other Notes
