@@ -6,8 +6,7 @@
 //
 // Text files carry explicit markers so nothing is matched by accident:
 //   HTML / Markdown   <!-- VERSION -->6.0.1<!-- /VERSION -->
-//   shell             CIRCLE_BUILD_NUM="6.0.1" # VERSION
-// JSON manifests are parsed and rewritten, keeping their indentation.
+// manifest.json is parsed and rewritten, keeping its indentation.
 // A missing marker is an error, so a file can never silently drift.
 
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
@@ -16,22 +15,17 @@ const check = process.argv.includes("--check");
 const { version } = JSON.parse(readFileSync("package.json", "utf8"));
 
 const MARKER = /(<!-- VERSION -->)(.*?)(<!-- \/VERSION -->)/;
-const SHELL = /^(\w+=")([^"]*)(".*# VERSION)$/m;
 
 const targets = [
 	{ file: "manifest.json", kind: "json" },
-	{ file: "manifest-firefox.json", kind: "json" },
 	{ file: "readme.md", kind: "marker" },
 	{ file: "changelog.html", kind: "marker" },
-	// gitignored release script; only touched when present
-	{ file: "crxmake.sh", kind: "shell", optional: true },
 ];
 
 let failed = false;
 
-for (const { file, kind, optional } of targets) {
+for (const { file, kind } of targets) {
 	if (!existsSync(file)) {
-		if (optional) continue;
 		console.error(`${file}: missing`);
 		failed = true;
 		continue;
@@ -46,15 +40,14 @@ for (const { file, kind, optional } of targets) {
 		data.version = version;
 		after = JSON.stringify(data, null, indent) + (before.endsWith("\n") ? "\n" : "");
 	} else {
-		const re = kind === "shell" ? SHELL : MARKER;
-		const m = before.match(re);
+		const m = before.match(MARKER);
 		if (!m) {
 			console.error(`${file}: no VERSION marker found`);
 			failed = true;
 			continue;
 		}
 		current = m[2];
-		after = before.replace(re, `$1${version}$3`);
+		after = before.replace(MARKER, `$1${version}$3`);
 	}
 
 	if (current === version) continue;
