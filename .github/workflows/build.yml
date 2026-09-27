@@ -31,4 +31,6 @@ jobs:
       - run: npm run check-version
       - run: npm run check-changelog
       - run: npm test
-      - run: npm run build   # tsc --noEmit && node build.mjs
+      - run: npm run build   # tsc --noEmit && node build.mjs -> build/chrome
+      - run: npm run build:firefox   # -> build/firefox
+      - run: npm run lint:firefox    # web-ext lint on the folder we just built
