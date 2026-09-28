@@ -9,4 +9,7 @@ build/
 source/
 tab-manager*/
 dist/
+.agents/
+.claude/skills/
+skills-lock.json
 
