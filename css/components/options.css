@@ -1,0 +1,65 @@
+/* The options screen: inside the popup (the wrench) and as options.html. Its
+   switches and number fields are in components/controls.css; the changelog
+   page reuses .optionsBox (components/changelog.css). */
+
+.options-window {
+	text-align: center;
+	padding: 1rem;
+}
+
+.logo-box {
+	margin-bottom: 1.5rem;
+}
+.toggle-box {
+	width: 100%;
+	clear: both;
+}
+.licenses {
+	position: fixed;
+	bottom: 0;
+	background-color: var(--surface-sunken);
+	left: 0;
+	width: 100%;
+	right: 0;
+	padding: 1rem 0;
+	font-size: 0.6rem;
+}
+
+/* a titled panel of options (also the changelog's page body) */
+.optionsBox {
+	padding: 10px 20px 10px;
+
+	width: 500px;
+	max-width: 90%;
+	margin: 30px auto;
+	clear: both;
+	background: var(--surface);
+	display: block;
+	text-align: left;
+}
+
+/* h3 = a version or a section: a strong rule and air above; h4 = a group
+   inside it: a hairline. The first h3 of a box sits at the top. */
+.optionsBox h3 {
+	margin: 2.5rem 0 0.8rem;
+	padding: 0 0 0.35rem;
+	border-bottom: 1px solid var(--rule-strong);
+	text-align: left;
+}
+.optionsBox h3:first-child, .optionsBox .updated-banner + h3 {
+	margin-top: 0;
+}
+.optionsBox h4 {
+	margin: 1.2rem 0 0.4rem;
+	padding: 0px 0 6px;
+	border-bottom: 1px solid var(--rule);
+	text-align: left;
+}
+
+.option-description {
+	clear: both;
+	padding-bottom: 20px;
+	/* under its label (0.75rem bold), not at the body's 16px like a heading */
+	font-size: 0.75rem;
+	line-height: 1.45;
+}

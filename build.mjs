@@ -8,9 +8,9 @@
 //                              React DevTools (`npx react-devtools`) needs to connect
 //
 // A folder holds everything the browser needs: the merged manifest, the three
-// html pages, css/, images/, dist/ (the esbuild output; it keeps that subpath so
-// the <script src="dist/…"> references in the html files stay as they are) and
-// the two legal documents. Load build/chrome unpacked in Chrome, and point
+// html pages, css/popup.css (the stylesheet bundle, see scripts/css.mjs), images/,
+// dist/ (the esbuild output; it keeps that subpath so the <script src="dist/…">
+// references in the html files stay as they are) and the two legal documents. Load build/chrome unpacked in Chrome, and point
 // web-ext or about:debugging at build/firefox. readme.md and CHANGELOG.md stay
 // out: the stores want the extension, not its documentation.
 //
@@ -28,6 +28,7 @@ import * as esbuild from 'esbuild'
 import { readFileSync, writeFileSync, rmSync, mkdirSync, cpSync, existsSync, statSync, watch as watchPath } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { firefoxManifest } from './scripts/manifest.mjs'
+import { cssOptions } from './scripts/css.mjs'
 
 const args = new Set(process.argv.slice(2))
 const watch = args.has('--watch')
@@ -40,11 +41,13 @@ const { version } = JSON.parse(readFileSync('package.json', 'utf8'))
 
 const outDir = join('build', browser)
 
-// copied verbatim next to the manifest; directories go in whole
-const STATIC = ['popup.html', 'options.html', 'changelog.html', 'css', 'images', 'LICENSE.md', 'PRIVACY.md']
+// copied verbatim next to the manifest; directories go in whole. css/ is not
+// here: the stylesheet is bundled (below), the raw files under css/ never ship
+const STATIC = ['popup.html', 'options.html', 'changelog.html', 'images', 'LICENSE.md', 'PRIVACY.md']
 
 // the sources watch mode keeps an eye on: the static files plus both manifests
-const WATCHED = ['popup.html', 'options.html', 'changelog.html', 'css', 'images', 'manifest.json', 'manifest.firefox.json']
+// (css/ is watched by the esbuild context of the stylesheet bundle)
+const WATCHED = ['popup.html', 'options.html', 'changelog.html', 'images', 'manifest.json', 'manifest.firefox.json']
 
 // React DevTools talks to the page over a websocket on 8097; only a dev build
 // may allow it, and only Chrome needs a policy for it at all
@@ -77,6 +80,9 @@ const options = {
 	},
 	logLevel: 'info',
 }
+
+/** The stylesheet bundle: css/popup.css and its imports -> build/<browser>/css/popup.css */
+const css = cssOptions({ outfile: join(outDir, 'css', 'popup.css'), dev })
 
 function fail(message) {
 	console.error(message)
@@ -132,6 +138,9 @@ writeManifest()
 if (watch) {
 	const ctx = await esbuild.context(options)
 	await ctx.watch()
+	// a second context for the stylesheet: rebuilds on any change under css/
+	const cssCtx = await esbuild.context(css)
+	await cssCtx.watch()
 
 	// one watcher per watched directory, recursively (Node 22+ can do that on
 	// Windows and Linux), plus one on the repo root for the watched files:
@@ -183,6 +192,6 @@ if (watch) {
 
 	console.log(`watching ${outDir} (${version}, development)…`)
 } else {
-	await esbuild.build(options)
+	await Promise.all([esbuild.build(options), esbuild.build(css)])
 	console.log(`built ${version} for ${browser} into ${outDir} (${dev ? 'development' : 'production'})`)
 }

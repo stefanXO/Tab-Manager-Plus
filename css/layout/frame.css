@@ -1,0 +1,112 @@
+/* The frame: the page box, the scrolling window container between a fixed
+   header (.window.top) and a fixed bottom bar (.window.searchbox, the search
+   box and the toolbar).
+
+   Popup, own tab and side panel share this frame. The popup's size is set on
+   html/body inline by src/helpers/popup_size.ts; the own tab and the panel
+   fill the viewport (src/popup/popup.tsx). layout/narrow.css adapts it below
+   450px (the Firefox sidebar, a small popup). */
+
+html, body {
+	min-width: 450px;
+	min-height: 400px;
+}
+
+.window-container, .options-container {
+	position: fixed;
+	top: 2.85rem;
+	bottom: 3.2rem;
+	width: 100%;
+	overflow-y: scroll;
+	padding-top: 5px;
+}
+.options-container {
+	overflow: auto;
+	overflow-y: auto;
+}
+
+/* header: the tab count and, under it, the hovered tab's url or a tip */
+.window.top {
+	background-color: var(--surface);
+	box-shadow: var(--shadow-header);
+	padding: 0;
+	margin: 0;
+	position: fixed;
+	border-radius: 0;
+	border: 0;
+	top: 0px;
+	left: 0px;
+	width: 100%;
+	height: 2.5rem;
+	z-index: 999999;
+}
+.window.top input {
+	width: 100%;
+	border: 0;
+	height: 1.4rem;
+	padding-right: 0;
+	margin: 0;
+	font-size: 0.9rem;
+	padding-top: 0.25rem;
+	padding-bottom: 0.125rem;
+	background: var(--header-field-bg);
+	border-radius: 0;
+	color: var(--text);
+}
+.window.top .taburl {
+	width: 100%;
+	border: 0;
+	border-radius: 0;
+	margin: 0;
+	font-size: 0.6rem;
+	padding-top: 0;
+	padding-bottom: 0;
+	color: var(--text-muted);
+}
+
+/* bottom bar: search box and toolbar, see components/search.css and actions.css */
+.window.searchbox {
+	background-color: var(--surface);
+	box-shadow: var(--shadow-footer);
+	padding: 0;
+	margin: 0;
+	position: fixed;
+	bottom: 0px;
+	left: 0px;
+	width: 100%;
+	height: 3.2rem;
+	border-radius: 0;
+}
+
+.infobox {
+	position: fixed;
+	font-weight: bold;
+	font-size: 0.5em;
+	color: var(--info);
+	top: 3px;
+	right: 8px;
+	z-index: 100;
+}
+
+.window-container.blocks-big, .window-container.blocks {
+	padding: 0.5rem 0;
+}
+.window-container.vertical {
+	min-height: 0;
+}
+.window-container.vertical > div {
+	min-height: 0;
+	min-width: 0;
+}
+
+.compact .window.top, .compact .window.searchbox {
+	padding: 0;
+	margin: 0;
+}
+
+/* compact mode: tighter card insides. !important, like the per-view paddings
+   in view-*.css it competes with; important declarations rank by layer the
+   other way round, so all of them have to share this layer */
+.compact .windowcontainer {
+	padding: 0.2rem !important;
+}

@@ -7,6 +7,7 @@ import {ManagerContext, ITabManagerActions} from "../context";
 import {getLocalStorage, setLocalStorage} from "@helpers/storage";
 import {getSetting, saveSetting} from "@helpers/settings";
 import {sizePopup} from "@helpers/popup_size";
+import {applyTheme} from "@helpers/theme";
 import * as S from "@strings";
 
 
@@ -499,13 +500,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		await saveSetting("dark", _dark);
 
 		this.darkText();
-		if (_dark) {
-			document.body.className = "dark";
-			document.documentElement.className = "dark";
-		} else {
-			document.body.className = "";
-			document.documentElement.className = "";
-		}
+		applyTheme(_dark);
 	}
 	darkText = () => {
 		this.context.setBottomText("Dark mode inverts the layout - better on the eyes. Default : off");

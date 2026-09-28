@@ -1,0 +1,67 @@
+/* ---------------------------------------------------------------------------
+   Horizontal layout as a strip view: one compact row per window, tabs in strip
+   order, so every window is a full-width drop lane.
+   [ title (fixed column) | tabs, wrapping | actions ]
+   --------------------------------------------------------------------------- */
+.window-container.horizontal {
+	--strip-title: 11rem;
+	--strip-pad: 0.35rem 0.6rem;
+	padding: 0.5rem 0 1rem;
+}
+.compact .window-container.horizontal {
+	--strip-title: 9rem;
+	--strip-pad: 0.15rem 0.4rem;
+}
+.window-container.horizontal .window.horizontal {
+	display: block;
+	width: calc(100% - 1rem);
+	margin: 0.4rem 0.5rem;
+	padding: 0;
+}
+.compact .window-container.horizontal .window.horizontal {
+	margin: 0.2rem 0.5rem;
+}
+.window-container.horizontal .window.horizontal .windowcontainer {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	width: 100%;
+	box-sizing: border-box;
+	padding: var(--strip-pad) !important;
+}
+.window.horizontal .windowTitle {
+	flex: 0 0 var(--strip-title);
+	min-width: 0;
+	display: block;
+	margin: 0 0.5rem 0 0;
+	text-align: left;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	align-self: center;
+}
+/* actions keep their DOM order at the right end of the row */
+.window.horizontal .window-actions {
+	display: flex;
+	float: none;
+	margin-left: auto;
+	padding-left: 0.5rem;
+}
+.window.horizontal .window-actions .windowaction {
+	float: none;
+	margin: 0 0.1rem;
+}
+.window.horizontal .newliner {
+	display: none;
+}
+/* the tiles wrapper is invisible to layout everywhere except the strip view */
+.tabs {
+	display: contents;
+}
+.window.horizontal .tabs {
+	display: flex;
+	flex-wrap: wrap;
+	flex: 1 1 0;
+	min-width: 0;
+	align-items: center;
+}

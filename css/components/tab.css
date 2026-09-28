@@ -1,0 +1,338 @@
+/* Tabs: the square tile (.icon.tab), its favicon, state tints, the state
+   badges in its corner, drop markers, and the state chips a list row carries.
+   The list view's row layout and row states are in layout/view-list.css;
+   motion (hover growth, entrance, pulse) in motion.css.
+
+   .icon is shared with the square action buttons (components/actions.css). */
+
+.icon, .iconoverlay {
+	height: 1.4rem;
+	width: 1.4rem;
+	box-sizing: border-box;
+	border: 1px solid var(--tile-border);
+	margin: 0.25rem;
+	border-radius: 3px;
+	background-size: 1rem 1rem;
+	background-repeat: no-repeat;
+	background-position: center;
+	background-color: var(--tile-bg);
+	float: left;
+	font-size: 0.8rem;
+	line-height: 1.5rem;
+	user-select: none;
+	cursor: pointer;
+}
+
+/* Favicon visibility. Tab.tsx sets --fav (the icon) and tags the tile with an
+   icon-* class from src/helpers/favicon.ts:
+     icon-mono-light  only white/grey → inverted on the light theme
+     icon-light       mostly white but not only (white card with a coloured
+                      mark, black-and-white…) → tint the tile so the white
+                      shape has an edge, like Chrome's dark tab strip does
+     icon-mono-dark   only black → inverted on the dark theme
+   The tile draws its icon on ::after (so a filter can hit the icon alone, not
+   the tile); the list layout uses the .iconoverlay child the same way. Size and
+   position come from the tile's own background-* rules via inherit.
+   The tint rules sit before .highlighted / .selected so those still win. */
+.icon.tab {
+	position: relative;
+	background-image: none;
+}
+.icon.tab::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	background-image: var(--fav, url(../images/generic.png));
+	background-size: inherit;
+	background-position: inherit;
+	background-repeat: inherit;
+}
+.iconoverlay {
+	background-image: var(--fav, url(../images/generic.png));
+}
+/* the list layout draws the icon on .iconoverlay, not on the row */
+.icon.tab.full::after {
+	content: none;
+}
+.icon.icon-mono-light::after, .iconoverlay.icon-mono-light {
+	filter: var(--fav-mono-light-filter);
+}
+.icon.icon-mono-dark::after, .iconoverlay.icon-mono-dark {
+	filter: var(--fav-mono-dark-filter);
+}
+.icon.icon-light, .iconoverlay.icon-light {
+	background-color: var(--tile-tint);
+}
+.icon.icon-light.highlighted {
+	background-color: var(--tile-tint-active);
+}
+.icon.icon-light.pinned {
+	background-color: var(--tile-tint-pinned);
+}
+.icon.icon-light.selected {
+	background-color: var(--tile-tint-selected);
+}
+.icon.icon-light.selected:hover {
+	background-color: var(--tile-tint-selected-hover);
+}
+
+.window.blocks-big .icon {
+	border-radius: 5px;
+	height: 1.5rem;
+	width: 1.5rem;
+	background-size: 1rem 1rem;
+}
+.window.blocks-big .tab {
+	border-radius: 5px;
+	height: 2.5rem;
+	width: 2.5rem;
+	background-size: 1.5rem 1.5rem;
+}
+
+/* tile states */
+.icon.highlighted {
+	background-color: var(--tile-active-bg);
+}
+.icon.incognito.highlighted {
+	background-color: var(--tile-incognito-active-bg);
+	border-color: var(--tile-incognito-active-border);
+}
+.icon.selected .iconoverlay {
+	border-color: var(--tile-border-accent);
+}
+.icon.pinned {
+	background-color: var(--tile-pinned-bg);
+}
+.icon.pinned, .icon.pinned .iconoverlay {
+	border: 1px solid var(--tile-border-accent);
+	box-shadow: inset 0 0 1px var(--pinned-glow), inset 0 0 1px var(--pinned-glow), inset 0 0 1px var(--pinned-glow);
+}
+.icon.incognito {
+	border: 1px solid var(--tile-border-accent);
+}
+/* a list row (.vertical): no tile box */
+.icon.vertical {
+	padding-left: 2rem;
+	border: 0;
+	box-shadow: none;
+	background-color: transparent;
+}
+.icon.vertical:hover {
+	background-color: var(--list-tile-hover);
+}
+.icon.pinned.vertical:hover {
+	background-color: var(--list-tile-pinned-hover);
+}
+.tab.selected.vertical:hover {
+	background-color: var(--selection-hover);
+}
+.tab:hover {
+	z-index: 99999;
+}
+.tab.search-faded {
+	opacity: 0.25;
+}
+.tab.selected {
+	opacity: 1;
+	z-index: 90000;
+	background-color: var(--selection);
+}
+/* the active tab's tile: dark edge and a hairline ring */
+.tab.highlighted {
+	border-color: var(--active-border);
+	box-shadow: 0 0 0 1px var(--active-ring);
+}
+.tab.selected:hover {
+	background-color: var(--selection-hover);
+}
+.tab.search-active.vertical, .animations .tab.search-active.vertical {
+	background-size: 0.75rem;
+}
+.tab.vertical {
+	height: auto;
+}
+.tab.vertical.selected, .animations .tab.vertical.selected {
+	background-size: 1.1rem;
+}
+.tab.hidden {
+	display: none;
+}
+.tab {
+	float: left;
+	position: relative;
+}
+.tab.full, .animations .tab.full {
+	min-width: 300px;
+	width: 100%;
+	background-position: 3px center;
+	padding: 0;
+	margin: 0 0 0.25rem 0;
+}
+.tab.full {
+	transform: scale(1);
+}
+.iconoverlay {
+	width: 1.4rem;
+	height: 1.4rem;
+	float: left;
+	margin: 0;
+	transition: none;
+}
+.icon.vertical {
+	background-image: none;
+}
+.icon.incognito.vertical {
+	background-color: var(--list-incognito-bg);
+	color: var(--list-incognito-text);
+}
+.icon.incognito.vertical.selected {
+	background-color: var(--list-incognito-selected-bg);
+	color: var(--list-incognito-text);
+}
+.icon.incognito.vertical:hover {
+	background-color: var(--list-incognito-hover-bg);
+	color: var(--list-incognito-hover-text);
+}
+
+/* A tab that plays sound: the tile takes the blue the animation pulses to,
+   so the state shows with animations off as well, and it beats the active
+   tab's tint (a selected tile stays yellow). A small speaker sits in the
+   corner, crossed when muted; a muted tab gets only that, no blue. The list
+   layout shows the blue as a left accent and on the favicon box, plus a chip
+   (.tab-audible) at the end of the row. */
+.icon.tab.audible:not(.muted):not(.selected) {
+	background-color: var(--playing);
+}
+/* state badges (see --badge-* in base/tokens.css) */
+.icon.tab.audible::before, .icon.tab.muted::before, .icon.tab.discarded::before {
+	content: "";
+	position: absolute;
+	right: -2px;
+	bottom: -2px;
+	z-index: 2;
+	width: 9px;
+	height: 9px;
+	background: var(--badge-playing) center / 100% 100% no-repeat;
+	box-shadow: var(--badge-ring);
+	border-radius: 2px;
+	pointer-events: none;
+}
+.window.blocks-big .icon.tab::before {
+	width: 11px;
+	height: 11px;
+	border-radius: 3px;
+}
+.icon.tab.discarded::before {
+	background-image: var(--badge-suspended);
+}
+/* playing: the animated badge when animations are on. These three stay
+   together (and out of motion.css): muted must come last and win */
+.animations .icon.tab.audible::before, .icon.tab.audible::before {
+	background-image: var(--badge-playing);
+}
+.animations .icon.tab.audible::before {
+	background-image: var(--badge-playing-anim);
+}
+.icon.tab.muted::before, .animations .icon.tab.muted::before {
+	background-image: var(--badge-muted);
+}
+.icon.tab.full::before {
+	content: none;
+}
+.icon.discarded.blocks, .icon.discarded .iconoverlay {
+	opacity: 0.8;
+	background-blend-mode: luminosity;
+}
+
+.tab.full > .tabtitle {
+	max-width: calc(100% - 1.5rem);
+	height: 100%;
+	padding-left: 1.5rem;
+	white-space: nowrap;
+	overflow: hidden;
+	position: absolute;
+}
+
+/* drop markers: where a dragged tab will land */
+.tab.left > .limiter, .tab.right > .limiter {
+	position: absolute;
+	top: -3px;
+	bottom: -3px;
+	width: 3px;
+	border-radius: 2px;
+	background-color: var(--drop-marker);
+}
+.tab.left > .limiter {
+	left: -5px;
+}
+.tab.right > .limiter {
+	right: -5px;
+}
+.tab.top > .limiter, .tab.bottom > .limiter {
+	height: 3px;
+	border-radius: 2px;
+	left: 0px;
+	right: 0px;
+	position: absolute;
+	background-color: var(--drop-marker);
+}
+.tab.top > .limiter {
+	top: -3px;
+}
+.tab.bottom > .limiter {
+	bottom: -3px;
+}
+.icon.tab.expanded {
+	width: 340px;
+	float: left;
+	background-position: 3px center;
+	margin-left: 0px;
+	font-size: 10pt;
+	padding-left: 22px;
+	white-space: nowrap;
+	-webkit-user-select: none;
+}
+.vertical .newliner {
+	display: none;
+}
+.newliner {
+	clear: both;
+}
+.hidden {
+	height: 0;
+	visibility: hidden;
+	display: none;
+}
+
+.compact .tab {
+	margin: 0.2rem 0;
+	padding: 0;
+}
+.compact .icon {
+	padding: 0.1rem;
+	margin: 0.1rem;
+}
+
+/* state chips at the end of a list row (their list look: layout/view-list.css) */
+.tab-pinned, .tab-highlighted, .tab-selected, .tab-audible, .tab-discarded {
+	position: absolute;
+	right: 0.3rem;
+	top: 0.3rem;
+	bottom: 0.3rem;
+	border: 1px solid var(--chip-solid-border);
+	font-size: 0.5rem;
+	line-height: 0.5rem;
+	height: 0.5rem;
+	padding: 0.1rem;
+	border-radius: 2px;
+	font-weight: bold;
+	display: inline-block;
+	background: var(--chip-solid-bg);
+	text-transform: uppercase;
+	box-shadow: 0px 0px 1px 2px var(--chip-solid-halo);
+	z-index: 100;
+}
+.incognito .tab-pinned, .incognito .tab-highlighted, .incognito .tab-selected, .incognito .tab-audible, .incognito .tab-discarded {
+	color: var(--chip-incognito-text);
+}

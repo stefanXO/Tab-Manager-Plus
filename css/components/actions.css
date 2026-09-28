@@ -1,0 +1,131 @@
+/* Square action buttons (.icon + an action class): the window card's action
+   row (.windowaction / .tabaction), the header's donate / rate / options, and
+   the bottom bar's toolbar. Each action class carries its image. */
+
+/* sizes and places in the header and the bottom bar */
+.window.searchbox .icon {
+	height: 2rem;
+	width: 2rem;
+	margin: 0.6rem 0.6rem 0.6rem 0;
+}
+.options.icon, .compact .options.icon {
+	height: 2rem;
+	width: 2rem;
+	margin: 0.25rem;
+	padding: 0;
+	position: absolute;
+	right: 2px;
+}
+.donate.icon, .compact .donate.icon,
+.rate.icon, .compact .rate.icon {
+	height: 2rem;
+	width: 2rem;
+	margin: 0.25rem;
+	padding: 0;
+	position: absolute;
+	right: 2.25rem;
+}
+.donate.icon, .compact .donate.icon {
+	right: 4.5rem;
+}
+
+.windowaction {
+	float: right;
+}
+.windowaction:hover {
+	background-color: var(--hover-mark);
+}
+.tabaction:hover {
+	background-color: var(--action-hover);
+}
+.windowaction + .enabled {
+	background-color: var(--action-hover);
+}
+.save {
+	background-image: url(../images/star64.png);
+	background-color: var(--action-bg);
+	border: var(--action-border);
+}
+.restore {
+	background-image: url(../images/check64.png);
+	background-color: var(--action-bg);
+	border: var(--action-border);
+}
+.delete {
+	background-image: url(../images/del64.png);
+	background-color: var(--action-bg);
+	border: var(--action-border);
+}
+.add {
+	background-image: url(../images/add64.png);
+	background-color: var(--action-bg);
+	border: var(--action-border);
+}
+.close {
+	background-image: url(../images/cancel64.png);
+	background-color: var(--action-bg);
+	border: var(--action-border);
+}
+.minimize {
+	background-image: url(../images/min64.png);
+	background-color: var(--action-bg);
+	border: var(--action-border);
+}
+.maximize {
+	background-image: url(../images/max64.png);
+	background-color: var(--action-bg);
+	border: var(--action-border);
+}
+.colors {
+	background-image: url(../images/dna64.png);
+	background-color: var(--action-bg);
+	border: var(--action-border);
+}
+.add:hover {
+	background-color: var(--action-add-hover);
+}
+.close:hover {
+	background-color: var(--action-close-hover);
+}
+.new {
+	background-image: url(../images/folder64.png);
+}
+.trash {
+	background-image: url(../images/remove64.png);
+}
+.discard {
+	background-image: url(../images/ram64.png);
+}
+.rate {
+	float: right;
+	background-image: url(../images/heart.png);
+}
+.donate {
+	float: right;
+	background-image: url(../images/paypal.png);
+}
+.options {
+	float: right;
+	background-image: url(../images/wrench64.png);
+}
+.blocks-big-view {
+	background-image: url(../images/views/big-blocks.png);
+}
+.blocks-view {
+	background-image: url(../images/views/blocks.png);
+}
+.horizontal-view {
+	background-image: url(../images/views/horizontal.png);
+}
+.vertical-view {
+	background-image: url(../images/views/vertical.png);
+}
+.pin {
+	background-image: url(../images/push-pin64.png);
+}
+.duplicates {
+	background-image: url(../images/duplicates.png);
+}
+.filter {
+	background-image: url(../images/show64.png);
+}

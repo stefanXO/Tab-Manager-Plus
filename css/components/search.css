@@ -1,0 +1,76 @@
+/* The search box in the bottom bar (its frame: layout/frame.css) and the help
+   panel that opens above it on hover. */
+
+.window.searchbox table {
+	width: 100%;
+}
+
+.window.searchbox input.searchBoxInput {
+	margin: 0.5rem 0.25rem 0 0.25rem;
+	min-width: auto;
+	width: 100%;
+}
+
+.window.searchbox td.two {
+	width: 300px;
+}
+
+.window.searchbox td.one {
+	position: relative;
+}
+
+/* hover help panel for the search box: shown only on pointer hover, after a
+   short delay, so it never pops up just because the input has focus */
+.search-help {
+	position: absolute;
+	bottom: 100%;
+	left: 0.25rem;
+	margin-bottom: 0.5rem;
+	max-width: 26rem;
+	padding: 0.6rem 0.8rem;
+	border: 1px solid var(--popover-border);
+	border-radius: 8px;
+	box-shadow: var(--shadow-popover);
+	background: var(--surface);
+	color: var(--popover-text);
+	font-size: 12px;
+	line-height: 1.5;
+	z-index: 100000;
+	opacity: 0;
+	visibility: hidden;
+	pointer-events: none;
+	transition: opacity 120ms, visibility 0s linear 120ms;
+}
+.window.searchbox td.one:hover .search-help {
+	opacity: 1;
+	visibility: visible;
+	pointer-events: auto;
+	transition-delay: 400ms;
+}
+.search-help-intro {
+	margin: 0 0 0.4rem 0;
+}
+.search-help-table {
+	width: auto;
+	border-collapse: collapse;
+}
+.search-help-table td {
+	padding: 0.1rem 0;
+	vertical-align: top;
+	white-space: nowrap;
+}
+.search-help-table td:first-child {
+	padding-right: 0.6rem;
+}
+.search-help-table td:last-child {
+	white-space: normal;
+	color: var(--popover-text-muted);
+}
+.search-help code {
+	padding: 1px 5px;
+	font-size: 11px;
+	font-family: monospace;
+	border: 1px solid var(--popover-border);
+	border-radius: 4px;
+	background: var(--code-bg);
+}

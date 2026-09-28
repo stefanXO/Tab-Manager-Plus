@@ -12,6 +12,7 @@ import {ICommand, ITabManager, ITabManagerState, ISavedSession} from "@types";
 import {ManagerContext, ITabManagerActions, ISettings} from "../context";
 import {attachMasonry, Masonry} from "../masonry";
 import {sizePopup} from "@helpers/popup_size";
+import {applyTheme} from "@helpers/theme";
 
 export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 
@@ -204,7 +205,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	}
 
 	applySettings(s : Settings) {
-		document.body.className = s.dark ? "dark" : "";
+		applyTheme(s.dark);
 		if (window.inPopup) sizePopup(s.tabWidth, s.tabHeight);
 		writeBootCache(s);
 		this.setState({

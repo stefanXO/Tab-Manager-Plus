@@ -1,0 +1,217 @@
+/* ---------------------------------------------------------------------------
+   Vertical layout as a list: window cards in a grid (one column in the popup,
+   more when there is room), each a header plus compact rows. Rows are flex:
+   favicon, title (truncated), state chips at the end. The active tab gets a
+   left accent instead of an outlined box.
+   --------------------------------------------------------------------------- */
+.window-container.vertical {
+	/* 30rem = one column in the 800px popup, two from about 1000px: titles stay readable */
+	--card-min: 30rem;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(var(--card-min), 100%), 1fr));
+	grid-auto-rows: 8px;
+	grid-auto-flow: row;
+	align-items: start;
+	gap: 8px;
+	padding: 8px 8px 1rem;
+	box-sizing: border-box;
+}
+.window-container.vertical .hrCont {
+	grid-column: 1 / -1;
+	padding: 0.6rem 0 0.4rem;
+}
+.window-container.vertical .window.vertical {
+	display: block;
+	float: none;
+	width: auto;
+	margin: 0;
+	padding: 0.35rem 0.5rem 0.4rem;
+	min-width: 0;
+}
+.window-container.vertical .window.vertical .windowcontainer {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	padding: 0 !important;
+	box-sizing: border-box;
+}
+/* header */
+.window.vertical .windowTitle {
+	display: block;
+	margin: 0 0 0.3rem;
+	padding: 0.15rem 0.4rem 0.35rem;
+	text-align: left;
+	font-size: 12.5px;
+	line-height: 1.4;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	border-bottom: 1px solid var(--divider);
+}
+/* rows */
+.window.vertical .tab.full {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	min-width: 0;
+	height: 1.75rem;
+	margin: 0;
+	padding: 0 0.4rem;
+	border-radius: 4px;
+	border-left: 3px solid transparent;
+	background-position: initial;
+}
+.window.vertical .tab.full > .iconoverlay {
+	order: 0;
+	flex: none;
+	width: 1.1rem;
+	height: 1.1rem;
+	margin: 0;
+	border: 0;
+	box-shadow: none;
+	border-radius: 3px;
+	background-size: 1rem 1rem;
+	background-color: transparent;
+}
+.window.vertical .tab.full > .tabtitle {
+	order: 1;
+	flex: 1 1 auto;
+	min-width: 0;
+	position: static;
+	height: auto;
+	max-width: none;
+	padding: 0;
+	line-height: 1.75rem;
+	font-size: 13px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.window.vertical .tab.full > .tab-pinned,
+.window.vertical .tab.full > .tab-highlighted,
+.window.vertical .tab.full > .tab-selected,
+.window.vertical .tab.full > .tab-audible,
+.window.vertical .tab.full > .tab-discarded {
+	order: 2;
+	position: static;
+	flex: none;
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	height: auto;
+	margin: 0;
+	padding: 1px 5px 1px 2px;
+	font-size: 9px;
+	line-height: 1.2;
+	border: 1px solid var(--chip-border);
+	border-radius: 4px;
+	background: var(--chip-bg);
+	box-shadow: none;
+	opacity: 0.85;
+}
+/* the badge in front of the chip text */
+.window.vertical .tab.full > .tab-pinned::before,
+.window.vertical .tab.full > .tab-highlighted::before,
+.window.vertical .tab.full > .tab-selected::before,
+.window.vertical .tab.full > .tab-audible::before,
+.window.vertical .tab.full > .tab-discarded::before {
+	content: "";
+	width: 11px;
+	height: 11px;
+	border-radius: 3px;
+	background: var(--badge-pinned) center / 11px 11px no-repeat;
+}
+.window.vertical .tab.full > .tab-highlighted::before {
+	background-image: var(--badge-active);
+}
+.window.vertical .tab.full > .tab-selected::before {
+	background-image: var(--badge-selected);
+}
+.window.vertical .tab.full > .tab-audible::before {
+	background-image: var(--badge-playing);
+}
+.animations .window.vertical .tab.full > .tab-audible::before {
+	background-image: var(--badge-playing-anim);
+}
+.window.vertical .tab.full.muted > .tab-audible::before {
+	background-image: var(--badge-muted);
+}
+.window.vertical .tab.full > .tab-discarded::before {
+	background-image: var(--badge-suspended);
+}
+/* a chip that is not on: the generic .hidden loses to the chip rule above by cascade order */
+.window.vertical .tab.full > .tab-pinned.hidden,
+.window.vertical .tab.full > .tab-highlighted.hidden,
+.window.vertical .tab.full > .tab-selected.hidden,
+.window.vertical .tab.full > .tab-audible.hidden,
+.window.vertical .tab.full > .tab-discarded.hidden,
+.window.vertical .tab.full > .limiter {
+	display: none;
+}
+/* hairline between rows, no ring on the active row: the accent and tint mark it */
+.window.vertical .tab.full + .tab.full {
+	border-top: 1px solid var(--row-divider);
+}
+.window.vertical .tab.full {
+	box-shadow: none;
+	border-radius: 0;
+}
+.window.vertical .tab.full:hover {
+	background-color: var(--row-hover);
+}
+/* Row states, each a coloured left accent plus a faint tint. One accent slot,
+   so the order here is the precedence, last wins:
+   pinned red < active purple < playing blue < muted grey < selected yellow */
+.window.vertical .tab.full.pinned {
+	border-left-color: var(--row-pinned-edge);
+	background-color: var(--row-pinned-bg);
+}
+.window.vertical .tab.full.pinned:hover {
+	background-color: var(--row-pinned-hover);
+}
+.window.vertical .tab.full.highlighted {
+	border-left-color: var(--row-active-edge);
+	background-color: var(--row-active-bg);
+}
+.window.vertical .tab.full.highlighted:hover {
+	background-color: var(--row-active-hover);
+}
+.window.vertical .tab.full.audible {
+	border-left-color: var(--row-playing-edge);
+	background-color: var(--row-playing-bg);
+}
+.window.vertical .tab.full.audible:hover {
+	background-color: var(--row-playing-hover);
+}
+/* a playing row breathes (motion.css) */
+.window.vertical .tab.full.muted {
+	border-left-color: var(--row-muted-edge);
+	background-color: transparent;
+}
+.window.vertical .tab.full.muted:hover {
+	background-color: var(--row-hover);
+}
+.window.vertical .tab.full.muted > .iconoverlay {
+	background-color: transparent;
+}
+.window.vertical .tab.full.selected {
+	border-left-color: var(--row-selected-edge);
+	background-color: var(--row-selected-bg);
+}
+.window.vertical .tab.full.selected:hover {
+	background-color: var(--row-selected-hover);
+}
+/* actions: last line, right, no per-icon floats */
+.window.vertical .window-actions {
+	display: flex;
+	float: none;
+	align-self: flex-end;
+	margin-top: 0.35rem;
+}
+.window.vertical .window-actions .windowaction {
+	float: none;
+	margin: 0 0.1rem;
+}
+.window.vertical .newliner {
+	display: none;
+}

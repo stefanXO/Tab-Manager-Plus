@@ -1,0 +1,28 @@
+/* Minimized windows and saved sessions: their cards are dimmed until hovered,
+   and each group sits under a labelled divider ("Minimized windows", "Saved
+   windows"). */
+
+.window.minimized {
+	opacity: var(--minimized-opacity);
+}
+
+.window.session {
+	opacity: var(--session-opacity);
+}
+
+.window.session:hover,
+.window.minimized:hover {
+	opacity: 1 !important;
+}
+
+/* section divider: a rule with its label on top */
+.hrCont {
+	padding-top: 20px; padding-bottom: 20px;
+	clear: both;
+}
+.hrDiv {
+	width: 100%; height: 8px; border-bottom: 1px solid var(--divider-strong); text-align: center;
+}
+.hrSpan {
+	font-size: 12px; background-color: var(--divider-label-bg); color: var(--divider-label-text); padding: 0 10px;
+}

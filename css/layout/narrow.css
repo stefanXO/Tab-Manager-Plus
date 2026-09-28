@@ -1,0 +1,120 @@
+/* ---------------------------------------------------------------------------
+   Narrow: the Firefox sidebar, or a small popup. The header drops buttons.
+   Cards never ask for more than the width there is.
+   --------------------------------------------------------------------------- */
+@media (max-width: 450px) {
+	/* the popup's 450px minimum would make the sidebar scroll sideways */
+	html, body {
+		min-width: 0;
+	}
+	/* the bottom bar's height: search box plus one row of actions */
+	:root {
+		--searchbox-height: 4.2rem;
+	}
+	.window.searchbox {
+		height: var(--searchbox-height);
+	}
+	.window-container {
+		bottom: var(--searchbox-height);
+	}
+	.window.searchbox table,
+	.window.searchbox tbody,
+	.window.searchbox tr,
+	.window.searchbox td.one,
+	.window.searchbox td.two {
+		display: block;
+		width: auto;
+	}
+	.window.searchbox input.searchBoxInput {
+		width: calc(100% - 0.5rem);
+		box-sizing: border-box;
+		padding: 0 0.6rem;
+		font-size: 0.7rem;
+	}
+
+	.window.searchbox input.searchBoxInput {
+		margin: 0.15rem 0.15rem 0 0.15rem;
+	}
+	/* the actions as a grid of eight, packed against the right edge like the
+	   wide bar; spare width stays on the left instead of opening gaps */
+	.window.searchbox td.two {
+		display: grid;
+		grid-template-columns: repeat(8, auto);
+		justify-content: end;
+		gap: 0.1rem;
+		padding: 0.1rem 0.25rem 0;
+	}
+	.window.searchbox td.two .icon {
+		float: none;
+		margin: 0;
+		height: 26px;
+		width: 26px;
+	}
+	/* the wide bar floats them right, so the markup lists them last to first:
+	   put them back in the order the wide bar shows */
+	.window.searchbox td.two > :nth-child(1) { order: 8; }
+	.window.searchbox td.two > :nth-child(2) { order: 7; }
+	.window.searchbox td.two > :nth-child(3) { order: 6; }
+	.window.searchbox td.two > :nth-child(4) { order: 5; }
+	.window.searchbox td.two > :nth-child(5) { order: 4; }
+	.window.searchbox td.two > :nth-child(6) { order: 3; }
+	.window.searchbox td.two > :nth-child(7) { order: 2; }
+	.window.searchbox td.two > :nth-child(8) { order: 1; }
+	/* the header keeps only its text: donate, rate and options go */
+	.donate.icon, .rate.icon, .options.icon {
+		display: none;
+	}
+	.window.searchbox .options-bottom.icon {
+		display: block;
+	}
+	/* the rename / color screen: its wide side padding would leave the title
+	   and the name field no room */
+	.window-colors {
+		padding: 3rem 1rem 1rem;
+		overflow-y: auto;
+	}
+	/* the close button in the corner, above the title */
+	.window-x {
+		right: 0;
+		top: 0;
+		margin: 0.5rem;
+	}
+	.window-colors input {
+		min-width: 0;
+		box-sizing: border-box;
+	}
+	/* the search help spans the bar instead of its fixed 26rem, and scrolls
+	   rather than growing up under the header */
+	.search-help {
+		right: 0.25rem;
+		max-width: none;
+		max-height: calc(100vh - 2.85rem - var(--searchbox-height) - 1rem);
+		overflow-y: auto;
+		box-sizing: border-box;
+	}
+	/* when the window was last active: no room for it next to the tabs or
+	   the actions, and it moves around as they wrap; the hover text has it */
+	.window-age {
+		display: none;
+	}
+	.window.horizontal .windowTitle {
+		flex: 1 1 100%;
+		margin: 0 0 0.3rem 0;
+	}
+	.window.horizontal .tabs {
+		flex: 1 1 100%;
+	}
+	.window.horizontal .window-actions {
+		padding: 0.3rem 0 0 0;
+	}
+}
+/* the options screen and the changelog: a box spans the width instead of a
+   centred 90%. Kept at 540px, a little wider than the popup block above. */
+@media (max-width: 540px) {
+	.optionsBox {
+		width: auto;
+		max-width: none;
+		margin: 1rem 0;
+		padding: 10px 12px;
+	}
+}

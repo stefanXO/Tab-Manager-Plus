@@ -1,0 +1,38 @@
+/* Wide: the old column steps for list cards on big screens. The list view's
+   own grid (layout/view-list.css) overrides most of this today. */
+
+@media only screen and (min-width: 1001px) {
+	.window.vertical {
+		width: calc(48% - 10px);
+		float: left;
+		margin: 10px;
+	}
+}
+@media only screen and (min-width: 1501px) {
+	.window.vertical {
+		width: calc(32% - 10px);
+		float: left;
+		margin: 10px;
+	}
+}
+@media only screen and (min-width: 2001px) {
+	.window.vertical {
+		width: calc(24% - 10px);
+		float: left;
+		margin: 10px;
+	}
+}
+@media only screen and (min-width: 2501px) {
+	.window.vertical {
+		width: calc(19% - 10px);
+		float: left;
+		margin: 10px;
+	}
+}
+@media only screen and (min-width: 3001px) {
+	.window.vertical {
+		width: calc(16% - 10px);
+		float: left;
+		margin: 10px;
+	}
+}

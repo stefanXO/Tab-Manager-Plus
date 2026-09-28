@@ -1,0 +1,216 @@
+/* Motion: the motion token, every keyframe, and the rules gated on
+   .animations (the "animations" setting, a class on #root). With the setting
+   off the app renders #root.no-animations and nothing here moves.
+
+   Kept out of here on purpose: the badge image swap for a playing tab
+   (components/tab.css, layout/view-list.css): the muted badge that follows
+   it must win, which needs the same file. */
+
+/* Motion. One quiet system: every state change of a tile is a short ease-out
+   on transform / opacity (160 ms, no overshoot), amplitudes small enough that
+   a whole window changing at once reads as a breath, not a jump. Search
+   results ripple through a window a few ms per tile. A tile selected by hand
+   gets one soft pulse ring; a selection made by the search (class
+   search-active) does not, typing would pulse the whole window per letter.
+   Same values in compact mode. */
+:root {
+	--motion: 220ms cubic-bezier(0.3, 1.3, 0.5, 1);
+}
+
+/* Entrance. Nothing moves: every card and tile is at its final place and size
+   from the first frame. Cards fade in, tiles fade in from 92%, rows fade, each
+   a few ms after the previous one (--i, set by Window / Tab). Fill mode is
+   backwards, so once it has run the state transitions apply as usual. Runs
+   on mount, so a new window or tab gets it too. */
+@keyframes tmp-card {
+	from { opacity: 0; }
+	to { opacity: 1; }
+}
+/* from only: the end state is whatever the tile's own rules say (a suspended
+   tile ends at its dimmed opacity, not at 1) */
+@keyframes tmp-in {
+	from { opacity: 0; transform: scale(0.6); }
+}
+@keyframes tmp-row {
+	from { opacity: 0; }
+	to { opacity: 1; }
+}
+.animations .window {
+	--wdelay: calc(min(var(--i, 0), 8) * 30ms);
+	animation: tmp-card 160ms ease-out backwards;
+	animation-delay: var(--wdelay);
+}
+.animations .window .tab.enter {
+	animation: tmp-in 220ms cubic-bezier(0.3, 1.3, 0.5, 1) backwards;
+	animation-delay: calc(var(--wdelay, 0ms) + min(var(--i, 0), 16) * 10ms);
+}
+.animations .window.vertical .tab.full.enter {
+	animation: tmp-row 140ms ease-out backwards;
+	animation-delay: calc(var(--wdelay, 0ms) + min(var(--i, 0), 12) * 8ms);
+}
+.animations .window.blocks-big .tab:hover {
+	transform: scale(1.12);
+}
+.animations .window.blocks-big .tab.search-active {
+	transform: scale(1.08);
+}
+.animations .window.blocks-big .tab.search-faded {
+	transform: scale(0.85);
+}
+.animations .window.blocks-big .tab.selected {
+	transform: scale(1.1);
+}
+.animations .tab {
+	transform: scale(1);
+	filter: none;
+	transition: transform var(--motion), opacity var(--motion), background-color var(--motion), box-shadow var(--motion);
+}
+.animations .tab:hover {
+	transform: scale(1.25);
+	filter: none;
+}
+.animations .tab.search-active, .animations .tab.search-faded {
+	transition-delay: calc(min(var(--i, 0), 16) * 10ms);
+}
+.animations .tab.search-active {
+	transform: scale(1.12);
+}
+.animations .tab.search-faded {
+	transform: scale(0.75);
+}
+.animations .tab.selected {
+	transform: scale(1.2);
+}
+@keyframes tmp-pulse {
+	0% { box-shadow: 0 0 0 0 var(--selection-pulse); }
+	100% { box-shadow: 0 0 0 14px var(--selection-pulse-end); }
+}
+/* not while entering: that rule owns the animation slot for the first moment */
+.animations .window:not(.vertical) .tab.selected:not(.search-active):not(.enter) {
+	animation: tmp-pulse 500ms ease-out;
+}
+.animations .window.vertical .tab.full {
+	transition: background-color var(--motion), border-color var(--motion);
+}
+/* list rows and a search hit in the list never grow */
+.tab.search-active.vertical, .animations .tab.search-active.vertical {
+	transform: scale(1) !important;
+}
+.tab.vertical.selected, .animations .tab.vertical.selected {
+	transform: scale(1) !important;
+}
+.animations .tab.full {
+	transform: scale(1);
+}
+
+/* a playing tile pulses to the playing blue */
+.animations .icon.audible:not(.muted).blocks {
+	animation-name: audible;
+	animation-duration: 3s;
+	animation-iteration-count: infinite;
+}
+@keyframes audible {
+	0% {
+		background-color: inherit;
+	}
+	50% {
+		background-color: var(--playing);
+	}
+	100% {
+		background-color: inherit;
+	}
+}
+
+/* a playing row breathes: the tint swells a little and back, slow */
+@keyframes tmp-breathe {
+	0%, 100% { background-color: var(--row-playing-bg); }
+	50% { background-color: var(--row-playing-pulse); }
+}
+.animations .window.vertical .tab.full.audible:not(.muted):not(.selected):not(:hover) {
+	animation: tmp-breathe 3s ease-in-out infinite;
+}
+
+/* the search help: no fade when animations are off */
+.no-animations .search-help {
+	transition: none;
+}
+.no-animations .window.searchbox td.one:hover .search-help {
+	transition-delay: 0s;
+}
+
+/* the options switch: the knob slides */
+.animations .toggle label {
+	transition: all 0.2s ease-in-out;
+}
+.animations .toggle label:before {
+	transition: box-shadow 0.2s ease-in-out;
+	-webkit-animation: moveLeft 0.2s ease-in-out;
+	animation: moveLeft 0.2s ease-in-out;
+}
+.animations .toggle input:checked + label:before {
+	-webkit-animation: moveRight 0.2s ease-in-out;
+	animation: moveRight 0.2s ease-in-out;
+}
+
+/* the switch knob: a little stretch on the way */
+@-webkit-keyframes moveRight {
+	0% {
+		width: 30px;
+		-webkit-transform: translateX(0);
+		transform: translateX(0);
+	}
+	45% {
+		width: 34px;
+	}
+	100% {
+		width: 30px;
+		-webkit-transform: translateX(44px);
+		transform: translateX(44px);
+	}
+}
+
+@keyframes moveRight {
+	0% {
+		width: 30px;
+		-webkit-transform: translateX(0);
+		transform: translateX(0);
+	}
+	45% {
+		width: 34px;
+	}
+	100% {
+		width: 30px;
+		-webkit-transform: translateX(44px);
+		transform: translateX(44px);
+	}
+}
+@-webkit-keyframes moveLeft {
+	0% {
+		width: 30px;
+		-webkit-transform: translateX(44px);
+		transform: translateX(44px);
+	}
+	45% {
+		width: 34px;
+	}
+	100% {
+		width: 30px;
+		-webkit-transform: translateX(0);
+		transform: translateX(0);
+	}
+}
+@keyframes moveLeft {
+	0% {
+		width: 30px;
+		-webkit-transform: translateX(44px);
+		transform: translateX(44px);
+	}
+	45% {
+		width: 34px;
+	}
+	100% {
+		width: 30px;
+		-webkit-transform: translateX(0);
+		transform: translateX(0);
+	}
+}

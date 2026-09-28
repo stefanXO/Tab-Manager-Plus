@@ -1,0 +1,257 @@
+/* Design tokens, two tiers.
+
+   1. Primitives: the raw palette. Nothing outside this file (and themes/)
+      should name them; they exist so the semantic tier reads as a mapping.
+      Translucent tints stay legacy rgba(r, g, b, a) literals in the semantic
+      tier: Chrome keeps the alpha of the modern rgb(r g b / a) form as a
+      float and blends it a shade differently, so rewriting them would not be
+      a visual no-op. (esbuild's minifier leaves custom property values alone;
+      it would turn an rgba() in a plain declaration into 8-bit hex.)
+   2. Semantic tokens: what components use. The values here are the light
+      theme; themes/dark.css redefines the ones that differ on the dark theme.
+      A token that dark.css does not mention looks the same on both themes
+      (today: the options screen controls and the changelog).
+
+   Colour-free tokens (motion, per-layout sizes such as --card-min) live next to
+   the rules that use them. */
+
+:root {
+	/* ------------------------------------------------------------ primitives */
+	--white: #fff;
+	--black: #000;
+
+	--gray-50: #f1f1f1;
+	--gray-75: #f3f5f6;
+	--gray-100: #eeeeee;
+	--gray-150: #dddddd;
+	--gray-200: #e1e1e1;
+	--gray-250: #cccccc;
+	--gray-300: #cfd4db;
+	--gray-400: #b2b2b2;
+	--gray-500: #999999;
+	--gray-550: #888888;
+	--gray-700: #555555;
+	--gray-850: #222222;
+	--gray-900: #111111;
+
+	/* the accent: rebeccapurple, used at several alphas; the older tile
+	   borders use the plain `purple` keyword, a different, darker hue */
+	--purple-legacy: purple;
+	--deep-purple-50: #ede7f6;
+	--deep-purple-200: #b39ddb;
+	--deep-purple-900: #311b92;
+
+	--blue: #4285f4;
+	--sky: #00aaff;
+	--ice: #beecff;
+	--ice-blue: #b9d6e6;
+	--frost: #eefaff;
+	--mint: #ddeeee;
+	--green-switch: #57de72;
+
+	--pink-soft: #f0b9cb;
+
+	--yellow: yellow;
+	--yellow-soft: #ffff97;
+
+	/* dark palette (the values body.dark used to carry) */
+	--dk-ground: #151a1f;
+	--dk-panel: #1e252b;
+	--dk-panel-2: #242c33;
+	--dk-tile: #2b343c;
+	--dk-tile-hover: #37424b;
+	--dk-line: rgba(255, 255, 255, 0.12);
+	--dk-line-strong: rgba(255, 255, 255, 0.24);
+	--dk-text: #e6eaee;
+	--dk-text-2: #a7b1ba;
+	--dk-accent: #b79ae8;
+	--dk-select: #f2c94c;
+	--dk-select-hover: #f7d872;
+	--dk-ink: #111;
+
+	/* -------------------------------------------------------------- semantic */
+
+	/* page and panels */
+	--bg: var(--gray-50);
+	--text: var(--black);
+	--text-muted: rgba(0, 0, 0, 0.5);
+	--text-faint: rgba(0, 0, 0, 0.45);
+	--text-subtle: var(--gray-550);
+	--surface: white;
+	--surface-sunken: white;
+	--surface-incognito: #333333CC;
+	--ink: black;
+	--info: var(--sky);
+
+	/* hairlines, rings and shadows */
+	--shadow-card: 0 0 0 1px rgba(0, 0, 0, 0.08);
+	--shadow-header: var(--shadow-card);
+	--shadow-footer: var(--shadow-card);
+	--shadow-popover: 0 4px 14px rgba(0, 0, 0, 0.18);
+	--focus-ring: rgba(102, 51, 153, 0.55);
+	--divider: rgba(0, 0, 0, 0.08);
+	--divider-strong: black;
+	--divider-label-bg: var(--gray-75);
+	--divider-label-text: var(--gray-700);
+	--rule: var(--gray-250);
+	--rule-strong: var(--gray-500);
+
+	/* opacity of dimmed cards */
+	--minimized-opacity: 0.8;
+	--session-opacity: 0.6;
+
+	/* the selection (tabs picked by hand or by search) */
+	--selection: var(--yellow);
+	--selection-hover: var(--yellow-soft);
+	--selection-pulse: rgba(255, 190, 0, 0.9);
+	--selection-pulse-end: rgba(255, 190, 0, 0);
+
+	/* the active tab */
+	--active-border: rgba(102, 51, 153, 0.55);
+	--active-ring: rgba(102, 51, 153, 0.2);
+
+	/* a tab that plays sound */
+	--playing: var(--blue);
+
+	/* tiles (.icon): tab tiles and the square action buttons */
+	--tile-bg: white;
+	--tile-border: var(--gray-400);
+	--tile-border-accent: var(--purple-legacy);
+	--tile-active-bg: #eefaff80;
+	--tile-pinned-bg: #FF117733;
+	--pinned-glow: #FF117733;
+	--tile-incognito-active-bg: #eefaffEE;
+	--tile-incognito-active-border: var(--yellow);
+	/* tints behind mostly-white favicons (icon-light), per tile state */
+	--tile-tint: var(--gray-300);
+	--tile-tint-active: var(--ice-blue);
+	--tile-tint-pinned: var(--pink-soft);
+	--tile-tint-selected: var(--yellow);
+	--tile-tint-selected-hover: var(--yellow-soft);
+	/* favicon filters: white-only icons are inverted on light tiles,
+	   black-only icons on dark ones */
+	--fav-mono-light-filter: invert(1);
+	--fav-mono-dark-filter: none;
+	/* the drop marker next to a dragged-over tile */
+	--drop-marker: #000000;
+	/* the playing / muted / asleep badge's ring against the tile */
+	--badge-ring: 0 0 0 1px rgba(255, 255, 255, 0.9);
+
+	/* list rows in their older, pre-list-view look (.icon.vertical) */
+	--list-tile-hover: var(--ice);
+	--list-tile-pinned-hover: #FF117788;
+	--list-incognito-bg: var(--gray-900);
+	--list-incognito-selected-bg: var(--gray-850);
+	--list-incognito-text: white;
+	--list-incognito-hover-bg: var(--purple-legacy);
+	--list-incognito-hover-text: var(--yellow);
+
+	/* action buttons (window bar, toolbar) */
+	--action-bg: transparent;
+	--action-border: none;
+	--action-hover: var(--mint);
+	--action-add-hover: #0080001f;
+	--action-close-hover: #ff000017;
+	/* a yellow mark under the pointer: window actions, the editable name */
+	--hover-mark: var(--yellow);
+	/* round close button of the window colour screen */
+	--button-bg: var(--gray-100);
+	--button-bg-hover: var(--gray-150);
+
+	/* fields */
+	--field-border: var(--gray-100);
+	--header-field-bg: white;
+
+	/* chips: the list view's state chips */
+	--chip-bg: rgba(255, 255, 255, 0.7);
+	--chip-border: rgba(0, 0, 0, 0.15);
+	/* the chip's older, solid look (only drawn outside the list rows) */
+	--chip-solid-bg: white;
+	--chip-solid-border: black;
+	--chip-solid-halo: rgba(255, 255, 255, 0.5);
+	--chip-incognito-text: black;
+
+	/* list rows: a coloured left edge plus a faint tint per state */
+	--row-divider: rgba(0, 0, 0, 0.1);
+	--row-hover: rgba(0, 0, 0, 0.07);
+	--row-pinned-edge: rgba(255, 17, 119, 0.8);
+	--row-pinned-bg: rgba(255, 17, 119, 0.06);
+	--row-pinned-hover: rgba(255, 17, 119, 0.14);
+	--row-active-edge: rgba(102, 51, 153, 0.8);
+	--row-active-bg: rgba(102, 51, 153, 0.06);
+	--row-active-hover: rgba(102, 51, 153, 0.14);
+	--row-playing-edge: var(--playing);
+	--row-playing-bg: rgba(66, 133, 244, 0.08);
+	--row-playing-hover: rgba(66, 133, 244, 0.16);
+	--row-playing-pulse: rgba(66, 133, 244, 0.22);
+	--row-muted-edge: rgba(0, 0, 0, 0.35);
+	--row-selected-edge: rgba(230, 200, 0, 0.95);
+	--row-selected-bg: rgba(255, 230, 0, 0.45);
+	--row-selected-hover: rgba(255, 230, 0, 0.6);
+
+	/* the search box's help panel */
+	--popover-border: rgba(0, 0, 0, 0.15);
+	--popover-text: var(--gray-850);
+	--popover-text-muted: rgba(0, 0, 0, 0.65);
+	--code-bg: rgba(255, 255, 255, 0.7);
+
+	/* options screen controls */
+	--switch-track: var(--gray-200);
+	--switch-border: white;
+	--switch-knob: var(--white);
+	--switch-shadow: rgba(0, 0, 0, 0.1);
+	--switch-on: var(--green-switch);
+
+	/* changelog */
+	--link-chip-bg: rgba(255, 255, 255, 0.7);
+	--link-chip-bg-hover: var(--white);
+	--link-chip-border: rgba(0, 0, 0, 0.15);
+	--link-chip-border-hover: rgba(0, 0, 0, 0.35);
+	--code-inline-bg: rgba(0, 0, 0, 0.06);
+	--code-inline-border: rgba(0, 0, 0, 0.1);
+	--notice-bg: var(--deep-purple-50);
+	--notice-border: var(--deep-purple-200);
+	--notice-text: var(--deep-purple-900);
+
+	/* state badges: small SVG marks, white glyph on the state's colour, used in
+	   the corner of a tile (playing / muted) and inside the list chips. Drawn
+	   as data URIs so they need no extra files and scale crisply. A data URI
+	   cannot take var(), so the badge colours are baked in; they are the same
+	   on both themes (a theme that wants other colours redefines these). */
+	--badge-playing: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 12 12%22%3E%3Crect width=%2212%22 height=%2212%22 rx=%223%22 fill=%22%234285f4%22/%3E%3Crect x=%222.5%22 y=%224%22 width=%222%22 height=%226%22 fill=%22%23fff%22/%3E%3Crect x=%225%22 y=%222%22 width=%222%22 height=%228%22 fill=%22%23fff%22/%3E%3Crect x=%227.5%22 y=%225%22 width=%222%22 height=%225%22 fill=%22%23fff%22/%3E%3C/svg%3E");
+	--badge-playing-anim: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 12 12%22%3E%3Crect width=%2212%22 height=%2212%22 rx=%223%22 fill=%22%234285f4%22/%3E%3Crect x=%222.5%22 y=%224%22 width=%222%22 height=%226%22 fill=%22%23fff%22%3E%3Canimate attributeName=%22y%22 values=%224;7;3;4%22 dur=%220.9s%22 begin=%220s%22 repeatCount=%22indefinite%22/%3E%3Canimate attributeName=%22height%22 values=%226;3;7;6%22 dur=%220.9s%22 begin=%220s%22 repeatCount=%22indefinite%22/%3E%3C/rect%3E%3Crect x=%225%22 y=%222%22 width=%222%22 height=%228%22 fill=%22%23fff%22%3E%3Canimate attributeName=%22y%22 values=%222;5;3;2%22 dur=%220.9s%22 begin=%22-0.3s%22 repeatCount=%22indefinite%22/%3E%3Canimate attributeName=%22height%22 values=%228;5;7;8%22 dur=%220.9s%22 begin=%22-0.3s%22 repeatCount=%22indefinite%22/%3E%3C/rect%3E%3Crect x=%227.5%22 y=%225%22 width=%222%22 height=%225%22 fill=%22%23fff%22%3E%3Canimate attributeName=%22y%22 values=%225;3;7;5%22 dur=%220.9s%22 begin=%22-0.6s%22 repeatCount=%22indefinite%22/%3E%3Canimate attributeName=%22height%22 values=%225;7;3;5%22 dur=%220.9s%22 begin=%22-0.6s%22 repeatCount=%22indefinite%22/%3E%3C/rect%3E%3C/svg%3E");
+	--badge-muted: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 12 12%22%3E%3Crect width=%2212%22 height=%2212%22 rx=%223%22 fill=%22%238a8f98%22/%3E%3Cpath d=%22M2 4.5h1.8L6 2.5v7L3.8 7.5H2z%22 fill=%22%23fff%22/%3E%3Cpath d=%22M7.5 4.5l3 3M10.5 4.5l-3 3%22 stroke=%22%23fff%22 stroke-width=%221.3%22 stroke-linecap=%22round%22/%3E%3C/svg%3E");
+	--badge-pinned: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 12 12%22%3E%3Crect width=%2212%22 height=%2212%22 rx=%223%22 fill=%22%23e0287a%22/%3E%3Cpath d=%22M7.5 2l2.5 2.5-1 1-.4-.4-1.9 1.9.3 1.7-1 1L4.4 8.1 2.5 10 2 9.5l1.9-1.9-1.6-1.6 1-1 1.7.3 1.9-1.9-.4-.4z%22 fill=%22%23fff%22/%3E%3C/svg%3E");
+	--badge-active: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 12 12%22%3E%3Crect width=%2212%22 height=%2212%22 rx=%223%22 fill=%22%237a4fb5%22/%3E%3Cpath d=%22M1.5 6c1.2-2 2.7-3 4.5-3s3.3 1 4.5 3c-1.2 2-2.7 3-4.5 3S2.7 8 1.5 6z%22 fill=%22%23fff%22/%3E%3Ccircle cx=%226%22 cy=%226%22 r=%221.6%22 fill=%22%237a4fb5%22/%3E%3C/svg%3E");
+	--badge-suspended: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 12 12%22%3E%3Crect width=%2212%22 height=%2212%22 rx=%223%22 fill=%22%235f7d95%22/%3E%3Cpath d=%22M7.6 2.2a3.9 3.9 0 1 0 2.2 6.6 4.4 4.4 0 0 1-2.2-6.6z%22 fill=%22%23fff%22/%3E%3C/svg%3E");
+	--badge-selected: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 12 12%22%3E%3Crect width=%2212%22 height=%2212%22 rx=%223%22 fill=%22%23e6b800%22/%3E%3Cpath d=%22M2.5 6.2l2.3 2.3 4.7-4.7%22 fill=%22none%22 stroke=%22%23fff%22 stroke-width=%221.8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22/%3E%3C/svg%3E");
+
+	/* window colour slots, 12 soft + 12 strong hues and a grey, in the order
+	   of the picker. --win-N fills the card, --win-N-hover under the pointer;
+	   the dark theme adds --win-N-edge, a top edge in the hue. */
+	--win-1: #ffdad6; --win-1-hover: #fdcdc9;     /* red soft */
+	--win-2: #ffdec8; --win-2-hover: #fad1bb;     /* orange soft */
+	--win-3: #ffe2c1; --win-3-hover: #f3d5b4;     /* amber soft */
+	--win-4: #f3e8bf; --win-4-hover: #e6dbb2;     /* yellow soft */
+	--win-5: #dfefc7; --win-5-hover: #d2e2ba;     /* lime soft */
+	--win-6: #cff3d5; --win-6-hover: #c2e6c8;     /* green soft */
+	--win-7: #c2f5e6; --win-7-hover: #b6e7d9;     /* teal soft */
+	--win-8: #bff2ff; --win-8-hover: #b2e5f2;     /* cyan soft */
+	--win-9: #d0eaff; --win-9-hover: #c3ddff;     /* blue soft */
+	--win-10: #dde6ff; --win-10-hover: #d0d9ff;   /* indigo soft */
+	--win-11: #f0dfff; --win-11-hover: #e3d2f9;   /* violet soft */
+	--win-12: #ffdaf0; --win-12-hover: #f7cde3;   /* pink soft */
+	--win-13: #ffbbb3; --win-13-hover: #ffaea7;   /* red strong */
+	--win-14: #ffc199; --win-14-hover: #fdb48c;   /* orange strong */
+	--win-15: #ffc98b; --win-15-hover: #f1bc7e;   /* amber strong */
+	--win-16: #e9d487; --win-16-hover: #dbc77a;   /* yellow strong */
+	--win-17: #c5e097; --win-17-hover: #b8d38b;   /* lime strong */
+	--win-18: #a4e7b2; --win-18-hover: #98daa5;   /* green strong */
+	--win-19: #89ead0; --win-19-hover: #7bddc4;   /* teal strong */
+	--win-20: #80e5fd; --win-20-hover: #73d8f0;   /* cyan strong */
+	--win-21: #a8d8ff; --win-21-hover: #9bcbff;   /* blue strong */
+	--win-22: #c1d0ff; --win-22-hover: #b4c3ff;   /* indigo strong */
+	--win-23: #e3c4ff; --win-23-hover: #d6b7fc;   /* violet strong */
+	--win-24: #ffbae3; --win-24-hover: #f7add6;   /* pink strong */
+	--win-25: #dedede; --win-25-hover: #d1d1d1;   /* grey */
+}
