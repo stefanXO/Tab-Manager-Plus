@@ -16,6 +16,11 @@
    the rules that use them. */
 
 :root {
+	/* the light theme is the default; html[data-theme="dark"] switches to dark
+	   (themes/dark.css). Pinned, not "light dark": the theme follows the
+	   setting, not the system, until a "system" theme exists. */
+	color-scheme: light;
+
 	/* ------------------------------------------------------------ primitives */
 	--white: #fff;
 	--black: #000;
@@ -45,7 +50,6 @@
 	--sky: #00aaff;
 	--ice: #beecff;
 	--ice-blue: #b9d6e6;
-	--frost: #eefaff;
 	--mint: #ddeeee;
 	--green-switch: #57de72;
 
@@ -57,7 +61,7 @@
 	/* dark palette (the values body.dark used to carry) */
 	--dk-ground: #151a1f;
 	--dk-panel: #1e252b;
-	--dk-panel-2: #242c33;
+	--dk-panel-2: #242c33; /* unused today */
 	--dk-tile: #2b343c;
 	--dk-tile-hover: #37424b;
 	--dk-line: rgba(255, 255, 255, 0.12);
