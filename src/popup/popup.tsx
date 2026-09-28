@@ -2,6 +2,7 @@
 
 import {migrated} from '@helpers/migrate';
 import {readBootCache} from "@helpers/settings";
+import {sizePopup} from "@helpers/popup_size";
 import {fetchBootData} from "./boot";
 import * as browser from 'webextension-polyfill';
 import {TabManager} from '@views';
@@ -33,23 +34,6 @@ async function switchToOwnTab() : Promise<boolean> {
 	await browser.windows.update(own.windowId, {focused: true});
 	await browser.tabs.update(own.id, {active: true});
 	return true;
-}
-
-// the popup's own size comes from the settings; the browser action popup has
-// no size of its own until the body has one
-function sizePopup(width : number, height : number) {
-	if (height > 0 && width > 0) {
-		document.body.style.width = width + "px";
-		document.body.style.height = height + "px";
-	}
-	let minHeight = parseInt(document.body.style.height.split("px")[0]) || 0;
-	if (minHeight < 300) {
-		minHeight = 400;
-	} else {
-		minHeight++;
-		if (minHeight > 600) minHeight = 600;
-	}
-	document.body.style.minHeight = minHeight + "px";
 }
 
 // own tab and sidebar fill the page

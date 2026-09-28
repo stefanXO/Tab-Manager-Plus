@@ -6,6 +6,7 @@ import { ICommand, ITabOptions, ITabOptionsState } from "@types";
 import {ManagerContext, ITabManagerActions} from "../context";
 import {getLocalStorage, setLocalStorage} from "@helpers/storage";
 import {getSetting, saveSetting} from "@helpers/settings";
+import {sizePopup} from "@helpers/popup_size";
 import * as S from "@strings";
 
 
@@ -449,7 +450,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		var _tab_width = parseInt(e.target.value);
 		this.context.setSetting("tabWidth", _tab_width);
 		await saveSetting("tabWidth", _tab_width);
-		document.body.style.width = _tab_width + "px";
+		if (window.inPopup) sizePopup(_tab_width, this.props.tabHeight);
 		this.tabWidthText();
 	}
 	tabWidthText = () => {
@@ -459,7 +460,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		var _tab_height = parseInt(e.target.value);
 		this.context.setSetting("tabHeight", _tab_height);
 		await saveSetting("tabHeight", _tab_height);
-		document.body.style.height = _tab_height + "px";
+		if (window.inPopup) sizePopup(this.props.tabWidth, _tab_height);
 		this.tabHeightText();
 	}
 	tabHeightText = () => {
