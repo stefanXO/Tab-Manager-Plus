@@ -3,6 +3,7 @@ import {readSettings, writeBootCache, SETTING_DEFAULTS, Settings, Layout, LAYOUT
 import {sortWindows} from "@helpers/windows";
 import {parseQuery, matchTab, searchable} from "../search";
 import {findDuplicates} from "../duplicates";
+import {onMainScreen} from "../screen";
 import {debounce, maybePluralize} from "@helpers/utils";
 import {Window, Session, TabOptions, Tab, WindowOptions} from "@views";
 import * as React from "react";
@@ -234,24 +235,31 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	}
 	hoverOver = (e : React.MouseEvent<HTMLDivElement>) => {
 		const el = (e.target as HTMLElement).closest<HTMLElement>("[data-hover], [title]");
-		this.hoverIcon(el ? (el.dataset.hover ?? el.title) : "");
+		// data-hover-hold (an options section's help text): no idle clear, the
+		// text stays while the pointer is anywhere inside the section and goes
+		// once it moves onto something without a hover text
+		this.hoverIcon(el ? (el.dataset.hover ?? el.title) : "", !!el && el.dataset.hoverHold !== undefined);
 	}
-	hoverIcon = (text : string) => {
+	hoverIcon = (text : string, hold = false) => {
 		let bottom = " ";
 		if (text.indexOf("\n") > -1) {
 			const a = text.split("\n");
 			text = a[0];
 			bottom = a[1];
 		}
-		if (text === this.state.topText && bottom === this.state.bottomText) return;
+		if (text === this.state.topText && bottom === this.state.bottomText) {
+			// still over the same held help text: no idle clear pending
+			if (hold) clearTimeout(this.state.resetTimeout);
+			return;
+		}
 		this.setState({
 			topText: text,
 			bottomText: bottom
 		});
-		// idle: clear the header after a while
+		// idle: clear the header after a while (not a held help text)
 		clearTimeout(this.state.resetTimeout);
 		this.setState({
-			resetTimeout: setTimeout(() => this.setState({ topText: "", bottomText: "" }), 15000)
+			resetTimeout: hold ? undefined : setTimeout(() => this.setState({ topText: "", bottomText: "" }), 15000)
 		});
 	}
 	render() {
@@ -933,8 +941,10 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		});
 	}
 	checkKey = async (e) => {
-		// enter
+		// enter: only on the window list. On the options screen or the window
+		// name / colour overlay it must not open or move to a window.
 		if (e.keyCode === 13) {
+			if (!onMainScreen(this.state)) return;
 			await this.addWindow();
 			return;
 		}
@@ -996,7 +1006,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			down arrow  40
 		*/
 		if (e.keyCode >= 37 && e.keyCode <= 40) {
-			if (this.state.colorsActive) return;
+			// off the window list the arrows scroll the page as usual
+			if (!onMainScreen(this.state)) return;
 			if (document.activeElement !== this.windowContainerRef.current && document.activeElement !== this.searchBoxRef.current) {
 				this.windowContainerRef.current?.focus();
 			}
