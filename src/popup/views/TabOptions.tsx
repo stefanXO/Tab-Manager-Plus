@@ -11,6 +11,29 @@ import {applyTheme} from "@helpers/theme";
 import * as S from "@strings";
 
 
+// Each option's help text, shown in the header's second line while the
+// pointer is anywhere over the option or its control has focus.
+const HELP = {
+	tabLimit: "Limit the number of tabs per window. Will move new tabs into a new window instead. 0 to turn off",
+	tabWidth: "Change the width of this window. 800 by default.",
+	tabHeight: "Change the height of this window. 600 by default.",
+	dark: "Dark mode inverts the layout - better on the eyes. Default : off",
+	compact: "Compact mode is a more compressed layout. Default : off",
+	animations: "Enables/disables animations. Default : on",
+	windowTitles: "Enables/disables window titles. Default : on",
+	sessions: "Allows you to save/restore windows into sessions. ( Tab History will be lost ) Default : off",
+	exportSessions: "Allows you to export your saved windows to an external backup",
+	importSessions: "Allows you to restore your saved windows from an external backup",
+	badge: "Shows the number of open tabs on the Tab Manager icon. Default : on",
+	openInOwnTab: "Open the Tab Manager by default in own tab, or as a popup?",
+	hide: "Automatically minimizes inactive chrome windows. Default : off",
+	popupSize: "The size of the popup, at most 800x600 (a browser limit). Default : 800x600",
+	incognito: "Opens the browser's extension settings, where you can allow Tab Manager Plus in incognito windows",
+	shortcuts: "Opens the browser's shortcut settings, to change or turn off the key that opens Tab Manager Plus",
+	changelog: "Opens the list of changes of every release in a new tab",
+	tabActions: "Adds 'Open a new tab' and 'Close this window' option to each window. Default : on",
+} as const;
+
 export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 	static contextType = ManagerContext;
 	declare context : ITabManagerActions;
@@ -19,6 +42,19 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		super(props);
 		this.state = {};
 
+	}
+	// The help text for a whole option section. TabManager's delegated
+	// mouseover reads data-hover from the closest element that has one (a
+	// leading newline = no header title, the text on the second line), so the
+	// text holds for every element inside the section; without it every
+	// mouseover on the section's children cleared the header. Focus inside the
+	// section shows the same text for keyboard users.
+	help(key : keyof typeof HELP) {
+		return {
+			"data-hover": "\n" + HELP[key],
+			"data-hover-hold": "",
+			onFocus: () => this.context.setBottomText(HELP[key])
+		};
 	}
 	logo() {
 		return (
@@ -36,17 +72,16 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 			<div className="toggle-options" key="options">
 				<div className="optionsBox">
 					<h4>Tab options</h4>
-					<div className="toggle-box">
+					<div className="toggle-box" {...this.help("tabLimit")}>
 						<input
 							type="number"
-							onMouseEnter={this.tabLimitText}
 							onChange={this.changeTabLimit}
 							value={this.props.tabLimit}
 							id="enable_tabLimit"
 							name="enable_tabLimit"
 							min={"0"}
 						/>
-						<label onMouseEnter={this.tabLimitText} htmlFor="enable_tabLimit" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
+						<label htmlFor="enable_tabLimit" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
 						<label className="textlabel" htmlFor="enable_tabLimit" style={{ textAlign: "left", whiteSpace: "pre", lineHeight: "2rem" }}>
 							Limit Tabs Per Window
 						</label>
@@ -59,14 +94,14 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 						</div>
 					</div>
 				</div>
-				<div className="optionsBox">
+				<div className="optionsBox" {...this.help("popupSize")}>
 					<h4>Popup size</h4>
 					<div className="option-description">
 						You can resize the popup here up to a maximum size of 800x600. This limitation is a browser limitation, and we cannot display a bigger popup due to
 						this. If you want to have a better overview, instead you can right click on the Tab Manager Plus icon, and `open in own tab`. This will open the Tab
 						Manager in a new tab.
 					</div>
-					<div className="toggle-box half-size float-right">
+					<div className="toggle-box half-size float-right" {...this.help("tabWidth")}>
 						<label className="textlabel" htmlFor="enable_tabWidth" style={{ textAlign: "left", whiteSpace: "pre", lineHeight: "2rem" }}>
 							Popup Width
 						</label>
@@ -75,15 +110,14 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 							min="450"
 							max="800"
 							step="25"
-							onMouseEnter={this.tabWidthText}
 							onChange={this.changeTabWidth}
 							value={this.props.tabWidth}
 							id="enable_tabWidth"
 							name="enable_tabWidth"
 						/>
-						<label onMouseEnter={this.tabWidthText} htmlFor="enable_tabWidth" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
+						<label htmlFor="enable_tabWidth" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
 					</div>
-					<div className="toggle-box half-size">
+					<div className="toggle-box half-size" {...this.help("tabHeight")}>
 						<label className="textlabel" htmlFor="enable_tabHeight" style={{ textAlign: "left", whiteSpace: "pre", lineHeight: "2rem" }}>
 							Popup Height
 						</label>
@@ -92,28 +126,26 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 							min="400"
 							max="600"
 							step="25"
-							onMouseEnter={this.tabHeightText}
 							onChange={this.changeTabHeight}
 							value={this.props.tabHeight}
 							id="enable_tabHeight"
 							name="enable_tabHeight"
 						/>
-						<label onMouseEnter={this.tabHeightText} htmlFor="enable_tabHeight" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
+						<label htmlFor="enable_tabHeight" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
 					</div>
 				</div>
 				<div className="optionsBox">
 					<h4>Window style</h4>
-					<div className="toggle-box">
+					<div className="toggle-box" {...this.help("dark")}>
 						<div className="toggle">
 							<input
 								type="checkbox"
-								onMouseEnter={this.darkText}
 								onChange={this.toggleDark}
 								checked={this.props.dark}
 								id="dark_mode"
 								name="dark_mode"
 							/>
-							<label onMouseEnter={this.darkText} htmlFor="dark_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
+							<label htmlFor="dark_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
 						</div>
 						<label className="textlabel" htmlFor="dark_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
 							Dark mode
@@ -123,17 +155,16 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 							<i>By default: disabled</i>
 						</div>
 					</div>
-					<div className="toggle-box">
+					<div className="toggle-box" {...this.help("compact")}>
 						<div className="toggle">
 							<input
 								type="checkbox"
-								onMouseEnter={this.compactText}
 								onChange={this.toggleCompact}
 								checked={this.props.compact}
 								id="compact_mode"
 								name="compact_mode"
 							/>
-							<label onMouseEnter={this.compactText} htmlFor="compact_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
+							<label htmlFor="compact_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
 						</div>
 						<label className="textlabel" htmlFor="compact_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
 							Compact mode
@@ -143,17 +174,16 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 							<i>By default: disabled</i>
 						</div>
 					</div>
-					<div className="toggle-box">
+					<div className="toggle-box" {...this.help("animations")}>
 						<div className="toggle">
 							<input
 								type="checkbox"
-								onMouseEnter={this.animationsText}
 								onChange={this.toggleAnimations}
 								checked={this.props.animations}
 								id="enable_animations"
 								name="enable_animations"
 							/>
-							<label onMouseEnter={this.animationsText} htmlFor="enable_animations" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
+							<label htmlFor="enable_animations" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
 						</div>
 						<label className="textlabel" htmlFor="enable_animations" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
 							Animations
@@ -163,17 +193,16 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 							<i>By default: enabled</i>
 						</div>
 					</div>
-					<div className="toggle-box">
+					<div className="toggle-box" {...this.help("windowTitles")}>
 						<div className="toggle">
 							<input
 								type="checkbox"
-								onMouseEnter={this.windowTitlesText}
 								onChange={this.toggleWindowTitles}
 								checked={this.props.windowTitles}
 								id="enable_windowTitles"
 								name="enable_windowTitles"
 							/>
-							<label onMouseEnter={this.windowTitlesText} htmlFor="enable_windowTitles" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
+							<label htmlFor="enable_windowTitles" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
 						</div>
 						<label className="textlabel" htmlFor="enable_windowTitles" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
 							Window titles
@@ -186,17 +215,16 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 				</div>
 				<div className="optionsBox">
 					<h4>Session Management</h4>
-					<div className="toggle-box">
+					<div className="toggle-box" {...this.help("sessions")}>
 						<div className="toggle">
 							<input
 								type="checkbox"
-								onMouseEnter={this.sessionsText}
 								onChange={this.toggleSessions}
 								checked={this.props.sessionsFeature}
 								id="session_mode"
 								name="session_mode"
 							/>
-							<label onMouseEnter={this.sessionsText} htmlFor="session_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
+							<label htmlFor="session_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
 						</div>
 						<label className="textlabel" htmlFor="session_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
 							Save Windows for Later
@@ -208,19 +236,19 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 							<i>By default: disabled ( experimental feature )</i>
 						</div>
 					</div>
-					{this.props.sessionsFeature && <div className="toggle-box">
+					{this.props.sessionsFeature && <div className="toggle-box" {...this.help("exportSessions")}>
 						<div className="toggle-box">
 							<label className="textlabel" htmlFor="session_export" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
 								<h4>Export/Backup Sessions</h4>
 							</label>
-							<button type="button" onMouseEnter={this.exportSessionsText} onClick={this.exportSessions} id="session_export" name="session_export">
+							<button type="button" onClick={this.exportSessions} id="session_export" name="session_export">
 								Export/Backup Sessions
 							</button>
-							<label onMouseEnter={this.exportSessionsText} htmlFor="session_export" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
+							<label htmlFor="session_export" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
 						</div>
 						<div className="option-description">Allows you to backup your saved windows to an external file.</div>
 					</div>}
-					{this.props.sessionsFeature && <div className="toggle-box">
+					{this.props.sessionsFeature && <div className="toggle-box" {...this.help("importSessions")}>
 						<div className="toggle-box">
 							<label className="textlabel" htmlFor="session_import" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
 								<h4>Import/Restore Sessions</h4>
@@ -228,13 +256,12 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 							<input
 								type="file"
 								accept="application/json"
-								onMouseEnter={this.importSessionsText}
 								onChange={this.importSessions}
 								id="session_import"
 								name="session_import"
 								placeholder="Import/Restore Sessions"
 							/>
-							<label onMouseEnter={this.importSessionsText} htmlFor="session_import" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
+							<label htmlFor="session_import" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
 						</div>
 						<div className="option-description">
 							Allows you to restore your backup from an external file. The restored windows will be added to your current saved windows.
@@ -243,17 +270,16 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 				</div>
 				<div className="optionsBox">
 					<h4>Popup icon</h4>
-					<div className="toggle-box">
+					<div className="toggle-box" {...this.help("badge")}>
 						<div className="toggle">
 							<input
 								type="checkbox"
-								onMouseEnter={this.badgeText}
 								onChange={this.toggleBadge}
 								checked={this.props.badge}
 								id="badge_mode"
 								name="badge_mode"
 							/>
-							<label onMouseEnter={this.badgeText} htmlFor="badge_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
+							<label htmlFor="badge_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
 						</div>
 						<label className="textlabel" htmlFor="badge_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
 							Count Tabs
@@ -264,17 +290,16 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 							<i>By default: enabled</i>
 						</div>
 					</div>
-					<div className="toggle-box">
+					<div className="toggle-box" {...this.help("openInOwnTab")}>
 						<div className="toggle">
 							<input
 								type="checkbox"
-								onMouseEnter={this.openInOwnTabText}
 								onChange={this.toggleOpenInOwnTab}
 								checked={this.props.openInOwnTab}
 								id="openinowntab_mode"
 								name="openinowntab_mode"
 							/>
-							<label onMouseEnter={this.openInOwnTabText} htmlFor="openinowntab_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
+							<label htmlFor="openinowntab_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
 						</div>
 						<label className="textlabel" htmlFor="openinowntab_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
 							Open in own Tab by default
@@ -288,17 +313,16 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 				</div>
 				<div className="optionsBox">
 					<h4>Window settings</h4>
-					<div className="toggle-box">
+					<div className="toggle-box" {...this.help("hide")}>
 						<div className="toggle">
 							<input
 								type="checkbox"
-								onMouseEnter={this.hideText}
 								onChange={this.toggleHide}
 								checked={this.props.hideWindows}
 								id="auto_hide"
 								name="auto_hide"
 							/>
-							<label onMouseEnter={this.hideText} htmlFor="auto_hide" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
+							<label htmlFor="auto_hide" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
 						</div>
 						<label className="textlabel" htmlFor="auto_hide" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
 							Minimize inactive windows
@@ -310,17 +334,16 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 							<i>By default: disabled</i>
 						</div>
 					</div>
-					<div className="toggle-box">
+					<div className="toggle-box" {...this.help("tabActions")}>
 						<div className="toggle">
 							<input
 								type="checkbox"
-								onMouseEnter={this.tabActionsText}
 								onChange={this.toggleTabActions}
 								checked={this.props.tabactions}
 								id="tabactions_mode"
 								name="tabactions_mode"
 							/>
-							<label onMouseEnter={this.tabActionsText} htmlFor="tabactions_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
+							<label htmlFor="tabactions_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
 						</div>
 						<label className="textlabel" htmlFor="tabactions_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
 							Show action buttons
@@ -334,7 +357,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 				</div>
 				<div className="optionsBox">
 					<h4>Advanced settings</h4>
-					<div className="toggle-box">
+					<div className="toggle-box" {...this.help("incognito")}>
 						<div className="toggle-box">
 							<a href="#" onClick={this.openIncognitoOptions}>
 								Allow in Incognito
@@ -344,13 +367,13 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 							If you also want to see your incognito tabs in the Tab Manager overview, then enable incognito access for this extension.
 						</div>
 					</div>
-					<div className="toggle-box">
+					<div className="toggle-box" {...this.help("shortcuts")}>
 						<a href="#" onClick={this.openShortcuts}>
 							Change shortcut key
 						</a>
 						<div className="option-description">If you want to disable or change the shortcut key with which to open Tab Manager Plus, you can do so here.</div>
 					</div>
-					<div className="toggle-box">
+					<div className="toggle-box" {...this.help("changelog")}>
 						<a href="changelog.html" target="_blank" rel="noopener">
 							What's new in this version
 						</a>
@@ -445,7 +468,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		this.tabLimitText();
 	}
 	tabLimitText = () => {
-		this.context.setBottomText("Limit the number of tabs per window. Will move new tabs into a new window instead. 0 to turn off");
+		this.context.setBottomText(HELP.tabLimit);
 	}
 	changeTabWidth = async (e : React.ChangeEvent<HTMLInputElement>) => {
 		var _tab_width = parseInt(e.target.value);
@@ -455,7 +478,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		this.tabWidthText();
 	}
 	tabWidthText = () => {
-		this.context.setBottomText("Change the width of this window. 800 by default.");
+		this.context.setBottomText(HELP.tabWidth);
 	}
 	changeTabHeight = async (e : React.ChangeEvent<HTMLInputElement>) => {
 		var _tab_height = parseInt(e.target.value);
@@ -465,7 +488,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		this.tabHeightText();
 	}
 	tabHeightText = () => {
-		this.context.setBottomText("Change the height of this window. 600 by default.");
+		this.context.setBottomText(HELP.tabHeight);
 	}
 	toggleAnimations = async () => {
 		var _animations = !this.props.animations;
@@ -474,7 +497,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		this.animationsText();
 	}
 	animationsText = () => {
-		this.context.setBottomText("Enables/disables animations. Default : on");
+		this.context.setBottomText(HELP.animations);
 	}
 	toggleWindowTitles = async () => {
 		var _window_titles = !this.props.windowTitles;
@@ -483,7 +506,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		this.windowTitlesText();
 	}
 	windowTitlesText = () => {
-		this.context.setBottomText("Enables/disables window titles. Default : on");
+		this.context.setBottomText(HELP.windowTitles);
 	}
 	toggleCompact = async () => {
 		var _compact = !this.props.compact;
@@ -492,7 +515,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		this.compactText();
 	}
 	compactText = () => {
-		this.context.setBottomText("Compact mode is a more compressed layout. Default : off");
+		this.context.setBottomText(HELP.compact);
 	}
 	toggleDark = async () => {
 		var _dark = !this.props.dark;
@@ -503,7 +526,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		applyTheme(_dark);
 	}
 	darkText = () => {
-		this.context.setBottomText("Dark mode inverts the layout - better on the eyes. Default : off");
+		this.context.setBottomText(HELP.dark);
 	}
 	toggleTabActions = async () => {
 		var _tabactions = !this.props.tabactions;
@@ -512,7 +535,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		this.tabActionsText();
 	}
 	tabActionsText = () => {
-		this.context.setBottomText("Adds 'Open a new tab' and 'Close this window' option to each window. Default : on");
+		this.context.setBottomText(HELP.tabActions);
 	}
 	toggleBadge = async () => {
 		var _badge = !this.props.badge;
@@ -522,7 +545,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		browser.runtime.sendMessage<ICommand>({command: S.update_tab_count});
 	}
 	badgeText = () => {
-		this.context.setBottomText("Shows the number of open tabs on the Tab Manager icon. Default : on");
+		this.context.setBottomText(HELP.badge);
 	}
 	toggleOpenInOwnTab = async () => {
 		var _openInOwnTab = !this.props.openInOwnTab;
@@ -532,7 +555,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		browser.runtime.sendMessage<ICommand>({ command: S.reload_popup_controls });
 	}
 	openInOwnTabText = () => {
-		this.context.setBottomText("Open the Tab Manager by default in own tab, or as a popup?");
+		this.context.setBottomText(HELP.openInOwnTab);
 	}
 	toggleSessions = async () => {
 		var _sessionsFeature = !this.props.sessionsFeature;
@@ -542,7 +565,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		this.sessionsText();
 	}
 	sessionsText = () => {
-		this.context.setBottomText("Allows you to save/restore windows into sessions. ( Tab History will be lost ) Default : off");
+		this.context.setBottomText(HELP.sessions);
 	}
 	exportSessions = () => {
 		if (this.props.sessions.length === 0) {
@@ -581,7 +604,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		this.context.reload();
 	}
 	exportSessionsText = () => {
-		this.context.setBottomText("Allows you to export your saved windows to an external backup");
+		this.context.setBottomText(HELP.exportSessions);
 	}
 	importSessions = (evt : React.ChangeEvent<HTMLInputElement>) => {
 		if (IS_FIREFOX) {
@@ -644,7 +667,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		this.context.reload();
 	}
 	importSessionsText = () => {
-		this.context.setBottomText("Allows you to restore your saved windows from an external backup");
+		this.context.setBottomText(HELP.importSessions);
 	}
 	toggleHide = async () => {
 
@@ -665,7 +688,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		this.hideText();
 	}
 	hideText = () => {
-		this.context.setBottomText("Automatically minimizes inactive chrome windows. Default : off");
+		this.context.setBottomText(HELP.hide);
 	}
 
 }
