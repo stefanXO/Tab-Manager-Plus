@@ -143,74 +143,37 @@
 	transition: all 0.2s ease-in-out;
 }
 .animations .toggle label:before {
-	transition: box-shadow 0.2s ease-in-out;
-	-webkit-animation: moveLeft 0.2s ease-in-out;
+	transition: box-shadow 0.2s ease-in-out, background-color 0.2s ease-in-out;
 	animation: moveLeft 0.2s ease-in-out;
 }
 .animations .toggle input:checked + label:before {
-	-webkit-animation: moveRight 0.2s ease-in-out;
 	animation: moveRight 0.2s ease-in-out;
 }
 
-/* the switch knob: a little stretch on the way */
-@-webkit-keyframes moveRight {
-	0% {
-		width: 30px;
-		-webkit-transform: translateX(0);
-		transform: translateX(0);
-	}
-	45% {
-		width: 34px;
-	}
-	100% {
-		width: 30px;
-		-webkit-transform: translateX(44px);
-		transform: translateX(44px);
-	}
-}
-
+/* the switch knob: a little stretch on the way (sizes: components/controls.css) */
 @keyframes moveRight {
 	0% {
-		width: 30px;
-		-webkit-transform: translateX(0);
+		width: var(--sw-knob);
 		transform: translateX(0);
 	}
 	45% {
-		width: 34px;
+		width: calc(var(--sw-knob) * 1.15);
 	}
 	100% {
-		width: 30px;
-		-webkit-transform: translateX(44px);
-		transform: translateX(44px);
-	}
-}
-@-webkit-keyframes moveLeft {
-	0% {
-		width: 30px;
-		-webkit-transform: translateX(44px);
-		transform: translateX(44px);
-	}
-	45% {
-		width: 34px;
-	}
-	100% {
-		width: 30px;
-		-webkit-transform: translateX(0);
-		transform: translateX(0);
+		width: var(--sw-knob);
+		transform: translateX(var(--sw-travel));
 	}
 }
 @keyframes moveLeft {
 	0% {
-		width: 30px;
-		-webkit-transform: translateX(44px);
-		transform: translateX(44px);
+		width: var(--sw-knob);
+		transform: translateX(var(--sw-travel));
 	}
 	45% {
-		width: 34px;
+		width: calc(var(--sw-knob) * 1.15);
 	}
 	100% {
-		width: 30px;
-		-webkit-transform: translateX(0);
+		width: var(--sw-knob);
 		transform: translateX(0);
 	}
 }

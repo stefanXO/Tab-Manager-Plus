@@ -29,6 +29,9 @@
 @import "base/normalize.css" layer(base);
 @import "base/tokens.css" layer(base);
 @import "base/typography.css" layer(base);
+/* unlayered on purpose: it has to beat the font Chrome injects into extension
+   pages, see the file */
+@import "base/body-font.css";
 
 @import "components/window.css" layer(components);
 @import "components/tab.css" layer(components);

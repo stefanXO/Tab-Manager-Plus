@@ -103,10 +103,36 @@
 		--row-selected-hover: rgba(255, 230, 0, 0.25);
 		--row-selected-text: #fff;
 
+		/* options screen: hairlines, fields and the switch. Off: a grey knob
+		   on a tile-coloured track with a light ring (knob 5.8:1 on the
+		   track); on: a dark knob on the green (10:1). */
+		--rule: var(--dk-line);
+		--rule-strong: var(--dk-line-strong);
+		--field-border: var(--dk-line-strong);
+		--switch-track: var(--dk-tile);
+		--switch-border: var(--dk-line-strong);
+		--switch-knob: var(--dk-text-2);
+		--switch-shadow: rgba(0, 0, 0, 0.4);
+		--switch-on: var(--green-switch);
+		--switch-on-border: transparent;
+		--switch-knob-on: var(--dk-ground);
+
 		--popover-border: var(--dk-line);
 		--popover-text: var(--dk-text);
 		--popover-text-muted: var(--dk-text-2);
 		--code-bg: var(--dk-tile);
+
+		/* changelog page: link chips, inline code and the update notice */
+		--text-subtle: var(--dk-text-2);
+		--link-chip-bg: rgba(255, 255, 255, 0.06);
+		--link-chip-bg-hover: rgba(255, 255, 255, 0.12);
+		--link-chip-border: var(--dk-line-strong);
+		--link-chip-border-hover: rgba(255, 255, 255, 0.45);
+		--code-inline-bg: rgba(255, 255, 255, 0.08);
+		--code-inline-border: var(--dk-line);
+		--notice-bg: rgba(183, 154, 232, 0.12);
+		--notice-border: rgba(183, 154, 232, 0.45);
+		--notice-text: var(--dk-text);
 
 		/* window colours: a dark ground carries a colour badly as a fill (yellows
 		   go olive), so every colour is the same faint wash plus a top edge in
@@ -193,6 +219,10 @@
 		& a {
 			color: var(--accent);
 		}
+		/* changelog link chips: the black service marks (GitHub, Patreon) in
+		   white, the coloured ones stay as they are */
+		& .optionsBox a[href*="github.com"] { --link-icon: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3E%3Cpath fill=%22%23fff%22 d=%22M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12%22/%3E%3C/svg%3E"); }
+		& .optionsBox a[href*="patreon.com"] { --link-icon: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3E%3Cpath fill=%22%23fff%22 d=%22M5 2.5h8.2a6.5 6.5 0 0 1 0 13H10.6v6H5z%22/%3E%3C/svg%3E"); }
 
 		/* list chips take the row's text colour */
 		& .tab-pinned, & .tab-highlighted, & .tab-selected, & .tab-audible, & .tab-discarded {

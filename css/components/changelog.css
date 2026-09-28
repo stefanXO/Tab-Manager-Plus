@@ -1,6 +1,7 @@
 /* The changelog page (changelog.html, also shown once after an update). It
-   reuses the options page's .optionsBox; this adds what only it has. It never
-   sets data-theme, so it always renders light. */
+   reuses the options page's .optionsBox; this adds what only it has. It
+   follows the dark setting like the popup (src/popup/changelog.ts); its dark
+   token values are in themes/dark.css. */
 
 /* the page is marked with the browser it runs in, lines about the other one
    are hidden */

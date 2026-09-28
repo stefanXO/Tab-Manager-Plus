@@ -23,6 +23,8 @@
 	right: 0;
 	padding: 1rem 0;
 	font-size: 0.6rem;
+	/* the same edge as the bottom search bar's */
+	box-shadow: var(--shadow-footer);
 }
 
 /* a titled panel of options (also the changelog's page body) */

@@ -9,8 +9,7 @@
       it would turn an rgba() in a plain declaration into 8-bit hex.)
    2. Semantic tokens: what components use. The values here are the light
       theme; themes/dark.css redefines the ones that differ on the dark theme.
-      A token that dark.css does not mention looks the same on both themes
-      (today: the options screen controls and the changelog).
+      A token that dark.css does not mention looks the same on both themes.
 
    Colour-free tokens (motion, per-layout sizes such as --card-min) live next to
    the rules that use them. */
@@ -52,6 +51,7 @@
 	--ice-blue: #b9d6e6;
 	--mint: #ddeeee;
 	--green-switch: #57de72;
+	--green-switch-deep: #2e9e4a;
 
 	--pink-soft: #f0b9cb;
 
@@ -89,7 +89,8 @@
 
 	/* hairlines, rings and shadows */
 	--shadow-card: 0 0 0 1px rgba(0, 0, 0, 0.08);
-	--shadow-header: var(--shadow-card);
+	/* a hairline under the header, the colour of the footer's ring */
+	--shadow-header: 0 1px 0 rgba(0, 0, 0, 0.08);
 	--shadow-footer: var(--shadow-card);
 	--shadow-popover: 0 4px 14px rgba(0, 0, 0, 0.18);
 	--focus-ring: rgba(102, 51, 153, 0.55);
@@ -199,12 +200,17 @@
 	--popover-text-muted: rgba(0, 0, 0, 0.65);
 	--code-bg: rgba(255, 255, 255, 0.7);
 
-	/* options screen controls */
-	--switch-track: var(--gray-200);
-	--switch-border: white;
+	/* options screen controls: the on/off switch. The knob's position is the
+	   state, so the knob keeps >= 3:1 against the track in both states (WCAG
+	   1.4.11): white on #888 is 3.5:1, white on the deep green 3.4:1. The ring
+	   is an inset hairline drawn over the track's edge. */
+	--switch-track: var(--gray-550);
+	--switch-border: rgba(0, 0, 0, 0.1);
 	--switch-knob: var(--white);
-	--switch-shadow: rgba(0, 0, 0, 0.1);
-	--switch-on: var(--green-switch);
+	--switch-shadow: rgba(0, 0, 0, 0.3);
+	--switch-on: var(--green-switch-deep);
+	--switch-on-border: rgba(0, 0, 0, 0.1);
+	--switch-knob-on: var(--white);
 
 	/* changelog */
 	--link-chip-bg: rgba(255, 255, 255, 0.7);
