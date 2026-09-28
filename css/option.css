@@ -217,7 +217,20 @@ input[type=number]::-webkit-outer-spin-button {
 .option-description {
   clear: both;
   padding-bottom: 20px;
-  /*font-size: 14px;*/
+  /* under its label (0.75rem bold), not at the body's 16px like a heading */
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+/* narrow (the sidebar, a small popup): a box spans the width instead of a
+   centred 90%; see the matching block at the end of popup.css */
+@media (max-width: 540px) {
+  .optionsBox {
+    width: auto;
+    max-width: none;
+    margin: 1rem 0;
+    padding: 10px 12px;
+  }
 }
 
 /* changelog: the page is marked with the browser it runs in, lines about the
