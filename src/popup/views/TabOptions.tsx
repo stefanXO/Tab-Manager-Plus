@@ -3,12 +3,13 @@
 import * as React from "react";
 import * as browser from 'webextension-polyfill';
 import { ICommand, ITabOptions, ITabOptionsState } from "@types";
-import {ManagerContext, ITabManagerActions} from "../context";
+import {ManagerContext, ITabManagerActions, ISettings} from "../context";
 import {getLocalStorage, setLocalStorage} from "@helpers/storage";
-import {getSetting, saveSetting} from "@helpers/settings";
+import {saveSetting, Settings} from "@helpers/settings";
 import {sizePopup} from "@helpers/popup_size";
 import {applyTheme} from "@helpers/theme";
 import * as S from "@strings";
+import {ActionOption, NumberOption, OptionsBox, SwitchOption} from "./options";
 
 
 // Each option's help text, shown in the header's second line while the
@@ -33,6 +34,12 @@ const HELP = {
 	changelog: "Opens the list of changes of every release in a new tab",
 	tabActions: "Adds 'Open a new tab' and 'Close this window' option to each window. Default : on",
 } as const;
+type HelpKey = keyof typeof HELP;
+
+// The settings the options screen changes through store(); the on/off ones
+// through toggle().
+type SwitchSetting = "animations" | "windowTitles" | "compact" | "dark" | "tabactions" | "badge" | "openInOwnTab" | "sessionsFeature";
+type OptionSetting = SwitchSetting | "tabLimit" | "tabWidth" | "tabHeight";
 
 export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 	static contextType = ManagerContext;
@@ -49,7 +56,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 	// text holds for every element inside the section; without it every
 	// mouseover on the section's children cleared the header. Focus inside the
 	// section shows the same text for keyboard users.
-	help(key : keyof typeof HELP) {
+	help(key : HelpKey) {
 		return {
 			"data-hover": "\n" + HELP[key],
 			"data-hover-hold": "",
@@ -68,295 +75,163 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 	}
 
 	optionsSection() {
+		const p = this.props;
 		return (
 			<div className="toggle-options" key="options">
-				<div className="optionsBox">
-					<h4>Tab options</h4>
-					<div className="toggle-box" {...this.help("tabLimit")}>
-						<input
-							type="number"
-							onChange={this.changeTabLimit}
-							value={this.props.tabLimit}
-							id="enable_tabLimit"
-							name="enable_tabLimit"
-							min={"0"}
-						/>
-						<label htmlFor="enable_tabLimit" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
-						<label className="textlabel" htmlFor="enable_tabLimit" style={{ textAlign: "left", whiteSpace: "pre", lineHeight: "2rem" }}>
-							Limit Tabs Per Window
-						</label>
-						<div className="option-description">
-							Once you reach this number of tabs, Tab Manager will move new tabs to a new window instead. No more windows with 60 tabs open!
-							<br />
-							<i>By default: 0 ( disabled )</i>
-							<br />
-							<i>Suggested value: 15</i>
-						</div>
-					</div>
-				</div>
-				<div className="optionsBox" {...this.help("popupSize")}>
-					<h4>Popup size</h4>
+				<OptionsBox title="Tab options">
+					<NumberOption
+						id="enable_tabLimit"
+						help={this.help("tabLimit")}
+						label="Limit Tabs Per Window"
+						value={p.tabLimit}
+						onChange={this.changeTabLimit}
+						min="0"
+						description="Once you reach this number of tabs, Tab Manager will move new tabs to a new window instead. No more windows with 60 tabs open!"
+						notes={["By default: 0 ( disabled )", "Suggested value: 15"]}
+					/>
+				</OptionsBox>
+				<OptionsBox title="Popup size" help={this.help("popupSize")}>
 					<div className="option-description">
 						You can resize the popup here up to a maximum size of 800x600. This limitation is a browser limitation, and we cannot display a bigger popup due to
 						this. If you want to have a better overview, instead you can right click on the Tab Manager Plus icon, and `open in own tab`. This will open the Tab
 						Manager in a new tab.
 					</div>
-					<div className="toggle-box half-size float-right" {...this.help("tabWidth")}>
-						<label className="textlabel" htmlFor="enable_tabWidth" style={{ textAlign: "left", whiteSpace: "pre", lineHeight: "2rem" }}>
-							Popup Width
-						</label>
+					<NumberOption
+						id="enable_tabWidth"
+						help={this.help("tabWidth")}
+						label="Popup Width"
+						value={p.tabWidth}
+						onChange={this.changeTabWidth}
+						min="450" max="800" step="25"
+						className="half-size float-right"
+						labelFirst
+					/>
+					<NumberOption
+						id="enable_tabHeight"
+						help={this.help("tabHeight")}
+						label="Popup Height"
+						value={p.tabHeight}
+						onChange={this.changeTabHeight}
+						min="400" max="600" step="25"
+						className="half-size"
+						labelFirst
+					/>
+				</OptionsBox>
+				<OptionsBox title="Window style">
+					<SwitchOption
+						id="dark_mode"
+						help={this.help("dark")}
+						label="Dark mode"
+						checked={p.dark}
+						onChange={this.toggleDark}
+						description="Dark mode, for working at night time. "
+						notes={["By default: disabled"]}
+					/>
+					<SwitchOption
+						id="compact_mode"
+						help={this.help("compact")}
+						label="Compact mode"
+						checked={p.compact}
+						onChange={() => this.toggle("compact", "compact")}
+						description="Saves a little bit of space around the icons. Makes it less beautiful, but more space efficient. "
+						notes={["By default: disabled"]}
+					/>
+					<SwitchOption
+						id="enable_animations"
+						help={this.help("animations")}
+						label="Animations"
+						checked={p.animations}
+						onChange={() => this.toggle("animations", "animations")}
+						description="Disables/enables animations and transitions in the popup. "
+						notes={["By default: enabled"]}
+					/>
+					<SwitchOption
+						id="enable_windowTitles"
+						help={this.help("windowTitles")}
+						label="Window titles"
+						checked={p.windowTitles}
+						onChange={() => this.toggle("windowTitles", "windowTitles")}
+						description="Disables/enables window titles. "
+						notes={["By default: enabled"]}
+					/>
+				</OptionsBox>
+				<OptionsBox title="Session Management">
+					<SwitchOption
+						id="session_mode"
+						help={this.help("sessions")}
+						label="Save Windows for Later"
+						checked={p.sessionsFeature}
+						onChange={this.toggleSessions}
+						description="Allows you to save windows as sessions ( saved windows ). You can restore these saved windows later on. The restored windows won't have the history restored. This feature is currently in beta."
+						notes={["By default: disabled ( experimental feature )"]}
+					/>
+					{p.sessionsFeature && <ActionOption
+						id="session_export"
+						help={this.help("exportSessions")}
+						label="Export/Backup Sessions"
+						description="Allows you to backup your saved windows to an external file."
+					>
+						<button type="button" onClick={this.exportSessions} id="session_export" name="session_export">
+							Export/Backup Sessions
+						</button>
+					</ActionOption>}
+					{p.sessionsFeature && <ActionOption
+						id="session_import"
+						help={this.help("importSessions")}
+						label="Import/Restore Sessions"
+						description="Allows you to restore your backup from an external file. The restored windows will be added to your current saved windows."
+					>
 						<input
-							type="number"
-							min="450"
-							max="800"
-							step="25"
-							onChange={this.changeTabWidth}
-							value={this.props.tabWidth}
-							id="enable_tabWidth"
-							name="enable_tabWidth"
+							type="file"
+							accept="application/json"
+							onChange={this.importSessions}
+							id="session_import"
+							name="session_import"
+							placeholder="Import/Restore Sessions"
 						/>
-						<label htmlFor="enable_tabWidth" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
-					</div>
-					<div className="toggle-box half-size" {...this.help("tabHeight")}>
-						<label className="textlabel" htmlFor="enable_tabHeight" style={{ textAlign: "left", whiteSpace: "pre", lineHeight: "2rem" }}>
-							Popup Height
-						</label>
-						<input
-							type="number"
-							min="400"
-							max="600"
-							step="25"
-							onChange={this.changeTabHeight}
-							value={this.props.tabHeight}
-							id="enable_tabHeight"
-							name="enable_tabHeight"
-						/>
-						<label htmlFor="enable_tabHeight" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
-					</div>
-				</div>
-				<div className="optionsBox">
-					<h4>Window style</h4>
-					<div className="toggle-box" {...this.help("dark")}>
-						<div className="toggle">
-							<input
-								type="checkbox"
-								onChange={this.toggleDark}
-								checked={this.props.dark}
-								id="dark_mode"
-								name="dark_mode"
-							/>
-							<label htmlFor="dark_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
-						</div>
-						<label className="textlabel" htmlFor="dark_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
-							Dark mode
-						</label>
-						<div className="option-description">
-							Dark mode, for working at night time. <br />
-							<i>By default: disabled</i>
-						</div>
-					</div>
-					<div className="toggle-box" {...this.help("compact")}>
-						<div className="toggle">
-							<input
-								type="checkbox"
-								onChange={this.toggleCompact}
-								checked={this.props.compact}
-								id="compact_mode"
-								name="compact_mode"
-							/>
-							<label htmlFor="compact_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
-						</div>
-						<label className="textlabel" htmlFor="compact_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
-							Compact mode
-						</label>
-						<div className="option-description">
-							Saves a little bit of space around the icons. Makes it less beautiful, but more space efficient. <br />
-							<i>By default: disabled</i>
-						</div>
-					</div>
-					<div className="toggle-box" {...this.help("animations")}>
-						<div className="toggle">
-							<input
-								type="checkbox"
-								onChange={this.toggleAnimations}
-								checked={this.props.animations}
-								id="enable_animations"
-								name="enable_animations"
-							/>
-							<label htmlFor="enable_animations" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
-						</div>
-						<label className="textlabel" htmlFor="enable_animations" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
-							Animations
-						</label>
-						<div className="option-description">
-							Disables/enables animations and transitions in the popup. <br />
-							<i>By default: enabled</i>
-						</div>
-					</div>
-					<div className="toggle-box" {...this.help("windowTitles")}>
-						<div className="toggle">
-							<input
-								type="checkbox"
-								onChange={this.toggleWindowTitles}
-								checked={this.props.windowTitles}
-								id="enable_windowTitles"
-								name="enable_windowTitles"
-							/>
-							<label htmlFor="enable_windowTitles" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
-						</div>
-						<label className="textlabel" htmlFor="enable_windowTitles" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
-							Window titles
-						</label>
-						<div className="option-description">
-							Disables/enables window titles. <br />
-							<i>By default: enabled</i>
-						</div>
-					</div>
-				</div>
-				<div className="optionsBox">
-					<h4>Session Management</h4>
-					<div className="toggle-box" {...this.help("sessions")}>
-						<div className="toggle">
-							<input
-								type="checkbox"
-								onChange={this.toggleSessions}
-								checked={this.props.sessionsFeature}
-								id="session_mode"
-								name="session_mode"
-							/>
-							<label htmlFor="session_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
-						</div>
-						<label className="textlabel" htmlFor="session_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
-							Save Windows for Later
-						</label>
-						<div className="option-description">
-							Allows you to save windows as sessions ( saved windows ). You can restore these saved windows later on. The restored windows won't have the history
-							restored. This feature is currently in beta.
-							<br />
-							<i>By default: disabled ( experimental feature )</i>
-						</div>
-					</div>
-					{this.props.sessionsFeature && <div className="toggle-box" {...this.help("exportSessions")}>
-						<div className="toggle-box">
-							<label className="textlabel" htmlFor="session_export" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
-								<h4>Export/Backup Sessions</h4>
-							</label>
-							<button type="button" onClick={this.exportSessions} id="session_export" name="session_export">
-								Export/Backup Sessions
-							</button>
-							<label htmlFor="session_export" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
-						</div>
-						<div className="option-description">Allows you to backup your saved windows to an external file.</div>
-					</div>}
-					{this.props.sessionsFeature && <div className="toggle-box" {...this.help("importSessions")}>
-						<div className="toggle-box">
-							<label className="textlabel" htmlFor="session_import" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
-								<h4>Import/Restore Sessions</h4>
-							</label>
-							<input
-								type="file"
-								accept="application/json"
-								onChange={this.importSessions}
-								id="session_import"
-								name="session_import"
-								placeholder="Import/Restore Sessions"
-							/>
-							<label htmlFor="session_import" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
-						</div>
-						<div className="option-description">
-							Allows you to restore your backup from an external file. The restored windows will be added to your current saved windows.
-						</div>
-					</div>}
-				</div>
-				<div className="optionsBox">
-					<h4>Popup icon</h4>
-					<div className="toggle-box" {...this.help("badge")}>
-						<div className="toggle">
-							<input
-								type="checkbox"
-								onChange={this.toggleBadge}
-								checked={this.props.badge}
-								id="badge_mode"
-								name="badge_mode"
-							/>
-							<label htmlFor="badge_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
-						</div>
-						<label className="textlabel" htmlFor="badge_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
-							Count Tabs
-						</label>
-						<div className="option-description">
-							Shows you the number of open tabs over the Tab Manager icon in the top right of your browser.
-							<br />
-							<i>By default: enabled</i>
-						</div>
-					</div>
-					<div className="toggle-box" {...this.help("openInOwnTab")}>
-						<div className="toggle">
-							<input
-								type="checkbox"
-								onChange={this.toggleOpenInOwnTab}
-								checked={this.props.openInOwnTab}
-								id="openinowntab_mode"
-								name="openinowntab_mode"
-							/>
-							<label htmlFor="openinowntab_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
-						</div>
-						<label className="textlabel" htmlFor="openinowntab_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
-							Open in own Tab by default
-						</label>
-						<div className="option-description">
-							Opens the Tab Manager in own tab by default, instead of the popup.
-							<br />
-							<i>By default: disabled</i>
-						</div>
-					</div>
-				</div>
-				<div className="optionsBox">
-					<h4>Window settings</h4>
-					<div className="toggle-box" {...this.help("hide")}>
-						<div className="toggle">
-							<input
-								type="checkbox"
-								onChange={this.toggleHide}
-								checked={this.props.hideWindows}
-								id="auto_hide"
-								name="auto_hide"
-							/>
-							<label htmlFor="auto_hide" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
-						</div>
-						<label className="textlabel" htmlFor="auto_hide" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
-							Minimize inactive windows
-						</label>
-						<div className="option-description">
-							With this option enabled, you will only have 1 open window per monitor at all times. When you switch to another window, the other windows will be
-							minimized to the tray automatically.
-							<br />
-							<i>By default: disabled</i>
-						</div>
-					</div>
-					<div className="toggle-box" {...this.help("tabActions")}>
-						<div className="toggle">
-							<input
-								type="checkbox"
-								onChange={this.toggleTabActions}
-								checked={this.props.tabactions}
-								id="tabactions_mode"
-								name="tabactions_mode"
-							/>
-							<label htmlFor="tabactions_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }} />
-						</div>
-						<label className="textlabel" htmlFor="tabactions_mode" style={{ whiteSpace: "pre", lineHeight: "2rem" }}>
-							Show action buttons
-						</label>
-						<div className="option-description">
-							Displays buttons in every window for : opening a new tab, minimizing the window, assigning a color to the window and closing the window.
-							<br />
-							<i>By default: enabled</i>
-						</div>
-					</div>
-				</div>
-				<div className="optionsBox">
-					<h4>Advanced settings</h4>
+					</ActionOption>}
+				</OptionsBox>
+				<OptionsBox title="Popup icon">
+					<SwitchOption
+						id="badge_mode"
+						help={this.help("badge")}
+						label="Count Tabs"
+						checked={p.badge}
+						onChange={this.toggleBadge}
+						description="Shows you the number of open tabs over the Tab Manager icon in the top right of your browser."
+						notes={["By default: enabled"]}
+					/>
+					<SwitchOption
+						id="openinowntab_mode"
+						help={this.help("openInOwnTab")}
+						label="Open in own Tab by default"
+						checked={p.openInOwnTab}
+						onChange={this.toggleOpenInOwnTab}
+						description="Opens the Tab Manager in own tab by default, instead of the popup."
+						notes={["By default: disabled"]}
+					/>
+				</OptionsBox>
+				<OptionsBox title="Window settings">
+					<SwitchOption
+						id="auto_hide"
+						help={this.help("hide")}
+						label="Minimize inactive windows"
+						checked={p.hideWindows}
+						onChange={this.toggleHide}
+						description="With this option enabled, you will only have 1 open window per monitor at all times. When you switch to another window, the other windows will be minimized to the tray automatically."
+						notes={["By default: disabled"]}
+					/>
+					<SwitchOption
+						id="tabactions_mode"
+						help={this.help("tabActions")}
+						label="Show action buttons"
+						checked={p.tabactions}
+						onChange={() => this.toggle("tabactions", "tabActions")}
+						description="Displays buttons in every window for : opening a new tab, minimizing the window, assigning a color to the window and closing the window."
+						notes={["By default: enabled"]}
+					/>
+				</OptionsBox>
+				<OptionsBox title="Advanced settings">
 					<div className="toggle-box" {...this.help("incognito")}>
 						<div className="toggle-box">
 							<a href="#" onClick={this.openIncognitoOptions}>
@@ -379,7 +254,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 						</a>
 						<div className="option-description">The changes of every release, and where to leave a review or report a problem.</div>
 					</div>
-				</div>
+				</OptionsBox>
 				<div className="optionsBox">
 					<div className="toggle-box">
 						<h4>Right mouse button</h4>
@@ -461,111 +336,56 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		);
 	}
 
-	changeTabLimit = async (e : React.ChangeEvent<HTMLInputElement>) => {
-		var _tab_limit = parseInt(e.target.value);
-		this.context.setSetting("tabLimit", _tab_limit);
-		await saveSetting("tabLimit", _tab_limit);
-		this.tabLimitText();
+	showHelp(key : HelpKey) {
+		this.context.setBottomText(HELP[key]);
 	}
-	tabLimitText = () => {
-		this.context.setBottomText(HELP.tabLimit);
+	// Puts a setting into the popup's state and into storage.
+	async store<K extends OptionSetting>(key : K, value : ISettings[K] & Settings[K]) {
+		this.context.setSetting(key, value);
+		await saveSetting(key, value);
+	}
+	// Flips an on/off setting and shows the option's help text; resolves to
+	// the new value, for the options with a side effect.
+	toggle = async (key : SwitchSetting, help : HelpKey) : Promise<boolean> => {
+		const value = !this.props[key];
+		await this.store(key, value);
+		this.showHelp(help);
+		return value;
+	}
+
+	changeTabLimit = async (e : React.ChangeEvent<HTMLInputElement>) => {
+		await this.store("tabLimit", parseInt(e.target.value));
+		this.showHelp("tabLimit");
 	}
 	changeTabWidth = async (e : React.ChangeEvent<HTMLInputElement>) => {
 		var _tab_width = parseInt(e.target.value);
-		this.context.setSetting("tabWidth", _tab_width);
-		await saveSetting("tabWidth", _tab_width);
+		await this.store("tabWidth", _tab_width);
 		if (window.inPopup) sizePopup(_tab_width, this.props.tabHeight);
-		this.tabWidthText();
-	}
-	tabWidthText = () => {
-		this.context.setBottomText(HELP.tabWidth);
+		this.showHelp("tabWidth");
 	}
 	changeTabHeight = async (e : React.ChangeEvent<HTMLInputElement>) => {
 		var _tab_height = parseInt(e.target.value);
-		this.context.setSetting("tabHeight", _tab_height);
-		await saveSetting("tabHeight", _tab_height);
+		await this.store("tabHeight", _tab_height);
 		if (window.inPopup) sizePopup(this.props.tabWidth, _tab_height);
-		this.tabHeightText();
-	}
-	tabHeightText = () => {
-		this.context.setBottomText(HELP.tabHeight);
-	}
-	toggleAnimations = async () => {
-		var _animations = !this.props.animations;
-		this.context.setSetting("animations", _animations);
-		await saveSetting("animations", _animations);
-		this.animationsText();
-	}
-	animationsText = () => {
-		this.context.setBottomText(HELP.animations);
-	}
-	toggleWindowTitles = async () => {
-		var _window_titles = !this.props.windowTitles;
-		this.context.setSetting("windowTitles", _window_titles);
-		await saveSetting("windowTitles", _window_titles);
-		this.windowTitlesText();
-	}
-	windowTitlesText = () => {
-		this.context.setBottomText(HELP.windowTitles);
-	}
-	toggleCompact = async () => {
-		var _compact = !this.props.compact;
-		this.context.setSetting("compact", _compact);
-		await saveSetting("compact", _compact);
-		this.compactText();
-	}
-	compactText = () => {
-		this.context.setBottomText(HELP.compact);
+		this.showHelp("tabHeight");
 	}
 	toggleDark = async () => {
-		var _dark = !this.props.dark;
-		this.context.setSetting("dark", _dark);
-		await saveSetting("dark", _dark);
-
-		this.darkText();
-		applyTheme(_dark);
-	}
-	darkText = () => {
-		this.context.setBottomText(HELP.dark);
-	}
-	toggleTabActions = async () => {
-		var _tabactions = !this.props.tabactions;
-		this.context.setSetting("tabactions", _tabactions);
-		await saveSetting("tabactions", _tabactions);
-		this.tabActionsText();
-	}
-	tabActionsText = () => {
-		this.context.setBottomText(HELP.tabActions);
+		applyTheme(await this.toggle("dark", "dark"));
 	}
 	toggleBadge = async () => {
-		var _badge = !this.props.badge;
-		this.context.setSetting("badge", _badge);
-		await saveSetting("badge", _badge);
-		this.badgeText();
+		await this.toggle("badge", "badge");
 		browser.runtime.sendMessage<ICommand>({command: S.update_tab_count});
 	}
-	badgeText = () => {
-		this.context.setBottomText(HELP.badge);
-	}
 	toggleOpenInOwnTab = async () => {
-		var _openInOwnTab = !this.props.openInOwnTab;
-		this.context.setSetting("openInOwnTab", _openInOwnTab);
-		await saveSetting("openInOwnTab", _openInOwnTab);
-		this.openInOwnTabText();
+		await this.toggle("openInOwnTab", "openInOwnTab");
 		browser.runtime.sendMessage<ICommand>({ command: S.reload_popup_controls });
-	}
-	openInOwnTabText = () => {
-		this.context.setBottomText(HELP.openInOwnTab);
 	}
 	toggleSessions = async () => {
 		var _sessionsFeature = !this.props.sessionsFeature;
-		this.context.setSetting("sessionsFeature", _sessionsFeature);
-		await saveSetting("sessionsFeature", _sessionsFeature);
+		await this.store("sessionsFeature", _sessionsFeature);
+		// the help text only once the sync is done
 		if (_sessionsFeature) await this.context.sessionSync();
-		this.sessionsText();
-	}
-	sessionsText = () => {
-		this.context.setBottomText(HELP.sessions);
+		this.showHelp("sessions");
 	}
 	exportSessions = () => {
 		if (this.props.sessions.length === 0) {
@@ -600,11 +420,8 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		downloadAnchorNode.dispatchEvent(evt);
 		downloadAnchorNode.remove();
 
-		this.exportSessionsText();
+		this.showHelp("exportSessions");
 		this.context.reload();
-	}
-	exportSessionsText = () => {
-		this.context.setBottomText(HELP.exportSessions);
 	}
 	importSessions = (evt : React.ChangeEvent<HTMLInputElement>) => {
 		if (IS_FIREFOX) {
@@ -663,12 +480,10 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 			console.error(err);
 			window.alert(err);
 		}
-		this.importSessionsText();
+		this.showHelp("importSessions");
 		this.context.reload();
 	}
-	importSessionsText = () => {
-		this.context.setBottomText(HELP.importSessions);
-	}
+	// not toggle(): needs the system.display permission (Chrome), off on Firefox
 	toggleHide = async () => {
 
 		var _hide_windows = this.props.hideWindows;
@@ -685,10 +500,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 
 		await saveSetting("hideWindows", _hide_windows);
 		this.context.setSetting("hideWindows", _hide_windows);
-		this.hideText();
-	}
-	hideText = () => {
-		this.context.setBottomText(HELP.hide);
+		this.showHelp("hide");
 	}
 
 }
