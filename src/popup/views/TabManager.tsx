@@ -1483,7 +1483,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			"Press enter to move all selected tabs to a new window",
 			"Middle click to close a tab",
 			"Tab Manager Plus loves saving time",
-			"To see incognito tabs, enable incognito access in the extension settings",
+			IS_FIREFOX
+				? "To see private tabs, allow Run in Private Windows in the add-on settings"
+				: "To see incognito tabs, enable incognito access in the extension settings",
 			"You can drag and drop tabs to other windows",
 			"You can type to search right away",
 			"Search for either of two things: google OR yahoo",

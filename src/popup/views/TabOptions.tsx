@@ -10,7 +10,12 @@ import {sizePopup} from "@helpers/popup_size";
 import {applyTheme} from "@helpers/theme";
 import * as S from "@strings";
 import {ActionOption, NumberOption, OptionsBox, SwitchOption} from "./options";
+import {Description} from "./options/shared";
 
+// Firefox cannot open about:addons (nor chrome:// pages) from an extension.
+// Its shortcut settings open through commands.openShortcutSettings() (Firefox
+// 137+); without it the options screen shows the steps instead of a link.
+const CAN_OPEN_SHORTCUTS = IS_FIREFOX && typeof browser.commands?.openShortcutSettings === "function";
 
 // Each option's help text, shown in the header's second line while the
 // pointer is anywhere over the option or its control has focus.
@@ -29,8 +34,12 @@ const HELP = {
 	openInOwnTab: "Open the Tab Manager by default in own tab, or as a popup?",
 	hide: "Automatically minimizes inactive chrome windows. Default : off",
 	popupSize: "The size of the popup, at most 800x600 (a browser limit). Default : 800x600",
-	incognito: "Opens the browser's extension settings, where you can allow Tab Manager Plus in incognito windows",
-	shortcuts: "Opens the browser's shortcut settings, to change or turn off the key that opens Tab Manager Plus",
+	incognito: IS_FIREFOX
+		? "How to allow Tab Manager Plus in private windows, to see your private tabs too"
+		: "Opens the browser's extension settings, where you can allow Tab Manager Plus in incognito windows",
+	shortcuts: IS_FIREFOX && !CAN_OPEN_SHORTCUTS
+		? "How to change or turn off the key that opens Tab Manager Plus"
+		: "Opens the browser's shortcut settings, to change or turn off the key that opens Tab Manager Plus",
 	changelog: "Opens the list of changes of every release in a new tab",
 	tabActions: "Adds 'Open a new tab' and 'Close this window' option to each window. Default : on",
 } as const;
@@ -49,6 +58,13 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		super(props);
 		this.state = {};
 
+	}
+	async componentDidMount() {
+		// Firefox has no link to its private windows setting, so show where it stands
+		if (IS_FIREFOX) {
+			const incognitoAllowed = await browser.extension.isAllowedIncognitoAccess().catch(() => undefined);
+			this.setState({ incognitoAllowed });
+		}
 	}
 	// The help text for a whole option section. TabManager's delegated
 	// mouseover reads data-hover from the closest element that has one (a
@@ -212,7 +228,8 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 					/>
 				</OptionsBox>
 				<OptionsBox title="Window settings">
-					<SwitchOption
+					{/* needs system.display, which Firefox does not have */}
+					{!IS_FIREFOX && <SwitchOption
 						id="auto_hide"
 						help={this.help("hide")}
 						label="Minimize inactive windows"
@@ -220,7 +237,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 						onChange={this.toggleHide}
 						description="With this option enabled, you will only have 1 open window per monitor at all times. When you switch to another window, the other windows will be minimized to the tray automatically."
 						notes={["By default: disabled"]}
-					/>
+					/>}
 					<SwitchOption
 						id="tabactions_mode"
 						help={this.help("tabActions")}
@@ -232,22 +249,47 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 					/>
 				</OptionsBox>
 				<OptionsBox title="Advanced settings">
-					<div className="toggle-box" {...this.help("incognito")}>
-						<div className="toggle-box">
-							<a href="#" onClick={this.openIncognitoOptions}>
-								Allow in Incognito
+					{IS_FIREFOX ? (
+						<div className="toggle-box" {...this.help("incognito")}>
+							<div className="toggle-box">
+								<strong>Allow in Private Windows</strong>
+							</div>
+							<Description
+								text={
+									"If you also want to see your private tabs in the Tab Manager overview, then allow this extension in private windows: " +
+									"open about:addons, click Tab Manager Plus, and on its Details tab set 'Run in Private Windows' to Allow."
+								}
+								notes={this.state.incognitoAllowed === undefined ? [] : ["Currently: " + (this.state.incognitoAllowed ? "allowed" : "not allowed")]}
+							/>
+						</div>
+					) : (
+						<div className="toggle-box" {...this.help("incognito")}>
+							<div className="toggle-box">
+								<a href="#" onClick={this.openIncognitoOptions}>
+									Allow in Incognito
+								</a>
+							</div>
+							<div className="option-description">
+								If you also want to see your incognito tabs in the Tab Manager overview, then enable incognito access for this extension.
+							</div>
+						</div>
+					)}
+					{IS_FIREFOX && !CAN_OPEN_SHORTCUTS ? (
+						<div className="toggle-box" {...this.help("shortcuts")}>
+							<strong>Change shortcut key</strong>
+							<div className="option-description">
+								If you want to disable or change the shortcut key with which to open Tab Manager Plus, you can do so in the add-ons settings: open about:addons,
+								click the settings cog, and then 'Manage Extension Shortcuts'.
+							</div>
+						</div>
+					) : (
+						<div className="toggle-box" {...this.help("shortcuts")}>
+							<a href="#" onClick={this.openShortcuts}>
+								Change shortcut key
 							</a>
+							<div className="option-description">If you want to disable or change the shortcut key with which to open Tab Manager Plus, you can do so here.</div>
 						</div>
-						<div className="option-description">
-							If you also want to see your incognito tabs in the Tab Manager overview, then enable incognito access for this extension.
-						</div>
-					</div>
-					<div className="toggle-box" {...this.help("shortcuts")}>
-						<a href="#" onClick={this.openShortcuts}>
-							Change shortcut key
-						</a>
-						<div className="option-description">If you want to disable or change the shortcut key with which to open Tab Manager Plus, you can do so here.</div>
-					</div>
+					)}
 					<div className="toggle-box" {...this.help("changelog")}>
 						<a href="changelog.html" target="_blank" rel="noopener">
 							What's new in this version
@@ -274,13 +316,18 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 			</div>
 		);
 	}
+	// Chrome only: Firefox shows the steps instead (it cannot open about:addons)
 	async openIncognitoOptions() {
 		await browser.tabs.create({
-			url: "chrome://extensions/?id=cnkdjjdmfiffagllbiiilooaoofcoeff"
+			url: "chrome://extensions/?id=" + browser.runtime.id
 		});
 	}
 	async openShortcuts() {
-		await browser.tabs.create({ url: "chrome://extensions/shortcuts" });
+		if (CAN_OPEN_SHORTCUTS) {
+			await browser.commands.openShortcutSettings();
+		} else {
+			await browser.tabs.create({ url: "chrome://extensions/shortcuts" });
+		}
 	}
 	licenses() {
 		return (
