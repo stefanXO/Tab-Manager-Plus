@@ -433,7 +433,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 						placeholder={maybePluralize(tabCount, 'tab') + " in " + maybePluralize(this.state.windows.length, 'window')}
 						value={this.state.topText}
 					/>
-					<input type="text" disabled={true} className="taburl" ref={this.topBoxUrlRef} placeholder={this.getTip()} value={this.state.bottomText} />
+					<input type="text" disabled={true} className="taburl" ref={this.topBoxUrlRef} placeholder={this.tip} value={this.state.bottomText} />
 				</div>
 				{!this.state.optionsActive && !this.state.colorsActive && <div className={"window searchbox"}>
 					<table>
@@ -1502,6 +1502,10 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 
 		return "Tip: " + tips[Math.floor(Math.random() * tips.length)];
 	}
+	// one tip per popup open: picked in render, every startup re-render (settings,
+	// windows, favicons...) showed a different one, several in the first second.
+	// A field initialiser, so it must stay below getTip.
+	private readonly tip : string = this.getTip();
 	elVisible(elem : HTMLElement) {
 		if (!(elem instanceof Element)) throw Error("DomUtil: elem is not an element.");
 		var style = getComputedStyle(elem);
