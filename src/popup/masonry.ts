@@ -12,12 +12,18 @@ const GAP = 8;   // px, must match --card-gap in popup.css
 const pending = new Set<HTMLElement>();
 let frame = 0;
 
-function measure(el : HTMLElement) {
+// All reads, then all writes: a write invalidates the layout, so reading the
+// next card's height after it would force a full layout per card (with 20
+// windows and 150 tabs that was ~20 layouts, half a second, per layout switch).
+function measure(cards : Iterable<HTMLElement>) {
+	const list = Array.from(cards);
 	// offsetHeight ignores transforms, so the entrance animation's
 	// scale does not make the row span jitter while it plays
-	const height = el.offsetHeight;
-	const value = "span " + Math.max(1, Math.ceil((height + GAP) / (ROW + GAP)));
-	if (el.style.gridRowEnd !== value) el.style.gridRowEnd = value;
+	const heights = list.map((el) => el.offsetHeight);
+	list.forEach((el, i) => {
+		const value = "span " + Math.max(1, Math.ceil((heights[i] + GAP) / (ROW + GAP)));
+		if (el.style.gridRowEnd !== value) el.style.gridRowEnd = value;
+	});
 }
 
 function span(card : HTMLElement) {
@@ -25,7 +31,7 @@ function span(card : HTMLElement) {
 	if (frame) return;
 	frame = requestAnimationFrame(() => {
 		frame = 0;
-		for (const el of pending) measure(el);
+		measure(pending);
 		pending.clear();
 	});
 }
@@ -47,10 +53,12 @@ export function attachMasonry(container : HTMLElement) : Masonry {
 	// the cards already there are measured right away, not in the next frame:
 	// attach runs from componentDidUpdate, before the browser paints, so a
 	// layout switch shows the packed grid in its first frame
+	const cards : HTMLElement[] = [];
 	for (const el of Array.from(container.children)) {
 		watch(el);
-		if (el instanceof HTMLElement && el.classList.contains("window")) measure(el);
+		if (el instanceof HTMLElement && el.classList.contains("window")) cards.push(el);
 	}
+	measure(cards);
 	const children = new MutationObserver((records) => {
 		for (const r of records) {
 			r.addedNodes.forEach(watch);
