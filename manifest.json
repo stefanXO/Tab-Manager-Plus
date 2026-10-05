@@ -7,6 +7,7 @@
 	"offline_enabled": true,
 	"description": "Quickly find open tabs, see all windows in one view, find duplicates and limit tabs per window. The best Tab Manager for Chrome.",
 	"author": "stefanXO",
+	"minimum_chrome_version": "104",
 	"icons": {
 		"16": "images/browsers16.png",
 		"48": "images/browsers48.png",

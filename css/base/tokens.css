@@ -94,8 +94,10 @@
 	--shadow-card: 0 0 0 1px rgba(0, 0, 0, 0.08);
 	/* the hairline under the header and over the bottom bar: opaque, so it
 	   reads the same over the grey ground and over a white box scrolled
-	   under it (a translucent line went pale over white) */
-	--bar-line: color-mix(in srgb, black 8%, var(--bg));
+	   under it (a translucent line went pale over white). 8% black over
+	   --bg (#f1f1f1), written out: color-mix() needs Chrome 111, the
+	   manifest's minimum is 104 */
+	--bar-line: #dedede;
 	--shadow-header: 0 1px 0 var(--bar-line);
 	--shadow-footer: 0 -1px 0 var(--bar-line);
 	--shadow-popover: 0 4px 14px rgba(0, 0, 0, 0.18);

@@ -66,7 +66,8 @@ const options = {
 	entryPoints: entries,
 	outdir: join(outDir, 'dist'),
 	bundle: true,
-	target: 'chrome88',
+	// the manifests' minimum versions, like the stylesheet (scripts/css.mjs)
+	target: ['chrome104', 'firefox140'],
 	minify: !dev,
 	sourcemap: dev,
 	define: {

@@ -70,7 +70,7 @@
 	.donate.icon, .rate.icon, .options.icon {
 		display: none;
 	}
-	.window.top input {
+	.window.top input, .no-supportLinks .window.top input {
 		padding-right: var(--bar-inset);
 	}
 	.window.searchbox .options-bottom.icon {

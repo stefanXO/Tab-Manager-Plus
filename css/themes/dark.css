@@ -26,7 +26,8 @@
 		--surface-incognito: var(--gray-900);
 
 		--shadow-card: 0 0 0 1px var(--dk-line);
-		--bar-line: color-mix(in srgb, white 12%, var(--bg));
+		/* 12% white over --dk-ground, see tokens.css */
+		--bar-line: #31353a;
 		--shadow-header: 0 1px 0 var(--bar-line);
 		--shadow-footer: 0 -1px 0 var(--bar-line);
 		--shadow-popover: 0 4px 14px rgba(0, 0, 0, 0.5);

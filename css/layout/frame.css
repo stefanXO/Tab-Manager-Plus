@@ -71,6 +71,10 @@ html, body {
 	border-radius: 0;
 	color: var(--text);
 }
+/* Donate and Rate turned off in the options: only the options button */
+.no-supportLinks .window.top input {
+	padding-right: calc(2rem + var(--bar-gap) + var(--bar-inset));
+}
 .window.top .taburl {
 	width: 100%;
 	border: 0;

@@ -5,7 +5,7 @@
 // files under css/. esbuild inlines the imports (keeping each in its layer)
 // and lowers native CSS nesting.
 //
-// Target: Chrome 104 (the manifest's minimum_chrome_version to be) and
+// Target: Chrome 104 (the manifest's minimum_chrome_version) and
 // Firefox 140 (manifest.firefox.json). Both support @layer (Chrome 99+), so it
 // is kept as written; Chrome 104 predates CSS nesting (Chrome 112/120), so
 // esbuild flattens nested rules into plain selectors. It does not lower
