@@ -17,7 +17,7 @@
 :root {
 	/* the light theme is the default; html[data-theme="dark"] switches to dark
 	   (themes/dark.css). Pinned, not "light dark": the theme follows the
-	   setting, not the system, until a "system" theme exists. */
+	   setting; src/helpers/theme.ts resolves "system" to light or dark. */
 	color-scheme: light;
 
 	/* ------------------------------------------------------------ primitives */
@@ -225,6 +225,10 @@
 	--switch-on: var(--green-switch-deep);
 	--switch-on-border: rgba(0, 0, 0, 0.1);
 	--switch-knob-on: var(--white);
+	/* the choice row (Theme): the switch's track, the chosen value drawn as
+	   its knob. Text on the track 5.9:1 (black on #888), on the knob 21:1 */
+	--choice-text: var(--text);
+	--choice-on-text: var(--text);
 
 	/* options screen: the shortcut keys (a <kbd> each), and "Not set" */
 	--kbd-bg: var(--gray-75);

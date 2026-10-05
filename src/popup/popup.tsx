@@ -3,7 +3,7 @@
 import {migrated} from '@helpers/migrate';
 import {readBootCache} from "@helpers/settings";
 import {sizePopup} from "@helpers/popup_size";
-import {applyTheme} from "@helpers/theme";
+import {applyTheme, readTheme} from "@helpers/theme";
 import {fetchBootData} from "./boot";
 import * as browser from 'webextension-polyfill';
 import {TabManager} from '@views';
@@ -67,7 +67,7 @@ async function loadApp() {
 		// 1. synchronous: size and theme from the cache of the last run, so the
 		//    very first frame has the right popup size and colours
 		const cache = readBootCache();
-		applyTheme(!!cache.dark);
+		applyTheme(readTheme(cache.theme, cache.dark));
 		if (window.inPopup) sizePopup(cache.tabWidth || 0, cache.tabHeight || 0);
 		else sizePage();
 
@@ -82,7 +82,7 @@ async function loadApp() {
 			window.close();
 			return;
 		}
-		applyTheme(boot.settings.dark);
+		applyTheme(boot.settings.theme);
 		if (window.inPopup) sizePopup(boot.settings.tabWidth, boot.settings.tabHeight);
 
 		const container = document.getElementById('TMP');

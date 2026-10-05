@@ -76,7 +76,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		let animations = s.animations;
 		let windowTitles = s.windowTitles;
 		let compact = s.compact;
-		let dark = s.dark;
+		let theme = s.theme;
 		let tabactions = s.tabactions;
 		let badge = s.badge;
 		let sessionsFeature = s.sessionsFeature;
@@ -98,7 +98,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			tabWidth: tabWidth,
 			tabHeight: tabHeight,
 			compact: compact,
-			dark: dark,
+			theme: theme,
 			tabactions: tabactions,
 			badge: badge,
 			hideWindows: hideWindows,
@@ -209,13 +209,13 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		return {
 			layout: st.layout, tabLimit: st.tabLimit, tabWidth: st.tabWidth, tabHeight: st.tabHeight,
 			animations: st.animations, windowTitles: st.windowTitles, tabactions: st.tabactions, badge: st.badge,
-			openInOwnTab: st.openInOwnTab, compact: st.compact, dark: st.dark, sessionsFeature: st.sessionsFeature,
+			openInOwnTab: st.openInOwnTab, compact: st.compact, theme: st.theme, sessionsFeature: st.sessionsFeature,
 			hideWindows: st.hideWindows, "filter-tabs": st.filterTabs
 		};
 	}
 
 	applySettings(s : ManagerSettings) {
-		applyTheme(s.dark);
+		applyTheme(s.theme);
 		if (window.inPopup) sizePopup(s.tabWidth, s.tabHeight);
 		writeBootCache(s);
 		this.setState({
@@ -227,7 +227,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			tabWidth: s.tabWidth,
 			tabHeight: s.tabHeight,
 			compact: s.compact,
-			dark: s.dark,
+			theme: s.theme,
 			tabactions: s.tabactions,
 			badge: s.badge,
 			hideWindows: s.hideWindows,
@@ -239,7 +239,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	setSetting<K extends keyof ISettings>(key : K, value : ISettings[K]) {
 		this.setState({ [key]: value } as Pick<ITabManagerState, K>, () => {
 			// keep the synchronous boot cache current for the next open
-			writeBootCache({ tabWidth: this.state.tabWidth, tabHeight: this.state.tabHeight, dark: this.state.dark, layout: this.state.layout, compact: this.state.compact });
+			writeBootCache({ tabWidth: this.state.tabWidth, tabHeight: this.state.tabHeight, theme: this.state.theme, layout: this.state.layout, compact: this.state.compact });
 		});
 	}
 	hoverOver = (e : React.MouseEvent<HTMLDivElement>) => {
@@ -448,7 +448,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				{this.state.optionsActive && <div className={"options-container"}>
 					<TabOptions
 						compact={this.state.compact}
-						dark={this.state.dark}
+						theme={this.state.theme}
 						animations={this.state.animations}
 						windowTitles={this.state.windowTitles}
 						tabLimit={this.state.tabLimit}
@@ -1344,7 +1344,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			layout: newLayout,
 			topText: "Switched to " + this.readablelayout(newLayout) + " view",
 			bottomText: " "
-		}, () => writeBootCache({ tabWidth: this.state.tabWidth, tabHeight: this.state.tabHeight, dark: this.state.dark, layout: this.state.layout, compact: this.state.compact }));
+		}, () => writeBootCache({ tabWidth: this.state.tabWidth, tabHeight: this.state.tabHeight, theme: this.state.theme, layout: this.state.layout, compact: this.state.compact }));
 	}
 	nextlayout() : Layout {
 		switch (this.state.layout) {

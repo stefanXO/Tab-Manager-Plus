@@ -3,6 +3,7 @@
 // help props, its control, the .textlabel title and the .option-description.
 export * from './OptionsBox'
 export * from './SwitchOption'
+export * from './ChoiceOption'
 export * from './NumberOption'
 export * from './ActionOption'
 export type {OptionHelp} from './shared'

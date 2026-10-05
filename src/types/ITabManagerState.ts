@@ -1,4 +1,5 @@
 import {Layout} from "../helpers/settings";
+import {Theme} from "../helpers/theme";
 ﻿import * as browser from "webextension-polyfill";
 import { ISavedSession} from "@types";
 import { Window } from "@views";
@@ -11,7 +12,7 @@ export interface ITabManagerState {
 	animations: boolean,
 	badge: boolean,
 	compact: boolean,
-	dark: boolean,
+	theme: Theme,
 	filterTabs: boolean,
 	hideWindows: boolean,
 	lastOpenWindow: number,

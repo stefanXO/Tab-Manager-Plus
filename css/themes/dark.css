@@ -120,6 +120,8 @@
 		--switch-on: var(--green-switch);
 		--switch-on-border: transparent;
 		--switch-knob-on: var(--dk-ground);
+		/* the choice row: dark text on the grey knob */
+		--choice-on-text: var(--dk-ground);
 		--kbd-bg: var(--dk-tile);
 		--kbd-border: var(--dk-line-strong);
 		--warning-text: var(--red-text-soft);

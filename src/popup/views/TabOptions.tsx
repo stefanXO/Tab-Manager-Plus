@@ -9,9 +9,9 @@ import {currentShowMonitors, saveSetting, Settings} from "@helpers/settings";
 import {switchShowMonitors} from "@helpers/monitors";
 import {sizePopup} from "@helpers/popup_size";
 import {getShortcuts} from "@helpers/shortcuts";
-import {applyTheme} from "@helpers/theme";
+import {applyTheme, Theme} from "@helpers/theme";
 import * as S from "@strings";
-import {ActionOption, NumberOption, OptionsBox, SwitchOption} from "./options";
+import {ActionOption, ChoiceOption, NumberOption, OptionsBox, SwitchOption} from "./options";
 import {Description} from "./options/shared";
 
 // Firefox cannot open about:addons (nor chrome:// pages) from an extension.
@@ -25,7 +25,7 @@ const HELP = {
 	tabLimit: "Limit the number of tabs per window. Will move new tabs into a new window instead. 0 to turn off",
 	tabWidth: "Change the width of this window. 800 by default.",
 	tabHeight: "Change the height of this window. 600 by default.",
-	dark: "Dark mode inverts the layout - better on the eyes. Default : off",
+	theme: "Light or dark colours, or follow your system's setting. Default : system",
 	compact: "Compact mode is a more compressed layout. Default : off",
 	animations: "Enables/disables animations. Default : on",
 	windowTitles: "Enables/disables window titles. Default : on",
@@ -50,8 +50,14 @@ type HelpKey = keyof typeof HELP;
 
 // The settings the options screen changes through store(); the on/off ones
 // through toggle().
-type SwitchSetting = "animations" | "windowTitles" | "compact" | "dark" | "tabactions" | "badge" | "openInOwnTab" | "sessionsFeature" | "hideWindows";
-type OptionSetting = SwitchSetting | "tabLimit" | "tabWidth" | "tabHeight";
+type SwitchSetting = "animations" | "windowTitles" | "compact" | "tabactions" | "badge" | "openInOwnTab" | "sessionsFeature" | "hideWindows";
+type OptionSetting = SwitchSetting | "theme" | "tabLimit" | "tabWidth" | "tabHeight";
+
+const THEME_CHOICES : readonly { value : Theme, label : string }[] = [
+	{ value: "system", label: "System" },
+	{ value: "light", label: "Light" },
+	{ value: "dark", label: "Dark" }
+];
 
 export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 	static contextType = ManagerContext;
@@ -183,14 +189,15 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 					/>
 				</OptionsBox>
 				<OptionsBox title="Window style">
-					<SwitchOption
-						id="dark_mode"
-						help={this.help("dark")}
-						label="Dark mode"
-						checked={p.dark}
-						onChange={this.toggleDark}
-						description="Dark mode, for working at night time. "
-						notes={["By default: disabled"]}
+					<ChoiceOption
+						id="theme_mode"
+						help={this.help("theme")}
+						label="Theme"
+						value={p.theme}
+						choices={THEME_CHOICES}
+						onChange={this.changeTheme}
+						description="Light or dark colours. System follows the dark mode of your operating system (or browser), and switches along with it. "
+						notes={["By default: system"]}
 					/>
 					<SwitchOption
 						id="compact_mode"
@@ -479,8 +486,10 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		if (window.inPopup) sizePopup(this.props.tabWidth, _tab_height);
 		this.showHelp("tabHeight");
 	}
-	toggleDark = async () => {
-		applyTheme(await this.toggle("dark", "dark"));
+	changeTheme = async (theme : Theme) => {
+		applyTheme(theme);
+		await this.store("theme", theme);
+		this.showHelp("theme");
 	}
 	toggleBadge = async () => {
 		await this.toggle("badge", "badge");

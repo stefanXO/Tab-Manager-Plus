@@ -2,6 +2,7 @@
 
 import * as browser from 'webextension-polyfill';
 import {readShowMonitors, resolveShowMonitors, ShowMonitors} from "./monitors";
+import {readTheme, Theme} from "./theme";
 
 // The four layouts, by their storage value. The user-facing names live in
 // TabManager.readablelayout().
@@ -31,7 +32,8 @@ export interface Settings {
 	badge : boolean;
 	openInOwnTab : boolean;
 	compact : boolean;
-	dark : boolean;
+	// "system" | "light" | "dark", see ./theme.ts
+	theme : Theme;
 	sessionsFeature : boolean;
 	hideWindows : boolean;
 	// Chrome: "Show all monitors", see ./monitors.ts
@@ -50,24 +52,39 @@ export const SETTING_DEFAULTS : Settings = {
 	badge: true,
 	openInOwnTab: false,
 	compact: false,
-	dark: false,
+	theme: "system",
 	sessionsFeature: false,
 	hideWindows: false,
 	showMonitors: "unset",
 	"filter-tabs": false
 };
 
+// 6.x kept the theme as a boolean `dark`; it is only read, for the move to
+// `theme`, and left in storage
+const LEGACY_DARK = "dark";
+
 // Reads the settings, writes back only the ones that are missing (plus the
 // version). Writing every key from a snapshot would overwrite whatever the
 // worker changed in the meantime: window names, colors, the window order.
 export async function readSettings(version : string) : Promise<Settings> {
-	const stored = await browser.storage.local.get(Object.keys(SETTING_DEFAULTS));
+	const { [LEGACY_DARK]: legacyDark, ...stored } = await browser.storage.local.get([...Object.keys(SETTING_DEFAULTS), LEGACY_DARK]);
 	const missing : Record<string, unknown> = { version: version };
 	for (const key of Object.keys(SETTING_DEFAULTS)) {
 		if (stored[key] === undefined || (key === "layout" && !stored[key])) missing[key] = SETTING_DEFAULTS[key];
 	}
+	// the first run after 6.x: the theme from the old dark switch
+	if (stored.theme === undefined) missing.theme = readTheme(undefined, legacyDark);
 	await browser.storage.local.set(missing);
-	return { ...SETTING_DEFAULTS, ...stored, ...missing } as Settings;
+	const settings = { ...SETTING_DEFAULTS, ...stored, ...missing } as Settings;
+	settings.theme = readTheme(settings.theme);
+	return settings;
+}
+
+// The theme setting for a page that may open before the popup ever ran on
+// this version (the changelog right after an update): falls back to `dark`.
+export async function getTheme() : Promise<Theme> {
+	const stored = await browser.storage.local.get(["theme", LEGACY_DARK]);
+	return readTheme(stored.theme, stored[LEGACY_DARK]);
 }
 
 export async function getSetting<K extends keyof Settings>(key : K) : Promise<Settings[K]> {
@@ -99,7 +116,9 @@ export async function currentShowMonitors() : Promise<{ setting : ShowMonitors, 
 export interface BootCache {
 	tabWidth : number;
 	tabHeight : number;
-	dark : boolean;
+	theme : Theme;
+	// 6.x boot caches carry this instead of `theme`
+	dark? : boolean;
 	layout : Layout;
 	compact : boolean;
 }
@@ -113,9 +132,9 @@ export function readBootCache() : Partial<BootCache> {
 	}
 }
 
-export function writeBootCache(s : Pick<Settings, "tabWidth" | "tabHeight" | "dark" | "layout" | "compact">) {
+export function writeBootCache(s : Pick<Settings, "tabWidth" | "tabHeight" | "theme" | "layout" | "compact">) {
 	try {
-		const cache : BootCache = { tabWidth: s.tabWidth, tabHeight: s.tabHeight, dark: s.dark, layout: s.layout, compact: s.compact };
+		const cache : BootCache = { tabWidth: s.tabWidth, tabHeight: s.tabHeight, theme: s.theme, layout: s.layout, compact: s.compact };
 		localStorage.setItem(BOOT_CACHE, JSON.stringify(cache));
 	} catch (e) {
 		// storage full or blocked: the next open just takes the slow path

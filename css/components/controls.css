@@ -90,6 +90,55 @@
 	animation: moveRight 0s ease-in-out;
 }
 
+/* A choice of a few values (ChoiceOption, the Theme): a segmented row as tall
+   as the switch, on its track, the chosen value drawn as its knob. Each radio
+   is invisible but focusable, like the switch's checkbox. */
+.choice {
+	display: inline-flex;
+	vertical-align: middle;
+	margin: 0 0.75rem 0.625rem 0;
+	padding: 0.1875rem;
+	border-radius: 0.6875rem;
+	background-color: var(--switch-track);
+	box-shadow: inset 0 0 0 1px var(--switch-border);
+}
+.choice label {
+	position: relative;
+	display: block;
+	cursor: pointer;
+}
+.choice input {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	opacity: 0;
+	cursor: pointer;
+}
+.choice span {
+	display: block;
+	padding: 0 0.625rem;
+	border-radius: 0.5rem;
+	font-size: 0.75rem;
+	line-height: 1rem;
+	color: var(--choice-text);
+}
+.choice input:checked + span {
+	background-color: var(--switch-knob);
+	box-shadow: 0 1px 2px var(--switch-shadow);
+	color: var(--choice-on-text);
+}
+.choice input:focus-visible + span {
+	outline: 2px solid var(--focus-ring);
+	outline-offset: 1px;
+}
+.choice + .textlabel {
+	display: inline-block;
+	vertical-align: middle;
+	margin-bottom: 0.625rem;
+}
+
 input[type=number] {
 	font-size: 2rem;
 	width: 6rem;

@@ -1,10 +1,11 @@
 import {ISavedSession} from "./ISavedSession";
+import {Theme} from "../helpers/theme";
 
 export interface ITabOptions {
 	animations: boolean,
 	badge: boolean,
 	compact: boolean,
-	dark: boolean,
+	theme: Theme,
 	hideWindows: boolean,
 	openInOwnTab: boolean,
 	sessionsFeature: boolean,

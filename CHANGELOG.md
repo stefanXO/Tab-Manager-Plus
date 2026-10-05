@@ -3,6 +3,7 @@
 A Brand New Look!
 - Every layout redesigned: Block view is a grid, List view (was Vertical) shows one tab per line, Rows view (was Horizontal) one window per row (#58)
 - Dark theme rebuilt with consistent colors; window colors show as a colored edge; scrollbars and controls are dark too (#99, #151)
+- Theme: System, Light or Dark. System is the new default and follows your operating system's dark mode, also while the popup is open; if you had dark mode on, it stays dark
 - New window color palette, with a matching set for the dark theme
 - Favicons: white icons stay visible in the light theme, and icons refresh when a tab finishes loading (#251)
 - Badges show a tab's state: playing sound, muted, asleep (put to sleep by the browser), pinned, active, selected. In List view as chips with a colored edge on the left (#171)

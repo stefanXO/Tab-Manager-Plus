@@ -5,7 +5,7 @@ import {ITabManagerState} from "@types";
 // Settings that live in TabManager state and can be changed from the options screen
 export type ISettings = Pick<ITabManagerState,
 	"layout" | "animations" | "windowTitles" | "tabLimit" | "openInOwnTab" |
-	"tabWidth" | "tabHeight" | "compact" | "dark" | "tabactions" | "badge" |
+	"tabWidth" | "tabHeight" | "compact" | "theme" | "tabactions" | "badge" |
 	"hideWindows" | "sessionsFeature" | "filterTabs">;
 
 // What child views may ask the TabManager to do. Children get this through

@@ -1,17 +1,18 @@
 "use strict";
 import * as browser from 'webextension-polyfill';
 import {timeAgo} from "@helpers/utils";
-import {getSetting, readBootCache} from "@helpers/settings";
-import {applyTheme} from "@helpers/theme";
+import {getTheme, readBootCache} from "@helpers/settings";
+import {applyTheme, readTheme} from "@helpers/theme";
 
-// The dark setting, as the popup boots it (popup.tsx): synchronously from the
+// The theme setting, as the popup boots it (popup.tsx): synchronously from the
 // boot cache the popup keeps in localStorage, so the first frame already has
 // the right colours, then from storage (the cache can be missing or stale),
 // and live when it is switched in the popup while this page is open.
-applyTheme(!!readBootCache().dark);
-getSetting("dark").then((dark) => applyTheme(!!dark), () => {});
+const cache = readBootCache();
+applyTheme(readTheme(cache.theme, cache.dark));
+getTheme().then(applyTheme, () => {});
 browser.storage.onChanged.addListener((changes, area) => {
-	if (area === "local" && changes.dark) applyTheme(!!changes.dark.newValue);
+	if (area === "local" && changes.theme) applyTheme(readTheme(changes.theme.newValue));
 });
 
 // changelog.html: every version heading carries an empty <time datetime>;
