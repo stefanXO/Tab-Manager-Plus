@@ -14,6 +14,7 @@ import {ManagerContext, ITabManagerActions, ISettings} from "../context";
 import {attachMasonry, Masonry} from "../masonry";
 import {sizePopup} from "@helpers/popup_size";
 import {applyTheme} from "@helpers/theme";
+import {StatsLayer, StatsSource} from "./StatsLayer";
 
 // the settings the manager holds in its state and applies
 type ManagerSettings = Omit<Settings, "showMonitors">;
@@ -245,6 +246,13 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		// once it moves onto something without a hover text
 		this.hoverIcon(el ? (el.dataset.hover ?? el.title) : "", !!el && el.dataset.hoverHold !== undefined);
 	}
+
+	// the stats card (StatsLayer, ../statsHover.ts) reads the manager's data
+	// through this when a card opens; it listens on #root (its parent) itself
+	private readonly statsSource : StatsSource = {
+		state: () => this.state,
+		searchBox: () => this.searchBoxRef.current
+	};
 	hoverIcon = (text : string, hold = false) => {
 		let bottom = " ";
 		if (text.indexOf("\n") > -1) {
@@ -257,15 +265,44 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			if (hold) clearTimeout(this.state.resetTimeout);
 			return;
 		}
-		this.setState({
-			topText: text,
-			bottomText: bottom
-		});
 		// idle: clear the header after a while (not a held help text)
 		clearTimeout(this.state.resetTimeout);
-		this.setState({
-			resetTimeout: hold ? undefined : setTimeout(() => this.setState({ topText: "", bottomText: "" }), 15000)
-		});
+		this.headerOnly(() => this.setState({
+			topText: text,
+			bottomText: bottom,
+			resetTimeout: hold ? undefined : setTimeout(() => this.headerOnly(() => this.setState({ topText: "", bottomText: "" })), 15000)
+		}));
+	}
+	// ---- the window list, rendered again only when something it shows changed ----
+	// The header text follows the pointer from tile to tile (hoverIcon): one
+	// setState per mouseover. Re-rendering every window and tile for that
+	// (TabManager's render) cost 70-130 ms per hover with ~200 tabs, and any
+	// stats card update in the same event waited for it. A setState made
+	// through headerOnly() leaves the window list's element as it was, so React
+	// skips the whole subtree; every other setState / forceUpdate (all other
+	// code paths, including in-place mutations of selection / hiddenTabs
+	// followed by a setState or rerender()) bumps listVersion and renders it.
+	private listVersion = 0;
+	private headerUpdate = false;
+	private listCache : { version : number, props : ITabManager, el : React.ReactNode } | null = null;
+	headerOnly(fn : () => void) {
+		this.headerUpdate = true;
+		try { fn(); } finally { this.headerUpdate = false; }
+	}
+	setState<K extends keyof ITabManagerState>(state : ((prev : Readonly<ITabManagerState>, props : Readonly<ITabManager>) => Pick<ITabManagerState, K> | ITabManagerState | null) | Pick<ITabManagerState, K> | ITabManagerState | null, callback? : () => void) {
+		if (!this.headerUpdate) this.listVersion++;
+		super.setState(state, callback);
+	}
+	forceUpdate(callback? : () => void) {
+		this.listVersion++;
+		super.forceUpdate(callback);
+	}
+	cachedContainer(build : () => React.ReactNode) : React.ReactNode {
+		const c = this.listCache;
+		if (c && c.version === this.listVersion && c.props === this.props) return c.el;
+		const el = build();
+		this.listCache = { version: this.listVersion, props: this.props, el };
+		return el;
 	}
 	render() {
 		// let hiddenCount = this.state.hiddenCount || 0;
@@ -312,7 +349,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				/>}
 				{/* keyed by layout: switching layouts remounts every card and tile, so the
 				    entrance animation plays again for the new arrangement */}
-				{!this.state.optionsActive && !this.state.colorsActive && <div key={"container-" + this.state.layout} className={"window-container " + this.state.layout} ref={this.windowContainerRef} tabIndex={2}>
+				{this.cachedContainer(() => !this.state.optionsActive && !this.state.colorsActive && <div key={"container-" + this.state.layout} className={"window-container " + this.state.layout} ref={this.windowContainerRef} tabIndex={2}>
 					{this.state.windows.map((window : browser.Windows.Window, order : number) => {
 						if (window.state === "minimized") return;
 
@@ -404,7 +441,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 								);
 							})
 						: false}
-				</div>}
+				</div>)}
 				{this.state.optionsActive && <div className={"options-container"}>
 					<TabOptions
 						compact={this.state.compact}
@@ -537,6 +574,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 					</table>
 				</div>}
 				<div className="window placeholder" />
+				<StatsLayer source={this.statsSource} version={this.listVersion} />
 			</div>
 			</ManagerContext.Provider>
 		);
@@ -955,6 +993,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			return;
 		}
 		// escape key
+		// (with a stats card open, StatsLayer takes Escape before this sees it)
 		if (e.keyCode === 27) {
 			if (!!this.state.colorsActive) {
 				// the window name / color overlay is open: close that, not the popup
@@ -1197,6 +1236,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 						}
 					}
 				}
+				// (the list view: the selection is the keyboard focus, StatsLayer
+				// shows its card, see statsHoverLogic.arrowsMoveCard)
 			}
 			return;
 		}

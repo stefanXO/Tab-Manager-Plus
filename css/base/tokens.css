@@ -198,6 +198,10 @@
 	--popover-border: rgba(0, 0, 0, 0.15);
 	--popover-text: var(--gray-850);
 	--popover-text-muted: rgba(0, 0, 0, 0.65);
+	/* the stats card's monitor map: a monitor, and the window on it */
+	--map-monitor-fill: rgba(0, 0, 0, 0.03);
+	--map-window: rgba(102, 51, 153, 0.35);
+	--map-window-edge: rgba(102, 51, 153, 0.8);
 	--code-bg: rgba(255, 255, 255, 0.7);
 
 	/* options screen controls: the on/off switch. The knob's position is the

@@ -39,6 +39,7 @@
 @import "components/session.css" layer(components);
 @import "components/colors.css" layer(components);
 @import "components/search.css" layer(components);
+@import "components/stats.css" layer(components);
 @import "components/options.css" layer(components);
 @import "components/controls.css" layer(components);
 @import "components/changelog.css" layer(components);

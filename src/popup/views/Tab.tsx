@@ -119,7 +119,6 @@ export class Tab extends React.Component<ITab, ITabState> {
 				"--i": this.props.tab.index
 			} as React.CSSProperties,
 			id: this.props.id,
-			title: this.props.tab.title,
 			onClick: this.click,
 			onMouseDown: this.onMouseDown,
 			"data-hover": (this.props.tab.title || "") + "\n" + (this.props.tab.url || this.props.tab.pendingUrl || ""),

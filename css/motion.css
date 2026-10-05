@@ -138,6 +138,13 @@
 	transition-delay: 0s;
 }
 
+/* the stats card fades in when it opens (opacity only, never its position;
+   moving to the next card swaps the content without a fade). With animations
+   off it just appears */
+.animations .stats-card.shown {
+	transition: opacity 60ms;
+}
+
 /* the options switch: the knob slides */
 .animations .toggle label {
 	transition: all 0.2s ease-in-out;

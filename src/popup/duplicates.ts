@@ -16,11 +16,16 @@ export interface DuplicateCandidate {
 	lastAccessed? : number;
 }
 
+// what makes two tabs copies of each other: the same url, compared exactly
+export function dupKey(tab : { url? : string }) : string {
+	return tab.url || "";
+}
+
 export function findDuplicates(tabs : Iterable<DuplicateCandidate>) : Duplicates {
 	const byUrl = new Map<string, DuplicateCandidate[]>();
 	for (const tab of tabs) {
 		if (tab.id === undefined) continue;
-		const url = tab.url || "";
+		const url = dupKey(tab);
 		const list = byUrl.get(url);
 		if (list) list.push(tab); else byUrl.set(url, [tab]);
 	}

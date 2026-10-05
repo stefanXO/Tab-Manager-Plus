@@ -256,7 +256,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 						{this.props.sessionsFeature ? (
 							<div
 								className={"icon tabaction save " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
-								title={
+								data-hover={
 									"Save this window for later\nWill save " +
 									maybePluralize(this.props.tabs.length, "tab") +
 									" with this window for later. Please note : The saved tabs will lose their history."
@@ -266,30 +266,30 @@ export class Window extends React.Component<IWindow, IWindowState> {
 						) : false}
 						<div
 							className={"icon tabaction add " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
-							title="Open a new tab"
+							data-hover="Open a new tab"
 							onClick={this.addTab}
 						/>
 						<div
 							className={"icon tabaction colors " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
-							title="Change window name or color"
+							data-hover="Change window name or color"
 							onClick={this.openOptions}
 						/>
 						{this.props.window.state === "minimized" ? (
 							<div
 								className={"icon tabaction maximize " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
-								title={"Maximize this window\nWill maximize " + maybePluralize(this.props.tabs.length, "tab")}
+								data-hover={"Maximize this window\nWill maximize " + maybePluralize(this.props.tabs.length, "tab")}
 								onClick={this.maximize}
 							/>
 						) : (
 							<div
 								className={"icon tabaction minimize " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
-								title={"Minimize this window\nWill minimize " + maybePluralize(this.props.tabs.length, "tab")}
+								data-hover={"Minimize this window\nWill minimize " + maybePluralize(this.props.tabs.length, "tab")}
 								onClick={this.minimize}
 							/>
 						)}
 						<div
 							className={"icon tabaction close " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
-							title={"Close this window\nWill close " + maybePluralize(this.props.tabs.length, "tab")}
+							data-hover={"Close this window\nWill close " + maybePluralize(this.props.tabs.length, "tab")}
 							onClick={this.close}
 						/>
 					</div>
@@ -305,7 +305,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 						<span
 							className="editName windowName"
 							onClick={this.openOptions}
-							title="Change the name of this window"
+							data-hover="Change the name of this window"
 						>
 							{this.props.window.incognito ? "🕵" : ""}
 							{!!this.state.name ? this.state.name : this.state.auto_name}
@@ -370,12 +370,11 @@ export class Window extends React.Component<IWindow, IWindowState> {
 					onDragOver={this.dragOver}
 					onDragLeave={this.dragLeave}
 					onClick={this.windowClick}
-					title={""}
 					onMouseEnter={this.hoverWindow}
 					onMouseLeave={this.hoverWindowOut}
 					onDrop={this.drop}
 				>
-					<div key={"windowcontainer_" + this.props.window.id} className="windowcontainer" title={"Focus this window\nWill select this window with " + maybePluralize(this.props.tabs.length, "tab")}>{children}</div>
+					<div key={"windowcontainer_" + this.props.window.id} className="windowcontainer" data-hover={"Focus this window\nWill select this window with " + maybePluralize(this.props.tabs.length, "tab")}>{children}</div>
 				</div>
 			);
 		} else {

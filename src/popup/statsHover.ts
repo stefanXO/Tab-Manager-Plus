@@ -1,0 +1,322 @@
+"use strict";
+
+import * as browser from 'webextension-polyfill';
+import {ITabManagerState} from "@types";
+import {LAYOUT, currentShowMonitors} from "@helpers/settings";
+import {popupScreen} from "@helpers/popup_size";
+import {onMainScreen} from "./screen";
+import {tabStats, windowStats, topSites, monitorMap, Bounds, MonitorMap, Rect} from "./stats";
+import {hoverKey, hoverAction, isWarm, parseKey, arrowsMoveCard, STATS_KEYBOARD_DELAY} from "./statsHoverLogic";
+import type {IStatsFavicon, IStatsCardContent} from "./views/StatsCard";
+
+// how many site favicons the window card shows
+const STATS_WINDOW_SITES = 4;
+// the window card's monitor map, CSS px (several monitors side by side get
+// the full width; the height limit keeps stacked ones in bounds)
+const STATS_MAP_WIDTH = 180;
+const STATS_MAP_HEIGHT = 90;
+
+// what the open card is for, and where it opened: at the pointer (it then
+// follows it) or next to an element (the keyboard's selected row)
+export interface IStatsTarget {
+	kind : "tab" | "window";
+	id : number;
+	pointer? : { x : number, y : number };
+	anchor? : Rect;
+}
+
+// the manager's data the cards are built from, read when a card opens
+export type StatsState = Pick<ITabManagerState,
+	"tabsbyid" | "windowsbyid" | "windows" | "windowrefs" | "lastActive" | "lastOpenWindow" |
+	"selection" | "layout" | "optionsActive" | "colorsActive">;
+export interface StatsSource {
+	state() : StatsState;
+	searchBox() : HTMLInputElement | null;
+}
+
+// the card (StatsLayer): what the controller drives
+export interface StatsView {
+	isOpen() : boolean;
+	current() : IStatsTarget | null;
+	show(target : IStatsTarget, zoom : number | undefined) : void;
+	setZoom(tabId : number, zoom : number) : void;
+	reanchor(anchor : Rect) : void;
+	close() : void;
+	follow(x : number, y : number) : void;
+	// the data behind an open card changed (the monitors arrived)
+	refresh() : void;
+}
+
+// The stats card's hover controller: when a card opens, swaps, follows,
+// closes (statsHoverLogic.ts has the rules), and what it shows. It listens on
+// the popup's root element itself (native listeners, no React handlers), so
+// none of this goes through TabManager: TabManager only mounts StatsLayer,
+// which owns one of these.
+export class StatsHover {
+	private readonly view : StatsView;
+	private readonly source : StatsSource;
+	private root : HTMLElement | null = null;
+	// what the pending or open card is for ("t<id>", "w<id>", "key", "" none),
+	// so moving around inside the same tile does not restart the delay
+	private key = "";
+	// when the pointer last left every target with a card open (chaining)
+	private leftAt = 0;
+	private timer = 0;
+	// the last pointer position over the popup: a card opens next to the
+	// pointer (which may have moved since mouseover) and then follows it
+	private readonly pointer = { x: 0, y: 0 };
+	// tabs.getZoom answers, per tab, for this popup's life
+	private readonly zoomCache = new Map<number, number>();
+	// the monitors for the window card's map, see loadDisplays()
+	private displays : { list : Bounds[], onlyPopup : boolean } | null = null;
+
+	constructor(view : StatsView, source : StatsSource) {
+		this.view = view;
+		this.source = source;
+	}
+
+	attach(root : HTMLElement) {
+		this.detach();
+		this.root = root;
+		root.addEventListener("mouseover", this.onOver);
+		root.addEventListener("mousemove", this.onMove);
+		root.addEventListener("mouseleave", this.close);
+		root.addEventListener("mousedown", this.close, true);
+		root.addEventListener("scroll", this.onScroll, true);
+		root.addEventListener("keydown", this.onKey);
+		// the monitors, once, off the first render
+		this.loadDisplays();
+		if (!IS_FIREFOX) {
+			browser.permissions.onAdded?.addListener(this.onPermission);
+			browser.permissions.onRemoved?.addListener(this.onPermission);
+			browser.storage.onChanged.addListener(this.onStorage);
+		}
+	}
+
+	detach() {
+		clearTimeout(this.timer);
+		const root = this.root;
+		if (!root) return;
+		this.root = null;
+		root.removeEventListener("mouseover", this.onOver);
+		root.removeEventListener("mousemove", this.onMove);
+		root.removeEventListener("mouseleave", this.close);
+		root.removeEventListener("mousedown", this.close, true);
+		root.removeEventListener("scroll", this.onScroll, true);
+		root.removeEventListener("keydown", this.onKey);
+		if (!IS_FIREFOX) {
+			browser.permissions.onAdded?.removeListener(this.onPermission);
+			browser.permissions.onRemoved?.removeListener(this.onPermission);
+			browser.storage.onChanged.removeListener(this.onStorage);
+		}
+	}
+
+	// ---- the events ----
+
+	private readonly onOver = (e : MouseEvent) => {
+		this.track(e);
+		const key = hoverKey(e.target as Element);
+		const action = hoverAction(key, this.key, this.view.isOpen(), isWarm(this.view.isOpen(), Date.now(), this.leftAt));
+		if (action.kind === "none") return;
+		clearTimeout(this.timer);
+		if (action.kind === "close") {
+			if (action.left) this.leftAt = Date.now();
+			this.close();
+			return;
+		}
+		this.key = key;
+		const target = parseKey(key);
+		if (!target) return;
+		if (action.delay === 0) this.show(target.kind, target.id);
+		else this.timer = window.setTimeout(() => this.show(target.kind, target.id), action.delay);
+	}
+
+	// the card follows the pointer right away, in the same event, straight
+	// on the card's element (a transform: no React render, no layout)
+	private readonly onMove = (e : MouseEvent) => {
+		this.track(e);
+	}
+
+	private track(e : MouseEvent) {
+		this.pointer.x = e.clientX;
+		this.pointer.y = e.clientY;
+		this.view.follow(e.clientX, e.clientY);
+	}
+
+	private readonly onKey = (e : KeyboardEvent) => {
+		if (e.keyCode === 27) {
+			if (this.view.isOpen()) {
+				// a card is open: Escape closes just that, not the popup (and
+				// TabManager's own Escape handling never sees the key)
+				e.preventDefault();
+				e.stopPropagation();
+			}
+			this.close();
+			return;
+		}
+		const st = this.source.state();
+		const search = this.source.searchBox();
+		const caret = !!search && document.activeElement === search && !!search.value;
+		if (arrowsMoveCard(e.keyCode, st.layout === LAYOUT.list, onMainScreen(st), caret)) this.keyboard();
+	}
+
+	// the list scrolled under the keyboard's card: keep it next to its row
+	// (a card at the pointer stays with the pointer)
+	private readonly onScroll = () => {
+		const t = this.view.current();
+		if (!t || !t.anchor) return;
+		const anchor = this.anchor(t.id);
+		if (!anchor) this.close();
+		else this.view.reanchor(anchor);
+	}
+
+	// ---- opening and closing ----
+
+	// the arrows moved the selection in the list view: the card follows it,
+	// once the keys have rested (TabManager has moved the selection by then)
+	private keyboard() {
+		this.close();
+		this.key = "key";
+		this.timer = window.setTimeout(() => {
+			const selection = this.source.state().selection;
+			if (selection.size !== 1) return;
+			this.show("tab", [...selection][0], true);
+		}, STATS_KEYBOARD_DELAY);
+	}
+
+	readonly close = () => {
+		clearTimeout(this.timer);
+		this.key = "";
+		this.view.close();
+	}
+
+	// the keyboard's card sits next to the selected row
+	private anchor(id : number) : Rect | null {
+		const el = document.getElementById("tab-" + id);
+		// hidden by the search filter
+		if (!el || el.offsetParent === null) return null;
+		return el.getBoundingClientRect();
+	}
+
+	private show(kind : "tab" | "window", id : number, keyboard = false) {
+		const st = this.source.state();
+		if (!onMainScreen(st)) return;
+		if (kind === "tab" ? !st.tabsbyid.has(id) : !st.windowsbyid.has(id)) return;
+		let target : IStatsTarget;
+		if (keyboard) {
+			const anchor = this.anchor(id);
+			if (!anchor) return;
+			target = { kind, id, anchor };
+		} else {
+			target = { kind, id, pointer: { ...this.pointer } };
+		}
+		// a zoom asked for before (this popup) is shown at once, no line popping in
+		const cached = kind === "tab" ? this.zoomCache.get(id) : undefined;
+		this.view.show(target, cached);
+		if (kind !== "tab" || cached !== undefined || !browser.tabs.getZoom) return;
+		// async and allowed to fail (a sleeping tab, a restricted page): the
+		// line is simply added when the answer comes, if the card is still up
+		browser.tabs.getZoom(id).then((z) => {
+			this.zoomCache.set(id, z);
+			this.view.setZoom(id, z);
+		}, () => {});
+	}
+
+	// ---- what a card shows ----
+
+	private windowName(windowId : number) : string {
+		const w = this.source.state().windowrefs.get(windowId)?.current;
+		return w ? (w.state.name || w.state.auto_name || "") : "";
+	}
+
+	// the favicon the tile resolved (Tab.resolveFavIconUrl), the tile's
+	// generic page icon when it has none; with the tone the tile measured
+	private favicon(tab : browser.Tabs.Tab) : IStatsFavicon {
+		const tile = this.source.state().windowrefs.get(tab.windowId)?.current?.state.tabrefs.get(tab.id)?.current;
+		if (!tile || !tile.state.favIcon) return { src: "../images/generic.png", tone: "normal" };
+		return { src: tile.state.favIcon, tone: tile.state.iconTone };
+	}
+
+	// The monitors for the window card's map: fetched once, right after the
+	// popup has loaded (never when a card opens), and again when the
+	// system.display permission or the "Show all monitors" setting changes
+	// while the popup is open. Chrome with that optional permission (options:
+	// "Show all monitors", or "Minimize inactive windows") and the setting not
+	// "off": every monitor, the primary one first; else (Chrome without it or
+	// switched off, Firefox) the popup's own monitor, `onlyPopup`. Applies the
+	// setting's unset -> on rule on the way (helpers/monitors.ts).
+	private displaysRun = 0;
+	private async loadDisplays() {
+		const run = ++this.displaysRun;
+		let list : Bounds[] = [];
+		if (!IS_FIREFOX) {
+			try {
+				if ((await currentShowMonitors()).enabled) {
+					const info = await chrome.system.display.getInfo();
+					list = info
+						.map((d, i) => ({ d, i }))
+						.sort((a, b) => (Number(!!b.d.isPrimary) - Number(!!a.d.isPrimary)) || a.i - b.i)
+						.map(({d}) => ({ left: d.bounds.left, top: d.bounds.top, width: d.bounds.width, height: d.bounds.height }));
+				}
+			} catch {
+				// no permission API / no displays: the popup's monitor
+			}
+		}
+		// only the latest load counts: an older one may have read the setting
+		// from before a switch
+		if (run !== this.displaysRun) return;
+		this.displays = list.length ? { list, onlyPopup: false } : { list: [popupScreen()], onlyPopup: true };
+		// an open window card picks the map up
+		this.view.refresh();
+	}
+
+	// granted (options) or given back while the popup is open: fetch again
+	// (a grant also turns an "unset" setting "on")
+	private readonly onPermission = (p : browser.Permissions.Permissions) => {
+		if (p.permissions && (p.permissions as string[]).indexOf("system.display") > -1) this.loadDisplays();
+	}
+	// "Show all monitors" switched in the options screen of this popup
+	private readonly onStorage = (changes : Record<string, browser.Storage.StorageChange>, area : string) => {
+		if (area === "local" && changes.showMonitors) this.loadDisplays();
+	}
+
+	private map(windowId : number) : MonitorMap | null {
+		if (!this.displays) return null;
+		return monitorMap(this.displays.list, this.source.state().windows, windowId, STATS_MAP_WIDTH, STATS_MAP_HEIGHT);
+	}
+
+	// the card of a target, from the manager's data; null: nothing to show
+	resolve(t : IStatsTarget, zoom : number | undefined) : IStatsCardContent | null {
+		const st = this.source.state();
+		if (!onMainScreen(st)) return null;
+		const now = Date.now();
+		if (t.kind === "tab") {
+			const tab = st.tabsbyid.get(t.id);
+			if (!tab) return null;
+			const win = st.windowsbyid.get(tab.windowId);
+			const card = tabStats(tab, {
+				now,
+				windowTabs: win && win.tabs ? win.tabs : [tab],
+				allTabs: st.tabsbyid.values(),
+				windowName: (id) => this.windowName(id),
+				zoom
+			});
+			return { card, icon: this.favicon(tab), url: tab.url || tab.pendingUrl || "" };
+		}
+		const win = st.windowsbyid.get(t.id);
+		if (!win) return null;
+		const map = this.map(t.id);
+		const card = windowStats(win, win.tabs || [], {
+			now,
+			name: this.windowName(t.id),
+			lastActive: st.lastActive.get(t.id),
+			focused: st.lastOpenWindow === t.id,
+			offscreen: !!map && map.offscreen,
+			monitor: map ? map.monitor : null,
+			// Chrome only: Firefox has no way to know the other monitors
+			monitorHint: !IS_FIREFOX && !!this.displays && this.displays.onlyPopup
+		});
+		const sites = topSites(win.tabs || [], STATS_WINDOW_SITES).map((tab) => this.favicon(tab));
+		return { card, sites, map: map && !map.offscreen ? map : null };
+	}
+}

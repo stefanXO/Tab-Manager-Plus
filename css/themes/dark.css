@@ -120,6 +120,9 @@
 		--popover-border: var(--dk-line);
 		--popover-text: var(--dk-text);
 		--popover-text-muted: var(--dk-text-2);
+		--map-monitor-fill: rgba(255, 255, 255, 0.04);
+		--map-window: rgba(183, 154, 232, 0.4);
+		--map-window-edge: var(--dk-accent);
 		--code-bg: var(--dk-tile);
 
 		/* changelog page: link chips, inline code and the update notice */

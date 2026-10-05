@@ -1,0 +1,214 @@
+/* The stats card: a tab's (pointer resting on the tile) or a window's
+   (pointer on its "last active" label). Positioned by StatsCard.tsx in
+   viewport coordinates; the look is the search help's (search.css). It takes
+   no pointer events, so the tiles under it keep their hover and clicks. */
+/* the layer the card lives in (StatsLayer.tsx), there for the popup's whole
+   life: the viewport, fully contained, so a change inside (the card follows
+   the pointer from tab to tab) lays out and paints only in here, never the
+   popup under it */
+.stats-layer {
+	position: fixed;
+	inset: 0;
+	z-index: 100000;
+	contain: strict;
+	pointer-events: none;
+}
+/* no card up: the layer (and the parked card in it) takes no part in the
+   page at all. Present, even invisible, a fixed full-viewport layer changes
+   how the popup under it is composited: a few anti-aliased pixels differ */
+.stats-layer:not(.up) {
+	display: none;
+}
+.stats-card {
+	/* placed by a transform (StatsCard.tsx), never animated */
+	position: absolute;
+	left: 0;
+	top: 0;
+	box-sizing: border-box;
+	max-width: min(22rem, calc(100vw - 16px));
+	padding: 0.5rem 0.7rem;
+	border: 1px solid var(--popover-border);
+	border-radius: 8px;
+	box-shadow: var(--shadow-popover);
+	background: var(--surface);
+	color: var(--popover-text-muted);
+	font-size: 12px;
+	line-height: 1.5;
+	text-align: left;
+	white-space: normal;
+	overflow-wrap: anywhere;
+	pointer-events: none;
+	/* hidden it is parked off screen (StatsCard.tsx), shown once placed */
+	visibility: hidden;
+	opacity: 0;
+}
+.stats-card.shown {
+	visibility: visible;
+	/* its own layer only while up: a parked card must not change how the
+	   popup under it is composited (and rasterised) */
+	will-change: transform;
+	opacity: 1;
+}
+/* title row: favicon | title (| the window's site favicons) */
+.stats-card-head {
+	display: flex;
+	align-items: flex-start;
+	gap: 6px;
+	margin-bottom: 0.15rem;
+}
+.stats-favicon {
+	flex: none;
+	width: 16px;
+	height: 16px;
+	/* centred on the first line of the 18px title */
+	margin-top: 1px;
+	object-fit: contain;
+	border-radius: 3px;
+}
+/* the tile's treatment of hard-to-see favicons (components/tab.css): white-
+   only ones inverted on the light theme, black-only ones on the dark theme,
+   mostly-white ones on a tint so the white shape has an edge */
+.stats-favicon.icon-mono-light {
+	filter: var(--fav-mono-light-filter);
+}
+.stats-favicon.icon-mono-dark {
+	filter: var(--fav-mono-dark-filter);
+}
+.stats-favicon.icon-light {
+	background-color: var(--tile-tint);
+}
+.stats-card-title {
+	flex: 1 1 auto;
+	min-width: 0;
+	color: var(--popover-text);
+	font-weight: 600;
+	/* a long page title: two lines, then an ellipsis */
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
+	overflow: hidden;
+}
+.stats-site-icons {
+	flex: none;
+	display: flex;
+	gap: 4px;
+	margin-left: 0.6rem;
+}
+/* every line below the title starts in the title's text column: a 16px
+   icon column (the favicon's width) and the same gap */
+.stats-card-url,
+.stats-card-line {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	white-space: nowrap;
+	overflow: hidden;
+}
+.stats-card-url {
+	margin-bottom: 0.2rem;
+	font-size: 11px;
+	color: var(--popover-text-muted);
+}
+.stats-url-rest {
+	opacity: 0.75;
+}
+.stats-url-host {
+	color: var(--popover-text);
+	font-weight: 600;
+}
+/* "opened from <a long title>": one line, the text gives way */
+.stats-text {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+.stats-icon {
+	flex: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 16px;
+	height: 12px;
+	background: center / 12px 12px no-repeat;
+}
+/* the clock and the globe (inline svg, StatsCard.tsx): stroked in the text colour */
+.stats-icon > svg {
+	display: block;
+	color: var(--popover-text-muted);
+}
+/* a line in word groups ("asleep · muted by you · pinned"), each with its
+   own badge: the first group's badge sits in the icon column */
+.stats-items {
+	gap: 0;
+}
+.stats-lead {
+	margin-right: 6px;
+}
+.stats-part {
+	flex: none;
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+.stats-part .stats-icon {
+	width: 12px;
+}
+.stats-part.first .stats-icon {
+	width: 16px;
+	margin-right: 2px;
+}
+.stats-sep {
+	flex: none;
+	padding: 0 0.35em;
+}
+/* no favicon in front of the title (the window card): no icon column, the
+   lines start where the title does and only real badges show */
+.stats-card:not(.with-icon) .stats-card-line > .stats-icon:not([class*="stats-icon-"]) {
+	display: none;
+}
+
+/* the list view's state chip badges (layout/view-list.css), and toolbar images */
+.stats-icon-asleep { background-image: var(--badge-suspended); }
+.stats-icon-muted { background-image: var(--badge-muted); }
+.stats-icon-playing { background-image: var(--badge-playing); }
+.stats-icon-pinned { background-image: var(--badge-pinned); }
+.stats-icon-position { background-image: url(../images/views/vertical.png); }
+.stats-icon-opener { background-image: url(../images/add64.png); }
+.stats-icon-copies { background-image: url(../images/duplicates.png); }
+
+/* the window card's monitor map (StatsCard.tsx): monitors outlined, the
+   other windows faint, this window filled with the accent */
+.stats-map {
+	display: block;
+	margin-top: 0.35rem;
+	overflow: visible;
+}
+.stats-map-monitor {
+	fill: var(--map-monitor-fill);
+	stroke: var(--popover-text-muted);
+	stroke-width: 1;
+}
+.stats-map-other {
+	fill: none;
+	stroke: var(--popover-text-muted);
+	stroke-width: 1;
+	stroke-opacity: 0.35;
+}
+.stats-map-window {
+	fill: var(--map-window);
+	stroke: var(--map-window-edge);
+	stroke-width: 1;
+}
+/* minimized: dashed, where it will come back (Chrome reports the restore bounds) */
+.stats-map-other.minimized,
+.stats-map-window.minimized {
+	stroke-dasharray: 2 2;
+}
+.stats-map-window.minimized {
+	fill: var(--map-monitor-fill);
+}
+/* "one monitor known · allow monitor access in options" */
+.stats-line-monitorHint {
+	font-size: 11px;
+	opacity: 0.8;
+}

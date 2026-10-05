@@ -47,6 +47,7 @@ export interface ITabManagerState {
 	colorsActive: number,
 	colorsAutoName: string,
 
+
 	resetTimeout: number,
 
 	dirty: boolean
