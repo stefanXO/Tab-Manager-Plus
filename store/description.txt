@@ -14,17 +14,25 @@ A simple and super-fast Google Extension to help you get the best overview over 
 ★  Functionality:
 
 ➤ Display all Tabs & Windows quickly in current window
-➤ Highlight duplicate tabs
+➤ Highlight duplicate tabs - only the extra copies are selected, the one you used last is kept
+➤ Highlight the tabs you used recently
 ➤ Select Tabs using Right Click, Ctrl, Cmd or Shift
 ➤ Quickly filter tabs by title and url ( just type - right away! )
   ➤ Switch to found tab with "Enter"
   ➤ Move multiple highlighted tabs with "Enter"
-➤ Switch to your latest opened tab with Shift+Ctrl+Space / Shift+Cmd+Space
+  ➤ Search in titles with t:word, in urls with u:word, leave tabs out with -word, search "a phrase" or a /regular expression/
+➤ Switch to your previously active tab with Shift+Ctrl+Space / Shift+Cmd+Space
 ➤ Limit open tabs - Tab Manager will open a new tab in a new window once your limit is reached
 ➤ Create new Tabs & Windows
 ➤ Move Tabs between Windows
 ➤ Delete Tabs & Windows
 ➤ Pin/unpin Tabs
+➤ Discard tabs to save memory
+➤ See which tabs play sound, are muted, asleep or pinned
+➤ Name and color your windows - names and colors survive a browser restart
+➤ Save windows and restore them later, with their size and position
+➤ Hold the mouse on a tab or window for details: last used, tab counts, sites, monitor
+➤ Light and dark theme
 ➤ Supports incognito mode, if you enable it
 
 ★  Updates
@@ -178,7 +186,7 @@ The main purpose of Tab Manager Plus is to find "lost" tabs easily. You can open
 
 The Tab Manager will then show you all tabs that match your search terms - by tab title, and by url. If you've found your tab, and it's the only one selected - press "enter" - and you will jump right to it!
 
-If you don't like one of the layouts, there's in total 4 more views available :
+If you don't like one of the layouts, there are 4 views available in total :
 
 ★ Block view ( Shows you groups of icons - each window is one group )
 ★ Big block view ( same as above, but with bigger icons )
@@ -187,7 +195,7 @@ If you don't like one of the layouts, there's in total 4 more views available :
 
 You can move tabs between windows in every view - and you can select tabs with your right mouse button ( or CTRL+click on Mac ). Once you have selected a few tabs, simply press the "enter" key, and all tabs will be moved to a new browser window.
 
-Are you stuck with lost duplicate tabs? Simply press the "duplicate tabs" icon, and Tab Manager will highlight the Duplicates for you. You can then press "Enter" as well, and they will be moved to a separate window.
+Are you stuck with lost duplicate tabs? Simply press the "duplicate tabs" icon, and Tab Manager will select the extra copies for you and keep the one you used last. The delete button closes just the duplicates, "Enter" moves them to a separate window.
 
 ➤ Don't like animations? You can turn off / turn on animations in the options.
 
