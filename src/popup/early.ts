@@ -24,6 +24,17 @@ window.takeEarlyKeys = function () {
 	return typed;
 };
 
+// --dpr: device pixels per CSS pixel (display scale x browser zoom). The list
+// view's freshness bars (css/layout/view-list.css) round their sizes to whole
+// device pixels with it, so the bars and gaps stay even at 125% / 150%.
+// Kept current when the zoom or the monitor changes.
+function trackDpr() {
+	const dpr = window.devicePixelRatio || 1;
+	document.documentElement.style.setProperty("--dpr", String(dpr));
+	matchMedia("(resolution: " + dpr + "dppx)").addEventListener("change", trackDpr, { once: true });
+}
+trackDpr();
+
 declare global {
 	interface Window {
 		takeEarlyKeys?: () => string;

@@ -92,19 +92,21 @@ export class Tab extends React.Component<ITab, ITabState> {
 				</div>
 			);
 			// how recently the tab was used (../freshness.ts): four bars, filled
-			// from the right and fading with age (css/layout/view-list.css)
+			// from the right and fading with age (css/layout/view-list.css). An svg
+			// so crispEdges can snap the bars to whole device pixels: html boxes
+			// get antialiased edges at 110% / 125% scale and the gaps look uneven
 			const fresh = tabFreshness(this.props.tab.lastAccessed);
 			if (fresh) {
 				children.push(
-					<div
+					<svg
 						key={"tab-fresh-" + this.props.tab.id}
 						className={"tab-fresh fresh-" + fresh.level}
 						role="img"
 						aria-label={fresh.label}
 						data-hover={fresh.label + "\n" + (this.props.tab.title || "")}
 					>
-						<i /><i /><i /><i />
-					</div>
+						<rect /><rect /><rect /><rect />
+					</svg>
 				);
 			}
 		}

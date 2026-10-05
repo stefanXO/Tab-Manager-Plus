@@ -225,42 +225,63 @@
    no lastAccessed. One fixed width, so no level ever moves the title. */
 .window.vertical .tab.full > .tab-fresh {
 	--fresh-c: var(--fresh-1);
+	/* bar width, gap and height in CSS px, before snapping */
+	--fresh-w: 3px;
+	--fresh-g: 1px;
+	--fresh-h: 10px;
+	--fresh-bw: var(--fresh-w);
+	--fresh-bgap: var(--fresh-g);
+	--fresh-bh: var(--fresh-h);
+	--fresh-step: calc(var(--fresh-bw) + var(--fresh-bgap));
 	order: 3;
 	flex: none;
-	display: inline-flex;
-	flex-direction: row-reverse;
-	align-items: flex-end;
-	gap: 1px;
-	width: 15px;
-	height: 12px;
+	display: block;
+	width: calc(var(--fresh-step) * 3 + var(--fresh-bw));
+	height: calc(var(--fresh-h) + 2px);
 	margin: 0 0 0 1px;
+	overflow: visible;
+	fill: var(--fresh-c);
+	/* whole device pixels: no antialiased edges */
+	shape-rendering: crispEdges;
+}
+/* the same sizes snapped to whole device pixels (--dpr, set by
+   src/popup/early.ts; 1 when absent). The gap rounds down so 150% gives 5+1,
+   not 5+2. Equal widths and an equal step put every bar on the same sub-pixel
+   phase, so crispEdges rounds them all alike. Browsers without round()
+   (Chrome < 125) keep the plain sizes above. */
+@supports (width: round(1px, 1px)) {
+	.window.vertical .tab.full > .tab-fresh {
+		--fresh-d: var(--dpr, 1);
+		--fresh-bw: calc(max(1px, round(calc(var(--fresh-w) * var(--fresh-d)), 1px)) / var(--fresh-d));
+		--fresh-bgap: calc(max(1px, round(down, calc(var(--fresh-g) * var(--fresh-d)), 1px)) / var(--fresh-d));
+		--fresh-bh: calc(round(calc(var(--fresh-h) * var(--fresh-d)), 1px) / var(--fresh-d));
+	}
 }
 .window.vertical .tab.full > .tab-fresh.fresh-2 { --fresh-c: var(--fresh-2); }
 .window.vertical .tab.full > .tab-fresh.fresh-3 { --fresh-c: var(--fresh-3); }
 .window.vertical .tab.full > .tab-fresh.fresh-4 { --fresh-c: var(--fresh-4); }
-.window.vertical .tab.full > .tab-fresh > i {
-	display: block;
-	flex: none;
-	width: 3px;
-	height: 10px;
-	background: var(--fresh-c);
+/* four bars, bottom-aligned; child 1 is the rightmost */
+.window.vertical .tab.full > .tab-fresh > rect {
+	y: calc(var(--fresh-h) + 2px - var(--fresh-bh));
+	width: var(--fresh-bw);
+	height: var(--fresh-bh);
 }
+.window.vertical .tab.full > .tab-fresh > rect:nth-child(1) { x: calc(var(--fresh-step) * 3); }
+.window.vertical .tab.full > .tab-fresh > rect:nth-child(2) { x: calc(var(--fresh-step) * 2); }
+.window.vertical .tab.full > .tab-fresh > rect:nth-child(3) { x: var(--fresh-step); }
+.window.vertical .tab.full > .tab-fresh > rect:nth-child(4) { x: 0; }
 /* the bars after the lit run (child 1 is the rightmost); level 0 from the first */
-.window.vertical .tab.full > .tab-fresh.fresh-0 > i:nth-child(1) { opacity: 0.55; }
-.window.vertical .tab.full > .tab-fresh.fresh-0 > i:nth-child(2),
-.window.vertical .tab.full > .tab-fresh.fresh-1 > i:nth-child(2),
-.window.vertical .tab.full > .tab-fresh.fresh-2 > i:nth-child(3),
-.window.vertical .tab.full > .tab-fresh.fresh-3 > i:nth-child(4) { opacity: 0.3; }
-.window.vertical .tab.full > .tab-fresh.fresh-0 > i:nth-child(3),
-.window.vertical .tab.full > .tab-fresh.fresh-1 > i:nth-child(3),
-.window.vertical .tab.full > .tab-fresh.fresh-2 > i:nth-child(4) { opacity: 0.18; }
-.window.vertical .tab.full > .tab-fresh.fresh-0 > i:nth-child(4),
-.window.vertical .tab.full > .tab-fresh.fresh-1 > i:nth-child(4) { opacity: 0.1; }
+.window.vertical .tab.full > .tab-fresh.fresh-0 > rect:nth-child(1) { opacity: 0.55; }
+.window.vertical .tab.full > .tab-fresh.fresh-0 > rect:nth-child(2),
+.window.vertical .tab.full > .tab-fresh.fresh-1 > rect:nth-child(2),
+.window.vertical .tab.full > .tab-fresh.fresh-2 > rect:nth-child(3),
+.window.vertical .tab.full > .tab-fresh.fresh-3 > rect:nth-child(4) { opacity: 0.3; }
+.window.vertical .tab.full > .tab-fresh.fresh-0 > rect:nth-child(3),
+.window.vertical .tab.full > .tab-fresh.fresh-1 > rect:nth-child(3),
+.window.vertical .tab.full > .tab-fresh.fresh-2 > rect:nth-child(4) { opacity: 0.18; }
+.window.vertical .tab.full > .tab-fresh.fresh-0 > rect:nth-child(4),
+.window.vertical .tab.full > .tab-fresh.fresh-1 > rect:nth-child(4) { opacity: 0.1; }
 .compact .window.vertical .tab.full > .tab-fresh {
-	width: 11px;
-	height: 10px;
-}
-.compact .window.vertical .tab.full > .tab-fresh > i {
-	width: 2px;
-	height: 8px;
+	--fresh-w: 2px;
+	--fresh-h: 8px;
 }
