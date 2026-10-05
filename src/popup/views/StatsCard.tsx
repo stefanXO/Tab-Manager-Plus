@@ -38,7 +38,8 @@ const PARKED = "translate3d(-10000px, -10000px, 0)";
 // the two pictures no image in images/ has: a clock (active …) and a globe
 // (the url line); strokes in the text colour, drawn at the badges' 12px
 const svgProps = { viewBox: "0 0 16 16", width: 12, height: 12, fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
-const CLOCK = <svg {...svgProps}><circle cx="8" cy="8" r="6.2" /><path d="M8 4.6V8l2.4 1.6" /></svg>;
+// the clock is also the bottom bar's "Highlight recently active tabs" icon
+export const CLOCK = <svg {...svgProps}><circle cx="8" cy="8" r="6.2" /><path d="M8 4.6V8l2.4 1.6" /></svg>;
 const GLOBE = <svg {...svgProps}><circle cx="8" cy="8" r="6.2" /><path d="M1.8 8h12.4M8 1.8c-3.2 3.4-3.2 9 0 12.4M8 1.8c3.2 3.4 3.2 9 0 12.4" /></svg>;
 
 const Icon = ({name} : {name : StatsIcon | "url"}) => (

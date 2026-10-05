@@ -3,6 +3,7 @@ import {readSettings, writeBootCache, SETTING_DEFAULTS, Settings, Layout, LAYOUT
 import {sortWindows} from "@helpers/windows";
 import {parseQuery, matchTab, searchable} from "../search";
 import {findDuplicates} from "../duplicates";
+import {recentTabs, recentText, RecentTabs} from "../recent";
 import {onMainScreen} from "../screen";
 import {debounce, maybePluralize} from "@helpers/utils";
 import {Window, Session, TabOptions, Tab, WindowOptions} from "@views";
@@ -15,6 +16,7 @@ import {attachMasonry, Masonry} from "../masonry";
 import {sizePopup} from "@helpers/popup_size";
 import {applyTheme} from "@helpers/theme";
 import {StatsLayer, StatsSource} from "./StatsLayer";
+import {CLOCK} from "./StatsCard";
 
 // the settings the manager holds in its state and applies
 type ManagerSettings = Omit<Settings, "showMonitors">;
@@ -121,6 +123,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			optionsActive: !!this.props.optionsActive,
 			filterTabs: filterTabs,
 			dupTabs: false,
+			recentOn: false,
 			dragFavicon: "",
 			colorsActive: 0,
 			colorsAutoName: "",
@@ -568,6 +571,15 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 										title="Highlight Duplicates"
 										onClick={this.highlightDuplicates}
 									/>
+									<div
+										className={"icon windowaction recent" + (this.state.recentOn ? " enabled" : "")}
+										title={
+											this.state.recentOn
+												? "Clear highlighted tabs\nWill unselect " + maybePluralize(this.recentIds.length, 'tab')
+												: "Highlight recently active tabs\n" + recentText(this.getRecent())
+										}
+										onClick={this.highlightRecent}
+									>{CLOCK}</div>
 								</td>
 							</tr>
 						</tbody>
@@ -891,6 +903,44 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			hiddenCount: hiddenCount,
 			searchLen: searchLen,
 			dupTabs: dupTabs,
+			recentOn: false,
+			dirty: true
+		});
+	}
+
+	// "Highlight recently active tabs" (see ../recent): selects them and hides
+	// the rest, like Highlight Duplicates, and turns that off. A second click,
+	// Escape or clearing the search ends it; searching meanwhile searches
+	// within the tabs it picked.
+	private recentIds : number[] = [];
+	getRecent() : RecentTabs {
+		return recentTabs(this.state.tabsbyid.values(), Date.now());
+	}
+	highlightRecent = () => {
+		const recent = this.state.recentOn ? null : this.getRecent();
+		if (this.searchBoxRef.current) this.searchBoxRef.current.value = "";
+		this.state.selection.clear();
+		this.clearHiddenTabs();
+		this.recentIds = recent ? recent.ids : [];
+		let hiddenCount = 0;
+		if (recent && recent.count > 0) {
+			const ids = new Set(recent.ids);
+			for (const id of this.state.tabsbyid.keys()) {
+				if (ids.has(id)) {
+					this.state.selection.add(id);
+				} else {
+					this.state.hiddenTabs.add(id);
+					hiddenCount++;
+				}
+			}
+		}
+		this.setState({
+			hiddenCount: hiddenCount,
+			searchLen: recent ? recent.count : 0,
+			dupTabs: false,
+			recentOn: !!recent && recent.count > 0,
+			topText: recent ? recentText(recent) : "",
+			bottomText: recent && recent.count > 0 ? "Delete closes them. Enter moves them to a new window" : "",
 			dirty: true
 		});
 	}
@@ -909,6 +959,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			this.setState({
 				hiddenCount: 0,
 				dupTabs: false,
+				recentOn: false,
 				dirty: true
 			});
 			this.clearHiddenTabs();
@@ -920,6 +971,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				const dup = duplicates.duplicates;
 				const orig = duplicates.originals;
 				idList = [...dup, ...orig];
+			} else if (this.state.recentOn) {
+				idList = this.recentIds.filter((id) => this.state.tabsbyid.has(id));
 			}
 			for (const id of idList) {
 				const tab = this.state.tabsbyid.get(id);
@@ -1012,6 +1065,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				searchLen: 0,
 				hiddenCount: 0,
 				dupTabs: false,
+				recentOn: false,
 				dirty: true
 			});
 

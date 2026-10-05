@@ -126,6 +126,18 @@
 .duplicates {
 	background-image: url(../images/duplicates.png);
 }
+/* Highlight recently active tabs: no image for it, the stats card's clock
+   drawn inline, in the text colour (light on the dark theme) */
+.recent {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--text);
+}
+.recent > svg {
+	width: 1rem;
+	height: 1rem;
+}
 .filter {
 	background-image: url(../images/show64.png);
 }

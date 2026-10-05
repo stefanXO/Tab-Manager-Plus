@@ -11,8 +11,10 @@
 	width: 100%;
 }
 
+/* room for the eight toolbar icons (2rem + 0.6rem margin each); narrow.css
+   packs them tighter at 540px and below so the search box keeps its width */
 .window.searchbox td.two {
-	width: 300px;
+	width: 342px;
 }
 
 .window.searchbox td.one {
