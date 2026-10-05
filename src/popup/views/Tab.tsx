@@ -7,6 +7,7 @@ import * as browser from 'webextension-polyfill';
 import {ICommand, ITab, ITabState} from '@types';
 import {ManagerContext, ITabManagerActions} from '../context';
 import {faviconTone} from '@helpers/favicon';
+import {tabFreshness} from "../freshness";
 
 export class Tab extends React.Component<ITab, ITabState> {
 	static contextType = ManagerContext;
@@ -90,6 +91,22 @@ export class Tab extends React.Component<ITab, ITabState> {
 					{this.props.tab.title || ""}
 				</div>
 			);
+			// how recently the tab was used (../freshness.ts): four bars, filled
+			// from the right and fading with age (css/layout/view-list.css)
+			const fresh = tabFreshness(this.props.tab.lastAccessed);
+			if (fresh) {
+				children.push(
+					<div
+						key={"tab-fresh-" + this.props.tab.id}
+						className={"tab-fresh fresh-" + fresh.level}
+						role="img"
+						aria-label={fresh.label}
+						data-hover={fresh.label + "\n" + (this.props.tab.title || "")}
+					>
+						<i /><i /><i /><i />
+					</div>
+				);
+			}
 		}
 
 		var tabDom : React.HTMLAttributes<HTMLDivElement> & { "data-hover"?: string } = {

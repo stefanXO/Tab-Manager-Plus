@@ -176,6 +176,13 @@
 	--chip-solid-halo: rgba(255, 255, 255, 0.5);
 	--chip-incognito-text: black;
 
+	/* freshness: how recently a list row's tab was used (layout/view-list.css),
+	   vivid green just now, greyer with age */
+	--fresh-4: #14a94b;
+	--fresh-3: #56b075;
+	--fresh-2: #8aa995;
+	--fresh-1: #9aa29d;
+
 	/* list rows: a coloured left edge plus a faint tint per state */
 	--row-divider: rgba(0, 0, 0, 0.1);
 	--row-hover: rgba(0, 0, 0, 0.07);

@@ -215,3 +215,52 @@
 .window.vertical .newliner {
 	display: none;
 }
+
+/* Freshness: how recently the tab was used (src/popup/freshness.ts). The last
+   thing in the row, after the chips, so it lines up as one column: four equal
+   bars, filled from the right edge, as many lit as the level (4 under 5 min,
+   3 under an hour, 2 under a day, 1 under a week). All in the level's colour
+   (--fresh-c, from .fresh-<n>); the bars after the lit run drop off steeply.
+   Older than a week: all grey and faint. Not rendered when the browser gives
+   no lastAccessed. One fixed width, so no level ever moves the title. */
+.window.vertical .tab.full > .tab-fresh {
+	--fresh-c: var(--fresh-1);
+	order: 3;
+	flex: none;
+	display: inline-flex;
+	flex-direction: row-reverse;
+	align-items: flex-end;
+	gap: 1px;
+	width: 15px;
+	height: 12px;
+	margin: 0 0 0 1px;
+}
+.window.vertical .tab.full > .tab-fresh.fresh-2 { --fresh-c: var(--fresh-2); }
+.window.vertical .tab.full > .tab-fresh.fresh-3 { --fresh-c: var(--fresh-3); }
+.window.vertical .tab.full > .tab-fresh.fresh-4 { --fresh-c: var(--fresh-4); }
+.window.vertical .tab.full > .tab-fresh > i {
+	display: block;
+	flex: none;
+	width: 3px;
+	height: 10px;
+	background: var(--fresh-c);
+}
+/* the bars after the lit run (child 1 is the rightmost); level 0 from the first */
+.window.vertical .tab.full > .tab-fresh.fresh-0 > i:nth-child(1) { opacity: 0.55; }
+.window.vertical .tab.full > .tab-fresh.fresh-0 > i:nth-child(2),
+.window.vertical .tab.full > .tab-fresh.fresh-1 > i:nth-child(2),
+.window.vertical .tab.full > .tab-fresh.fresh-2 > i:nth-child(3),
+.window.vertical .tab.full > .tab-fresh.fresh-3 > i:nth-child(4) { opacity: 0.3; }
+.window.vertical .tab.full > .tab-fresh.fresh-0 > i:nth-child(3),
+.window.vertical .tab.full > .tab-fresh.fresh-1 > i:nth-child(3),
+.window.vertical .tab.full > .tab-fresh.fresh-2 > i:nth-child(4) { opacity: 0.18; }
+.window.vertical .tab.full > .tab-fresh.fresh-0 > i:nth-child(4),
+.window.vertical .tab.full > .tab-fresh.fresh-1 > i:nth-child(4) { opacity: 0.1; }
+.compact .window.vertical .tab.full > .tab-fresh {
+	width: 11px;
+	height: 10px;
+}
+.compact .window.vertical .tab.full > .tab-fresh > i {
+	width: 2px;
+	height: 8px;
+}

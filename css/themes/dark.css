@@ -85,6 +85,10 @@
 		--chip-bg: rgba(255, 255, 255, 0.06);
 		--chip-border: rgba(255, 255, 255, 0.15);
 		--chip-solid-bg: transparent;
+		--fresh-4: #3ddc74;
+		--fresh-3: #6cc68c;
+		--fresh-2: #7fae8f;
+		--fresh-1: #858d88;
 		--row-divider: rgba(255, 255, 255, 0.08);
 		--row-hover: rgba(255, 255, 255, 0.08);
 		/* row states, same precedence as light: pinned < active < playing < muted < selected */
