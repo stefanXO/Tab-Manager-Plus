@@ -403,36 +403,14 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		return (
 			<div className="licenses" key="licenses">
 				<div className="license">
-					Tab Manager Plus is based on{" "}
-					<a href="https://github.com/dsc/Tab-Manager" target="_blank" title="Tab-Manager">
-						dsc/Tab-Manager
-					</a>
-					,{" "}
-					<a href="https://github.com/joshperry/Tab-Manager" target="_blank" title="Tab-Manager">
-						joshperry/Tab-Manager
-					</a>{" "}
-					and{" "}
-					<a href="https://github.com/JonasNo/Tab-Manager" target="_blank" title="Tab-Manager">
-						JonasNo/Tab-Manager
-					</a>
-					.<br />
-					Licensed by{" "}
-					<a href="http://creativecommons.org/licenses/by/3.0/" target="_blank" title=" Mozilla Public License (MPL)">
-						MPLv2
-					</a>
-					. Icons made by{" "}
-					<a href="http://www.freepik.com" title="Freepik">
-						Freepik
-					</a>{" "}
-					from{" "}
-					<a href="http://www.flaticon.com" title="Flaticon">
-						www.flaticon.com
-					</a>
-					. Licensed by{" "}
-					<a href="http://creativecommons.org/licenses/by/3.0/" target="_blank" title="Creative Commons BY 3.0">
-						CC 3.0 BY
-					</a>
-					.
+					Tab Manager Plus is based on {link("https://github.com/dsc/Tab-Manager", "dsc/Tab-Manager")},{" "}
+					{link("https://github.com/joshperry/Tab-Manager", "joshperry/Tab-Manager")} and{" "}
+					{link("https://github.com/JonasNo/Tab-Manager", "JonasNo/Tab-Manager")}.
+					Licensed under {link("https://www.mozilla.org/MPL/2.0/", "MPL 2.0")}.<br />
+					Icons made by {link("https://www.freepik.com", "Freepik")} from {link("https://www.flaticon.com", "www.flaticon.com")},
+					licensed under {link("https://creativecommons.org/licenses/by/3.0/", "CC BY 3.0")}.
+					Uses {link("https://react.dev", "React")} and {link("https://github.com/necolas/normalize.css", "normalize.css")} (MIT)
+					and {link("https://github.com/mozilla/webextension-polyfill", "webextension-polyfill")} (MPL 2.0).
 				</div>
 			</div>
 		);
