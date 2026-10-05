@@ -29,6 +29,62 @@ A simple and super-fast Google Extension to help you get the best overview over 
 
 ★  Updates
 
+➤ 7.0.0
+A Brand New Look!
+- Every layout redesigned: Block view is a grid, List view (was Vertical) shows one tab per line, Rows view (was Horizontal) one window per row (#58)
+- Dark theme rebuilt with consistent colors; window colors show as a colored edge; scrollbars and controls are dark too (#99, #151)
+- New window color palette, with a matching set for the dark theme
+- Favicons: white icons stay visible in the light theme, and icons refresh when a tab finishes loading (#251)
+- Badges show a tab's state: playing sound, muted, asleep (put to sleep by the browser), pinned, active, selected. In List view as chips with a colored edge on the left (#171)
+- List view shows how recently each tab was used: four small bars at the right of the row, filled from the right and fading with age (green for the last minutes, grey after a week); hover them for the exact time
+- Windows show when they were last active, saved sessions when they were saved
+- Subtle animations when they are on: windows and tabs fade in, state changes ease instead of snapping, a playing row breathes
+
+Faster
+- The popup opens with its final layout, theme and windows in the first frame instead of filling in afterwards
+- The popup script is about 40% smaller
+- Tab changes show up immediately
+- Typing right after opening the popup no longer loses the first characters
+
+Searching And Duplicates
+- Highlight Duplicates selects only the extra copies and keeps the one you used last, so Delete closes just the duplicates (#142, #188, #240, #248, #260)
+- The header shows how many tabs have duplicates and how many are selected
+- Searching while duplicates are highlighted searches within them
+- Pasting a search term, or editing in the middle of it, now searches the right tabs
+- Clearing the search field no longer shows matches for an empty search
+- Search in titles only with t:word, in urls only with u:word
+- Exclude tabs from a search with -word, also -u:word
+- Search for a phrase with a space by quoting it: "pull request" (#224)
+- Search with a regular expression: /\(\d+\)/ finds tabs with an unread count, /localhost:\d+/ local dev servers, /\.pdf$/ open PDFs (#247, #156)
+- Hover the search box for the whole search syntax
+- Highlight recently active tabs: the new clock button in the bar selects the tabs you used last. It finds the time span itself from how your activity clusters: a burst of tabs in the last minutes, or the last hour, or the last day, and stops where the gap to older tabs gets big
+
+Windows And Sessions
+- Window names and colors survive a browser restart, even when the window's tabs changed since
+- Names and colors of windows closed for more than a day are cleaned up, so a new window cannot inherit an old name (#103, #244)
+- Restored windows keep their size and position, fitted to the screen they are restored on; a window saved maximized comes back maximized (#205, #208)
+- Restoring a window in own-tab mode scrolls to it
+- Saved sessions could be lost when the update from version 5 was interrupted, e.g. by closing the popup
+- Saved sessions are no longer limited by the browser's 10 MB storage quota, and showing a session no longer changes it (which could corrupt exports)
+- Enabling the sessions feature shows your saved windows right away
+- The window order no longer resets on its own; the current window is always listed first and marked, also as a popup (#241)
+- Clicking the icon while Tab Manager Plus is already open in a tab switches to that tab
+- The "switch to previous tab" shortcut works again (#37, #108, #238)
+
+Tab And Window Info
+- Hold the mouse on a tab to see when it was last used, its state (asleep, muted and why, playing, pinned), its position, which tab opened it, copies in other windows and its zoom
+- Hold the mouse on a window for its tab counts, sites, last activity, oldest and newest tab, size, and a small map of your monitors showing where the window is
+- The card follows the mouse and switches instantly between tabs; Escape closes it
+- "Show all monitors" in the options draws every monitor on that map (asks for the monitor permission)
+- Hovering and switching layouts are much faster in the popup with many windows and tabs
+
+Options
+- The switches are readable in the dark theme and scale with the browser's zoom
+- Hovering anywhere over an option shows its help text in the header, and it stays while the mouse is there; Popup size, Incognito, Shortcut and What's new have help texts too
+- Enter no longer opens a new window while the options or the window color screen are open
+- The changelog page follows the dark theme
+- The tip in the header no longer changes while the popup is loading
+
 ➤ 6.0.0 ( 1st October 2024 )
 - You can now open single tabs from your saved sessions
 - Experimental: Try to restore window names and colors after a browser restart
@@ -90,145 +146,35 @@ A simple and super-fast Google Extension to help you get the best overview over 
 ➤ 5.1.4 ( 17th June 2020 )
 - Moving multiple tabs would sometimes not work when using the button or [Enter] key. This should be fixed now
 
-➤ 5.1.3 ( 7th November 2019 )
-- Fix: Popup width adjustable again instead of stuck to 800px
-- Fix: Only open the popup from context menu if current browser supports it
-
-➤ 5.1.2 ( 4th November 2019 )
-- Overhauled and more friendlier context menu. You can now open the popup from the context menu, if opening as own tab is the default. You can now also access the changelog from the context menu
-- Increase popup size/width steps to 25
-- Fix: Hide saved windows when a filter is active
-- Fix: Don't break rows on tabs based on the hidden tabs
-- Fix: Sometimes when using the keyboard the tabs would not highlight properly. This should be resolved now.
-- Fix: Background color for dark mode.
-- Performance improvements, such as not rendering hidden tabs to the DOM
-
-➤ 5.1.1 ( 1st November 2019 )
-- Fix: The "highlight duplicate tabs" button may have disappeared - it should be back now
-
-➤ 5.1.0 ( 31st October 2019 )
-- You can now see which tabs are playing sounds and/or music. For this you need to have the "animations" option turned on. The tabs with active sounds will pulsate
-- You can see now which tabs have been discarded by the browser to save memory - the icons will lose their color if they are in a discarded / memory-saving state
-- You can also discard tabs well. Simply select one or more tabs, and press the "discard tabs" button in the bottom right corner
-- New keyboard possibilities : Use the arrow keys to jump between tabs and windows. Use shift+arrow keys to select tabs. Press Escape to delete a search / unselect everything at once.
-- The big block view has now bigger icons. Easier to read on TVs and big resolutions
-- Small design fixes for dark and compact modes and the options page
-- Fix: Sometimes switching to a tab would not focus the new window properly
-- Fix: Sometimes "open in own tab" would not focus on the tab correctly if it was already open
-- Fix: Sometimes the bottom search bar would disappear / be pushed below. This should be resolved now
-- Scroll to the new window when restoring it from saved windows
-- Scroll to the new saved window when saving it
-- When drag and dropping a tab outside of Tab Manager Plus into another program or the browser ( which is not really intended/supported ) it will now paste the URL on drop
-- Under the hood : A rewrite of the extension and upgrade to the latest React version. A big change under the hood with slight performance improvements
-- General performance improvements
-- More options texts regarding shortcuts
-
-➤ 5.0.8 ( 29th October 2019 )
-- You can now backup and restore your saved windows
-- You can now select multiple tabs by using right mouse click while holding shift/ctrl or command. Select the first tab with a right click, and then select the last tab with shift+right mouse click, to select all the tabs in between.
-- You can now set in the options if you'd like to have the Tab Manager open as a popup by default, or in its' own tab
-- Design fixes to have the right amount of tabs per row displayed in the block view
-- Stops auto-scrolling to the first active tab, if the user has already started scrolling
-- Some small fixes to make sure we load correctly also on slower machines
-- Fixes to dark mode in its' own tab - the background was not displayed in the full window
-- Removed buggy animation transitions that would get stuck on hover
-
-➤ 5.0.7 ( 28th October 2019 )
-- Dark mode - you can now enable the dark mode in the options!
-- Close the popup when clicking on a tab, window or restoring a session, but don't close it when we're in a Tab Manager page of its own
-
-➤ 5.0.6 ( 25th October 2019 )
-- Fixed issue where current tab wouldn't be closed when pressing the "close tabs" button
-- Backwards compatibility with older browser versions
-
-➤ 5.0.5 ( 23rd October 2019 )
-- Removed unnecessary chrome permission
-- Slight performance improvements
-
-➤ 5.0.4 ( 23rd October 2019 )
-- Save/restore windows ( beta ) - you can now save and restore windows into your local storage. Please note : History of the tabs will not be preserved. ( Disabled by default )
-- Fixes for search box displays on some configurations
-- Adjustments for wide screens
-- Various other small fixes
-- Close popup after pressing enter
-
-➤ 5.0.3 ( 15th August 2019 )
-- Added context menu to open Tab Manager in its' own tab
-- Small fixes for icon borders not rendering properly
-- Fixes for the search bar when the popup is too narrow
-- Added popup title and favicon
-- Disable popup auto-closing until we have a better solution
-- Fixed Firefox error where a new window would not be created
-
-➤ 5.0.2 ( 6th August 2019 )
-- Hotfix for Chrome to support the browser based api
-
-➤ 5.0.1 ( 6th August 2019 )
-- Fixes to rate and review buttons
-- Added donate option - thank you for keeping this extension alive!
-- Changed description of colorize button to include hint that the window name can be changed as well
-- Changed colorize button to settings
-- Adjusted fonts, so they look nicer
-- Font changes in options menu
-- Added title detection for the about: protocol
-- Launched for Firefox as well!
-
-➤ 5.0.0 ( 5th August 2019 )
-- Added rate and review buttons
-- Updated depreciated chrome api calls to newer ones
-- Prepared Firefox compatibility
-
-➤ 4.9.9 ( 27th February 2019 )
-- If the current tab is not in the initial popup screen, then we'll scroll down to it
-- "Minimize inactive windows" will only minimize windows on the same monitor ( requires additional permission )
-- Small fixes to window titles from last update
-
-➤ 4.9.8 ( 27th February 2019 )
-- Add option to enable/disable window titles
-- Smarter window title detection, especially for super-long titles
-
-➤ 4.9.7 ( 24th January 2019 )
-- Fix small rendering issues
-- Re-arrange some options
-
-➤ 4.9.6 ( 24th January 2019 )
-- Nicer wrapping of windows
-- Show the tabs with the highest count first in the title
-- Fixes in list views for high width popups, sometimes the titles were cut off
-
-➤ 4.9.5 ( 23rd January 2019 )
-- Unnamed windows will show now the top domains in it instead
-- Added a close option to the naming and color popups
-
-➤ 4.9.4 ( 28th June 2018 )
-- Fixes to stuck tab counters
-- Auto-close forgotten tab managers after 100 seconds
-- Various bugfixes and style changes
-
-➤ 4.9.3
-- Fixes for older Chrome versions
-
-➤ 4.9.2
-- Fixes a bug when localStorage is empty
-
-➤ 4.9.1
-- You can now auto-hide Chrome windows that aren't active, having only one Chrome window in focus at a time
-- There's now a separate section for minimized windows - so it's easier to spot them
-- Clicking on a window will activate that window ( instead of having to click on a tab )
-- Fixes to window coloring - sometimes the colors would be lost / applied to the wrong window
-- New options page
-
-➤ 4.9.0
-- Allows you to give windows colors
-- You can now minimize and maximize windows from Tab Manager
-- Minimized windows are now shown as faded out and at the end of the list
-- You can now set the width and height of the popup in the options
+➤ 5.1.3 ( 7th November 2019 ) popup width adjustable again
+➤ 5.1.2 ( 4th November 2019 ) friendlier context menu, faster with many tabs
+➤ 5.1.1 ( 1st November 2019 ) highlight duplicate tabs button is back
+➤ 5.1.0 ( 31st October 2019 ) see tabs playing sound, see and discard sleeping tabs, arrow key navigation
+➤ 5.0.8 ( 29th October 2019 ) backup and restore your saved windows
+➤ 5.0.7 ( 28th October 2019 ) dark mode
+➤ 5.0.6 ( 25th October 2019 ) support for older browser versions
+➤ 5.0.5 ( 23rd October 2019 ) one permission less
+➤ 5.0.4 ( 23rd October 2019 ) save and restore windows
+➤ 5.0.3 ( 15th August 2019 ) open Tab Manager in its own tab
+➤ 5.0.2 ( 6th August 2019 ) Chrome hotfix
+➤ 5.0.1 ( 6th August 2019 ) launched for Firefox
+➤ 5.0.0 ( 5th August 2019 ) rate and review buttons, newer Chrome APIs
+➤ 4.9.9 ( 27th February 2019 ) scroll to the current tab
+➤ 4.9.8 ( 27th February 2019 ) smarter window titles
+➤ 4.9.7 ( 24th January 2019 ) rendering fixes
+➤ 4.9.6 ( 24th January 2019 ) nicer wrapping of windows
+➤ 4.9.5 ( 23rd January 2019 ) unnamed windows show their top sites
+➤ 4.9.4 ( 28th June 2018 ) auto-close forgotten tab managers
+➤ 4.9.3 fixes for older Chrome versions
+➤ 4.9.2 settings fix
+➤ 4.9.1 auto-hide inactive windows, section for minimized windows
+➤ 4.9.0 window colors, minimize and maximize windows
 
 
 
 Tab Manager Plus is open source.
 
-The main purpose of Tab Manager Plus is to find "lost" tabs easily. You can open the Tab Manager with a keyboard shortcut - Ctrl+M / Cmd+M or by clicking on the icon - and then you can type right away!
+The main purpose of Tab Manager Plus is to find "lost" tabs easily. You can open the Tab Manager with a keyboard shortcut - Alt+Shift+M (PC) / Ctrl+Shift+M (Mac) or by clicking on the icon - and then you can type right away!
 
 The Tab Manager will then show you all tabs that match your search terms - by tab title, and by url. If you've found your tab, and it's the only one selected - press "enter" - and you will jump right to it!
 
@@ -236,8 +182,8 @@ If you don't like one of the layouts, there's in total 4 more views available :
 
 ★ Block view ( Shows you groups of icons - each window is one group )
 ★ Big block view ( same as above, but with bigger icons )
-★ Horizontal view ( every window is one line, and every tab is represented by an icon )
-★ Vertical view ( a list of all your tabs - with readable titles )
+★ Rows view ( every window is one line, and every tab is represented by an icon )
+★ List view ( a list of all your tabs - with readable titles )
 
 You can move tabs between windows in every view - and you can select tabs with your right mouse button ( or CTRL+click on Mac ). Once you have selected a few tabs, simply press the "enter" key, and all tabs will be moved to a new browser window.
 
