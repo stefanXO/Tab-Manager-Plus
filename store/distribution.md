@@ -1,27 +1,9 @@
-# Distribution and publisher
-
-## Distribution
+# Distribution
 
 **Payments**: Free of charge
 **Visibility**: Public
 **Regions**: All regions
 
-## Developer Info
+## Package
 
-These are account settings and apply to every item of the publisher.
-
-**Publisher Name**
-
-Tab Manager Plus
-
-**Website**
-
-https://stefanxo.com
-
-**Contact Email**
-
-The address registered with the developer account.
-
-**Trader Status**
-
-Non-trader
+**Verified CRX uploads**: Not opted in
