@@ -156,7 +156,7 @@ const DPR1 = {name: '', os: 1, zoom: 1}
 
 /**
  * Standalone pages from the same build. `ownTheme`: the theme is not forced
- * onto the page; the `dark` setting (storage + the localStorage boot cache) is
+ * onto the page; the `theme` setting (and 6.x's `dark`; storage + the localStorage boot cache) is
  * seeded before load and the page has to apply it itself, so a page that
  * ignores the setting shows up as light in its dark shot. `scales`: also shot
  * at these scales (800x600 and, where the scale has `narrow`, 380x900).
@@ -235,7 +235,7 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 		// 2. layout + theme (+ a state's own settings) through the same storage
 		// the app reads; the fake system.display permission
 		window.__fakeGranted = s.granted
-		await window.__fake.storage.local.set({...s.store, layout: s.layout, dark: s.dark, animations: false})
+		await window.__fake.storage.local.set({...s.store, layout: s.layout, dark: s.dark, theme: s.dark ? 'dark' : 'light', animations: false})
 		await frame()
 
 		// 3. search text, through a real input event
@@ -424,7 +424,7 @@ async function shootPages(scale, sizes, defs) {
 				const name = `${pageDef.name}-na-${theme}-${size.name}${suffix}`
 				if (!want(name)) continue
 				const dark = theme === 'dark'
-				const page = await newPage(size, scale, pageDef.ownTheme ? {dark} : null)
+				const page = await newPage(size, scale, pageDef.ownTheme ? {dark, theme} : null)
 				const res = await page.goto(origin + '/' + pageDef.url, {waitUntil: 'load'})
 				if (!res || !res.ok()) { skipped.push(name + ' (' + pageDef.url + ' did not load)'); await closePage(page); continue }
 				await page.evaluate((dark, force) => {

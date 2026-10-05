@@ -149,7 +149,7 @@ currently on disk — there is no stale copy to forget about.
 | axis | values |
 | --- | --- |
 | layout | `blocks`, `blocks-big`, `horizontal` (Rows), `vertical` (List) — set through the `layout` storage key the app reads |
-| theme | `light`, `dark` — the `dark` storage key, i.e. `<html data-theme="dark">` |
+| theme | `light`, `dark` — the `theme` storage key (and 6.x's boolean `dark`, so older commits shoot too), i.e. `<html data-theme="dark">` |
 | width | `800x600` (popup default), `1100x700` (above the 1001px query), `380x900` (below the 540px query) |
 | state | `plain`, `search` (`github` typed into `.searchBoxInput`), `dup` (Highlight Duplicates clicked), `options` (the wrench screen), `options-switches` (the wrench screen scrolled to the "Window style" box: its on/off switches), `options-advanced` (the wrench screen scrolled to the "Advanced settings" box: incognito / private windows, shortcut key, changelog; dpr 1 only), `options-hover` (the same as `options-switches`, with the real mouse moved onto the Compact mode switch and then onto its description text: the header shows that option's help text), `windowopts` (the window colour/name screen) |
 

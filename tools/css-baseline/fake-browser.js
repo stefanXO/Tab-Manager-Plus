@@ -117,7 +117,7 @@ const sessions = {
 
 const store = {
 	layout: "blocks", tabWidth: 800, tabHeight: 600, animations: false, windowTitles: true, tabactions: true, badge: true,
-	openInOwnTab: false, compact: false, dark: false, sessionsFeature: true, hideWindows: false, "filter-tabs": false, tabLimit: 0,
+	openInOwnTab: false, compact: false, dark: false, theme: "light", sessionsFeature: true, hideWindows: false, "filter-tabs": false, tabLimit: 0,
 	version: "7.0.0", migrated: true,
 	windowNames: { [W1]: "Work", [W2]: "Life", [W3]: "Research" },
 	windowColors: { [W1]: "color9", [W2]: "color1", [W3]: "color6" },
