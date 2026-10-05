@@ -1,12 +1,18 @@
 /* ---------------------------------------------------------------------------
    Narrow: the Firefox sidebar, or a small popup. The header drops buttons.
    Cards never ask for more than the width there is.
+
+   Both queries start at 100px: Chrome sizes an extension popup by laying it
+   out at 25px wide first (its minimum), on every frame that changes anything
+   (a hover, the stats card moving). A plain max-width query matched at 25px
+   and not at the popup's real width, so each frame switched these rules on
+   and off twice, and every switch restyled and laid out the whole popup
+   (all of its elements, and its fonts again: 30-60 ms with ~200 tabs). No
+   real popup, sidebar or tab is under 100px wide.
+   (The popup's 450px minimum gives way below 450px in layout/frame.css,
+   without a query.)
    --------------------------------------------------------------------------- */
-@media (max-width: 450px) {
-	/* the popup's 450px minimum would make the sidebar scroll sideways */
-	html, body {
-		min-width: 0;
-	}
+@media (min-width: 100px) and (max-width: 450px) {
 	/* the bottom bar's height: search box plus one row of actions */
 	:root {
 		--searchbox-height: 4.2rem;
@@ -109,8 +115,9 @@
 	}
 }
 /* the options screen and the changelog: a box spans the width instead of a
-   centred 90%. Kept at 540px, a little wider than the popup block above. */
-@media (max-width: 540px) {
+   centred 90%. Kept at 540px, a little wider than the popup block above.
+   From 100px: see the top of this file. */
+@media (min-width: 100px) and (max-width: 540px) {
 	.optionsBox {
 		width: auto;
 		max-width: none;

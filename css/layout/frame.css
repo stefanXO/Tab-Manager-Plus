@@ -7,8 +7,11 @@
    fill the viewport (src/popup/popup.tsx). layout/narrow.css adapts it below
    450px (the Firefox sidebar, a small popup). */
 
+/* the popup's 450px minimum; a narrower viewport (the Firefox sidebar)
+   gets its own width instead, so it never scrolls sideways (a percentage, not
+   a media query: see layout/narrow.css) */
 html, body {
-	min-width: 450px;
+	min-width: min(450px, 100%);
 	min-height: 400px;
 }
 
