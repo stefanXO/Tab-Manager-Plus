@@ -1,4 +1,5 @@
 import {Layout} from "../helpers/settings";
+import {SearchQuery} from "../popup/search";
 import * as browser from "webextension-polyfill";
 import {ISavedSession} from "./ISavedSession";
 import {MouseEvent} from "react";
@@ -13,6 +14,8 @@ export interface ITab {
 	id: string,
 
 	searchActive: boolean,
+	// the search, for the matched parts of a title (bold in List view)
+	query?: SearchQuery | null,
 	layout: Layout,
 	draggable: boolean,
 

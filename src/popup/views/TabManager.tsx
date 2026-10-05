@@ -131,6 +131,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			tabCount: 0,
 			hiddenCount: 0,
 			searchLen: 0,
+			query: null,
 
 			dirty: false
 		};
@@ -370,6 +371,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 								layout={this.state.layout}
 								selection={this.state.selection}
 								searchActive={this.state.searchLen > 0}
+								query={this.state.query}
 								sessionsFeature={this.state.sessionsFeature}
 								tabactions={this.state.tabactions}
 								hiddenTabs={this.state.hiddenTabs}
@@ -405,6 +407,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 								layout={this.state.layout}
 								selection={this.state.selection}
 								searchActive={this.state.searchLen > 0}
+								query={this.state.query}
 								sessionsFeature={this.state.sessionsFeature}
 								tabactions={this.state.tabactions}
 								hiddenTabs={this.state.hiddenTabs}
@@ -434,6 +437,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 										layout={this.state.layout}
 										selection={this.state.selection}
 										searchActive={this.state.searchLen > 0}
+										query={this.state.query}
 										tabactions={this.state.tabactions}
 										hiddenTabs={this.state.hiddenTabs}
 										filterTabs={this.state.filterTabs}
@@ -857,6 +861,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				hiddenCount: 0,
 				dupTabs: dupTabs,
 				searchLen: searchLen,
+				query: null,
 				dirty: true
 			});
 			return;
@@ -907,6 +912,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			searchLen: searchLen,
 			dupTabs: dupTabs,
 			recentLevel: 0,
+			query: null,
 			dirty: true
 		});
 	}
@@ -942,6 +948,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		this.setState({
 			hiddenCount: hiddenCount,
 			searchLen: recent ? recent.count : 0,
+			query: null,
 			dupTabs: false,
 			recentLevel: recent && recent.count > 0 ? level : 0,
 			topText: recent ? recentText(recent) : "",
@@ -1000,7 +1007,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 
 		this.setState({
 			hiddenCount: hiddenCount,
-			searchLen: searchLen
+			searchLen: searchLen,
+			query: searchLen ? parsed : null
 		})
 
 		const matches = this.state.tabsbyid.size - hiddenCount;
@@ -1069,6 +1077,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			this.setState({
 				searchLen: 0,
 				hiddenCount: 0,
+				query: null,
 				dupTabs: false,
 				recentLevel: 0,
 				dirty: true

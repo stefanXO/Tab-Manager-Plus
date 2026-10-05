@@ -1,5 +1,6 @@
 import {Layout} from "../helpers/settings";
 import {Theme} from "../helpers/theme";
+import {SearchQuery} from "../popup/search";
 ﻿import * as browser from "webextension-polyfill";
 import { ISavedSession} from "@types";
 import { Window } from "@views";
@@ -36,6 +37,7 @@ export interface ITabManagerState {
 
 	lastSelect: number,
 	searchLen: number,
+	query: SearchQuery | null,
 	height: number,
 	hasScrollBar: boolean,
 	focusUpdates: number,

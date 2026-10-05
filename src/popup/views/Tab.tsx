@@ -8,6 +8,7 @@ import {ICommand, ITab, ITabState} from '@types';
 import {ManagerContext, ITabManagerActions} from '../context';
 import {faviconTone} from '@helpers/favicon';
 import {tabFreshness} from "../freshness";
+import {titleHits} from "../search";
 
 export class Tab extends React.Component<ITab, ITabState> {
 	static contextType = ManagerContext;
@@ -88,7 +89,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 			);
 			children.push(
 				<div key={"tab-title-" + this.props.tab.id} className="tabtitle">
-					{this.props.tab.title || ""}
+					{this.title()}
 				</div>
 			);
 			// how recently the tab was used (../freshness.ts): four bars, filled
@@ -159,6 +160,21 @@ export class Tab extends React.Component<ITab, ITabState> {
 				<div className="limiter" />
 			</div>
 		);
+	}
+	// the title, with the parts the search matched in bold
+	title() : React.ReactNode {
+		const title = this.props.tab.title || "";
+		const hits = titleHits(title, this.props.query);
+		if (hits.length === 0) return title;
+		const parts : React.ReactNode[] = [];
+		let at = 0;
+		for (const [start, end] of hits) {
+			if (start > at) parts.push(title.slice(at, start));
+			parts.push(<b key={start} className="search-hit">{title.slice(start, end)}</b>);
+			at = end;
+		}
+		if (at < title.length) parts.push(title.slice(at));
+		return parts;
 	}
 	onHover = () => {
 		this.setState({hovered: true});

@@ -231,6 +231,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 					hidden={isHidden}
 					faded={isFaded}
 					searchActive={this.props.searchActive}
+					query={this.props.query}
 					draggable={true}
 					ref={tabRef}
 					id={"tab-" + tab.id}

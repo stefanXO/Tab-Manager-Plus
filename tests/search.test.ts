@@ -5,7 +5,7 @@
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { parseQuery, matchTab, searchable } from "../src/popup/search.ts";
+import { parseQuery, matchTab, searchable, titleHits } from "../src/popup/search.ts";
 import type { Searchable, SearchQuery } from "../src/popup/search.ts";
 import {
 	RAW_TABS, T,
@@ -750,5 +750,53 @@ describe("unicode: em dash in title", () => {
 		// T.gonnaIssue's title ("Gonna fix it tomorrow — GitHub Issue #12") also
 		// uses an em dash, so it matches too, alongside T.ublock.
 		assert.deepEqual(ids("t:—"), [T.ublock, T.gonnaIssue]);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// titleHits: the parts of a title shown in bold (List view)
+// ---------------------------------------------------------------------------
+describe("titleHits", () => {
+	const hits = (title: string, q: string) => titleHits(title, parseQuery(q));
+	const bold = (title: string, q: string) => {
+		let out = "", at = 0;
+		for (const [s, e] of hits(title, q)) { out += title.slice(at, s) + "_" + title.slice(s, e) + "_"; at = e; }
+		return out + title.slice(at);
+	};
+
+	test("a substring inside a word, case kept", () => {
+		assert.equal(bold("GitHub - acme/webapp", "ithub"), "G_itHub_ - acme/webapp");
+	});
+	test("every occurrence", () => {
+		assert.equal(bold("github github", "git"), "_git_hub _git_hub");
+	});
+	test("several terms; overlapping and touching hits merge", () => {
+		assert.equal(bold("Pull request #418", "pull request"), "_Pull_ _request_ #418");
+		assert.equal(bold("github", "git hub"), "_github_");
+		assert.equal(bold("github", "gith ithu"), "_githu_b");
+	});
+	test("OR: each term that is in the title", () => {
+		assert.equal(bold("reddit and github", "github OR reddit"), "_reddit_ and _github_");
+	});
+	test("quoted phrase and t: count; u: and -excluded do not", () => {
+		assert.equal(bold("Add pull request", '"pull request"'), "Add _pull request_");
+		assert.equal(bold("Release notes", "t:release"), "_Release_ notes");
+		assert.equal(bold("github issue", "u:github"), "github issue");
+		assert.equal(bold("github issue", "issue -github"), "github _issue_");
+	});
+	test("regular expression, every match", () => {
+		assert.equal(bold("Inbox (3) - Mail (12)", "/\\(\\d+\\)/"), "Inbox _(3)_ - Mail _(12)_");
+	});
+	test("an invalid pattern is a substring, like the search", () => {
+		assert.equal(bold("a (b c", "/(b/"), "a _(b_ c");
+	});
+	test("no query, empty query, empty title, no match", () => {
+		assert.deepEqual(titleHits("github", null), []);
+		assert.deepEqual(hits("github", ""), []);
+		assert.deepEqual(hits("", "git"), []);
+		assert.deepEqual(hits("github", "reddit"), []);
+	});
+	test("a title whose length changes when lowercased: no hits, not wrong ones", () => {
+		assert.deepEqual(hits("İstanbul github", "github"), []);
 	});
 });

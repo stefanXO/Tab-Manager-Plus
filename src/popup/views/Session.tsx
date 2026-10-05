@@ -52,6 +52,7 @@ export class Session extends React.Component<ISession, ISessionState> {
 					faded={isFaded}
 					draggable={false}
 					searchActive={this.props.searchActive}
+					query={this.props.query}
 				/>
 			);
 		});

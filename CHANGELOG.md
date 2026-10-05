@@ -28,6 +28,7 @@ Searching And Duplicates
 - Search for a phrase with a space by quoting it: `"pull request"` (#224)
 - Search with a regular expression: `/\(\d+\)/` finds tabs with an unread count, `/localhost:\d+/` local dev servers, `/\.pdf$/` open PDFs (#247, #156)
 - Hover the search box for the whole search syntax
+- List view shows the part of a title that matched the search in bold
 - Highlight recently active tabs: the new clock button in the bar selects the tabs you used last: the shortest span (15 minutes, 3 hours, 12 hours, 2 days ...) with more than one tab in it. Click again to reach further back, twice more (the clock moves to 6 and 9), a fourth click turns it off
 
 Windows And Sessions

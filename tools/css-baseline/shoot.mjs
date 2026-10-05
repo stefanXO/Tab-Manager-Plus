@@ -84,6 +84,9 @@ const STATES = [
 	{name: 'plain', layouts: LAYOUTS, scaleLayouts: LAYOUTS, apply: {}},
 	{name: 'search', layouts: LAYOUTS, scaleLayouts: ['blocks'], apply: {search: 'github'}},
 	{name: 'dup', layouts: LAYOUTS, scaleLayouts: ['blocks'], apply: {dup: true}},
+	// a search that hits inside title words ("redirect", "Request", "React",
+	// "reddit"): the List view shows the matched parts in bold. dpr 1, List only
+	{name: 'search-title', layouts: ['vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {search: 're'}},
 	// "Highlight recently active tabs" clicked (the fixture's lastAccessed: 6
 	// tabs within the hour). dpr 1, blocks + List, 800x600 and 380x900 only
 	{name: 'recent', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {recent: 1}},

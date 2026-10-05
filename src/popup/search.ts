@@ -15,6 +15,8 @@ export interface SearchTerm {
 	field : "any" | "title" | "url";
 	negate : boolean;
 	test : (s : string) => boolean;
+	// where the term matches in `s` (original case), as [start, end) pairs
+	hits : (s : string) => [number, number][];
 }
 
 export interface SearchQuery {
@@ -60,23 +62,40 @@ function term(token : string) : SearchTerm | null {
 	if (rest.length === 0) return null;
 
 	let test : SearchTerm["test"];
+	let hits : SearchTerm["hits"];
 	const rx = /^\/(.+)\/(i?)$/.exec(rest);
 	const quoted = /^"(.*)"$/.exec(rest);
+	let lit : string;
 	if (rx) {
 		try {
 			const r = new RegExp(rx[1], "i");
+			const all = new RegExp(rx[1], "gi");
 			test = (s) => r.test(s);
+			hits = (s) => {
+				const out : [number, number][] = [];
+				for (const m of s.matchAll(all)) if (m[0].length > 0) out.push([m.index, m.index + m[0].length]);
+				return out;
+			};
+			return { field, negate, test, hits };
 		} catch (e) {
 			// not a valid pattern: search for its text as it is
-			const lit = rx[1].toLowerCase();
-			test = (s) => s.indexOf(lit) >= 0;
+			lit = rx[1].toLowerCase();
 		}
 	} else {
-		const lit = (quoted ? quoted[1] : rest).toLowerCase();
+		lit = (quoted ? quoted[1] : rest).toLowerCase();
 		if (lit.length === 0) return null;
-		test = (s) => s.indexOf(lit) >= 0;
 	}
-	return { field, negate, test };
+	test = (s) => s.indexOf(lit) >= 0;
+	hits = (s) => {
+		const out : [number, number][] = [];
+		const lower = s.toLowerCase();
+		// a few characters change length when lowercased (İ): the offsets
+		// would be off, so no hits rather than wrong ones
+		if (lower.length !== s.length) return out;
+		for (let i = lower.indexOf(lit); i >= 0; i = lower.indexOf(lit, i + lit.length)) out.push([i, i + lit.length]);
+		return out;
+	};
+	return { field, negate, test, hits };
 }
 
 export function parseQuery(query : string) : SearchQuery {
@@ -102,4 +121,23 @@ export function matchTab(tab : Searchable, query : SearchQuery) : boolean {
 		return t.negate ? !found : found;
 	};
 	return query.mode === "or" ? query.terms.some(hit) : query.terms.every(hit);
+}
+
+// The parts of a title the search matched, to show in bold: every term that
+// looks at the title (not url-only, not excluded), sorted, overlaps merged.
+export function titleHits(title : string, query : SearchQuery | null) : [number, number][] {
+	if (!query || query.empty || !title) return [];
+	const all : [number, number][] = [];
+	for (const t of query.terms) {
+		if (t.negate || t.field === "url") continue;
+		all.push(...t.hits(title));
+	}
+	all.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+	const out : [number, number][] = [];
+	for (const [start, end] of all) {
+		const last = out[out.length - 1];
+		if (last && start <= last[1]) last[1] = Math.max(last[1], end);
+		else out.push([start, end]);
+	}
+	return out;
 }
