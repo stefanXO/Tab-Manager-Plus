@@ -165,23 +165,28 @@ const PAGES = [
 
 // ------------------------------------------------------------------ browser
 async function launch() {
-	try {
-		const puppeteer = (await import('puppeteer')).default
-		return await puppeteer.launch({headless: true, args: BROWSER_ARGS, ...LAUNCH_EXTRA})
-	} catch (e) {
-		if (e && e.code !== 'ERR_MODULE_NOT_FOUND') throw e
-	}
 	const puppeteer = (await import('puppeteer-core')).default
+	const {existsSync, readdirSync} = await import('node:fs')
+	const {homedir} = await import('node:os')
+	// a pinned build from `npx @puppeteer/browsers install chrome@<version>`
+	// (see README) wins over the system Chrome, which auto-updates
+	const pinned = join(homedir(), '.cache', 'puppeteer', 'chrome')
+	const pinnedExe = existsSync(pinned) ? readdirSync(pinned).sort().reverse().map((d) => [
+		join(pinned, d, 'chrome-win64', 'chrome.exe'),
+		join(pinned, d, 'chrome-linux64', 'chrome'),
+		join(pinned, d, 'chrome-mac-arm64', 'Google Chrome for Testing.app', 'Contents', 'MacOS', 'Google Chrome for Testing'),
+		join(pinned, d, 'chrome-mac-x64', 'Google Chrome for Testing.app', 'Contents', 'MacOS', 'Google Chrome for Testing'),
+	]).flat() : []
 	const candidates = [
 		process.env.CHROME_PATH,
+		...pinnedExe,
 		'C:/Program Files/Google/Chrome/Application/chrome.exe',
 		'C:/Program Files (x86)/Google/Chrome/Application/chrome.exe',
 		'/usr/bin/google-chrome',
 		'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
 	].filter(Boolean)
-	const {existsSync} = await import('node:fs')
 	const executablePath = candidates.find((p) => existsSync(p))
-	if (!executablePath) throw new Error('no Chrome found; run `npm i -D puppeteer && npx puppeteer browsers install chrome`')
+	if (!executablePath) throw new Error('no Chrome found; install Chrome, set CHROME_PATH, or see README "First-time setup"')
 	return await puppeteer.launch({headless: true, executablePath, args: BROWSER_ARGS, ...LAUNCH_EXTRA})
 }
 const BROWSER_ARGS = ['--force-color-profile=srgb', '--font-render-hinting=none', '--disable-lcd-text', '--disable-features=PaintHolding']

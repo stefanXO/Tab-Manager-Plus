@@ -118,19 +118,23 @@ exits 0 — `compare.mjs` is the pass/fail gate. `tools/css-baseline/report/` an
 
 ## First-time setup
 
-The harness uses the repo's own `puppeteer` devDependency, which pins the Chrome
-build it downloads. `npm install` in this repo does **not** run puppeteer's
-postinstall (the repo gates install scripts through `allowScripts`), so fetch the
-browser once:
+The harness drives Chrome through `puppeteer-core`, which downloads no browser,
+so `npm install` (locally and in CI) stays small. `shoot.mjs` looks for Chrome in
+this order:
+
+1. `$CHROME_PATH`
+2. a pinned build in `~/.cache/puppeteer/chrome/` (newest first)
+3. the system Chrome in its usual install location
+
+The system Chrome works but auto-updates, and text renders slightly differently
+between Chrome versions (see "Chrome version" below). Take the baseline and the
+compare with the same build. For results that stay put across updates, install a
+pinned build once (about 435 MB):
 
 ```sh
 npm install
-npx puppeteer browsers install chrome
+npx @puppeteer/browsers install chrome@154.0.8037.57 --path ~/.cache/puppeteer
 ```
-
-If you would rather use a Chrome already on the machine, `shoot.mjs` falls back
-to `puppeteer-core` plus `$CHROME_PATH` / the usual install locations — but see
-the warning about Chrome versions below.
 
 ## What it captures
 
@@ -226,8 +230,8 @@ would otherwise drift, and how they are pinned:
 
 Text rasterisation is Chrome-version-specific, so a baseline is only comparable
 against a run on the **same Chrome build** (this one was recorded on
-`Chrome/154.0.8037.57`, the build pinned by `puppeteer@25`). Upgrading puppeteer
-means re-recording the baseline. This is also why regenerating the baseline (see
+`Chrome/154.0.8037.57`). A Chrome update, or switching between the pinned build
+and the system Chrome, means re-recording the baseline. This is also why regenerating the baseline (see
 below) beats committing it: both sides of the comparison then come from the same
 machine and the same browser.
 
@@ -245,7 +249,7 @@ check that commit out in a worktree and shoot there:
 # <ref> = the last commit before the refactor, e.g. HEAD~1 or a branch point
 git worktree add ../tmp-css-base <ref>
 cd ../tmp-css-base
-npm ci && npx puppeteer browsers install chrome
+npm ci && npx @puppeteer/browsers install chrome@154.0.8037.57 --path ~/.cache/puppeteer
 node tools/css-baseline/shoot.mjs "$PWD/../css-baseline-ref"
 cd -
 
