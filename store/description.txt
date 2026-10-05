@@ -21,7 +21,7 @@ A simple and super-fast Google Extension to help you get the best overview over 
   ➤ Switch to found tab with "Enter"
   ➤ Move multiple highlighted tabs with "Enter"
   ➤ Search in titles with t:word, in urls with u:word, leave tabs out with -word, search "a phrase" or a /regular expression/
-➤ Switch to your previously active tab with Shift+Ctrl+Space / Shift+Cmd+Space
+➤ Switch to your previously active tab with Alt+Shift+Comma (PC) / Ctrl+Shift+Comma (Mac)
 ➤ Limit open tabs - Tab Manager will open a new tab in a new window once your limit is reached
 ➤ Create new Tabs & Windows
 ➤ Move Tabs between Windows
@@ -32,7 +32,7 @@ A simple and super-fast Google Extension to help you get the best overview over 
 ➤ Name and color your windows - names and colors survive a browser restart
 ➤ Save windows and restore them later, with their size and position
 ➤ Hold the mouse on a tab or window for details: last used, tab counts, sites, monitor
-➤ Light and dark theme
+➤ Light and dark theme, or follow your system
 ➤ Supports incognito mode, if you enable it
 
 ★  Updates
@@ -41,6 +41,7 @@ A simple and super-fast Google Extension to help you get the best overview over 
 A Brand New Look!
 - Every layout redesigned: Block view is a grid, List view (was Vertical) shows one tab per line, Rows view (was Horizontal) one window per row (#58)
 - Dark theme rebuilt with consistent colors; window colors show as a colored edge; scrollbars and controls are dark too (#99, #151)
+- Theme: System, Light or Dark. System is the new default and follows your operating system's dark mode, also while the popup is open; if you had dark mode on, it stays dark
 - New window color palette, with a matching set for the dark theme
 - Favicons: white icons stay visible in the light theme, and icons refresh when a tab finishes loading (#251)
 - Badges show a tab's state: playing sound, muted, asleep (put to sleep by the browser), pinned, active, selected. In List view as chips with a colored edge on the left (#171)
@@ -65,7 +66,8 @@ Searching And Duplicates
 - Search for a phrase with a space by quoting it: "pull request" (#224)
 - Search with a regular expression: /\(\d+\)/ finds tabs with an unread count, /localhost:\d+/ local dev servers, /\.pdf$/ open PDFs (#247, #156)
 - Hover the search box for the whole search syntax
-- Highlight recently active tabs: the new clock button in the bar selects the tabs you used last. It finds the time span itself from how your activity clusters: a burst of tabs in the last minutes, or the last hour, or the last day, and stops where the gap to older tabs gets big
+- List view shows the part of a title that matched the search in bold
+- Highlight recently active tabs: the new clock button in the bar selects the tabs you used last: the shortest span (15 minutes, 3 hours, 12 hours, 2 days ...) with more than one tab in it. Click again to reach further back, twice more (the clock moves to 6 and 9), a fourth click turns it off
 
 Windows And Sessions
 - Window names and colors survive a browser restart, even when the window's tabs changed since
@@ -87,6 +89,9 @@ Tab And Window Info
 - Hovering and switching layouts are much faster in the popup with many windows and tabs
 
 Options
+- The options list each keyboard shortcut with its current key, or "Not set"
+- "Donate and Rate buttons" in the options hides those two buttons at the top of the popup
+- New default keys for new installs, as the browser took the old ones: Alt+Shift+M opens Tab Manager Plus, Alt+Shift+, switches to the previous tab (Ctrl+Shift+M and Ctrl+Shift+, on Mac). Existing installs keep their keys
 - The switches are readable in the dark theme and scale with the browser's zoom
 - Hovering anywhere over an option shows its help text in the header, and it stays while the mouse is there; Popup size, Incognito, Shortcut and What's new have help texts too
 - Enter no longer opens a new window while the options or the window color screen are open
