@@ -120,6 +120,9 @@
 		--switch-on: var(--green-switch);
 		--switch-on-border: transparent;
 		--switch-knob-on: var(--dk-ground);
+		--kbd-bg: var(--dk-tile);
+		--kbd-border: var(--dk-line-strong);
+		--warning-text: var(--red-text-soft);
 
 		--popover-border: var(--dk-line);
 		--popover-text: var(--dk-text);

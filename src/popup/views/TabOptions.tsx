@@ -8,6 +8,7 @@ import {getLocalStorage, setLocalStorage} from "@helpers/storage";
 import {currentShowMonitors, saveSetting, Settings} from "@helpers/settings";
 import {switchShowMonitors} from "@helpers/monitors";
 import {sizePopup} from "@helpers/popup_size";
+import {getShortcuts} from "@helpers/shortcuts";
 import {applyTheme} from "@helpers/theme";
 import * as S from "@strings";
 import {ActionOption, NumberOption, OptionsBox, SwitchOption} from "./options";
@@ -40,8 +41,8 @@ const HELP = {
 		? "How to allow Tab Manager Plus in private windows, to see your private tabs too"
 		: "Opens the browser's extension settings, where you can allow Tab Manager Plus in incognito windows",
 	shortcuts: IS_FIREFOX && !CAN_OPEN_SHORTCUTS
-		? "How to change or turn off the key that opens Tab Manager Plus"
-		: "Opens the browser's shortcut settings, to change or turn off the key that opens Tab Manager Plus",
+		? "Lists the keys set now, and how to change or turn off the key that opens Tab Manager Plus"
+		: "Lists the keys set now. The link opens the browser's shortcut settings, to change or turn off the key that opens Tab Manager Plus",
 	changelog: "Opens the list of changes of every release in a new tab",
 	tabActions: "Adds 'Open a new tab' and 'Close this window' option to each window. Default : on",
 } as const;
@@ -62,6 +63,10 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 
 	}
 	async componentDidMount() {
+		// the keys change in the browser's shortcut settings: read them again
+		// when the user comes back from there
+		window.addEventListener("focus", this.loadShortcuts);
+		this.loadShortcuts();
 		// Firefox has no link to its private windows setting, so show where it stands
 		if (IS_FIREFOX) {
 			const incognitoAllowed = await browser.extension.isAllowedIncognitoAccess().catch(() => undefined);
@@ -75,6 +80,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		}
 	}
 	componentWillUnmount() {
+		window.removeEventListener("focus", this.loadShortcuts);
 		if (!IS_FIREFOX) {
 			browser.permissions.onAdded?.removeListener(this.checkMonitorAccess);
 			browser.permissions.onRemoved?.removeListener(this.checkMonitorAccess);
@@ -89,6 +95,25 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		const { setting, enabled } = await currentShowMonitors();
 		if (run !== this.monitorCheck) return;
 		if (enabled !== this.state.monitorAccess || setting !== this.state.showMonitors) this.setState({ monitorAccess: enabled, showMonitors: setting });
+	}
+	loadShortcuts = async () => {
+		const shortcuts = await getShortcuts();
+		this.setState({ shortcuts });
+	}
+	// Each command with its current key, or "Not set"
+	shortcutList() {
+		const shortcuts = this.state.shortcuts;
+		if (!shortcuts?.length) return null;
+		return (
+			<ul className="shortcut-list">
+				{shortcuts.map((s) => (
+					<li key={s.name}>
+						<span className="shortcut-label">{s.label}</span>
+						{s.shortcut ? <kbd>{s.shortcut}</kbd> : <span className="shortcut-unset">Not set</span>}
+					</li>
+				))}
+			</ul>
+		);
 	}
 	// The help text for a whole option section. TabManager's delegated
 	// mouseover reads data-hover from the closest element that has one (a
@@ -313,6 +338,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 					{IS_FIREFOX && !CAN_OPEN_SHORTCUTS ? (
 						<div className="toggle-box" {...this.help("shortcuts")}>
 							<strong>Change shortcut key</strong>
+							{this.shortcutList()}
 							<div className="option-description">
 								If you want to disable or change the shortcut key with which to open Tab Manager Plus, you can do so in the add-ons settings: open about:addons,
 								click the settings cog, and then 'Manage Extension Shortcuts'.
@@ -323,6 +349,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 							<a href="#" onClick={this.openShortcuts}>
 								Change shortcut key
 							</a>
+							{this.shortcutList()}
 							<div className="option-description">If you want to disable or change the shortcut key with which to open Tab Manager Plus, you can do so here.</div>
 						</div>
 					)}

@@ -44,16 +44,16 @@
 	"commands": {
 		"_execute_action": {
 			"suggested_key": {
-				"default": "Ctrl+Shift+M",
-				"windows": "Ctrl+Shift+M",
-				"mac": "Command+Shift+M"
+				"default": "Alt+Shift+M",
+				"windows": "Alt+Shift+M",
+				"mac": "MacCtrl+Shift+M"
 			}
 		},
 		"switch_to_previous_active_tab": {
 			"suggested_key": {
-				"default": "Ctrl+Shift+Space",
-				"windows": "Ctrl+Shift+Space",
-				"mac": "Command+Shift+Space"
+				"default": "Alt+Shift+Comma",
+				"windows": "Alt+Shift+Comma",
+				"mac": "MacCtrl+Shift+Comma"
 			},
 			"description": "Switches to previously active tab"
 		}

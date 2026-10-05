@@ -58,6 +58,9 @@
 	--yellow: yellow;
 	--yellow-soft: #ffff97;
 
+	--red-text: #b3261e;
+	--red-text-soft: #f2b8b5;
+
 	/* dark palette (the values body.dark used to carry) */
 	--dk-ground: #151a1f;
 	--dk-panel: #1e252b;
@@ -222,6 +225,11 @@
 	--switch-on: var(--green-switch-deep);
 	--switch-on-border: rgba(0, 0, 0, 0.1);
 	--switch-knob-on: var(--white);
+
+	/* options screen: the shortcut keys (a <kbd> each), and "Not set" */
+	--kbd-bg: var(--gray-75);
+	--kbd-border: var(--gray-250);
+	--warning-text: var(--red-text);
 
 	/* changelog */
 	--link-chip-bg: rgba(255, 255, 255, 0.7);

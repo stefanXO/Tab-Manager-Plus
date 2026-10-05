@@ -58,6 +58,32 @@
 	text-align: left;
 }
 
+/* the shortcut box: each command and its current key */
+.shortcut-list {
+	list-style: none;
+	margin: 0.4rem 0;
+	padding: 0;
+	font-size: 0.75rem;
+}
+.shortcut-list li {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	gap: 1rem;
+	padding: 0.15rem 0;
+}
+.shortcut-list kbd {
+	padding: 0.05rem 0.4rem;
+	border: 1px solid var(--kbd-border);
+	border-radius: 3px;
+	background: var(--kbd-bg);
+	white-space: nowrap;
+}
+.shortcut-unset {
+	color: var(--warning-text);
+	font-style: italic;
+}
+
 .option-description {
 	clear: both;
 	padding-bottom: 20px;

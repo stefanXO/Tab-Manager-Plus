@@ -1,4 +1,5 @@
 ﻿import type {ShowMonitors} from "@helpers/monitors";
+import type {Shortcut} from "@helpers/shortcuts";
 
 export interface ITabOptionsState {
 	// Firefox: whether the extension may run in private windows (unknown until read)
@@ -7,4 +8,6 @@ export interface ITabOptionsState {
 	// system.display permission granted), and the setting itself
 	monitorAccess? : boolean;
 	showMonitors? : ShowMonitors;
+	// the extension's commands and their current keys (unknown until read)
+	shortcuts? : Shortcut[];
 }
