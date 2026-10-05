@@ -79,9 +79,14 @@
 	background: var(--kbd-bg);
 	white-space: nowrap;
 }
+.shortcut-list kbd,
+.shortcut-unset {
+	flex-shrink: 0;
+}
 .shortcut-unset {
 	color: var(--warning-text);
 	font-style: italic;
+	white-space: nowrap;
 }
 
 .option-description {
