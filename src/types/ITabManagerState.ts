@@ -20,6 +20,7 @@ export interface ITabManagerState {
 	layout: Layout,
 	openInOwnTab: boolean,
 	sessionsFeature: boolean,
+	supportLinks: boolean,
 	tabHeight: number,
 	tabLimit: number,
 	tabWidth: number,

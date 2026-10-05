@@ -6,7 +6,7 @@ import {ITabManagerState} from "@types";
 export type ISettings = Pick<ITabManagerState,
 	"layout" | "animations" | "windowTitles" | "tabLimit" | "openInOwnTab" |
 	"tabWidth" | "tabHeight" | "compact" | "theme" | "tabactions" | "badge" |
-	"hideWindows" | "sessionsFeature" | "filterTabs">;
+	"hideWindows" | "sessionsFeature" | "filterTabs" | "supportLinks">;
 
 // What child views may ask the TabManager to do. Children get this through
 // ManagerContext instead of a reference to the component instance, so they

@@ -81,6 +81,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		let badge = s.badge;
 		let sessionsFeature = s.sessionsFeature;
 		let hideWindows = s.hideWindows;
+		let supportLinks = s.supportLinks;
 		let filterTabs = s["filter-tabs"];
 		let tabLimit = s.tabLimit;
 		let openInOwnTab = s.openInOwnTab;
@@ -103,6 +104,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			badge: badge,
 			hideWindows: hideWindows,
 			sessionsFeature: sessionsFeature,
+			supportLinks: supportLinks,
 			lastOpenWindow: -1,
 			windows: [],
 			lastActive: boot ? boot.lastActive : new Map(),
@@ -211,7 +213,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			layout: st.layout, tabLimit: st.tabLimit, tabWidth: st.tabWidth, tabHeight: st.tabHeight,
 			animations: st.animations, windowTitles: st.windowTitles, tabactions: st.tabactions, badge: st.badge,
 			openInOwnTab: st.openInOwnTab, compact: st.compact, theme: st.theme, sessionsFeature: st.sessionsFeature,
-			hideWindows: st.hideWindows, "filter-tabs": st.filterTabs
+			hideWindows: st.hideWindows, supportLinks: st.supportLinks, "filter-tabs": st.filterTabs
 		};
 	}
 
@@ -233,6 +235,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			badge: s.badge,
 			hideWindows: s.hideWindows,
 			sessionsFeature: s.sessionsFeature,
+			supportLinks: s.supportLinks,
 			filterTabs: s["filter-tabs"]
 		});
 	}
@@ -339,7 +342,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 					" " +
 					(this.state.animations ? "animations" : "no-animations") +
 					" " +
-					(this.state.windowTitles ? "windowTitles" : "no-windowTitles")
+					(this.state.windowTitles ? "windowTitles" : "no-windowTitles") +
+					(this.state.supportLinks ? "" : " no-supportLinks")
 				}
 				onKeyDown={this.checkKey}
 				onMouseOver={this.hoverOver}
@@ -463,16 +467,17 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 						badge={this.state.badge}
 						hideWindows={this.state.hideWindows}
 						sessionsFeature={this.state.sessionsFeature}
+						supportLinks={this.state.supportLinks}
 						sessions={this.state.sessions}
 					/>
 				</div>}
 				<div className="window top" ref={this.topHoverRef}>
-					<div className="icon windowaction donate" title="Donate a Coffee" onClick={this.donate} />
-					<div
+					{this.state.supportLinks && <div className="icon windowaction donate" title="Donate a Coffee" onClick={this.donate} />}
+					{this.state.supportLinks && <div
 						className="icon windowaction rate"
 						title="Rate Tab Manager Plus"
 						onClick={this.rateExtension}
-					/>
+					/>}
 					<div className="icon windowaction options" title="Options" onClick={this.toggleOptions} />
 					<input
 						type="text"

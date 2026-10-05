@@ -9,6 +9,7 @@ export interface ITabOptions {
 	hideWindows: boolean,
 	openInOwnTab: boolean,
 	sessionsFeature: boolean,
+	supportLinks: boolean,
 	tabHeight: number,
 	tabLimit: number,
 	tabWidth: number,

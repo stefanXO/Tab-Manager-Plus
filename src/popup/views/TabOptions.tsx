@@ -29,6 +29,7 @@ const HELP = {
 	compact: "Compact mode is a more compressed layout. Default : off",
 	animations: "Enables/disables animations. Default : on",
 	windowTitles: "Enables/disables window titles. Default : on",
+	supportLinks: "Shows the Donate and Rate buttons at the top of the popup. Default : on",
 	sessions: "Allows you to save/restore windows into sessions. ( Tab History will be lost ) Default : off",
 	exportSessions: "Allows you to export your saved windows to an external backup",
 	importSessions: "Allows you to restore your saved windows from an external backup",
@@ -50,7 +51,7 @@ type HelpKey = keyof typeof HELP;
 
 // The settings the options screen changes through store(); the on/off ones
 // through toggle().
-type SwitchSetting = "animations" | "windowTitles" | "compact" | "tabactions" | "badge" | "openInOwnTab" | "sessionsFeature" | "hideWindows";
+type SwitchSetting = "animations" | "windowTitles" | "supportLinks" | "compact" | "tabactions" | "badge" | "openInOwnTab" | "sessionsFeature" | "hideWindows";
 type OptionSetting = SwitchSetting | "theme" | "tabLimit" | "tabWidth" | "tabHeight";
 
 const THEME_CHOICES : readonly { value : Theme, label : string }[] = [
@@ -226,6 +227,15 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 						description="Disables/enables window titles. "
 						notes={["By default: enabled"]}
 					/>
+					<SwitchOption
+						id="enable_supportLinks"
+						help={this.help("supportLinks")}
+						label="Donate and Rate buttons"
+						checked={p.supportLinks}
+						onChange={() => this.toggle("supportLinks", "supportLinks")}
+						description="Shows the Donate and Rate buttons next to the options button at the top of the popup. "
+						notes={["By default: enabled"]}
+					/>
 				</OptionsBox>
 				<OptionsBox title="Session Management">
 					<SwitchOption
@@ -399,7 +409,10 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 			await browser.tabs.create({ url: "chrome://extensions/shortcuts" });
 		}
 	}
+	// Credits for the code and images the extension ships; changelog.html
+	// carries a static copy of the same text
 	licenses() {
+		const link = (href : string, text : string) => <a href={href} target="_blank" rel="noopener">{text}</a>;
 		return (
 			<div className="licenses" key="licenses">
 				<div className="license">

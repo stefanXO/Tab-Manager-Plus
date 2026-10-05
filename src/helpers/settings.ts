@@ -36,6 +36,8 @@ export interface Settings {
 	theme : Theme;
 	sessionsFeature : boolean;
 	hideWindows : boolean;
+	// the header's Donate and Rate buttons
+	supportLinks : boolean;
 	// Chrome: "Show all monitors", see ./monitors.ts
 	showMonitors : ShowMonitors;
 	"filter-tabs" : boolean;
@@ -55,6 +57,7 @@ export const SETTING_DEFAULTS : Settings = {
 	theme: "system",
 	sessionsFeature: false,
 	hideWindows: false,
+	supportLinks: true,
 	showMonitors: "unset",
 	"filter-tabs": false
 };

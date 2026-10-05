@@ -61,6 +61,7 @@ Tab And Window Info
 
 Options
 - The options list each keyboard shortcut with its current key, or "Not set"
+- "Donate and Rate buttons" in the options hides those two buttons at the top of the popup
 - New default keys for new installs, as the browser took the old ones: Alt+Shift+M opens Tab Manager Plus, Alt+Shift+, switches to the previous tab (Ctrl+Shift+M and Ctrl+Shift+, on Mac). Existing installs keep their keys
 - The switches are readable in the dark theme and scale with the browser's zoom
 - Hovering anywhere over an option shows its help text in the header, and it stays while the mouse is there; Popup size, Incognito, Shortcut and What's new have help texts too
