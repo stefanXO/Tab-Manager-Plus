@@ -36,7 +36,7 @@ const HELP = {
 	badge: "Shows the number of open tabs on the Tab Manager icon. Default : on",
 	openInOwnTab: "Open the Tab Manager by default in own tab, or as a popup?",
 	hide: "Automatically minimizes inactive browser windows. Default : off",
-	monitors: "Lets the window card's map show every monitor, not just the one this popup is on. Default : off",
+	monitors: "Lets the window card's map show every monitor, not just the one this popup is on. Recommended : on",
 	popupSize: "The size of the popup, at most 800x600 (a browser limit). Default : 800x600",
 	incognito: IS_FIREFOX
 		? "How to allow Tab Manager Plus in private windows, to see your private tabs too"
@@ -313,7 +313,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 							checked={!!this.state.monitorAccess}
 							onChange={this.toggleMonitors}
 							description="The window card (hover a window) draws a map of your monitors and where the window is. With this on it knows all of them; it asks the browser for permission to read your display layout, the same one Minimize inactive windows uses."
-							notes={["By default: disabled"]}
+							notes={["Recommended: enabled", "Starts disabled: the browser only grants the permission when you turn it on"]}
 						/>
 					)}
 					<SwitchOption
