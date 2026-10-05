@@ -5,7 +5,8 @@ import * as browser from 'webextension-polyfill';
 import { ICommand, ITabOptions, ITabOptionsState } from "@types";
 import {ManagerContext, ITabManagerActions, ISettings} from "../context";
 import {getLocalStorage, setLocalStorage} from "@helpers/storage";
-import {saveSetting, Settings} from "@helpers/settings";
+import {currentShowMonitors, saveSetting, Settings} from "@helpers/settings";
+import {switchShowMonitors} from "@helpers/monitors";
 import {sizePopup} from "@helpers/popup_size";
 import {applyTheme} from "@helpers/theme";
 import * as S from "@strings";
@@ -33,6 +34,7 @@ const HELP = {
 	badge: "Shows the number of open tabs on the Tab Manager icon. Default : on",
 	openInOwnTab: "Open the Tab Manager by default in own tab, or as a popup?",
 	hide: "Automatically minimizes inactive chrome windows. Default : off",
+	monitors: "Lets the window card's map show every monitor, not just the one this popup is on. Default : off",
 	popupSize: "The size of the popup, at most 800x600 (a browser limit). Default : 800x600",
 	incognito: IS_FIREFOX
 		? "How to allow Tab Manager Plus in private windows, to see your private tabs too"
@@ -64,7 +66,29 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		if (IS_FIREFOX) {
 			const incognitoAllowed = await browser.extension.isAllowedIncognitoAccess().catch(() => undefined);
 			this.setState({ incognitoAllowed });
+		} else {
+			// "Show all monitors": a setting of its own next to the system.display
+			// permission (which "Minimize inactive windows" can grant as well)
+			browser.permissions.onAdded?.addListener(this.checkMonitorAccess);
+			browser.permissions.onRemoved?.addListener(this.checkMonitorAccess);
+			await this.checkMonitorAccess();
 		}
+	}
+	componentWillUnmount() {
+		if (!IS_FIREFOX) {
+			browser.permissions.onAdded?.removeListener(this.checkMonitorAccess);
+			browser.permissions.onRemoved?.removeListener(this.checkMonitorAccess);
+		}
+	}
+	// Reads the setting + permission, applying the unset -> on rule. Only the
+	// latest call sets the state: a permission event racing a click must not
+	// show what was stored before the click's own save.
+	private monitorCheck = 0;
+	checkMonitorAccess = async () => {
+		const run = ++this.monitorCheck;
+		const { setting, enabled } = await currentShowMonitors();
+		if (run !== this.monitorCheck) return;
+		if (enabled !== this.state.monitorAccess || setting !== this.state.showMonitors) this.setState({ monitorAccess: enabled, showMonitors: setting });
 	}
 	// The help text for a whole option section. TabManager's delegated
 	// mouseover reads data-hover from the closest element that has one (a
@@ -238,6 +262,17 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 						description="With this option enabled, you will only have 1 open window per monitor at all times. When you switch to another window, the other windows will be minimized to the tray automatically."
 						notes={["By default: disabled"]}
 					/>}
+					{!IS_FIREFOX && (
+						<SwitchOption
+							id="monitors_mode"
+							help={this.help("monitors")}
+							label="Show all monitors"
+							checked={!!this.state.monitorAccess}
+							onChange={this.toggleMonitors}
+							description="The window card (hover a window) draws a map of your monitors and where the window is. With this on it knows all of them; it asks the browser for permission to read your display layout, the same one Minimize inactive windows uses."
+							notes={["By default: disabled"]}
+						/>
+					)}
 					<SwitchOption
 						id="tabactions_mode"
 						help={this.help("tabActions")}
@@ -529,6 +564,21 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		}
 		this.showHelp("importSessions");
 		this.context.reload();
+	}
+	// Chrome only. On: asks for the system.display permission from this click
+	// (when missing); denied leaves the setting and the switch off. Off: the
+	// setting "off", which a later grant never undoes. The permission is never
+	// given back here: "Minimize inactive windows" may need it.
+	toggleMonitors = async () => {
+		const turnOn = !this.state.monitorAccess;
+		this.monitorCheck++;
+		const granted = turnOn
+			? await chrome.permissions.request({ permissions: ["system.display"] }).catch(() => false)
+			: false;
+		const setting = switchShowMonitors(this.state.showMonitors || "unset", turnOn, granted);
+		await saveSetting("showMonitors", setting);
+		await this.checkMonitorAccess();
+		this.showHelp("monitors");
 	}
 	// not toggle(): needs the system.display permission (Chrome), off on Firefox
 	toggleHide = async () => {

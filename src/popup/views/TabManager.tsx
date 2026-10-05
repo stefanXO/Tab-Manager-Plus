@@ -15,6 +15,9 @@ import {attachMasonry, Masonry} from "../masonry";
 import {sizePopup} from "@helpers/popup_size";
 import {applyTheme} from "@helpers/theme";
 
+// the settings the manager holds in its state and applies
+type ManagerSettings = Omit<Settings, "showMonitors">;
+
 export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 
     private readonly rootRef: React.RefObject<HTMLDivElement>;
@@ -50,11 +53,13 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		if (area !== "local") return;
 		if (S.windowAge in changes) this.runUpdate();
 		// another popup, sidebar or the options page changed a setting: follow it
-		const changed = (Object.keys(SETTING_DEFAULTS) as (keyof Settings)[]).filter((key) => key in changes);
+		// (showMonitors is not the manager's: the stats card and the options
+		// screen read it themselves)
+		const changed = (Object.keys(SETTING_DEFAULTS) as (keyof Settings)[]).filter((key) : key is keyof ManagerSettings => key in changes && key !== "showMonitors");
 		if (changed.length === 0) return;
 		const next = this.currentSettings() as unknown as Record<string, unknown>;
 		for (const key of changed) next[key] = changes[key].newValue ?? SETTING_DEFAULTS[key];
-		this.applySettings(next as unknown as Settings);
+		this.applySettings(next as unknown as ManagerSettings);
 	}
 
 	constructor(props : ITabManager) {
@@ -195,7 +200,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		this.applySettings(await readSettings(window.extensionVersion));
 	}
 
-	currentSettings() : Settings {
+	currentSettings() : ManagerSettings {
 		const st = this.state;
 		return {
 			layout: st.layout, tabLimit: st.tabLimit, tabWidth: st.tabWidth, tabHeight: st.tabHeight,
@@ -205,7 +210,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		};
 	}
 
-	applySettings(s : Settings) {
+	applySettings(s : ManagerSettings) {
 		applyTheme(s.dark);
 		if (window.inPopup) sizePopup(s.tabWidth, s.tabHeight);
 		writeBootCache(s);

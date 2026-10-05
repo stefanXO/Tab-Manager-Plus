@@ -1,6 +1,7 @@
 "use strict";
 
 import * as browser from 'webextension-polyfill';
+import {readShowMonitors, resolveShowMonitors, ShowMonitors} from "./monitors";
 
 // The four layouts, by their storage value. The user-facing names live in
 // TabManager.readablelayout().
@@ -33,6 +34,8 @@ export interface Settings {
 	dark : boolean;
 	sessionsFeature : boolean;
 	hideWindows : boolean;
+	// Chrome: "Show all monitors", see ./monitors.ts
+	showMonitors : ShowMonitors;
 	"filter-tabs" : boolean;
 }
 
@@ -50,6 +53,7 @@ export const SETTING_DEFAULTS : Settings = {
 	dark: false,
 	sessionsFeature: false,
 	hideWindows: false,
+	showMonitors: "unset",
 	"filter-tabs": false
 };
 
@@ -73,6 +77,21 @@ export async function getSetting<K extends keyof Settings>(key : K) : Promise<Se
 
 export function saveSetting<K extends keyof Settings>(key : K, value : Settings[K]) : Promise<void> {
 	return browser.storage.local.set({ [key]: value });
+}
+
+// Chrome: "Show all monitors" as it stands now. Reads the setting and the
+// system.display permission and applies the unset -> on rule (persisting it),
+// see resolveShowMonitors(). `enabled`: the map shows every monitor and the
+// options switch is on.
+export async function currentShowMonitors() : Promise<{ setting : ShowMonitors, enabled : boolean }> {
+	const [stored, granted] = await Promise.all([
+		getSetting("showMonitors").catch(() => "unset" as ShowMonitors),
+		browser.permissions.contains({ permissions: ["system.display"] }).catch(() => false)
+	]);
+	const setting = readShowMonitors(stored);
+	const resolved = resolveShowMonitors(setting, granted);
+	if (resolved.setting !== stored) await saveSetting("showMonitors", resolved.setting).catch(() => {});
+	return resolved;
 }
 
 // What the very first paint needs, mirrored in localStorage so the popup can
