@@ -92,9 +92,12 @@
 
 	/* hairlines, rings and shadows */
 	--shadow-card: 0 0 0 1px rgba(0, 0, 0, 0.08);
-	/* a hairline under the header, the colour of the footer's ring */
-	--shadow-header: 0 1px 0 rgba(0, 0, 0, 0.08);
-	--shadow-footer: var(--shadow-card);
+	/* the hairline under the header and over the bottom bar: opaque, so it
+	   reads the same over the grey ground and over a white box scrolled
+	   under it (a translucent line went pale over white) */
+	--bar-line: color-mix(in srgb, black 8%, var(--bg));
+	--shadow-header: 0 1px 0 var(--bar-line);
+	--shadow-footer: 0 -1px 0 var(--bar-line);
 	--shadow-popover: 0 4px 14px rgba(0, 0, 0, 0.18);
 	--focus-ring: rgba(102, 51, 153, 0.55);
 	--divider: rgba(0, 0, 0, 0.08);

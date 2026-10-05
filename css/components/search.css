@@ -11,10 +11,10 @@
 	width: 100%;
 }
 
-/* room for the eight toolbar icons (2rem + 0.6rem margin each); narrow.css
-   packs them tighter at 540px and below so the search box keeps its width */
+/* exactly the eight toolbar icons (2rem + --bar-gap each) and the inset;
+   narrow.css makes them a grid at 450px and below */
 .window.searchbox td.two {
-	width: 342px;
+	width: calc(8 * (2rem + var(--bar-gap)));
 }
 
 .window.searchbox td.one {

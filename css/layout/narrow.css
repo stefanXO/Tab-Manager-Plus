@@ -47,8 +47,8 @@
 		display: grid;
 		grid-template-columns: repeat(8, auto);
 		justify-content: end;
-		gap: 0.1rem;
-		padding: 0.1rem 0.25rem 0;
+		gap: var(--bar-gap);
+		padding: 0.1rem var(--bar-inset) 0;
 	}
 	.window.searchbox td.two .icon {
 		float: none;
@@ -69,6 +69,9 @@
 	/* the header keeps only its text: donate, rate and options go */
 	.donate.icon, .rate.icon, .options.icon {
 		display: none;
+	}
+	.window.top input {
+		padding-right: var(--bar-inset);
 	}
 	.window.searchbox .options-bottom.icon {
 		display: block;
@@ -117,17 +120,6 @@
 /* the options screen and the changelog: a box spans the width instead of a
    centred 90%. Kept at 540px, a little wider than the popup block above.
    From 100px: see the top of this file. */
-/* the bottom bar from 451px to 540px, still one row: the eight toolbar icons
-   packed into the 300px the seven had, so the search box keeps its width
-   (at 450px and below the block above lays them out as a grid) */
-@media (min-width: 451px) and (max-width: 540px) {
-	.window.searchbox td.two {
-		width: 300px;
-	}
-	.window.searchbox .icon {
-		margin-right: 0.3rem;
-	}
-}
 @media (min-width: 100px) and (max-width: 540px) {
 	.optionsBox {
 		width: auto;

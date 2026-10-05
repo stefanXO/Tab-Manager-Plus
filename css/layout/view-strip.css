@@ -6,7 +6,7 @@
 .window-container.horizontal {
 	--strip-title: 11rem;
 	--strip-pad: 0.35rem 0.6rem;
-	padding: 0.5rem 0 1rem;
+	padding: 8px 0 1rem;
 }
 .compact .window-container.horizontal {
 	--strip-title: 9rem;
@@ -15,11 +15,13 @@
 .window-container.horizontal .window.horizontal {
 	display: block;
 	width: calc(100% - 1rem);
-	margin: 0.4rem 0.5rem;
+	/* bottom only: the first row starts at the container's 8px, as the
+	   block and list cards do */
+	margin: 0 0.5rem 8px;
 	padding: 0;
 }
 .compact .window-container.horizontal .window.horizontal {
-	margin: 0.2rem 0.5rem;
+	margin: 0 0.5rem 0.2rem;
 }
 .window-container.horizontal .window.horizontal .windowcontainer {
 	display: flex;

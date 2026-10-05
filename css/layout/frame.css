@@ -28,6 +28,13 @@ html, body {
 	overflow-y: auto;
 }
 
+/* the header's and the bottom bar's icon rows (components/actions.css):
+   space between two icons, and from the last one to the right edge */
+.window.top, .window.searchbox {
+	--bar-gap: 2px;
+	--bar-inset: 0.5rem;
+}
+
 /* header: the tab count and, under it, the hovered tab's url or a tip */
 .window.top {
 	background-color: var(--surface);
@@ -48,11 +55,14 @@ html, body {
 	height: 2.8rem;
 	z-index: 999999;
 }
+/* the text starts on the bars' inset, the cards' left edge, and stops
+   short of the three icons (narrow.css: no icons there) */
 .window.top input {
 	width: 100%;
 	border: 0;
 	height: 1.4rem;
-	padding-right: 0;
+	padding-left: var(--bar-inset);
+	padding-right: calc(3 * (2rem + var(--bar-gap)) + var(--bar-inset));
 	margin: 0;
 	font-size: 0.9rem;
 	padding-top: 0.25rem;

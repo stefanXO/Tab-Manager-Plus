@@ -2,31 +2,34 @@
    row (.windowaction / .tabaction), the header's donate / rate / options, and
    the bottom bar's toolbar. Each action class carries its image. */
 
-/* sizes and places in the header and the bottom bar */
+/* sizes and places in the header and the bottom bar: both rows are 2rem
+   squares --bar-gap apart, --bar-inset from the right edge (layout/frame.css),
+   so the header's three line up with the bottom bar's eight */
 .window.searchbox .icon {
 	height: 2rem;
 	width: 2rem;
-	margin: 0.6rem 0.6rem 0.6rem 0;
+	margin: 0.6rem 0 0.6rem var(--bar-gap);
 }
-.options.icon, .compact .options.icon {
-	height: 2rem;
-	width: 2rem;
-	margin: 0.25rem;
-	padding: 0;
-	position: absolute;
-	right: 2px;
+.window.searchbox td.two {
+	padding-right: var(--bar-inset);
 }
+/* the header's three, right to left; centred in its 2.8rem */
+.options.icon, .compact .options.icon,
 .donate.icon, .compact .donate.icon,
 .rate.icon, .compact .rate.icon {
 	height: 2rem;
 	width: 2rem;
-	margin: 0.25rem;
+	margin: 0;
 	padding: 0;
 	position: absolute;
-	right: 2.25rem;
+	top: 0.4rem;
+	right: var(--bar-inset);
+}
+.rate.icon, .compact .rate.icon {
+	right: calc(var(--bar-inset) + 2rem + var(--bar-gap));
 }
 .donate.icon, .compact .donate.icon {
-	right: 4.5rem;
+	right: calc(var(--bar-inset) + 2 * (2rem + var(--bar-gap)));
 }
 
 .windowaction {
