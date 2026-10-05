@@ -21,7 +21,9 @@
     "changelog": "node scripts/changelog.mjs",
     "check-changelog": "node scripts/changelog.mjs --check",
     "release": "tsc --noEmit && npm run package",
-    "package": "node scripts/package.mjs"
+    "package": "node scripts/package.mjs",
+    "css:baseline": "node tools/css-baseline/shoot.mjs tools/css-baseline/baseline",
+    "css:compare": "node tools/css-baseline/compare.mjs tools/css-baseline/baseline"
   },
   "repository": {
     "type": "git",
@@ -44,6 +46,9 @@
     "@types/webextension-polyfill": "^0.12.1",
     "crx3": "^1.1.3",
     "esbuild": "^0.28.2",
+    "pixelmatch": "^7.2.0",
+    "pngjs": "^7.0.0",
+    "puppeteer": "^25.12.0",
     "typescript": "^7.0.2",
     "web-ext": "^10.7.0",
     "webextension-polyfill": "^0.12.0",
