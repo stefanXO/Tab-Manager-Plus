@@ -28,13 +28,13 @@ English
 
 ## Graphics
 
-| Asset              | Dimensions  | File                                                                           | Status                   |
-|--------------------|-------------|--------------------------------------------------------------------------------|--------------------------|
-| Store Icon         | 128×128     | `../images/browsers128.png`                                                    | Uploaded                 |
-| Screenshots        | 640×400     | `images/screenshot-1-640x400.png` … `screenshot-5-640x400.png`, in store order | 5 uploaded (the maximum) |
-| Small Promo Tile   | 440×280     | `images/promo-small-440x280.png`                                               | Uploaded                 |
-| Marquee Promo Tile | 1400×560    | `images/promo-marquee-1400x560.png`                                            | Uploaded                 |
-| Promo Video        | YouTube URL | https://youtu.be/DiVPpG9uIvk                                                   | Uploaded                 |
+| Asset              | Dimensions  | File                                                                             | Status          |
+|--------------------|-------------|----------------------------------------------------------------------------------|-----------------|
+| Store Icon         | 128×128     | `../images/browsers128.png`                                                      | Uploaded        |
+| Screenshots        | 1280×800    | `images/screenshot-1-1280x800.png` … `screenshot-5-1280x800.png`, in store order | 5 (the maximum) |
+| Small Promo Tile   | 440×280     | `images/promo-small-440x280.png`                                                 | Uploaded        |
+| Marquee Promo Tile | 1400×560    | `images/promo-marquee-1400x560.png`                                              | Uploaded        |
+| Promo Video        | YouTube URL | https://youtu.be/DiVPpG9uIvk                                                     | Uploaded        |
 
 ## Additional fields
 
