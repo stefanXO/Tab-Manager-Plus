@@ -6,6 +6,7 @@ A Brand New Look!
 - New window color palette, with a matching set for the dark theme
 - Favicons: white icons stay visible in the light theme, and icons refresh when a tab finishes loading (#251)
 - Badges show a tab's state: playing sound, muted, asleep (put to sleep by the browser), pinned, active, selected. In List view as chips with a colored edge on the left (#171)
+- List view shows how recently each tab was used: four small bars at the right of the row, filled from the right and fading with age (green for the last minutes, grey after a week); hover them for the exact time
 - Windows show when they were last active, saved sessions when they were saved
 - Subtle animations when they are on: windows and tabs fade in, state changes ease instead of snapping, a playing row breathes
 
@@ -26,6 +27,7 @@ Searching And Duplicates
 - Search for a phrase with a space by quoting it: `"pull request"` (#224)
 - Search with a regular expression: `/\(\d+\)/` finds tabs with an unread count, `/localhost:\d+/` local dev servers, `/\.pdf$/` open PDFs (#247, #156)
 - Hover the search box for the whole search syntax
+- Highlight recently active tabs: the new clock button in the bar selects the tabs you used last. It finds the time span itself from how your activity clusters: a burst of tabs in the last minutes, or the last hour, or the last day, and stops where the gap to older tabs gets big
 
 Windows And Sessions
 - Window names and colors survive a browser restart, even when the window's tabs changed since
@@ -47,6 +49,24 @@ Smaller fixes
 - The drop indicator when dragging a tab fits every layout and shows in the dark theme; the color picker lists colors in order (#97)
 - The window name and color screen covers the whole popup, its close button shows a pointer and Escape closes only that screen
 - Firefox-based browsers (LibreWolf, Zen, Waterfox) are detected as Firefox
+
+Tab And Window Info
+- Hold the mouse on a tab to see when it was last used, its state (asleep, muted and why, playing, pinned), its position, which tab opened it, copies in other windows and its zoom
+- Hold the mouse on a window for its tab counts, sites, last activity, oldest and newest tab, size, and a small map of your monitors showing where the window is
+- The card follows the mouse and switches instantly between tabs; Escape closes it
+- Chrome: "Show all monitors" in the options draws every monitor on that map (asks for the monitor permission)
+- Hovering and switching layouts are much faster in the popup with many windows and tabs
+
+Options
+- The switches are readable in the dark theme and scale with the browser's zoom
+- Hovering anywhere over an option shows its help text in the header, and it stays while the mouse is there; Popup size, Incognito, Shortcut and What's new have help texts too
+- Enter no longer opens a new window while the options or the window color screen are open
+- The changelog page follows the dark theme
+- The tip in the header no longer changes while the popup is loading
+
+Firefox
+- "Minimize inactive windows" works on Firefox: keeps one window active, the others (on every monitor) are minimized
+- The options explain how to allow Tab Manager Plus in private windows and show whether it is allowed; "Change shortcut key" opens Firefox's shortcut settings
 
 6.0.0 (2024-10-01)
 =====
