@@ -40,6 +40,9 @@ const PARKED = "translate3d(-10000px, -10000px, 0)";
 const svgProps = { viewBox: "0 0 16 16", width: 12, height: 12, fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
 // the clock is also the bottom bar's "Highlight recently active tabs" icon
 export const CLOCK = <svg {...svgProps}><circle cx="8" cy="8" r="6.2" /><path d="M8 4.6V8l2.4 1.6" /></svg>;
+// its levels 1..3: the clock at 3, 6 and 9 o'clock, the time span growing
+const clockAt = (hands : string) => <svg {...svgProps}><circle cx="8" cy="8" r="6.2" /><path d={hands} /></svg>;
+export const RECENT_CLOCKS = [CLOCK, clockAt("M8 4V8h3"), clockAt("M8 4V11"), clockAt("M8 4V8H5")];
 const GLOBE = <svg {...svgProps}><circle cx="8" cy="8" r="6.2" /><path d="M1.8 8h12.4M8 1.8c-3.2 3.4-3.2 9 0 12.4M8 1.8c3.2 3.4 3.2 9 0 12.4" /></svg>;
 
 const Icon = ({name} : {name : StatsIcon | "url"}) => (

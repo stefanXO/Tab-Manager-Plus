@@ -3,7 +3,7 @@ import {readSettings, writeBootCache, SETTING_DEFAULTS, Settings, Layout, LAYOUT
 import {sortWindows} from "@helpers/windows";
 import {parseQuery, matchTab, searchable} from "../search";
 import {findDuplicates} from "../duplicates";
-import {recentTabs, recentText, RecentTabs} from "../recent";
+import {recentTabs, recentText, RecentTabs, RECENT_LEVELS} from "../recent";
 import {onMainScreen} from "../screen";
 import {debounce, maybePluralize} from "@helpers/utils";
 import {Window, Session, TabOptions, Tab, WindowOptions} from "@views";
@@ -16,7 +16,7 @@ import {attachMasonry, Masonry} from "../masonry";
 import {sizePopup} from "@helpers/popup_size";
 import {applyTheme} from "@helpers/theme";
 import {StatsLayer, StatsSource} from "./StatsLayer";
-import {CLOCK} from "./StatsCard";
+import {RECENT_CLOCKS} from "./StatsCard";
 
 // the settings the manager holds in its state and applies
 type ManagerSettings = Omit<Settings, "showMonitors">;
@@ -123,7 +123,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			optionsActive: !!this.props.optionsActive,
 			filterTabs: filterTabs,
 			dupTabs: false,
-			recentOn: false,
+			recentLevel: 0,
 			dragFavicon: "",
 			colorsActive: 0,
 			colorsAutoName: "",
@@ -572,14 +572,17 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 										onClick={this.highlightDuplicates}
 									/>
 									<div
-										className={"icon windowaction recent" + (this.state.recentOn ? " enabled" : "")}
+										className={"icon windowaction recent" + (this.state.recentLevel ? " enabled" : "")}
+										data-level={this.state.recentLevel}
 										title={
-											this.state.recentOn
-												? "Clear highlighted tabs\nWill unselect " + maybePluralize(this.recentIds.length, 'tab')
-												: "Highlight recently active tabs\n" + recentText(this.getRecent())
+											this.state.recentLevel === 0
+												? "Highlight recently active tabs\n" + recentText(this.getRecent(1))
+												: this.state.recentLevel < RECENT_LEVELS
+													? "Highlight more recently active tabs\n" + recentText(this.getRecent(this.state.recentLevel + 1))
+													: "Clear highlighted tabs\nWill unselect " + maybePluralize(this.recentIds.length, 'tab')
 										}
 										onClick={this.highlightRecent}
-									>{CLOCK}</div>
+									>{RECENT_CLOCKS[this.state.recentLevel]}</div>
 								</td>
 							</tr>
 						</tbody>
@@ -903,21 +906,23 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			hiddenCount: hiddenCount,
 			searchLen: searchLen,
 			dupTabs: dupTabs,
-			recentOn: false,
+			recentLevel: 0,
 			dirty: true
 		});
 	}
 
 	// "Highlight recently active tabs" (see ../recent): selects them and hides
-	// the rest, like Highlight Duplicates, and turns that off. A second click,
-	// Escape or clearing the search ends it; searching meanwhile searches
-	// within the tabs it picked.
+	// the rest, like Highlight Duplicates, and turns that off. Each click
+	// widens it a level (1..RECENT_LEVELS, the clock at 3, 6, 9); the click
+	// after the last, Escape or clearing the search ends it; searching
+	// meanwhile searches within the tabs it picked.
 	private recentIds : number[] = [];
-	getRecent() : RecentTabs {
-		return recentTabs(this.state.tabsbyid.values(), Date.now());
+	getRecent(level : number) : RecentTabs {
+		return recentTabs(this.state.tabsbyid.values(), Date.now(), level);
 	}
 	highlightRecent = () => {
-		const recent = this.state.recentOn ? null : this.getRecent();
+		const level = (this.state.recentLevel + 1) % (RECENT_LEVELS + 1);
+		const recent = level ? this.getRecent(level) : null;
 		if (this.searchBoxRef.current) this.searchBoxRef.current.value = "";
 		this.state.selection.clear();
 		this.clearHiddenTabs();
@@ -938,7 +943,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			hiddenCount: hiddenCount,
 			searchLen: recent ? recent.count : 0,
 			dupTabs: false,
-			recentOn: !!recent && recent.count > 0,
+			recentLevel: recent && recent.count > 0 ? level : 0,
 			topText: recent ? recentText(recent) : "",
 			bottomText: recent && recent.count > 0 ? "Delete closes them. Enter moves them to a new window" : "",
 			dirty: true
@@ -959,7 +964,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			this.setState({
 				hiddenCount: 0,
 				dupTabs: false,
-				recentOn: false,
+				recentLevel: 0,
 				dirty: true
 			});
 			this.clearHiddenTabs();
@@ -971,7 +976,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				const dup = duplicates.duplicates;
 				const orig = duplicates.originals;
 				idList = [...dup, ...orig];
-			} else if (this.state.recentOn) {
+			} else if (this.state.recentLevel) {
 				idList = this.recentIds.filter((id) => this.state.tabsbyid.has(id));
 			}
 			for (const id of idList) {
@@ -1065,7 +1070,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				searchLen: 0,
 				hiddenCount: 0,
 				dupTabs: false,
-				recentOn: false,
+				recentLevel: 0,
 				dirty: true
 			});
 

@@ -86,7 +86,10 @@ const STATES = [
 	{name: 'dup', layouts: LAYOUTS, scaleLayouts: ['blocks'], apply: {dup: true}},
 	// "Highlight recently active tabs" clicked (the fixture's lastAccessed: 6
 	// tabs within the hour). dpr 1, blocks + List, 800x600 and 380x900 only
-	{name: 'recent', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {recent: true}},
+	{name: 'recent', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {recent: 1}},
+	// its second and third click (recent: the level, 0..3)
+	{name: 'recent2', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {recent: 2}},
+	{name: 'recent3', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {recent: 3}},
 	// the options screen replaces the whole window container, so the layout
 	// underneath it makes no difference: one layout is enough
 	{name: 'options', layouts: ['blocks'], scaleLayouts: ['blocks'], apply: {overlay: 'options'}},
@@ -220,7 +223,7 @@ async function settle(page) {
 }
 
 /** Applies a popup state absolutely: the result never depends on what came before. */
-async function apply(page, {layout, dark, search = '', dup = false, recent = false, overlay = null, scrollTo = null, store = {}, granted = true}) {
+async function apply(page, {layout, dark, search = '', dup = false, recent = 0, overlay = null, scrollTo = null, store = {}, granted = true}) {
 	await page.evaluate(async (s) => {
 		const q = (sel) => document.querySelector(sel)
 		const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
@@ -247,7 +250,9 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = fal
 		const dupBtn = q('.icon.windowaction.duplicates')
 		if (dupBtn && dupBtn.classList.contains('enabled') !== s.dup) { dupBtn.click(); await frame() }
 		const recentBtn = q('.icon.windowaction.recent')
-		if (recentBtn && recentBtn.classList.contains('enabled') !== s.recent) { recentBtn.click(); await frame() }
+		// older builds: an on/off button without data-level
+		const level = () => +(q('.icon.windowaction.recent')?.dataset.level ?? (q('.icon.windowaction.recent.enabled') ? 1 : 0))
+		for (let i = 0; recentBtn && level() !== s.recent && i < 4; i++) { q('.icon.windowaction.recent').click(); await frame() }
 
 		// 5. open the requested overlay
 		if (s.overlay === 'options') { q('.icon.windowaction.options')?.click(); await frame() }

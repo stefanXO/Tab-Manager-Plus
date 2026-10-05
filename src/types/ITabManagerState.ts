@@ -43,8 +43,8 @@ export interface ITabManagerState {
 	lastDirection: string,
 	optionsActive: boolean,
 	dupTabs: boolean,
-	// "Highlight recently active tabs" is on
-	recentOn: boolean,
+	// "Highlight recently active tabs": 0 off, else its level (see popup/recent)
+	recentLevel: number,
 	dragFavicon: string,
 	colorsActive: number,
 	colorsAutoName: string,
