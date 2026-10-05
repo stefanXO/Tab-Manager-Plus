@@ -8,6 +8,7 @@ import {maybePluralize, timeAgo} from "@helpers/utils";
 import * as browser from 'webextension-polyfill';
 import {ICommand, ISession, ISessionState} from '@types';
 import * as S from "@strings";
+import {popupScreen} from "@helpers/popup_size";
 import {ManagerContext, ITabManagerActions} from '../context';
 
 export class Session extends React.Component<ISession, ISessionState> {
@@ -155,12 +156,7 @@ export class Session extends React.Component<ISession, ISessionState> {
 			session: this.props.session,
 			tab_id: tabId,
 			// the worker has no screen; this is the display the popup is on
-			screen: {
-				left: (screen as Screen & { availLeft?: number }).availLeft || 0,
-				top: (screen as Screen & { availTop?: number }).availTop || 0,
-				width: screen.availWidth,
-				height: screen.availHeight
-			}
+			screen: popupScreen()
 		});
 
 		if (!!window.inPopup) {

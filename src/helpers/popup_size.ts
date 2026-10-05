@@ -65,3 +65,16 @@ function roomOnScreen() : { width : number, height : number } {
 		height: Math.floor((scr.availTop || 0) + scr.availHeight - win.mozInnerScreenY - SCREEN_MARGIN),
 	};
 }
+
+// The monitor the popup is on (its usable area, screen.avail*), sent to the
+// background, which has no screen: restored windows are placed on it, and on
+// Firefox it is the monitor "Minimize inactive windows" acts on.
+export function popupScreen() : { left : number, top : number, width : number, height : number } {
+	const scr = screen as Screen & { availLeft? : number, availTop? : number };
+	return {
+		left: scr.availLeft || 0,
+		top: scr.availTop || 0,
+		width: scr.availWidth,
+		height: scr.availHeight
+	};
+}

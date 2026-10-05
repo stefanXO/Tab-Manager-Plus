@@ -33,7 +33,7 @@ const HELP = {
 	importSessions: "Allows you to restore your saved windows from an external backup",
 	badge: "Shows the number of open tabs on the Tab Manager icon. Default : on",
 	openInOwnTab: "Open the Tab Manager by default in own tab, or as a popup?",
-	hide: "Automatically minimizes inactive chrome windows. Default : off",
+	hide: "Automatically minimizes inactive browser windows. Default : off",
 	monitors: "Lets the window card's map show every monitor, not just the one this popup is on. Default : off",
 	popupSize: "The size of the popup, at most 800x600 (a browser limit). Default : 800x600",
 	incognito: IS_FIREFOX
@@ -49,7 +49,7 @@ type HelpKey = keyof typeof HELP;
 
 // The settings the options screen changes through store(); the on/off ones
 // through toggle().
-type SwitchSetting = "animations" | "windowTitles" | "compact" | "dark" | "tabactions" | "badge" | "openInOwnTab" | "sessionsFeature";
+type SwitchSetting = "animations" | "windowTitles" | "compact" | "dark" | "tabactions" | "badge" | "openInOwnTab" | "sessionsFeature" | "hideWindows";
 type OptionSetting = SwitchSetting | "tabLimit" | "tabWidth" | "tabHeight";
 
 export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
@@ -252,16 +252,17 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 					/>
 				</OptionsBox>
 				<OptionsBox title="Window settings">
-					{/* needs system.display, which Firefox does not have */}
-					{!IS_FIREFOX && <SwitchOption
+					{/* Firefox has no system.display: it keeps one window active on all monitors together */}
+					<SwitchOption
 						id="auto_hide"
 						help={this.help("hide")}
 						label="Minimize inactive windows"
 						checked={p.hideWindows}
 						onChange={this.toggleHide}
-						description="With this option enabled, you will only have 1 open window per monitor at all times. When you switch to another window, the other windows will be minimized to the tray automatically."
+						description={"With this option enabled, you will only have 1 open window per monitor at all times. When you switch to another window, the other windows will be minimized to the tray automatically."
+							+ (IS_FIREFOX ? " Firefox: every other window, on every monitor." : "")}
 						notes={["By default: disabled"]}
-					/>}
+					/>
 					{!IS_FIREFOX && (
 						<SwitchOption
 							id="monitors_mode"
@@ -580,19 +581,20 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		await this.checkMonitorAccess();
 		this.showHelp("monitors");
 	}
-	// not toggle(): needs the system.display permission (Chrome), off on Firefox
+	// Chrome needs the system.display permission (one window per monitor);
+	// Firefox needs none (one window in all), a plain toggle
 	toggleHide = async () => {
+		if (IS_FIREFOX) {
+			await this.toggle("hideWindows", "hide");
+			return;
+		}
 
 		var _hide_windows = this.props.hideWindows;
-		if (IS_FIREFOX) {
-			_hide_windows = false;
+		var granted = await chrome.permissions.request({ permissions: ["system.display"] });
+		if (granted) {
+			_hide_windows = !_hide_windows;
 		} else {
-			var granted = await chrome.permissions.request({ permissions: ["system.display"] });
-			if (granted) {
-				_hide_windows = !_hide_windows;
-			} else {
-				_hide_windows = false;
-			}
+			_hide_windows = false;
 		}
 
 		await saveSetting("hideWindows", _hide_windows);

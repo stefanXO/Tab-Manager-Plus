@@ -5,6 +5,7 @@ import {
 	fitInto,
 	usableBounds,
 	isInBounds,
+	windowsToMinimize,
 } from "../src/helpers/geometry.ts";
 
 // ---------------------------------------------------------------------------
@@ -198,5 +199,101 @@ describe("usableBounds", () => {
 
 	test("strings -> false", () => {
 		assert.equal(usableBounds({ left: "0", top: 0, width: 100, height: 100 } as any), false);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// windowsToMinimize
+// ---------------------------------------------------------------------------
+describe("windowsToMinimize", () => {
+	const left = { left: 0, top: 0, width: 1920, height: 1040 };
+	const right = { left: 1920, top: 0, width: 2560, height: 1400 };
+	const w = (id : number, x : number, y : number, state = "normal") => ({ id, left: x, top: y, state });
+
+	test("minimizes the other windows on the target's display", () => {
+		const windows = [w(1, 10, 10), w(2, 100, 50), w(3, 500, 300)];
+		assert.deepEqual(windowsToMinimize(1, windows, [left]), [2, 3]);
+	});
+
+	test("leaves windows on other displays alone", () => {
+		const windows = [w(1, 10, 10), w(2, 2000, 10), w(3, 300, 300)];
+		assert.deepEqual(windowsToMinimize(1, windows, [left, right]), [3]);
+	});
+
+	test("target on the second display: only that display's windows", () => {
+		const windows = [w(1, 10, 10), w(2, 2000, 10), w(3, 2500, 500)];
+		assert.deepEqual(windowsToMinimize(2, windows, [left, right]), [3]);
+	});
+
+	test("target on no known display -> nothing", () => {
+		const windows = [w(1, 10, 10), w(2, 2000, 10), w(3, 300, 300)];
+		assert.deepEqual(windowsToMinimize(2, windows, [left]), []);
+	});
+
+	test("no displays -> nothing", () => {
+		assert.deepEqual(windowsToMinimize(1, [w(1, 10, 10), w(2, 20, 20)], []), []);
+	});
+
+	test("target not among the windows -> nothing", () => {
+		assert.deepEqual(windowsToMinimize(9, [w(1, 10, 10), w(2, 20, 20)], [left]), []);
+	});
+
+	test("windows that are already minimized are skipped", () => {
+		const windows = [w(1, 10, 10), w(2, 20, 20, "minimized"), w(3, 30, 30)];
+		assert.deepEqual(windowsToMinimize(1, windows, [left]), [3]);
+	});
+
+	test("windows without a position are skipped", () => {
+		const windows = [w(1, 10, 10), { id: 2, state: "normal" }, w(3, 30, 30)];
+		assert.deepEqual(windowsToMinimize(1, windows, [left]), [3]);
+	});
+
+	test("the target window itself is never minimized", () => {
+		assert.deepEqual(windowsToMinimize(1, [w(1, 10, 10)], [left]), []);
+	});
+
+	test("a window on the display's edge counts as on it (like isInBounds)", () => {
+		const windows = [w(1, 10, 10), w(2, 1920, 1040)];
+		assert.deepEqual(windowsToMinimize(1, windows, [left]), [2]);
+	});
+
+	test("the target's display is the first one containing it", () => {
+		// overlapping displays (mirrored or odd layouts): the first match wins
+		const windows = [w(1, 1920, 10), w(2, 100, 10), w(3, 3000, 10)];
+		assert.deepEqual(windowsToMinimize(1, windows, [left, right]), [2]);
+	});
+});
+
+// Firefox (no display API): displays = null, one window stays active across
+// all monitors together
+describe("windowsToMinimize without displays (Firefox)", () => {
+	const w = (id : number, x? : number, y? : number, state = "normal", type = "normal") => ({ id, left: x, top: y, state, type });
+
+	test("minimizes every other window, on every monitor", () => {
+		const windows = [w(1, 10, 10), w(2, 2000, 10), w(3, 300, 300), w(4, -1500, 200)];
+		assert.deepEqual(windowsToMinimize(1, windows, null), [2, 3, 4]);
+	});
+
+	test("the target window itself is never minimized", () => {
+		assert.deepEqual(windowsToMinimize(1, [w(1, 10, 10)], null), []);
+	});
+
+	test("windows that are already minimized are skipped", () => {
+		const windows = [w(1, 10, 10), w(2, 20, 20, "minimized"), w(3, 30, 30)];
+		assert.deepEqual(windowsToMinimize(1, windows, null), [3]);
+	});
+
+	test("positions do not matter: windows without one are minimized too", () => {
+		const windows = [w(1), w(2), w(3, 30, 30)];
+		assert.deepEqual(windowsToMinimize(1, windows, null), [2, 3]);
+	});
+
+	test("only normal windows: popups and panels are left alone", () => {
+		const windows = [w(1, 10, 10), w(2, 20, 20, "normal", "popup"), w(3, 30, 30, "normal", "panel"), w(4, 40, 40)];
+		assert.deepEqual(windowsToMinimize(1, windows, null), [4]);
+	});
+
+	test("target not among the windows -> nothing", () => {
+		assert.deepEqual(windowsToMinimize(9, [w(1, 10, 10), w(2, 20, 20)], null), []);
 	});
 });

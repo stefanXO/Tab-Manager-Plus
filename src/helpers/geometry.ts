@@ -36,3 +36,32 @@ export function usableBounds(b : Partial<Bounds>) : b is Bounds {
 	const values = [b.left, b.top, b.width, b.height];
 	return values.every((v) => typeof v === "number" && isFinite(v)) && b.width >= 100 && b.height >= 100;
 }
+
+// "Minimize inactive windows": the ids of the windows to minimize when the
+// window targetId gets the focus. Windows that are already minimized are
+// left out.
+// Chrome (displays known through system.display): the other windows whose
+// top-left corner is on the target's display (the first display containing
+// it), so one window stays active per monitor; windows that report no
+// position are left out, and nothing when the target is on none of the
+// displays.
+// Firefox (no display API, displays = null): every other normal window, on
+// every monitor, so one window stays active in all.
+export function windowsToMinimize(
+	targetId : number,
+	windows : { id? : number, left? : number, top? : number, state? : string, type? : string }[],
+	displays : Bounds[] | null
+) : number[] {
+	const target = windows.find((w) => w.id === targetId);
+	if (!target) return [];
+	const others = windows.filter((w) => w.id !== targetId && typeof w.id === "number" && w.state !== "minimized");
+	if (displays === null) {
+		return others.filter((w) => !w.type || w.type === "normal").map((w) => w.id);
+	}
+	const hasPosition = (w : { left? : number, top? : number }) : w is { left : number, top : number } =>
+		typeof w.left === "number" && typeof w.top === "number";
+	if (!hasPosition(target)) return [];
+	const home = displays.find((d) => isInBounds(target, d));
+	if (!home) return [];
+	return others.filter((w) => hasPosition(w) && isInBounds(w, home)).map((w) => w.id);
+}

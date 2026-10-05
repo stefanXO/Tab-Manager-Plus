@@ -2,8 +2,7 @@
 
 import {cleanupDebounce} from "@background/tracking";
 import {getLocalStorage, getLocalStorageMap, setLocalStorage, setLocalStorageMap, serialized} from "@helpers/storage";
-import {is_in_bounds} from "@helpers/utils";
-import {placeWindow, usableBounds} from "@helpers/geometry";
+import {placeWindow, usableBounds, windowsToMinimize} from "@helpers/geometry";
 import {hashcode} from "@helpers/windows";
 import {setWindowColor, setWindowName} from "@background/actions";
 import * as S from "@strings";
@@ -209,51 +208,39 @@ export async function focusOnWindow(windowId : number) {
 	await browser.windows.update(windowId, {focused: true});
 }
 
+// "Minimize inactive windows": when a window gets the focus, minimize the
+// other windows. Chrome: the ones on its monitor (every monitor is known
+// through the optional system.display permission; nothing without it).
+// Firefox has no display API: every other window, on every monitor, so one
+// window stays active in all.
 async function hideWindows(windowId : number) {
-	if (IS_FIREFOX) return;
 	if (!windowId || windowId < 0) return;
 
 	let hide_windows = await getSetting("hideWindows");
 	if (!hide_windows) return;
 
-	let has_permission = await browser.permissions.contains({permissions: ['system.display']});
-	if (!has_permission) return;
+	const displays = await hideDisplays();
+	if (displays !== null && displays.length === 0) return;
 
-	let displaylayouts = await chrome.system.display.getInfo();
-	let monitor_bounds = [];
-
-	try {
-		for (let displaylayout of displaylayouts) {
-			monitor_bounds.push(displaylayout.bounds);
-		}
-	} catch (err) {
-		console.error(err);
-		return;
+	const windows = await browser.windows.getAll();
+	for (const id of windowsToMinimize(windowId, windows, displays)) {
+		await browser.windows.update(id, {"state": "minimized"});
 	}
+}
 
-	let windows = await browser.windows.getAll({populate: true});
-	let monitor = null;
-
-	for (let window of windows) {
-		if (window.id === windowId) {
-			for (let bounds_index in monitor_bounds) {
-				let _monitor = monitor_bounds[bounds_index];
-				let _is_in_bounds = is_in_bounds(window, _monitor);
-				if (_is_in_bounds) {
-					monitor = _monitor;
-					break;
-				}
-			}
-		}
-	}
-
-	if (monitor == null) return;
-
-	for (let window of windows) {
-		if (window.id !== windowId) {
-			if (is_in_bounds(window, monitor)) {
-				await browser.windows.update(window.id, {"state": "minimized"});
-			}
+// null on Firefox (no monitors: every window counts); if/else, so the Firefox
+// build drops the system.display branch entirely
+async function hideDisplays() : Promise<IScreenBounds[] | null> {
+	if (IS_FIREFOX) {
+		return null;
+	} else {
+		let has_permission = await browser.permissions.contains({permissions: ['system.display']});
+		if (!has_permission) return [];
+		try {
+			return (await chrome.system.display.getInfo()).map((d) => d.bounds);
+		} catch (err) {
+			console.error(err);
+			return [];
 		}
 	}
 }

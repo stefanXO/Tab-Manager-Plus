@@ -553,8 +553,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			await this.loadStorage();
 		}
 
-		if (IS_FIREFOX) {
-		} else {
+		// Chrome: without system.display the setting cannot work, so it is
+		// turned off. Firefox needs no permission for it.
+		if (!IS_FIREFOX) {
 			let result = await browser.permissions.contains({permissions: ["system.display"]});
 			if (!result) {
 				saveSetting("hideWindows", false);
