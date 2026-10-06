@@ -160,6 +160,7 @@ currently on disk — there is no stale copy to forget about.
   dark, off in light
 - `options-window`: the wrench screen scrolled to "Window settings" (Minimize inactive windows + its Firefox note; Chrome: "Show all monitors" on), `blocks` × 2 × 3, dpr 1 only. Chrome build only (`--chrome`): `options-window-monitors-off` (setting `showMonitors: "off"`: switch off although granted) and `options-window-denied` (fake permission not granted: `window.__fakeGranted = false`, read by `permissions.contains/request` in `fake-browser.js`)
 - `recent`: "Highlight recently active tabs" clicked (the fixture's `lastAccessed`: 23 tabs, target 5, the 6 used within the hour), `blocks` + `vertical` × 2 themes × `800x600` + `380x900`, dpr 1 only
+- `options-sessions` / `options-debug`: the wrench screen scrolled to "Session Management" (the export note for the fixture's two saved sessions) / "Export tabs for debugging" (its button row and the window/tab note), `blocks` × 2 × 3, dpr 1 only
 - `windowopts`: takes the layout as a prop, so `blocks` + `vertical` × 2 × 3 = 12
 - `tab-stats` / `window-stats`: the real mouse rests on a tab (`#tab-15`, the muted
   second Lofi tab: every line of the tab card, zoom from the fake `tabs.getZoom`) /

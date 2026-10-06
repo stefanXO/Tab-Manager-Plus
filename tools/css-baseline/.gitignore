@@ -16,3 +16,4 @@ live/
 fav/
 # third-party brand favicons, downloaded on first use by fetch-favicons.mjs
 fav/
+font-*/

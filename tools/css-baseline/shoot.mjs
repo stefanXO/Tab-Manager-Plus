@@ -112,6 +112,11 @@ const STATES = [
 	{name: 'options-window', layouts: ['blocks'], scaleLayouts: [], apply: {overlay: 'options', scrollTo: 'Window settings'}},
 	{name: 'options-window-monitors-off', chromeOnly: true, layouts: ['blocks'], scaleLayouts: [], apply: {overlay: 'options', scrollTo: 'Window settings', store: {showMonitors: 'off'}}},
 	{name: 'options-window-denied', chromeOnly: true, layouts: ['blocks'], scaleLayouts: [], apply: {overlay: 'options', scrollTo: 'Window settings', store: {showMonitors: 'unset'}, granted: false}},
+	// the same screen scrolled to the "Session Management" box (export/import
+	// with the fixture's two saved sessions) and to the "Export tabs for
+	// debugging" box (its two buttons and the window/tab count). dpr 1 only
+	{name: 'options-sessions', layouts: ['blocks'], scaleLayouts: [], apply: {overlay: 'options', scrollTo: 'Session Management'}},
+	{name: 'options-debug', layouts: ['blocks'], scaleLayouts: [], apply: {overlay: 'options', scrollTo: 'Export tabs for debugging'}},
 	// the window colour/name screen does take the layout as a prop
 	{name: 'windowopts', layouts: ['blocks', 'vertical'], scaleLayouts: ['blocks'], apply: {overlay: 'colors'}},
 	// the "Window style" box with the real mouse on it: over the Compact mode
