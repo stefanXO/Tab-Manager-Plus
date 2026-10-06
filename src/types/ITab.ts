@@ -20,6 +20,6 @@ export interface ITab {
 	draggable: boolean,
 
 	tabs?: browser.Tabs.Tab[],
-	onOpen?: (e : MouseEvent<HTMLDivElement>, index : number) => void,
+	onOpen?: (e : MouseEvent<HTMLDivElement>, index : number) => void | Promise<void>,
 	onDragChange?: () => void
 }

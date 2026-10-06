@@ -203,7 +203,9 @@ export class Tab extends React.Component<ITab, ITabState> {
 			}
 		} else {
 			if (!!this.props.onOpen) {
-				this.props.onOpen(e, this.props.tab.id);
+				// a saved session's tab: restoreSession() waits for the worker and closes the popup itself
+				await this.props.onOpen(e, this.props.tab.id);
+				return false;
 			} else {
 				let windowId = this.props.window.id;
 

@@ -143,10 +143,10 @@ export class Session extends React.Component<ISession, ISessionState> {
 		e.stopPropagation();
 	}
 	windowClick = async (e : React.MouseEvent<HTMLDivElement>) => {
-		this.restoreSession(e, null);
+		await this.restoreSession(e, null);
 	}
 	openTab = async (e : React.MouseEvent<HTMLDivElement>, index : number) => {
-		this.restoreSession(e, index);
+		await this.restoreSession(e, index);
 	}
 	async restoreSession(e : React.MouseEvent<HTMLDivElement>, tabId : number) {
 		e.stopPropagation();
