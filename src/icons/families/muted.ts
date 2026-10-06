@@ -268,21 +268,21 @@ export const family : IconFamily = {
 	label: "F — flat muted",
 	scope: "all",
 	icons: {
-		"save": { role: "accent", parts: [
+		"save": { parts: [
 			fill(STAR, "amber"), fill(STAR_RIGHT, "amber-dark"),
 			fill(circ(6.3, 6.9, 0.8), "white", 0.7),
 			ink(STAR),
 		] },
-		"restore": { role: "add", parts: disc("lime", [line("M4.9 8.2L7.1 10.4L11.2 6.2", "white", 2.2)]) },
-		"delete": { role: "danger", parts: [
+		"restore": { parts: disc("lime", [line("M4.9 8.2L7.1 10.4L11.2 6.2", "white", 2.2)]) },
+		"delete": { parts: [
 			fill(cross(5, 1.5), "coral"),
 			ink(cross(5, 1.5), 0.9),
 		] },
-		"add": { role: "add", parts: disc("blue-soft", [line("M8 4.6V11.4M4.6 8H11.4", "white", 2)]) },
-		"close": { role: "danger", parts: disc("coral", [line("M5.5 5.5L10.5 10.5M10.5 5.5L5.5 10.5", "white", 2)]) },
-		"minimize": { role: "neutral", parts: disc("lime", [line("M8 4.4V11M5.2 8.4L8 11.2L10.8 8.4", "white", 2.2)]) },
-		"maximize": { role: "neutral", parts: disc("lime", [line("M8 11.6V5M5.2 7.6L8 4.8L10.8 7.6", "white", 2.2)]) },
-		"colors": { role: "accent", parts: [
+		"add": { parts: disc("blue-soft", [line("M8 4.6V11.4M4.6 8H11.4", "white", 2)]) },
+		"close": { parts: disc("coral", [line("M5.5 5.5L10.5 10.5M10.5 5.5L5.5 10.5", "white", 2)]) },
+		"minimize": { parts: disc("lime", [line("M8 4.4V11M5.2 8.4L8 11.2L10.8 8.4", "white", 2.2)]) },
+		"maximize": { parts: disc("lime", [line("M8 11.6V5M5.2 7.6L8 4.8L10.8 7.6", "white", 2.2)]) },
+		"colors": { parts: [
 			// this window's name (the white line) on its colour (the title bar), and a pencil to change them
 			fill(WIN, "white"), fill(NAME_BAR, "blue-soft"), line("M3.6 4.5H8.6", "white", 1.4),
 			// a second colour, a coral swatch on the bar (pixel-aligned, no rim, so it stays crisp at 16px): "colour", not just a blue window
@@ -292,32 +292,32 @@ export const family : IconFamily = {
 			fill(PENCIL_TIP, "cream"), fill(PENCIL_LEAD, "ink"),
 			ink(PENCIL, 0.9),
 		] },
-		"new": { role: "neutral", parts: [
+		"new": { parts: [
 			// a new browser window: grey title bar with three dots, a plus badge
 			fill(WIN, "white"), fill(WIN_BAR, "steel"),
 			fill(circ(3.5, 3.75, 0.8), "coral"), fill(circ(5.7, 3.75, 0.8), "amber-dark"), fill(circ(7.9, 3.75, 0.8), "lime-dark"),
 			ink(WIN), ink("M1.5 5.5H14.5", 0.8),
 			fill(circ(11.8, 11.8, 3.4), "lime-dark"), line("M11.8 10V13.6M10 11.8H13.6", "white", 1.6), ink(circ(11.8, 11.8, 3.4)),
 		] },
-		"trash": { role: "danger", parts: [
+		"trash": { parts: [
 			fill(BIN, "slate"), fill("M4.6 6.5H6.2L6.6 14.5H5.3a1 1 0 0 1 -1 -.8z", "steel", 0.45),
 			line("M7 8.5V12.5M10 8.5V12.5", "steel", 1),
 			ink(BIN),
 			fill(rr(5.5, 1.5, 5, 2, 0.5), "coral"), ink(rr(5.5, 1.5, 5, 2, 0.5)),
 			fill(rr(1.5, 3.5, 13, 3, 0.6), "grey-light"), ink(rr(1.5, 3.5, 13, 3, 0.6)),
 		] },
-		"discard": { role: "warn", parts: [
+		"discard": { parts: [
 			fill(RAM_BOARD, "lime"), fill(RAM_CHIPS, "slate"), fill(RAM_CONTACTS, "amber"),
 			ink(RAM_BOARD),
 		] },
-		"pin": { role: "accent", parts: [
+		"pin": { parts: [
 			// the ink under-strokes first: the fills on top leave one outline round the whole pin
 			line(PIN_NEEDLE, "ink", 2.4), ink(PIN_BODY, 2),
 			line(PIN_NEEDLE, "sky-soft", 1),
 			fill(PIN_HEAD, "coral"), fill(PIN_BASE, "blue-soft"), fill(PIN_SHADE_HEAD, "coral-dark"), fill(PIN_SHADE_BASE, "blue-soft-dark"),
 			line(open(pin([[5.2, 2.3], [8, 2.3]])), "white", 1, 0.7),
 		] },
-		"duplicates": { role: "neutral", parts: [
+		"duplicates": { parts: [
 			fill(rr(1.5, 1.5, 9, 9, 1), "grey-light"), fill("M2.5 1.5h7a1 1 0 0 1 1 1V4H1.5V2.5a1 1 0 0 1 1 -1z", "amber"), ink(rr(1.5, 1.5, 9, 9, 1)),
 			fill(rr(5.5, 5.5, 9, 9, 1), "white"), fill("M6.5 5.5h7a1 1 0 0 1 1 1V8H5.5V6.5a1 1 0 0 1 1 -1z", "blue-soft"),
 			fill(rr(2, 5, 3, 2), "peach"), line("M2.5 8.5H4", "grey", 1),
@@ -327,49 +327,49 @@ export const family : IconFamily = {
 		] },
 		// "hide tabs that do not match": off shows the open eye, on the same eye struck through
 		// (eye-off), the strike coral, ink-edged; one eye geometry so the button does not shift
-		"filter": { role: "neutral", parts: EYE_PARTS },
-		"filter-on": { role: "neutral", parts: [
+		"filter": { parts: EYE_PARTS },
+		"filter-on": { parts: [
 			...EYE_PARTS,
 			line(STRIKE, "ink", 2.4), line(STRIKE, "coral", 1.2),
 		] },
-		"options": { role: "neutral", parts: [
+		"options": { parts: [
 			ink(WRENCH_HEAD, 2), ink(WRENCH_HANDLE, 2),
 			fill(WRENCH_HEAD, "grey"), fill(WRENCH_HANDLE, "grey"), fill(WRENCH_SHADE, "slate"),
 			// a light edge along the handle keeps it metal: darker than D so it holds on white
 			line("M3.2 11.7L8.6 6.3", "steel", 0.8),
 		] },
-		"rate": { role: "accent", parts: [
+		"rate": { parts: [
 			fill(HEART, "coral"),
 			line("M3.5 6.6C3.5 5.3 4.3 4.5 5.4 4.4", "white", 1, 0.7),
 			ink(HEART),
 		] },
-		"view-big-blocks": { role: "neutral", parts: [
+		"view-big-blocks": { parts: [
 			fill(tiles([1.5, 9.5], [1.5, 9.5], 5, 5, 1), "blue-soft"), rim(tiles([1.5, 9.5], [1.5, 9.5], 5, 5, 1)),
 		] },
-		"view-blocks": { role: "neutral", parts: [
+		"view-blocks": { parts: [
 			// fills to the pixel grid with a thin rim, so the small tiles read as tiles, not rings
 			fill(tiles([1, 6, 11], [1, 6, 11], 4, 4, 0.6), "blue-soft"), rim(tiles([1.3, 6.3, 11.3], [1.3, 6.3, 11.3], 3.4, 3.4, 0.5), 0.6),
 		] },
-		"view-horizontal": { role: "neutral", parts: [
+		"view-horizontal": { parts: [
 			fill(tiles([1.5], [1.5, 6.5, 11.5], 13, 3, 0.8), "blue-soft"), rim(tiles([1.5], [1.5, 6.5, 11.5], 13, 3, 0.8)),
 		] },
-		"view-vertical": { role: "neutral", parts: [
+		"view-vertical": { parts: [
 			fill(tiles([1.5], [1.5, 6.5, 11.5], 3, 3, 0.6), "blue-soft"), rim(tiles([1.5], [1.5, 6.5, 11.5], 3, 3, 0.6)),
 			line("M7 3H14M7 8H14M7 13H14", "blue-soft", 2),
 		] },
-		"favicon": { role: "neutral", parts: [
+		"favicon": { parts: [
 			fill(PAGE, "white"), fill("M9.5 1.5v4h4z", "grey-light"),
 			line("M5 8.5H11M5 10.5H11M5 12.5H9", "grey", 1),
 			ink(PAGE), ink("M9.5 1.5v4h4"),
 		] },
-		"recent": { role: "neutral", parts: clock(0) },
+		"recent": { parts: clock(0) },
 		// recent's levels: the last 15 / 30 / 45 minutes, filled back from 12 o'clock as a quarter, half, three quarters of the face
-		"recent-1": { role: "neutral", parts: clock(1) },
-		"recent-2": { role: "neutral", parts: clock(2) },
-		"recent-3": { role: "neutral", parts: clock(3) },
+		"recent-1": { parts: clock(1) },
+		"recent-2": { parts: clock(2) },
+		"recent-3": { parts: clock(3) },
 
 		// ---- options screen ----
-		"tab-limit": { role: "neutral", parts: [
+		"tab-limit": { parts: [
 			// a tab strip: two lighter back tabs, the blue active tab open at the bottom
 			// (it breaks the line they stand on), then a coral stop bar. Short tabs with
 			// round tops a step of 4 apart, so they read as tabs and not as columns
@@ -379,48 +379,48 @@ export const family : IconFamily = {
 			fill(tab(0.5, false, TAB_BOT + 0.5), "blue-soft"), ink(tab(0.5, true)),
 			fill(rr(13.5, 2.5, 2, 11, 0.6), "coral"), ink(rr(13.5, 2.5, 2, 11, 0.6)),
 		] },
-		"popup-width": { role: "neutral", parts: [
+		"popup-width": { parts: [
 			...win(1.5, 3.5, 13, 9, 2.5, "steel"),
 			line("M3.6 9.3H12.4M5.3 7.6L3.6 9.3L5.3 11M10.7 7.6L12.4 9.3L10.7 11", "blue-soft-dark", 1.3),
 		] },
-		"popup-height": { role: "neutral", parts: [
+		"popup-height": { parts: [
 			...win(3.5, 1.5, 9, 13, 2.5, "steel"),
 			line("M8 5.8V12.6M6.3 7.5L8 5.8L9.7 7.5M6.3 10.9L8 12.6L9.7 10.9", "blue-soft-dark", 1.3),
 		] },
-		"theme": { role: "neutral", parts: [
+		"theme": { parts: [
 			line("M2.8 8H1.2M3.5 4.6L2.4 3.5M3.5 11.4L2.4 12.5M5.6 2.6L5 1.2M5.6 13.4L5 14.8", "amber-dark", 1.2),
 			fill("M8 3.6A4.4 4.4 0 0 0 8 12.4z", "amber"),
 			fill("M8 3.6A4.4 4.4 0 0 1 8 12.4z", "slate"), fill(circ(10.1, 6.3, 0.6), "white"),
 			ink(circ(8, 8, 4.4)), ink("M8 3.6V12.4", 0.8),
 		] },
 		// theme's two halves on their own, for the Light and Dark segments
-		"theme-light": { role: "neutral", parts: [
+		"theme-light": { parts: [
 			line(SUN_RAYS, "amber-dark", 1.2),
 			fill(circ(8, 8, 3.7), "amber"), fill(circ(6.7, 6.7, 0.8), "white", 0.7),
 			ink(circ(8, 8, 3.7)),
 		] },
-		"theme-dark": { role: "neutral", parts: [
+		"theme-dark": { parts: [
 			fill(MOON, "slate"), line(MOON_LIT, "sky-soft", 1.3), fill(circ(6.6, 8.2, 0.8), "white", 0.7),
 			ink(MOON),
 		] },
-		"compact": { role: "neutral", parts: [
+		"compact": { parts: [
 			// rows pressed together: pixel-aligned fills, like view-blocks, and two coral chevrons pushing in
 			fill(tiles([1], [4, 7, 10], 14, 2, 0.6), "blue-soft"),
 			line("M5.5 1.2L8 3L10.5 1.2M5.5 14.8L8 13L10.5 14.8", "coral", 1.4),
 		] },
-		"animations": { role: "neutral", parts: [
+		"animations": { parts: [
 			// a ball flying right, speed lines behind it
 			line("M3 5.5H6M0.8 8H5.4M3 10.5H6", "blue-soft", 1.3),
 			fill(circ(11, 8, 4), "coral"), fill(circ(9.7, 6.7, 1.1), "white", 0.7),
 			ink(circ(11, 8, 3.9)),
 		] },
-		"window-titles": { role: "neutral", parts: [
+		"window-titles": { parts: [
 			// a window whose title bar is highlighted, its title written on it
 			...win(1.5, 1.5, 13, 13, 5, "amber", "white", 1.2),
 			line("M3.8 4H9.8", "ink", 1.5),
 			line("M4 9.5H12M4 12H9.5", "grey", 1),
 		] },
-		"support-links": { role: "accent", parts: [
+		"support-links": { parts: [
 			// donate (a coffee cup) and rate (a heart, its steam)
 			fill(circ(11.3, 10.3, 2.5) + circ(11.3, 10.3, 1), "blue-soft"), ink(circ(11.3, 10.3, 2.5) + circ(11.3, 10.3, 1), 0.9),
 			fill("M1.5 7.5h9v3a3.5 3.5 0 0 1 -3.5 3.5h-2a3.5 3.5 0 0 1 -3.5 -3.5z", "blue-soft"),
@@ -428,21 +428,21 @@ export const family : IconFamily = {
 			ink("M1.5 7.5h9v3a3.5 3.5 0 0 1 -3.5 3.5h-2a3.5 3.5 0 0 1 -3.5 -3.5z"),
 			fill(place(HEART, 0.45, 8, 1.7, 6, 0.8), "coral"), ink(place(HEART, 0.45, 8, 1.7, 6, 0.8), 0.9),
 		] },
-		"sessions": { role: "accent", parts: [
+		"sessions": { parts: [
 			// saved windows (a stack) with the gold star of "save"
 			...win(4.5, 1.5, 10, 7, 2, "steel"),
 			...win(1.5, 4.5, 10, 9, 2.5, "blue-soft"),
 			fill(star(11.7, 11.3, 3.9), "amber"), ink(star(11.7, 11.3, 3.9), 0.9),
 		] },
-		"export-sessions": { role: "neutral", parts: [
+		"export-sessions": { parts: [
 			...doc(),
 			fill(arrow(6, 15, 11), "lime"), ink(arrow(6, 15, 11), 0.9),
 		] },
-		"import-sessions": { role: "neutral", parts: [
+		"import-sessions": { parts: [
 			...doc(),
 			fill(arrow(15, 6, 11), "blue-soft"), ink(arrow(15, 6, 11), 0.9),
 		] },
-		"badge": { role: "neutral", parts: [
+		"badge": { parts: [
 			// the toolbar icon (the extension's mark) with a coral count bubble. The count is
 			// a bold "1", its stem on a pixel column: a "3" blurred to a blob at 16px
 			...mark(0.5, 3, 8, 6, 2.5, 1.6),
@@ -450,7 +450,7 @@ export const family : IconFamily = {
 			line("M11.3 2.5L12.5 1.6V5.4", "white", 1.4),
 			ink(rr(8.5, 0.5, 7, 6, 3), 0.9),
 		] },
-		"own-tab": { role: "neutral", parts: [
+		"own-tab": { parts: [
 			// a browser window with a steel tab strip; its active tab, soft blue like the
 			// page under it, opens onto the extension's mark
 			fill(rr(1.5, 2, 13, 12, 1.2), "blue-soft"), fill(bar(1.5, 2, 13, 4, 1.2), "steel"),
@@ -459,12 +459,12 @@ export const family : IconFamily = {
 			...mark(3.5, 7.5, 6, 3, 1.5, 0, 0.7),
 			ink(rr(1.5, 2, 13, 12, 1.2)),
 		] },
-		"minimize-inactive": { role: "neutral", parts: [
+		"minimize-inactive": { parts: [
 			// an inactive (grey) window and the lime minimize button
 			...win(1.5, 1.5, 11, 9, 2.5, "steel", "grey-light"),
 			fill(circ(11.5, 11.5, 3.6), "lime"), line("M11.5 9.5V13.3M9.9 11.8L11.5 13.4L13.1 11.8", "white", 1.3), ink(circ(11.5, 11.5, 3.6)),
 		] },
-		"monitors": { role: "neutral", parts: [
+		"monitors": { parts: [
 			// two screens side by side on slate stands
 			fill("M3 9.5H5V11.5H6.5V13H1.5V11.5H3zM11 9.5H13V11.5H14.5V13H9.5V11.5H11z", "slate"),
 			ink("M3 9.5H5V11.5H6.5V13H1.5V11.5H3zM11 9.5H13V11.5H14.5V13H9.5V11.5H11z", 0.8),
@@ -472,14 +472,14 @@ export const family : IconFamily = {
 			line("M2 5L3.6 3.6M10 5L11.6 3.6", "white", 0.9, 0.7),
 			ink(rr(0.5, 2.5, 7, 7, 0.8)), ink(rr(8.5, 2.5, 7, 7, 0.8)),
 		] },
-		"action-buttons": { role: "neutral", parts: [
+		"action-buttons": { parts: [
 			// a window header with the three coloured window buttons
 			...win(1.5, 1.5, 13, 13, 6, "steel", "white", 1.2),
 			fill(circ(4.5, 4.5, 1.8), "coral"), fill(circ(8, 4.5, 1.8), "lime"), fill(circ(11.5, 4.5, 1.8), "blue-soft"),
 			ink(circ(4.5, 4.5, 1.8) + circ(8, 4.5, 1.8) + circ(11.5, 4.5, 1.8), 0.8),
 			line("M4 10.5H12M4 12.5H9", "grey", 1),
 		] },
-		"private-windows": { role: "neutral", parts: [
+		"private-windows": { parts: [
 			// the incognito hat and glasses: a light steel crown over the slate brim, so the
 			// hat holds on a dark background too
 			fill(poly([[4.3, 6.6], [5.3, 2], [10.7, 2], [11.7, 6.6]]), "steel"), fill("M4.75 4.5H11.25L11.7 6.6H4.3z", "coral"),
@@ -488,10 +488,10 @@ export const family : IconFamily = {
 			fill(circ(4.8, 11.6, 2.4) + circ(11.2, 11.6, 2.4), "sky-soft"), fill(circ(4.1, 10.9, 0.6) + circ(10.5, 10.9, 0.6), "white"),
 			ink(circ(4.8, 11.6, 2.4) + circ(11.2, 11.6, 2.4)), ink("M7.2 11.2C7.7 10.7 8.3 10.7 8.8 11.2", 0.9),
 		] },
-		"shortcuts": { role: "neutral", parts: keycap([
+		"shortcuts": { parts: keycap([
 			fill(BOLT, "amber"), ink(BOLT, 0.8),
 		]) },
-		"changelog": { role: "neutral", parts: [
+		"changelog": { parts: [
 			// a clipboard of notes and a "new" sparkle
 			fill(rr(1.5, 2.5, 10.5, 12, 1.2), "peach"), fill(rr(3, 4, 7.5, 9, 0.4), "white"),
 			line("M4.5 6.5H9M4.5 8.5H9M4.5 10.5H7", "grey", 1),
@@ -499,7 +499,7 @@ export const family : IconFamily = {
 			fill(rr(4.25, 1, 5, 2.6, 0.8), "slate"), ink(rr(4.25, 1, 5, 2.6, 0.8), 0.9),
 			fill(sparkle(12, 11.8, 3.5), "amber"), ink(sparkle(12, 11.8, 3.5), 0.9),
 		] },
-		"debug-export": { role: "neutral", parts: [
+		"debug-export": { parts: [
 			// a page with a ladybug on it
 			...doc(),
 			fill(circ(11, 7.4, 1.6), "slate"), ink(circ(11, 7.4, 1.6), 0.8),
@@ -508,15 +508,15 @@ export const family : IconFamily = {
 			ink("M11 7.6V15", 0.8), ink(circ(11, 11.2, 3.8)),
 		] },
 		// one mouse, the same size in all three: the clicked part coral
-		"mouse-right": { role: "neutral", parts: mouse(3.5, "right") },
-		"mouse-middle": { role: "neutral", parts: mouse(3.5, "middle") },
-		"mouse-shift-right": { role: "neutral", parts: [
+		"mouse-right": { parts: mouse(3.5, "right") },
+		"mouse-middle": { parts: mouse(3.5, "middle") },
+		"mouse-shift-right": { parts: [
 			// the Shift key's hollow arrow, 1.7 left of the mouse
 			fill(poly([[2.7, 4.8], [4.8, 7.6], [3.7, 7.6], [3.7, 11], [1.7, 11], [1.7, 7.6], [0.6, 7.6]]), "white"),
 			ink(poly([[2.7, 4.8], [4.8, 7.6], [3.7, 7.6], [3.7, 11], [1.7, 11], [1.7, 7.6], [0.6, 7.6]]), 0.9),
 			...mouse(6.5, "right"),
 		] },
-		"key-enter": { role: "neutral", parts: keycap([
+		"key-enter": { parts: keycap([
 			line("M10.6 4.4V7.6H5.6M7.2 6L5.6 7.6L7.2 9.2", "blue-soft-dark", 1.4),
 		]) },
 	},

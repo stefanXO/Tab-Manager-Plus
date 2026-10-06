@@ -32,20 +32,14 @@ export const ICON_NAMES : readonly IconName[] = [...ACTION_ICONS, ...OPTION_ICON
 // what a family must draw: the state icons are optional
 export const REQUIRED_ICONS : readonly IconName[] = [...ACTION_ICONS, ...OPTION_ICONS];
 
-// what an icon's colour means; the colours themselves are in palette.ts
-export const ROLES = ["neutral", "accent", "add", "danger", "warn"] as const;
-export type IconRole = typeof ROLES[number];
-
-// stroke: an outline in the text colour; tint: a soft fill in the role's
-// tint; fill: a solid fill in the role's colour
+// stroke: an outline; tint: a soft fill; fill: a solid fill (evenodd). All
+// are painted in the part's named colour
 export type PartKind = "stroke" | "tint" | "fill";
 
-// named colours for multi-colour families (palette.ts COLORS); theme-independent
+// the named colours (palette.ts COLORS), the same on a light and a dark page
 export const COLOR_KEYS = [
-	"ink", "white", "red", "red-dark", "orange", "yellow", "yellow-dark", "green", "green-dark",
-	"blue", "blue-dark", "sky", "purple", "pink", "brown", "gold",
-	"grey-light", "grey", "grey-dark", "steel",
-	// the softer tones of the muted family (F), sampled from the old images; append only
+	"ink", "white", "grey-light", "grey", "steel",
+	// the softer tones of the muted family (F), sampled from the old images
 	"coral", "coral-dark", "lime", "lime-dark", "amber", "amber-dark", "blue-soft", "blue-soft-dark",
 	"sky-soft", "cream", "slate", "peach",
 ] as const;
@@ -54,9 +48,8 @@ export type ColorKey = typeof COLOR_KEYS[number];
 export interface IconPart {
 	d : string;
 	kind : PartKind;
-	// fill / tint: paint with this named colour instead of the role colour;
-	// stroke: stroke in this colour instead of the text colour
-	color? : ColorKey;
+	// the named colour the part is painted (fill, tint) or stroked in
+	color : ColorKey;
 	// 0..1, e.g. a white highlight at 0.5
 	opacity? : number;
 	// stroke only: width instead of STROKE_WIDTH, 0.6..2.4
@@ -64,7 +57,6 @@ export interface IconPart {
 }
 
 export interface IconDef {
-	role : IconRole;
 	parts : IconPart[];
 }
 

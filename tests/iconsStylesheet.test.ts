@@ -8,7 +8,6 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { iconsCss } from "../src/icons/stylesheet.ts";
 import { familyCss } from "../src/icons/css.ts";
-import { paletteCss } from "../src/icons/palette.ts";
 import { family } from "../src/icons/families/muted.ts";
 
 const FILE = new URL("../css/components/icons.css", import.meta.url);
@@ -19,13 +18,11 @@ test("starts with the do-not-edit header naming the script, the family and the n
 	assert.match(head, /do not edit; run `npm run icons:css` \*\/$/);
 });
 
-test("the palette, light on :root and dark under the dark theme, then the family", () => {
-	const css = iconsCss();
-	const light = paletteCss(":root", "light"), dark = paletteCss('html[data-theme="dark"]', "dark"), icons = familyCss(family);
-	assert.ok(css.includes(light) && css.includes(dark) && css.includes(icons));
-	assert.ok(css.indexOf(light) < css.indexOf(dark));
-	assert.ok(css.indexOf(dark) < css.indexOf(icons));
+test("the family's images follow the header, and nothing else", () => {
+	const css = iconsCss(), icons = familyCss(family);
 	assert.ok(css.endsWith(icons));
+	assert.ok(css.indexOf(icons) === css.indexOf("\n") + 2);
+	assert.ok(!css.includes("--icon-") && !css.includes("data-theme"));
 });
 
 test("deterministic, \\n line endings, one trailing newline", () => {

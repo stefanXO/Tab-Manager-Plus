@@ -8,7 +8,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { launchChrome } from './chrome.mjs'
-import { iconSvg, themePaint } from '../../src/icons/svg.ts'
+import { iconSvg } from '../../src/icons/svg.ts'
 import { validateFamily } from '../../src/icons/validate.ts'
 import { ICON_NAMES } from '../../src/icons/types.ts'
 
@@ -34,8 +34,8 @@ const cell = (name, theme) => {
 	const bg = theme === 'dark' ? '#1e2227' : '#ffffff'
 	const fg = theme === 'dark' ? '#e6e6e6' : '#1f2328'
 	return `<div style="background:${bg};color:${fg};padding:6px;display:flex;gap:8px;align-items:center">
-		<span style="width:22px;height:22px;display:grid;place-items:center;border:1px solid #8886;border-radius:3px">${iconSvg(def, 16, themePaint(def.role, theme))}</span>
-		<span style="${GRID}">${iconSvg(def, 64, themePaint(def.role, theme))}</span>
+		<span style="width:22px;height:22px;display:grid;place-items:center;border:1px solid #8886;border-radius:3px">${iconSvg(def, 16)}</span>
+		<span style="${GRID}">${iconSvg(def, 64)}</span>
 		<span style="font:11px sans-serif;width:90px;overflow-wrap:anywhere">${name}</span></div>`
 }
 const html = `<!doctype html><meta charset="utf-8"><body style="margin:0;font:11px sans-serif">

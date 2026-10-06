@@ -1,6 +1,6 @@
 "use strict";
 
-import { ACTION_ICONS, COLOR_KEYS, ICON_NAMES, REQUIRED_ICONS, ROLES, STROKE_WIDTH, type IconFamily } from "./types.ts";
+import { ACTION_ICONS, COLOR_KEYS, ICON_NAMES, REQUIRED_ICONS, STROKE_WIDTH, type IconFamily } from "./types.ts";
 import { pathPoints } from "./path.ts";
 
 // Everything wrong with a family, one readable line each ("save: part 0:
@@ -26,7 +26,6 @@ export function validateFamily(f : IconFamily) : string[] {
 	for (const name of names) {
 		const def = f.icons[name as keyof IconFamily["icons"]];
 		if (!def) continue;
-		if (!(ROLES as readonly string[]).includes(def.role)) errors.push(name + ": unknown role " + JSON.stringify(def.role));
 		if (!def.parts?.length) {
 			errors.push(name + ": no parts");
 			continue;
@@ -37,7 +36,8 @@ export function validateFamily(f : IconFamily) : string[] {
 				errors.push(at + "unknown kind " + JSON.stringify(part.kind));
 				return;
 			}
-			if (part.color !== undefined && !isColor(part.color)) errors.push(at + "unknown color " + JSON.stringify(part.color));
+			if (part.color === undefined) errors.push(at + "missing color");
+			else if (!isColor(part.color)) errors.push(at + "unknown color " + JSON.stringify(part.color));
 			if (part.opacity !== undefined && !(part.opacity >= 0 && part.opacity <= 1)) errors.push(at + "opacity " + part.opacity + " outside 0..1");
 			if (part.width !== undefined) {
 				if (part.kind !== "stroke") errors.push(at + "width needs a stroke part");
@@ -56,7 +56,6 @@ export function validateFamily(f : IconFamily) : string[] {
 			if (out) errors.push(at + "point (" + +out[0].toFixed(3) + ", " + +out[1].toFixed(3) + ") outside " + lo + ".." + hi);
 		});
 		// muted, the family the popup uses, is flat: named colours with an ink outline
-		if (!def.parts.some((p) => p.color)) errors.push(name + ": flat icons need a part with color");
 		if (!def.parts.some((p) => p.kind === "stroke")) errors.push(name + ": flat icons need a stroke part (the outline)");
 	}
 	return errors;

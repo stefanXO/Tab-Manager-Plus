@@ -1,5 +1,5 @@
-// Writes css/components/icons.css: the popup's icons (the --icon-* palette
-// and the family's images for the .icon classes) from src/icons/families/muted.ts.
+// Writes css/components/icons.css: the popup's icons (the family's
+// images for the .icon classes) from src/icons/families/muted.ts.
 // The text comes from iconsCss() (src/icons/stylesheet.ts); this only writes
 // it. Run after changing a drawing: tests/iconsStylesheet.test.ts fails while
 // the file is stale.
