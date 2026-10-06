@@ -31,9 +31,11 @@
 @keyframes tmp-in {
 	from { opacity: 0; transform: scale(0.6); }
 }
+/* from only, like tmp-in: a row the search fades (or a selection leaves
+   unselected) ends at its faded opacity; an explicit "to 1" showed it at full
+   opacity for the whole fade, then snapped it down */
 @keyframes tmp-row {
 	from { opacity: 0; }
-	to { opacity: 1; }
 }
 .animations .window {
 	--wdelay: calc(min(var(--i, 0), 8) * 30ms);
