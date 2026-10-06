@@ -77,6 +77,13 @@
 .stats-favicon.icon-light {
 	background-color: var(--tile-tint);
 }
+/* a tab without a favicon: the icon set's page icon, as on its tile (the
+   image is in icons.css, generated) */
+.stats-favicon-generic {
+	background-position: center;
+	background-size: 16px 16px;
+	background-repeat: no-repeat;
+}
 /* the window card's title icon: a line drawing in the text colour */
 .stats-head-icon {
 	display: block;
@@ -137,7 +144,12 @@
 	justify-content: center;
 	width: 16px;
 	height: 12px;
-	background: center / 12px 12px no-repeat;
+	/* longhands, not the background shorthand: icons.css (imported before
+	   this file) sets the toolbar images below, which a shorthand here would
+	   reset */
+	background-position: center;
+	background-size: 12px 12px;
+	background-repeat: no-repeat;
 }
 /* the line drawings (inline svg, StatsCard.tsx): stroked in the text colour */
 .stats-icon > svg {

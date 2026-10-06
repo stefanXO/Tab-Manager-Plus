@@ -116,8 +116,10 @@
 	opacity: 0;
 	cursor: pointer;
 }
-.choice span {
-	display: block;
+.choice label > span {
+	display: flex;
+	align-items: center;
+	gap: 0.3125rem;
 	padding: 0 0.625rem;
 	border-radius: 0.5rem;
 	font-size: 0.75rem;
@@ -132,6 +134,11 @@
 .choice input:focus-visible + span {
 	outline: 2px solid var(--focus-ring);
 	outline-offset: 1px;
+}
+.choice .ico {
+	display: inline-flex;
+	flex: none;
+	line-height: 0;
 }
 .choice + .textlabel {
 	display: inline-block;
