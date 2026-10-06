@@ -22,6 +22,9 @@
 			"@helpers/*": [
 				"./src/helpers/*"
 			],
+			"@icons/*": [
+				"./src/icons/*"
+			],
 			"@types": [
 				"./src/types/index"
 			],
