@@ -1,11 +1,11 @@
 "use strict";
 
-// Unit tests for findDuplicates in src/popup/duplicates.ts.
+// Unit tests for findDuplicates and duplicatesTitle in src/popup/duplicates.ts.
 // Run with: npm test  (== node --test tests/)
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { findDuplicates } from "../src/popup/duplicates.ts";
+import { findDuplicates, duplicatesTitle } from "../src/popup/duplicates.ts";
 import type { DuplicateCandidate } from "../src/popup/duplicates.ts";
 import { parseQuery, matchTab, searchable } from "../src/popup/search.ts";
 import { RAW_TABS, T, DUPLICATE_URL_TABS } from "./fixture.ts";
@@ -252,5 +252,34 @@ describe("search within duplicates (findDuplicates + the search grammar)", () =>
 
 	test("'reddit' among duplicates+originals matches nothing (the reddit variants are not duplicates)", () => {
 		assert.deepEqual(idsAmong("reddit"), []);
+	});
+});
+
+describe("duplicatesTitle: the button's tooltip", () => {
+	// a.com three times, b.com twice, c.com once: 5 tabs with duplicates, 3 of them duplicates
+	const dups = findDuplicates([
+		{ id: 1, url: "https://a.com/" }, { id: 2, url: "https://a.com/" }, { id: 3, url: "https://a.com/" },
+		{ id: 4, url: "https://b.com/" }, { id: 5, url: "https://b.com/" }, { id: 6, url: "https://c.com/" },
+	]);
+	const none = findDuplicates([{ id: 1, url: "https://a.com/" }, { id: 2, url: "https://b.com/" }]);
+
+	test("off: what the click selects", () => {
+		assert.equal(duplicatesTitle(dups, false),
+			"Highlight Duplicates\n5 tabs with duplicates: will select the 3 duplicates and keep one of each");
+	});
+
+	test("one duplicate", () => {
+		const one = findDuplicates([{ id: 1, url: "https://a.com/" }, { id: 2, url: "https://a.com/" }]);
+		assert.equal(duplicatesTitle(one, false),
+			"Highlight Duplicates\n2 tabs with duplicates: will select the 1 duplicate and keep one of each");
+	});
+
+	test("on: the next click clears", () => {
+		assert.equal(duplicatesTitle(dups, true), "Clear highlighted duplicates\nWill unselect 3 duplicates");
+	});
+
+	test("no duplicates, off and on", () => {
+		assert.equal(duplicatesTitle(none, false), "Highlight Duplicates\nNo duplicates found");
+		assert.equal(duplicatesTitle(none, true), "Clear highlighted duplicates\nNo duplicates found");
 	});
 });

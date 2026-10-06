@@ -2,7 +2,7 @@ import {getLocalStorage, setLocalStorage, getLocalStorageMap} from "@helpers/sto
 import {readSettings, writeBootCache, SETTING_DEFAULTS, Settings, Layout, LAYOUT, getSetting, saveSetting} from "@helpers/settings";
 import {sortWindows} from "@helpers/windows";
 import {parseQuery, matchTab, searchable} from "../search";
-import {findDuplicates} from "../duplicates";
+import {duplicatesTitle, findDuplicates} from "../duplicates";
 import {recentTabs, recentText, recentTitle, RecentTabs, RECENT_LEVELS} from "../recent";
 import {onMainScreen} from "../screen";
 import {debounce, maybePluralize} from "@helpers/utils";
@@ -469,6 +469,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 						sessionsFeature={this.state.sessionsFeature}
 						supportLinks={this.state.supportLinks}
 						sessions={this.state.sessions}
+						windowCount={this.state.windows.length}
+						tabCount={this.state.tabCount}
 					/>
 				</div>}
 				<div className="window top" ref={this.topHoverRef}>
@@ -577,7 +579,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 									/>
 									<div
 										className={"icon windowaction duplicates" + (this.state.dupTabs ? " enabled" : "")}
-										title="Highlight Duplicates"
+										title={duplicatesTitle(this.getDuplicates(), !!this.state.dupTabs)}
 										onClick={this.highlightDuplicates}
 									/>
 									<div

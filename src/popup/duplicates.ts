@@ -1,5 +1,7 @@
 "use strict";
 
+import { maybePluralize } from "../helpers/utils.ts";
+
 // Tabs that share a url. One copy per url stays (the original): the one used
 // most recently (tabs.Tab.lastAccessed), and among tabs without that
 // timestamp the first in the order given. The other copies are the
@@ -43,4 +45,15 @@ export function findDuplicates(tabs : Iterable<DuplicateCandidate>) : Duplicates
 		}
 	}
 	return { originals, duplicates };
+}
+
+// the button's tooltip: what a click does and how many tabs it touches
+// (on: Highlight Duplicates is showing them)
+export function duplicatesTitle(dups : Duplicates, on : boolean) : string {
+	const heading = on ? "Clear highlighted duplicates" : "Highlight Duplicates";
+	const n = dups.duplicates.size;
+	if (n === 0) return heading + "\nNo duplicates found";
+	if (on) return heading + "\nWill unselect " + maybePluralize(n, "duplicate");
+	return heading + "\n" + maybePluralize(n + dups.originals.size, "tab") + " with duplicates: will select the "
+		+ maybePluralize(n, "duplicate") + " and keep one of each";
 }
