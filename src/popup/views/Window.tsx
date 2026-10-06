@@ -7,9 +7,10 @@ import {LAYOUT, isBlockLayout} from "@helpers/settings";
 import * as React from "react";
 import {maybePluralize, timeAgo} from "@helpers/utils";
 import * as browser from 'webextension-polyfill';
-import {ICommand, IWindow, IWindowState, ISavedSession} from '@types';
+import {IWindow, IWindowState, ISavedSession} from '@types';
 import {ManagerContext, ITabManagerActions} from '../context';
 import {windowName, compactName, tabsKey} from '../windowName';
+import {sendAndWait} from '../messaging';
 
 export class Window extends React.Component<IWindow, IWindowState> {
 	static contextType = ManagerContext;
@@ -375,9 +376,9 @@ export class Window extends React.Component<IWindow, IWindowState> {
 		let windowId = this.props.window.id;
 
 		if (IS_FIREFOX) {
-			browser.runtime.sendMessage<ICommand>({command: S.focus_on_window_delayed, window_id: windowId});
+			await sendAndWait({command: S.focus_on_window_delayed, window_id: windowId});
 		} else {
-			browser.runtime.sendMessage<ICommand>({command: S.focus_on_window, window_id: windowId});
+			await sendAndWait({command: S.focus_on_window, window_id: windowId});
 		}
 
 		if (!!window.inPopup) {

@@ -3,12 +3,12 @@
 import * as S from "@strings";
 import {LAYOUT} from "@helpers/settings";
 import * as React from "react";
-import * as browser from 'webextension-polyfill';
-import {ICommand, ITab, ITabState} from '@types';
+import {ITab, ITabState} from '@types';
 import {ManagerContext, ITabManagerActions} from '../context';
 import {faviconTone} from '@helpers/favicon';
 import {tabFreshness} from "../freshness";
 import {titleHits} from "../search";
+import {sendAndWait} from "../messaging";
 
 export class Tab extends React.Component<ITab, ITabState> {
 	static contextType = ManagerContext;
@@ -208,12 +208,12 @@ export class Tab extends React.Component<ITab, ITabState> {
 				let windowId = this.props.window.id;
 
 				if (IS_FIREFOX) {
-					browser.runtime.sendMessage<ICommand>({
+					await sendAndWait({
 						command: S.focus_on_tab_and_window_delayed,
 						saved_tab: {tabId: tabId, windowId: windowId}
 					});
 				} else {
-					browser.runtime.sendMessage<ICommand>({
+					await sendAndWait({
 						command: S.focus_on_tab_and_window,
 						saved_tab: {tabId: tabId, windowId: windowId}
 					});

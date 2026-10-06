@@ -47,6 +47,7 @@ Windows And Sessions
 
 Smaller fixes
 - Settings, window names and colors no longer revert to an older state when the popup opens while they are being changed (#126, #131)
+- Clicking a tab or a window in the popup switches to it every time; after the browser sat idle for a while, the first click only closed the popup (#242, #246, #252)
 - Closing, discarding or moving selected tabs works even when one of them was closed in the meantime
 - Window names and colors changed in the background refresh in the popup
 - Hover texts: restored when moving from a tab back to its window, sessions have one too, tab counts and plurals are right (#121, #183)
