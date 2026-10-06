@@ -131,14 +131,12 @@
 	--tile-border: var(--gray-400);
 	--tile-border-accent: var(--purple-legacy);
 	--tile-active-bg: #eefaff80;
-	--tile-pinned-bg: #FF117733;
 	--pinned-glow: #FF117733;
 	--tile-incognito-active-bg: #eefaffEE;
 	--tile-incognito-active-border: var(--yellow);
 	/* tints behind mostly-white favicons (icon-light), per tile state */
 	--tile-tint: var(--gray-300);
 	--tile-tint-active: var(--ice-blue);
-	--tile-tint-pinned: var(--pink-soft);
 	--tile-tint-selected: var(--yellow);
 	--tile-tint-selected-hover: var(--yellow-soft);
 	/* favicon filters: white-only icons are inverted on light tiles,
@@ -217,6 +215,9 @@
 	--map-monitor-fill: rgba(0, 0, 0, 0.03);
 	--map-window: rgba(102, 51, 153, 0.35);
 	--map-window-edge: rgba(102, 51, 153, 0.8);
+	/* a minimized window: a lighter fill, dashed (others: just the dashed edge) */
+	--map-window-minimized: rgba(102, 51, 153, 0.16);
+	--map-other-minimized: rgba(0, 0, 0, 0.06);
 	--code-bg: rgba(255, 255, 255, 0.7);
 
 	/* options screen controls: the on/off switch. The knob's position is the
