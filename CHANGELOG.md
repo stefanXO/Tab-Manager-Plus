@@ -32,6 +32,7 @@ Searching And Duplicates
 - Highlight recently active tabs: the new clock button in the bar selects the tabs you used last: the shortest span (15 minutes, 3 hours, 12 hours, 2 days ...) with more than one tab in it. Click again to reach further back, twice more (the clock moves to 6 and 9), a fourth click turns it off
 
 Windows And Sessions
+- Automatic window names come from the sites in the window, with proper spelling (GitHub, Stack Overflow, Gmail, Google Docs), no more "Facebook, facebook & 5 more"
 - Window names and colors survive a browser restart, even when the window's tabs changed since
 - Names and colors of windows closed for more than a day are cleaned up, so a new window cannot inherit an old name (#103, #244)
 - Restored windows keep their size and position, fitted to the screen they are restored on; a window saved maximized comes back maximized (#205, #208)
@@ -68,6 +69,7 @@ Options
 - Enter no longer opens a new window while the options or the window color screen are open
 - The changelog page follows the dark theme
 - The tip in the header no longer changes while the popup is loading
+- Advanced settings: Export tabs for debugging saves a JSON file with your windows, tabs and settings, to attach to a bug report
 
 Firefox
 - "Minimize inactive windows" works on Firefox: keeps one window active, the others (on every monitor) are minimized
