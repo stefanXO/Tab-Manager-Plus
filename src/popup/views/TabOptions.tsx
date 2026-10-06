@@ -422,8 +422,10 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 					Licensed under {link("https://www.mozilla.org/MPL/2.0/", "MPL 2.0")}.<br />
 					Icons made by {link("https://www.freepik.com", "Freepik")} from {link("https://www.flaticon.com", "www.flaticon.com")},
 					licensed under {link("https://creativecommons.org/licenses/by/3.0/", "CC BY 3.0")}.
+					Font {link("https://fonts.google.com/noto/specimen/Noto+Sans", "Noto Sans")} by Google ({link("https://openfontlicense.org", "SIL OFL 1.1")}).
 					Uses {link("https://react.dev", "React")} and {link("https://github.com/necolas/normalize.css", "normalize.css")} (MIT)
-					and {link("https://github.com/mozilla/webextension-polyfill", "webextension-polyfill")} (MPL 2.0).
+					and {link("https://github.com/mozilla/webextension-polyfill", "webextension-polyfill")} (MPL 2.0)
+					and the {link("https://publicsuffix.org", "Public Suffix List")} (MPL 2.0).
 				</div>
 			</div>
 		);

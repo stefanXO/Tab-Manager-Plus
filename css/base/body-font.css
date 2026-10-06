@@ -17,5 +17,5 @@
    well (the old body rule set no size), so it is left as it was. */
 
 body {
-	font-family: "interfont",'Graphik', -apple-system, system-ui, BlinkMacSystemFont, "interfont", "Segoe UI", 'Helvetica', Roboto, "Helvetica Neue", Arial, sans-serif;
+	font-family: "Noto Sans", 'Graphik', -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", 'Helvetica', Roboto, "Helvetica Neue", Arial, sans-serif;
 }

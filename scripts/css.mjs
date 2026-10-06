@@ -12,11 +12,11 @@
 // @layer; a target below Chrome 99 would ship layers that the browser drops.
 //
 // url() references stay as written and are not copied or inlined: they are
-// relative to the bundled file (css/popup.css → ../images/…), and images/ is
+// relative to the bundled file (css/popup.css → ../images/…), and images/ and fonts/ are
 // copied next to css/ by the build.
 
-/** Image types a stylesheet may reference; all of them live in images/. */
-const IMAGES = ['*.png', '*.svg', '*.jpg', '*.gif', '*.webp']
+/** Image and font types a stylesheet may reference; they live in images/ and fonts/. */
+const IMAGES = ['*.png', '*.svg', '*.jpg', '*.gif', '*.webp', '*.woff2']
 
 export const CSS_ENTRY = 'css/popup.css'
 export const CSS_TARGET = ['chrome104', 'firefox140']
