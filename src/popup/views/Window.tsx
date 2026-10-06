@@ -9,6 +9,7 @@ import {maybePluralize, timeAgo} from "@helpers/utils";
 import * as browser from 'webextension-polyfill';
 import {ICommand, IWindow, IWindowState, ISavedSession} from '@types';
 import {ManagerContext, ITabManagerActions} from '../context';
+import {windowName, tabsKey} from '../windowName';
 
 export class Window extends React.Component<IWindow, IWindowState> {
 	static contextType = ManagerContext;
@@ -19,11 +20,10 @@ export class Window extends React.Component<IWindow, IWindowState> {
 		super(props);
 
 		this.state = {
-			windowTitles: [],
 			color: "default",
 			name: "",
 			auto_name: "",
-			tabs: 0,
+			tabsKey: "",
 			hover: false,
 			hidden: false,
 			tabrefs: new Map<number, React.RefObject<Tab>>()
@@ -102,102 +102,13 @@ export class Window extends React.Component<IWindow, IWindowState> {
 			return;
 		}
 
-		let _window_titles = this.state.windowTitles;
-		let _tabs = this.state.tabs;
-
-		if (_window_titles.length === 0 || this.state.tabs !== tabs.length + this.props.window.id * 99) {
-			_window_titles.length = 0;
-			_tabs = tabs.length + this.props.window.id * 99;
-
-			for (let i = 0; i < tabs.length; i++) {
-				const _tab = tabs[i];
-				if (!!_tab && (!!_tab.url || !!_tab.pendingUrl)) {
-					let url : URL;
-					if (!!_tab.pendingUrl) {
-						url = new URL(_tab.pendingUrl);
-					} else if (!!_tab.url) {
-						url = new URL(_tab.url);
-					}
-
-					// force refresh once we've loaded tabs
-					if (_tab.status == "loading") _tabs--;
-
-					let protocol = url.protocol || "";
-					let hostname = url.hostname || "";
-					if (protocol.indexOf("view-source") > -1 && !!url.pathname) {
-						url = new URL(url.pathname);
-						hostname = url.hostname || "source";
-					} else if (protocol.indexOf("chrome-extension") > -1) {
-						hostname = _tab.title || "extension";
-					} else if (protocol.indexOf("about") > -1) {
-						hostname = _tab.title || "about";
-					} else if (hostname.indexOf("mail.google") > -1) {
-						hostname = "gmail";
-					} else {
-						if (!hostname) hostname = "";
-						hostname = hostname.replace("www.", "");
-						if (!isIpAddress(hostname)) {
-							let regex_var = new RegExp(/(\.[^\.]{0,2})(\.[^\.]{0,2})(\.*$)|(\.[^\.]*)(\.*$)/);
-							hostname = hostname
-								.replace(regex_var, "")
-								.split(".")
-								.pop();
-						} else {
-							if (!!_tab.title) {
-								hostname = _tab.title;
-							} else {
-								let ip = hostname.split(".");
-								hostname = ip[0] + "." + ip[1] + ".*.*";
-							}
-						}
-					}
-
-					if (!hostname || hostname.length > 7) {
-						let title = _tab.title || "";
-
-						const separators = /\s[—|•-]\s/; // Define separators here
-
-						do {
-							let titles = title.split(separators);
-							let first = titles[0];
-							let last = titles[titles.length - 1];
-							if (slugify(first) == slugify(hostname) || slugify_no_space(first) == slugify_no_space(hostname) || slugify_no_space(first).startsWith(slugify_no_space(hostname).substring(0, 3)) || slugify_no_space(hostname).startsWith(slugify_no_space(first).substring(0, 3))) {
-								title = first;
-							} else if (slugify(last) == slugify(hostname) || slugify_no_space(last) == slugify_no_space(hostname) || slugify_no_space(last).startsWith(slugify_no_space(hostname).substring(0, 3)) || slugify_no_space(hostname).startsWith(slugify_no_space(last).substring(0, 3))) {
-								title = last;
-							} else {
-								titles.sort((a : string, b : string) => a.length - b.length);
-								titles.pop();
-								title = titles.join("-");
-							}
-						} while (title.length > hostname.length && separators.test(title))
-
-						if (!hostname || (!!title && title.length < 23)) {
-							hostname = title;
-						}
-
-						// while (hostname.length > 21 && hostname.indexOf(" ") > -1) {
-						// 	let hostnames = hostname.split(" ");
-						// 	hostnames.pop();
-						// 	hostname = hostnames.join(" ");
-						// }
-
-					}
-
-					_window_titles.push(hostname);
-				}
-			}
-
-			this.setState({
-				tabs: _tabs
-			})
-		}
-
-		if (_window_titles.length > 0) {
-			name = this.topEntries(this.state.windowTitles).join("");
-			this.setState({
-				auto_name: name
-			});
+		// the auto name depends on the sites only, so it is recomputed when a tab is
+		// added, removed or navigated; a loading tab has no final url yet, so leave
+		// the key unset and try again once it settled
+		const key = tabsKey(tabs);
+		if (key !== this.state.tabsKey) {
+			const loading = tabs.some((tab) => tab.status === "loading");
+			this.setState({ tabsKey: loading ? "" : key, auto_name: windowName(tabs) });
 		}
 	}
 
@@ -483,16 +394,12 @@ export class Window extends React.Component<IWindow, IWindowState> {
 	save = async (e) => {
 		this.stopProp(e);
 
-		console.log("session name", this.state.name);
-		let sessionName = this.state.name || this.topEntries(this.state.windowTitles).join("");
 		let sessionColor = this.state.color || "default";
-
-		console.log("session name", sessionName);
 
 		let session : ISavedSession = {
 			tabs: [],
 			windowsInfo: null,
-			name: sessionName,
+			name: "",
 			customName: !!this.state.name,
 			color: sessionColor,
 			date: Date.now(),
@@ -506,10 +413,8 @@ export class Window extends React.Component<IWindow, IWindowState> {
 		};
 		//queryInfo.currentWindow = true;
 
-		console.log(queryInfo);
-
 		let tabs : browser.Tabs.Tab[] = await browser.tabs.query(queryInfo);
-		console.log(tabs);
+		session.name = this.state.name || this.state.auto_name || windowName(tabs);
 		for (let tabkey in tabs) {
 			if (IS_FIREFOX) {
 				let newTab = tabs[tabkey];
@@ -552,33 +457,6 @@ export class Window extends React.Component<IWindow, IWindowState> {
 		});
 		this.context.reload();
 	}
-	topEntries(arr : string[]) : string[] {
-		let cnts = arr.reduce(function(obj, val) {
-			obj[val] = (obj[val] || 0) + 1;
-			return obj;
-		}, {});
-		let sorted = Object.keys(cnts).sort(function(a, b) {
-			return cnts[b] - cnts[a];
-		});
-
-		let more = 0;
-		if (sorted.length === 3) {
-		} else {
-			while (sorted.length > 2) {
-				sorted.pop();
-				more++;
-			}
-		}
-		for (let i = 0; i < sorted.length; i++) {
-			if (i > 0) {
-				sorted[i] = ", " + sorted[i];
-			}
-		}
-		if (more > 0) {
-			sorted.push(" & " + more + " more");
-		}
-		return sorted;
-	}
 	stopProp(e) {
 		if(e && e.nativeEvent) {
 			e.nativeEvent.preventDefault();
@@ -589,37 +467,4 @@ export class Window extends React.Component<IWindow, IWindowState> {
 			e.stopPropagation();
 		}
 	}
-}
-
-function slugify(text) {
-	return text
-		.toString()
-		.toLowerCase()
-		.replace(/\s+/g, "-") // Replace spaces with -
-		.replace(/[^\w-]+/g, "") // Remove all non-word chars
-		.replace(/--+/g, "-") // Replace multiple - with single -
-		.replace(/^-+/, "") // Trim - from start of text
-		.replace(/-+$/, ""); // Trim - from end of text
-}
-
-function slugify_no_space(text) {
-	return text
-		.toString()
-		.toLowerCase()
-		.replace(/\s+/g, "") // Replace spaces with -
-		.replace(/[^\w-]+/g, "") // Remove all non-word chars
-		.replace(/--+/g, "-") // Replace multiple - with single -
-		.replace(/^-+/, "") // Trim - from start of text
-		.replace(/-+$/, ""); // Trim - from end of text
-}
-
-// Function to check if the string is an IP address (IPv4 or IPv6)
-function isIpAddress(input) {
-	// Regex for IPv4: 0-255.0-255.0-255.0-255
-	const ipv4Regex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-
-	// Regex for IPv6: Matches standard IPv6 formatting (8 groups of 4 hex digits)
-	const ipv6Regex = /^([a-fA-F0-9]{1,4}:){7}[a-fA-F0-9]{1,4}$/;
-
-	return ipv4Regex.test(input) || ipv6Regex.test(input);
 }

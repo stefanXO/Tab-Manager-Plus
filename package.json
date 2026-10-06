@@ -18,6 +18,8 @@
     "lint:firefox": "web-ext lint --source-dir build/firefox --warnings-as-errors=false",
     "version": "node scripts/sync-version.mjs && git add manifest.json readme.md changelog.html",
     "check-version": "node scripts/sync-version.mjs --check",
+    "psl": "node scripts/psl.mjs",
+    "psl:show": "node --experimental-strip-types --no-warnings scripts/psl-show.mjs",
     "changelog": "node scripts/changelog.mjs",
     "check-changelog": "node scripts/changelog.mjs --check",
     "release": "tsc --noEmit && npm run package",
