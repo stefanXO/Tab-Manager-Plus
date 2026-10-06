@@ -5,7 +5,7 @@ import { maybePluralize } from "../helpers/utils.ts";
 // The tabs "Highlight recently active tabs" selects, by tabs.Tab.lastAccessed:
 // all tabs used within a time window, the smallest window from
 // RECENT_WINDOWS that holds at least RECENT_MIN tabs ("if several tabs were
-// active in the last 15 minutes, only those; if not, the last 3 hours"...).
+// active in the last 15 minutes, only those; if not, the last hour"...).
 //
 // The button cycles through RECENT_LEVELS levels, then off. Each level is
 // the same rule, skipping the windows the levels before used: level 2 is the
@@ -13,7 +13,7 @@ import { maybePluralize } from "../helpers/utils.ts";
 // are skipped, so every level selects more than the one before (while there
 // are older tabs to add).
 const MIN = 60e3, HOUR = 60 * MIN, DAY = 24 * HOUR;
-export const RECENT_WINDOWS = [15 * MIN, 3 * HOUR, 12 * HOUR, 2 * DAY, 7 * DAY, 28 * DAY];
+export const RECENT_WINDOWS = [15 * MIN, HOUR, 3 * HOUR, 12 * HOUR, DAY, 2 * DAY, 7 * DAY, 28 * DAY];
 export const RECENT_MIN = 2;
 export const RECENT_LEVELS = 3;
 

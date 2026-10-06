@@ -19,7 +19,7 @@ const sorted = (ids : number[]) => [...ids].sort((a, b) => a - b);
 
 describe("constants", () => {
 	test("windows 15 min .. 4 weeks, at least 2 tabs, 3 levels", () => {
-		assert.deepEqual(RECENT_WINDOWS, [15 * MIN, 3 * HOUR, 12 * HOUR, 2 * DAY, 7 * DAY, 28 * DAY]);
+		assert.deepEqual(RECENT_WINDOWS, [15 * MIN, HOUR, 3 * HOUR, 12 * HOUR, DAY, 2 * DAY, 7 * DAY, 28 * DAY]);
 		assert.equal(RECENT_MIN, 2);
 		assert.equal(RECENT_LEVELS, 3);
 	});
@@ -34,13 +34,13 @@ describe("recentTabs: level 1, the smallest window with several tabs", () => {
 
 	test("only one tab in 15 minutes: the next window", () => {
 		const r = recentTabs(tabs([0, 40 * MIN, 2 * HOUR, 2 * DAY]), NOW);
-		assert.deepEqual(sorted(r.ids), [1, 2, 3]);
-		assert.equal(r.span, "3 hours");
+		assert.deepEqual(sorted(r.ids), [1, 2]);
+		assert.equal(r.span, "hour");
 	});
 
 	test("a window's edge is inside it", () => {
 		assert.equal(recentTabs(tabs([0, 15 * MIN, 2 * HOUR]), NOW).count, 2);
-		assert.equal(recentTabs(tabs([0, 15 * MIN + 1, 2 * HOUR]), NOW).span, "3 hours");
+		assert.equal(recentTabs(tabs([0, 15 * MIN + 1, 2 * HOUR]), NOW).span, "hour");
 	});
 
 	test("the level defaults to 1", () => {
@@ -53,21 +53,21 @@ describe("recentTabs: level 1, the smallest window with several tabs", () => {
 			25 * MIN, 40 * MIN, 45 * MIN, 20 * HOUR, 5 * HOUR, 26 * HOUR, 2 * DAY, 12 * DAY,
 			3 * HOUR, 7 * HOUR, 2 * DAY, 3 * DAY, 14 * DAY, 10 * HOUR];
 		assert.equal(recentText(recentTabs(tabs(ages), NOW, 1)), "2 tabs active in the last 15 minutes");
-		assert.equal(recentText(recentTabs(tabs(ages), NOW, 2)), "9 tabs active in the last 3 hours");
-		assert.equal(recentText(recentTabs(tabs(ages), NOW, 3)), "13 tabs active in the last 12 hours");
+		assert.equal(recentText(recentTabs(tabs(ages), NOW, 2)), "6 tabs active in the last hour");
+		assert.equal(recentText(recentTabs(tabs(ages), NOW, 3)), "9 tabs active in the last 3 hours");
 	});
 });
 
 describe("recentTabs: levels 2 and 3 skip the windows before", () => {
-	const ages = [0, 1 * MIN, 30 * MIN, 40 * MIN, 3 * HOUR, 2 * DAY, 20 * DAY];
+	const ages = [0, 1 * MIN, 90 * MIN, 2 * HOUR, 3 * HOUR, 2 * DAY, 20 * DAY];
 
-	test("level 2: the next window that adds tabs", () => {
+	test("level 2: the next window that adds tabs (the hour adds none)", () => {
 		const r = recentTabs(tabs(ages), NOW, 2);
 		assert.deepEqual(sorted(r.ids), [1, 2, 3, 4, 5]);
 		assert.equal(r.span, "3 hours");
 	});
 
-	test("level 3: the one after that adds tabs (12 hours adds none)", () => {
+	test("level 3: the one after that adds tabs (12 hours and a day add none)", () => {
 		const r = recentTabs(tabs(ages), NOW, 3);
 		assert.deepEqual(sorted(r.ids), [1, 2, 3, 4, 5, 6]);
 		assert.equal(recentText(r), "6 tabs active in the last 2 days");

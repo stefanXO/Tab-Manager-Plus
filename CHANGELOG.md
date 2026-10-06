@@ -29,7 +29,7 @@ Searching And Duplicates
 - Search with a regular expression: `/\(\d+\)/` finds tabs with an unread count, `/localhost:\d+/` local dev servers, `/\.pdf$/` open PDFs (#247, #156)
 - Hover the search box for the whole search syntax
 - List view shows the part of a title that matched the search in bold
-- Highlight recently active tabs: the new clock button in the bar selects the tabs you used last: the shortest span (15 minutes, 3 hours, 12 hours, 2 days ...) with more than one tab in it. Click again to reach further back, twice more (the clock moves to 6 and 9), a fourth click turns it off
+- Highlight recently active tabs: the new clock button in the bar selects the tabs you used last: the shortest span (15 minutes, an hour, 3 hours, 12 hours, a day, 2 days ...) with more than one tab in it. Click again to reach further back, twice more (the clock moves to 6 and 9), a fourth click turns it off
 
 Windows And Sessions
 - Automatic window names come from the sites in the window, with proper spelling (GitHub, Stack Overflow, Gmail, Google Docs), no more "Facebook, facebook & 5 more"
