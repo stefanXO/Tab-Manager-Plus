@@ -5,7 +5,7 @@
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { windowName, tabsKey, siteOf, publicSuffix } from "../src/popup/windowName.ts";
+import { windowName, compactName, tabsKey, siteOf, publicSuffix } from "../src/popup/windowName.ts";
 import type { NameTab } from "../src/popup/windowName.ts";
 
 const t = (url: string, title = "", extra: Partial<NameTab> = {}): NameTab => ({ url, title, ...extra });
@@ -378,5 +378,24 @@ describe("title spelling", () => {
 		const five = [t("https://github.com/a"), t("https://a.com/"), t("https://b.com/"), t("https://c.com/"), t("https://d.com/"), newtab(0), newtab(1), newtab(2)];
 		assert.equal(windowName(five), "GitHub, A, B & 2 more");
 		assert.equal(windowName([t("chrome://extensions/", "Extensions"), newtab(0)]), "New Tab, Extensions");
+	});
+});
+
+describe("compactName: the title in compact mode", () => {
+	test("\" & N more\" becomes \" + N\"", () => {
+		assert.equal(compactName("GitHub, Claude, Google & 3 more"), "GitHub, Claude, Google + 3");
+		assert.equal(compactName("YouTube, A, B & 1 more"), "YouTube, A, B + 1");
+	});
+
+	test("names without the suffix stay as they are", () => {
+		assert.equal(compactName("GitHub, Claude"), "GitHub, Claude");
+		assert.equal(compactName("Tom & Jerry"), "Tom & Jerry");
+		assert.equal(compactName(""), "");
+	});
+
+	test("matches what windowName produces", () => {
+		const five = many(5, (i) => t("https://site" + i + ".com/", "S" + i));
+		assert.match(windowName(five), / & 2 more$/);
+		assert.match(compactName(windowName(five)), / \+ 2$/);
 	});
 });
