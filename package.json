@@ -26,7 +26,8 @@
     "package": "node scripts/package.mjs",
     "css:baseline": "node tools/css-baseline/shoot.mjs tools/css-baseline/baseline",
     "css:compare": "node tools/css-baseline/compare.mjs tools/css-baseline/baseline",
-    "icons:css": "node scripts/icons-css.mjs"
+    "icons:css": "node scripts/icons-css.mjs",
+    "icons:sheet": "node tools/icons/sheet.mjs muted"
   },
   "repository": {
     "type": "git",

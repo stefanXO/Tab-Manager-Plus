@@ -1,4 +1,4 @@
-// node tools/icons/sheet.mjs muted <out.png>
+// node tools/icons/sheet.mjs muted [out.png]   (npm run icons:sheet)
 // A contact sheet of one family, for checking drawings by eye: every icon
 // the family has at 16px in a toolbar-sized box and at 64px on a 16x16 grid,
 // light and dark. The family is validated first: its errors are printed and
@@ -12,9 +12,11 @@ import { iconSvg, themePaint } from '../../src/icons/svg.ts'
 import { validateFamily } from '../../src/icons/validate.ts'
 import { ICON_NAMES } from '../../src/icons/types.ts'
 
-const [id, out] = process.argv.slice(2)
-if (!id || !out) {
-	console.error('usage: node tools/icons/sheet.mjs <family> <out.png>')
+// without an output path the sheet goes to the temp folder
+const [id, outArg] = process.argv.slice(2)
+const out = outArg || join(tmpdir(), 'icons-sheet-' + id + '.png')
+if (!id) {
+	console.error('usage: node tools/icons/sheet.mjs <family> [out.png]')
 	process.exit(1)
 }
 const { family } = await import(new URL(id + '.ts', new URL('../../src/icons/families/', import.meta.url)).href)
