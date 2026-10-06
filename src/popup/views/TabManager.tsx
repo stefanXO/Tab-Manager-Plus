@@ -3,7 +3,7 @@ import {readSettings, writeBootCache, SETTING_DEFAULTS, Settings, Layout, LAYOUT
 import {sortWindows} from "@helpers/windows";
 import {parseQuery, matchTab, searchable} from "../search";
 import {findDuplicates} from "../duplicates";
-import {recentTabs, recentText, RecentTabs, RECENT_LEVELS} from "../recent";
+import {recentTabs, recentText, recentTitle, RecentTabs, RECENT_LEVELS} from "../recent";
 import {onMainScreen} from "../screen";
 import {debounce, maybePluralize} from "@helpers/utils";
 import {Window, Session, TabOptions, Tab, WindowOptions} from "@views";
@@ -583,13 +583,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 									<div
 										className={"icon windowaction recent" + (this.state.recentLevel ? " enabled" : "")}
 										data-level={this.state.recentLevel}
-										title={
-											this.state.recentLevel === 0
-												? "Highlight recently active tabs\n" + recentText(this.getRecent(1))
-												: this.state.recentLevel < RECENT_LEVELS
-													? "Highlight more recently active tabs\n" + recentText(this.getRecent(this.state.recentLevel + 1))
-													: "Clear highlighted tabs\nWill unselect " + maybePluralize(this.recentIds.length, 'tab')
-										}
+										title={recentTitle(this.state.tabsbyid.values(), Date.now(), this.state.recentLevel)}
 										onClick={this.highlightRecent}
 									>{RECENT_CLOCKS[this.state.recentLevel]}</div>
 								</td>

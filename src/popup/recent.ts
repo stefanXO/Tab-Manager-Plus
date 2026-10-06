@@ -77,3 +77,28 @@ export function recentText(recent : RecentTabs) : string {
 	if (!recent.span || recent.count === 0) return "No recently active tabs";
 	return maybePluralize(recent.count, "tab") + " active in the last " + recent.span;
 }
+
+// the button's tooltip: what a click does, then every level it cycles
+// through, the one shown (current, 0 when off) and the next click's marked.
+// Levels that select the same tabs share a line
+export function recentTitle(tabs : Iterable<RecentCandidate>, now : number, current : number) : string {
+	const list = Array.from(tabs);
+	const lines : { text : string, levels : number[] }[] = [];
+	let count = -1;
+	for (let level = 1; level <= RECENT_LEVELS; level++) {
+		const recent = recentTabs(list, now, level);
+		if (recent.count === count) {
+			lines[lines.length - 1].levels.push(level);
+			continue;
+		}
+		count = recent.count;
+		lines.push({ text: recentText(recent), levels: [level] });
+	}
+	const heading = current === 0
+		? "Highlight recently active tabs"
+		: current < RECENT_LEVELS ? "Highlight more recently active tabs" : "Clear highlighted tabs";
+	if (count === 0) return heading + "\n" + lines[0].text;
+	return [heading, ...lines.map((l) =>
+		l.text + (l.levels.includes(current) ? " (shown)" : l.levels.includes(current + 1) ? " (next click)" : "")
+	)].join("\n");
+}

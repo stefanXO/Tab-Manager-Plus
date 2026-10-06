@@ -1,11 +1,11 @@
 "use strict";
 
-// Unit tests for recentTabs / recentSpan / recentText in src/popup/recent.ts.
+// Unit tests for recentTabs / recentSpan / recentText / recentTitle in src/popup/recent.ts.
 // Run with: npm test  (== node --test tests/)
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { recentTabs, recentText, recentSpan, RECENT_WINDOWS, RECENT_MIN, RECENT_LEVELS } from "../src/popup/recent.ts";
+import { recentTabs, recentText, recentTitle, recentSpan, RECENT_WINDOWS, RECENT_MIN, RECENT_LEVELS } from "../src/popup/recent.ts";
 import type { RecentCandidate } from "../src/popup/recent.ts";
 
 const NOW = Date.parse("2030-06-01T12:00:00.000Z");
@@ -165,5 +165,43 @@ describe("recentText", () => {
 		assert.equal(recentText({ ids: [1, 2], count: 2, span: "hour" }), "2 tabs active in the last hour");
 		assert.equal(recentText({ ids: [1], count: 1, span: "day" }), "1 tab active in the last day");
 		assert.equal(recentText({ ids: [], count: 0, span: null }), "No recently active tabs");
+	});
+});
+
+describe("recentTitle: the button's tooltip lists every level", () => {
+	const list = tabs([0, 1 * MIN, 40 * MIN, 2 * HOUR, 2 * DAY]);
+	const levels = ["2 tabs active in the last 15 minutes", "3 tabs active in the last hour", "4 tabs active in the last 3 hours"];
+	// the three levels, each followed by its mark
+	const title = (marks : string[]) => levels.map((l, i) => l + marks[i]).join("\n");
+
+	test("off: the first click marked", () => {
+		assert.equal(recentTitle(list, NOW, 0),
+			"Highlight recently active tabs\n" + title([" (next click)", "", ""]));
+	});
+
+	test("on: the level shown and the next click marked", () => {
+		assert.equal(recentTitle(list, NOW, 1),
+			"Highlight more recently active tabs\n" + title([" (shown)", " (next click)", ""]));
+		assert.equal(recentTitle(list, NOW, 2),
+			"Highlight more recently active tabs\n" + title(["", " (shown)", " (next click)"]));
+	});
+
+	test("the last level: the next click clears", () => {
+		assert.equal(recentTitle(list, NOW, 3),
+			"Clear highlighted tabs\n" + title(["", "", " (shown)"]));
+	});
+
+	test("levels that select the same tabs are one line", () => {
+		const few = tabs([0, 1 * MIN, 2 * MIN]);
+		assert.equal(recentTitle(few, NOW, 0), "Highlight recently active tabs\n3 tabs active in the last 15 minutes (next click)");
+		assert.equal(recentTitle(few, NOW, 3), "Clear highlighted tabs\n3 tabs active in the last 15 minutes (shown)");
+	});
+
+	test("no tabs", () => {
+		assert.equal(recentTitle([], NOW, 0), "Highlight recently active tabs\nNo recently active tabs");
+	});
+
+	test("takes an iterator, read once", () => {
+		assert.equal(recentTitle(list.values(), NOW, 0), recentTitle(list, NOW, 0));
 	});
 });
