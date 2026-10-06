@@ -7,6 +7,7 @@ import {ManagerContext, ITabManagerActions, ISettings} from "../context";
 import {getLocalStorage, getLocalStorageMap, setLocalStorage} from "@helpers/storage";
 import {currentShowMonitors, saveSetting, Settings, SETTING_DEFAULTS} from "@helpers/settings";
 import {buildDebugExport, debugFileName} from "../debugExport";
+import {debugExportNote, sessionsExportNote} from "../exportNotes";
 import {switchShowMonitors} from "@helpers/monitors";
 import {sizePopup} from "@helpers/popup_size";
 import {getShortcuts} from "@helpers/shortcuts";
@@ -255,6 +256,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 						help={this.help("exportSessions")}
 						label="Export/Backup Sessions"
 						description="Allows you to backup your saved windows to an external file."
+						notes={[sessionsExportNote(p.sessions)]}
 					>
 						<button type="button" onClick={this.exportSessions} id="session_export" name="session_export">
 							Export/Backup Sessions
@@ -382,15 +384,15 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 				</OptionsBox>
 				<OptionsBox title="Export tabs for debugging">
 					<div className="toggle-box" {...this.help("debugExport")}>
-						<div>
+						<div className="option-actions">
 							<button type="button" id="debug_export" onClick={this.exportDebug}>Save debug file</button>
-							&nbsp;
 							<button type="button" id="debug_copy"
 							        onClick={this.copyDebug}>{this.state.debugCopied ? "Copied" : "Copy to clipboard"}</button>
 						</div>
-						<div className="option-description">
-							Writes every open window and tab (title, url, last used, pinned, active), the automatic name Tab Manager Plus gave each window, and your settings to a JSON file. Nothing is sent anywhere. Attach it to a bug report when a window name or a search result looks wrong.
-						</div>
+						<Description
+							text="Writes every open window and tab (title, url, last used, pinned, active), the automatic name Tab Manager Plus gave each window, and your settings to a JSON file. Nothing is sent anywhere. Attach it to a bug report when a window name or a search result looks wrong."
+							notes={[debugExportNote(p.windowCount, p.tabCount)]}
+						/>
 					</div>
 				</OptionsBox>
 				<div className="optionsBox">

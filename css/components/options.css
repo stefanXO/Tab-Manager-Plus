@@ -89,6 +89,15 @@
 	white-space: nowrap;
 }
 
+/* a row of buttons for one option (the debug export's save / copy), set
+   off from the box's heading above and its description below */
+.option-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	margin: 0.9rem 0 0.6rem;
+}
+
 .option-description {
 	clear: both;
 	padding-bottom: 20px;

@@ -15,5 +15,8 @@ export interface ITabOptions {
 	tabWidth: number,
 	tabactions: boolean,
 	windowTitles: boolean,
-	sessions: ISavedSession[]
+	sessions: ISavedSession[],
+	// the open windows and tabs, for the debug export's note
+	windowCount: number,
+	tabCount: number
 }
