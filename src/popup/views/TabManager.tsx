@@ -16,7 +16,6 @@ import {attachMasonry, Masonry} from "../masonry";
 import {sizePopup} from "@helpers/popup_size";
 import {applyTheme} from "@helpers/theme";
 import {StatsLayer, StatsSource} from "./StatsLayer";
-import {RECENT_CLOCKS} from "./StatsCard";
 
 // the settings the manager holds in its state and applies
 type ManagerSettings = Omit<Settings, "showMonitors">;
@@ -382,6 +381,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 								filterTabs={this.state.filterTabs}
 								draggable={true}
 								windowTitles={this.state.windowTitles}
+								compact={this.state.compact}
 								lastOpenWindow={this.state.lastOpenWindow}
 								lastActive={this.state.lastActive.get(window.id)}
 								order={order}
@@ -418,6 +418,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 								filterTabs={this.state.filterTabs}
 								draggable={true}
 								windowTitles={this.state.windowTitles}
+								compact={this.state.compact}
 								lastOpenWindow={this.state.lastOpenWindow}
 								lastActive={this.state.lastActive.get(window.id)}
 								order={order}
@@ -587,7 +588,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 										data-level={this.state.recentLevel}
 										title={recentTitle(this.state.tabsbyid.values(), Date.now(), this.state.recentLevel)}
 										onClick={this.highlightRecent}
-									>{RECENT_CLOCKS[this.state.recentLevel]}</div>
+									/>
 								</td>
 							</tr>
 						</tbody>

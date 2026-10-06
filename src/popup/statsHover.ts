@@ -226,14 +226,14 @@ export class StatsHover {
 
 	private windowName(windowId : number) : string {
 		const w = this.source.state().windowrefs.get(windowId)?.current;
-		return w ? (w.state.name || w.state.auto_name || "") : "";
+		return w ? w.shownName() : "";
 	}
 
-	// the favicon the tile resolved (Tab.resolveFavIconUrl), the tile's
-	// generic page icon when it has none; with the tone the tile measured
+	// the favicon the tile resolved (Tab.resolveFavIconUrl), with the tone the
+	// tile measured; none (src null): the card draws the tile's page icon
 	private favicon(tab : browser.Tabs.Tab) : IStatsFavicon {
 		const tile = this.source.state().windowrefs.get(tab.windowId)?.current?.state.tabrefs.get(tab.id)?.current;
-		if (!tile || !tile.state.favIcon) return { src: "../images/generic.png", tone: "normal" };
+		if (!tile || !tile.state.favIcon) return { src: null, tone: "normal" };
 		return { src: tile.state.favIcon, tone: tile.state.iconTone };
 	}
 

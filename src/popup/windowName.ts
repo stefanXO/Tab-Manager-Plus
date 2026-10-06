@@ -821,6 +821,12 @@ export function windowName(tabs: NameTab[]): string {
 	return out;
 }
 
+// the automatic name in compact mode: "GitHub, Claude, Google & 3 more"
+// becomes "GitHub, Claude, Google + 3"
+export function compactName(name: string): string {
+	return name.replace(/ & (\d+) more$/, " + $1");
+}
+
 // changes when a tab is added, removed, moved or navigated; not on title changes
 export function tabsKey(tabs: NameTab[]): string {
 	return tabs.map((t) => t.pendingUrl || t.url || "").join("\n");

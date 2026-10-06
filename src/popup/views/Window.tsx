@@ -9,7 +9,7 @@ import {maybePluralize, timeAgo} from "@helpers/utils";
 import * as browser from 'webextension-polyfill';
 import {ICommand, IWindow, IWindowState, ISavedSession} from '@types';
 import {ManagerContext, ITabManagerActions} from '../context';
-import {windowName, tabsKey} from '../windowName';
+import {windowName, compactName, tabsKey} from '../windowName';
 
 export class Window extends React.Component<IWindow, IWindowState> {
 	static contextType = ManagerContext;
@@ -110,6 +110,13 @@ export class Window extends React.Component<IWindow, IWindowState> {
 			const loading = tabs.some((tab) => tab.status === "loading");
 			this.setState({ tabsKey: loading ? "" : key, auto_name: windowName(tabs) });
 		}
+	}
+
+	// the name as the title bar shows it: the user's name, else the automatic
+	// one (shortened in compact mode); the window card (statsHover) shows the same
+	shownName() : string {
+		if (this.state.name) return this.state.name;
+		return this.props.compact ? compactName(this.state.auto_name) : this.state.auto_name;
 	}
 
 	render() {
@@ -220,7 +227,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 							data-hover="Change the name of this window"
 						>
 							{this.props.window.incognito ? "🕵" : ""}
-							{!!this.state.name ? this.state.name : this.state.auto_name}
+							{this.shownName()}
 						</span>
 					</h3>
 				);
