@@ -221,22 +221,21 @@ function mouse(x : number, button : "right" | "middle") : IconPart[] {
 	];
 }
 
-// the clock of "recent", looking back in time: levels 1..3 fill the face from 12 o'clock
-// counter-clockwise back to 9, 6 and 3 o'clock (a quarter, a half, three quarters)
-const QUARTERS = ["", "M8 8V3.4A4.6 4.6 0 0 0 3.4 8z", "M8 8V3.4A4.6 4.6 0 0 0 8 12.6z", "M8 8V3.4A4.6 4.6 0 1 0 12.6 8z"];
-// the hands lie exactly on the filled sector's two edges, from the same centre (8, 8): the
-// minute hand at 12, the hour hand at 9, 6 or 3 (level 0, no sector: 3 o'clock). They are
-// filled rectangles on whole pixels so they stay crisp at 16px. The hour hand is short and
-// bold (2 wide, centred on its edge, through a 2 x 2 hub at the centre); the minute hand long
-// and thin (1 wide, the pixel column just left of the 12 o'clock edge, where every sector
-// starts). At 6 o'clock the change from thin to bold keeps them two hands, not one bar.
-const MINUTE_HAND = rr(7, 4, 1, 4);
-const HOUR_HAND = [rr(7, 7, 4, 2), rr(5, 7, 4, 2), rr(7, 7, 2, 4), rr(7, 7, 4, 2)];
-const clock = (quarters : number) : IconPart[] => [
-	fill(DISC, "peach"), fill(circ(8, 8, 4.6), "white"),
-	...(quarters ? [fill(QUARTERS[quarters], "peach", 0.75)] : []),
-	fill(MINUTE_HAND, "ink"), fill(HOUR_HAND[quarters], "ink"),
-	ink(circ(8, 8, 4.6), 0.8), ink(DISC),
+// the clock of "recent": a thick peach rim around a white face, hands on whole pixels (the
+// minute hand the 1-wide column at mx, up from the hub; the hour hand 2 high from the hub
+// row hy, to the right), over a three-step meter: levels 1..3 light one more coral step.
+// Off is the same clock over three faint steps. The steps echo the list view's freshness bars.
+function face(cx : number, cy : number, R : number, mx : number, hy : number, minute = 3, hour = 3) : IconPart[] {
+	return [
+		fill(circ(cx, cy, R), "peach"), fill(circ(cx, cy, R - 1.6), "white"),
+		fill(rr(mx, hy + 1 - minute, 1, minute + 1), "ink"), fill(rr(mx, hy, hour + 1, 2), "ink"),
+		ink(circ(cx, cy, R)),
+	];
+}
+const METER = [0, 6, 12];
+const clock = (level : number) : IconPart[] => [
+	...face(8, 6, 5.5, 7, 5),
+	...METER.map((x, i) => i < level ? fill(rr(x, 13, 4, 3, 1), "coral") : fill(rr(x, 13, 4, 3, 1), "grey", 0.45)),
 ];
 
 // the sun of "theme-light": the warm-gold half of "theme" made whole, eight rays
@@ -363,7 +362,7 @@ export const family : IconFamily = {
 			ink(PAGE), ink("M9.5 1.5v4h4"),
 		] },
 		"recent": { parts: clock(0) },
-		// recent's levels: the last 15 / 30 / 45 minutes, filled back from 12 o'clock as a quarter, half, three quarters of the face
+		// recent's levels: one, two, three steps of the meter lit
 		"recent-1": { parts: clock(1) },
 		"recent-2": { parts: clock(2) },
 		"recent-3": { parts: clock(3) },
