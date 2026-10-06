@@ -1,4 +1,4 @@
-// shoot.mjs <outdir> [--only <substring>] [--keep] [--scales | --scales-only | --no-scales] [--ext-css] [--scrollbars]
+// shoot.mjs <outdir> [--only <substring>] [--keep] [--scales | --scales-only | --no-scales] [--ext-css] [--scrollbars] [--chrome] [--jobs <n>]
 //
 //   <outdir> / --out <dir>  where the PNGs go (wiped first unless --keep)
 //   --only <substring>      shoot only the names containing it
@@ -11,6 +11,10 @@
 //   --scrollbars            classic (non-overlay) scrollbars, as Chrome on
 //                           Windows draws them; off by default (puppeteer
 //                           launches with --hide-scrollbars)
+//   --chrome                bundle the popup as the Chrome build (see README)
+//   --jobs <n>              page loads run at once over the one shared browser
+//                           (default min(6, availableParallelism); 1 = strictly
+//                           one after the other)
 //
 // Rebuilds tools/css-baseline/app from the CSS that is on disk right now, serves
 // it, and screenshots a fixed matrix of the REAL popup in headless Chrome.
@@ -26,7 +30,11 @@
 //     profile, no font hinting.
 //   * Every page gets its own fresh browser context, so the app's boot cache in
 //     localStorage cannot carry the previous page's theme/layout into the first
-//     frame.
+//     frame. The same isolation is what makes --jobs safe: one task is one
+//     page load (one size x state[, scale], or one standalone page) in its own
+//     context, with its own viewport, media emulation, init scripts and
+//     virtual mouse, so tasks share nothing but the browser process and run
+//     through a small concurrency pool. Output names do not depend on order.
 //   * The virtual mouse is never moved, except in `options-hover`: every other
 //     interaction is an in-page element.click(), so no :hover state is entered.
 //   * activeElement is blurred and caret-color is forced transparent before each
@@ -37,6 +45,7 @@
 // Output file names: <state>-<layout>-<theme>-<width>.png, and for the scale
 // axis <state>-<layout>-<theme>-<width>@<scale>.png (e.g. @z125, @os150).
 import {mkdirSync, rmSync} from 'node:fs'
+import {availableParallelism} from 'node:os'
 import {dirname, join, resolve} from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {buildApp} from './build-app.mjs'
@@ -44,9 +53,10 @@ import {serve} from './serve.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 
-const USAGE = 'usage: node tools/css-baseline/shoot.mjs <outdir> [--only <substring>] [--keep] [--scales | --scales-only | --no-scales] [--ext-css] [--scrollbars] [--chrome]'
+const USAGE = 'usage: node tools/css-baseline/shoot.mjs <outdir> [--only <substring>] [--keep] [--scales | --scales-only | --no-scales] [--ext-css] [--scrollbars] [--chrome] [--jobs <n>]'
 const argv = process.argv.slice(2)
 let outArg = null, only = null, keep = false, scaleMode = 'none', extCss = false, scrollbars = false, chrome = false
+let jobs = Math.min(6, availableParallelism())
 for (let i = 0; i < argv.length; i++) {
 	const a = argv[i]
 	if (a === '--only') only = argv[++i]
@@ -58,6 +68,10 @@ for (let i = 0; i < argv.length; i++) {
 	else if (a === '--ext-css') extCss = true
 	else if (a === '--scrollbars') scrollbars = true
 	else if (a === '--chrome') chrome = true
+	else if (a === '--jobs') {
+		jobs = Number(argv[++i])
+		if (!Number.isInteger(jobs) || jobs < 1) { console.error('--jobs needs a positive integer\n' + USAGE); process.exit(2) }
+	}
 	else if (a.startsWith('--')) { console.error('unknown flag ' + a + '\n' + USAGE); process.exit(2) }
 	else if (!outArg) outArg = a
 }
@@ -96,6 +110,9 @@ const STATES = [
 	// the options screen replaces the whole window container, so the layout
 	// underneath it makes no difference: one layout is enough
 	{name: 'options', layouts: ['blocks'], scaleLayouts: ['blocks'], apply: {overlay: 'options'}},
+	// the same screen scrolled to the "Popup size" box (width and height side by
+	// side when the options box is wide enough, stacked when it is narrow)
+	{name: 'options-popupsize', layouts: ['blocks'], scaleLayouts: [], apply: {overlay: 'options', scrollTo: 'Popup size'}},
 	// the same screen scrolled to the "Window style" box, whose switches sit
 	// below the fold of `options`: dark (on in the dark theme), compact (off),
 	// animations (off) and window titles (on), so both switch states show
@@ -116,6 +133,8 @@ const STATES = [
 	// with the fixture's two saved sessions) and to the "Export tabs for
 	// debugging" box (its two buttons and the window/tab count). dpr 1 only
 	{name: 'options-sessions', layouts: ['blocks'], scaleLayouts: [], apply: {overlay: 'options', scrollTo: 'Session Management'}},
+	// no saved windows: Export/Backup Sessions is disabled, its note says why
+	{name: 'options-sessions-empty', layouts: ['blocks'], scaleLayouts: [], apply: {overlay: 'options', scrollTo: 'Session Management', store: {sessions: {}}}},
 	{name: 'options-debug', layouts: ['blocks'], scaleLayouts: [], apply: {overlay: 'options', scrollTo: 'Export tabs for debugging'}},
 	// the window colour/name screen does take the layout as a prop
 	{name: 'windowopts', layouts: ['blocks', 'vertical'], scaleLayouts: ['blocks'], apply: {overlay: 'colors'}},
@@ -381,13 +400,30 @@ async function shoot(page, name) {
 	if (shot % 10 === 0) console.log('  ' + shot + ' shots')
 }
 
+// ---- the task list and its pool ----
+// Every unit of work is one page load in its own browser context, queued by
+// shootPopup / shootPages and run afterwards by runTasks().
+const tasks = []
+/** Runs the tasks `n` at a time over the shared browser; the first failure stops the queue and is rethrown. */
+async function runTasks(list, n) {
+	let next = 0, failed = null
+	const worker = async () => {
+		while (!failed && next < list.length) {
+			const task = list[next++]
+			try { await task() } catch (e) { failed = failed || e }
+		}
+	}
+	await Promise.all(Array.from({length: Math.max(1, Math.min(n, list.length))}, worker))
+	if (failed) throw failed
+}
+
 // ---- the popup ----
 // One fresh page load (in a fresh browser context) per (width, state). Some
 // popup state is not a setting and does not get reset by re-applying the
 // others - Highlight Duplicates leaves its count in the header bar - so a state
 // must not inherit the page another state left behind. Themes and layouts are
 // pure settings and are looped inside.
-async function shootPopup(scale, sizes, layoutsOf) {
+function shootPopup(scale, sizes, layoutsOf) {
 	const suffix = scale.name ? '@' + scale.name : ''
 	for (const size of sizes) {
 		for (const state of STATES) {
@@ -398,33 +434,38 @@ async function shootPopup(scale, sizes, layoutsOf) {
 			for (const theme of THEMES) for (const layout of layoutsOf(state)) names.push([theme, layout, `${state.name}-${layout}-${theme}-${size.name}${suffix}`])
 			if (!names.some(([, , n]) => want(n))) continue
 
-			const page = await newPage(size, scale)
-			await page.goto(origin + '/popup.html', {waitUntil: 'load'})
-			await page.waitForFunction(() => document.querySelector('.searchBoxInput') && document.querySelectorAll('.window').length >= 3, {timeout: 20000})
-			// warm-up: mounting every tab once resolves and caches every favicon tone,
-			// so the first shot is not raced by the async icon classification
-			await settle(page)
-			await new Promise((r) => setTimeout(r, 900))
+			tasks.push(async () => {
+				const page = await newPage(size, scale)
+				try {
+					await page.goto(origin + '/popup.html', {waitUntil: 'load'})
+					await page.waitForFunction(() => document.querySelector('.searchBoxInput') && document.querySelectorAll('.window').length >= 3, {timeout: 20000})
+					// warm-up: mounting every tab once resolves and caches every favicon tone,
+					// so the first shot is not raced by the async icon classification
+					await settle(page)
+					await new Promise((r) => setTimeout(r, 900))
 
-			for (const [theme, layout, name] of names) {
-				if (!want(name)) continue
-				await apply(page, {layout, dark: theme === 'dark', ...state.apply})
-				// sanity: the overlay states must really be open, else skip
-				if (state.apply.overlay === 'options' && !(await page.$('.options-window'))) { skipped.push(name + ' (options screen did not open)'); continue }
-				if (state.apply.overlay === 'colors' && !(await page.$('.window-colors'))) { skipped.push(name + ' (window colour screen did not open)'); continue }
-				if (state.hover) await hoverOption(page, state.hover)
-				if (state.stats && !(await hoverStats(page, state.stats))) { skipped.push(name + ' (' + state.stats + ' not shown)'); continue }
-				await shoot(page, name)
-			}
-			await closePage(page)
+					for (const [theme, layout, name] of names) {
+						if (!want(name)) continue
+						await apply(page, {layout, dark: theme === 'dark', ...state.apply})
+						// sanity: the overlay states must really be open, else skip
+						if (state.apply.overlay === 'options' && !(await page.$('.options-window'))) { skipped.push(name + ' (options screen did not open)'); continue }
+						if (state.apply.overlay === 'colors' && !(await page.$('.window-colors'))) { skipped.push(name + ' (window colour screen did not open)'); continue }
+						if (state.hover) await hoverOption(page, state.hover)
+						if (state.stats && !(await hoverStats(page, state.stats))) { skipped.push(name + ' (' + state.stats + ' not shown)'); continue }
+						await shoot(page, name)
+					}
+				} finally {
+					await closePage(page)
+				}
+			})
 		}
 	}
 }
 
-if (scaleMode !== 'only') await shootPopup(DPR1, WIDTHS, (st) => st.layouts)
+if (scaleMode !== 'only') shootPopup(DPR1, WIDTHS, (st) => st.layouts)
 
 // ---- the standalone pages (dpr 1, plus the scales a page lists) ----
-async function shootPages(scale, sizes, defs) {
+function shootPages(scale, sizes, defs) {
 	const suffix = scale.name ? '@' + scale.name : ''
 	for (const pageDef of defs) {
 		for (const size of sizes) {
@@ -432,28 +473,33 @@ async function shootPages(scale, sizes, defs) {
 				const name = `${pageDef.name}-na-${theme}-${size.name}${suffix}`
 				if (!want(name)) continue
 				const dark = theme === 'dark'
-				const page = await newPage(size, scale, pageDef.ownTheme ? {dark, theme} : null)
-				const res = await page.goto(origin + '/' + pageDef.url, {waitUntil: 'load'})
-				if (!res || !res.ok()) { skipped.push(name + ' (' + pageDef.url + ' did not load)'); await closePage(page); continue }
-				await page.evaluate((dark, force) => {
-					if (force) {
-						// the theme attribute src/helpers/theme.ts sets; the body/html class
-						// is what the stylesheet keyed on before the css restructure
-						document.documentElement.dataset.theme = dark ? 'dark' : 'light'
-						document.body.classList.toggle('dark', dark)
-						document.documentElement.classList.toggle('dark', dark)
+				tasks.push(async () => {
+					const page = await newPage(size, scale, pageDef.ownTheme ? {dark, theme} : null)
+					try {
+						const res = await page.goto(origin + '/' + pageDef.url, {waitUntil: 'load'})
+						if (!res || !res.ok()) { skipped.push(name + ' (' + pageDef.url + ' did not load)'); return }
+						await page.evaluate((dark, force) => {
+							if (force) {
+								// the theme attribute src/helpers/theme.ts sets; the body/html class
+								// is what the stylesheet keyed on before the css restructure
+								document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+								document.body.classList.toggle('dark', dark)
+								document.documentElement.classList.toggle('dark', dark)
+							}
+							if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur()
+						}, dark, !pageDef.ownTheme)
+						await settle(page)
+						await new Promise((r) => setTimeout(r, 400))
+						await shoot(page, name)
+					} finally {
+						await closePage(page)
 					}
-					if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur()
-				}, dark, !pageDef.ownTheme)
-				await settle(page)
-				await new Promise((r) => setTimeout(r, 400))
-				await shoot(page, name)
-				await closePage(page)
+				})
 			}
 		}
 	}
 }
-if (scaleMode !== 'only') await shootPages(DPR1, WIDTHS, PAGES)
+if (scaleMode !== 'only') shootPages(DPR1, WIDTHS, PAGES)
 
 // ---- the scale axis (popup only) ----
 if (scaleMode !== 'none') {
@@ -461,13 +507,19 @@ if (scaleMode !== 'none') {
 	const narrow = WIDTHS.find((w) => w.name === '380x900')
 	for (const scale of SCALES) {
 		const sizes = scale.narrow ? [popup, narrow] : [popup]
-		await shootPopup(scale, sizes, (st) => st.scaleLayouts)
-		await shootPages(scale, sizes, PAGES.filter((p) => p.scales?.includes(scale.name)))
+		shootPopup(scale, sizes, (st) => st.scaleLayouts)
+		shootPages(scale, sizes, PAGES.filter((p) => p.scales?.includes(scale.name)))
 	}
 }
 
-await browser.close()
-server.close()
+console.log(tasks.length + ' page loads, ' + Math.min(jobs, tasks.length || 1) + ' at a time')
+try {
+	await runTasks(tasks, jobs)
+} finally {
+	await browser.close()
+	server.close()
+}
 
 console.log('\n' + shot + ' screenshots -> ' + OUT)
-if (skipped.length) console.log('skipped:\n  ' + skipped.join('\n  '))
+// tasks finish in any order; list the skips in a stable one
+if (skipped.length) console.log('skipped:\n  ' + skipped.sort().join('\n  '))

@@ -53,6 +53,7 @@ mismatch are written to `<candidate>/diff/`.
 | `--scales-only` | the scale axis only |
 | `--ext-css` | emulate the stylesheet Chrome injects into every extension page (`body { font-family: "Segoe UI", Tahoma, sans-serif; font-size: 75% }` on Windows, unlayered, ahead of the page's sheets). Without it the harness is a plain web page and cannot show a body rule that loses to it — e.g. a body font inside an `@layer`. Also makes body 12px, as in the real popup |
 | `--scrollbars` | classic scrollbars (drops puppeteer's `--hide-scrollbars`), so `overflow-y: scroll` boxes lose their 15px as on Windows |
+| `--jobs <n>` | page loads run at once over the one shared browser (default `min(6, availableParallelism())`; `--jobs 1` shoots strictly one after the other). Each page load is its own browser context, so tasks are isolated; the 192-shot default matrix takes ~45 s at the default vs ~245 s with `--jobs 1`, and the two outputs are pixel-identical apart from the same 1–4 px anti-aliasing noise two sequential runs show |
 | `--chrome` | bundle the popup as the Chrome build (`IS_FIREFOX=false`) instead of the default Firefox build; favicons then render icon-less (they resolve through `chrome-extension://`), so compare only `--chrome` runs with each other |
 
 `--ext-css` and `--scrollbars` change every shot, so compare only runs shot
