@@ -37,7 +37,7 @@ A simple and super-fast Google Extension to help you get the best overview over 
 
 ★  Updates
 
-➤ 7.0.0
+➤ 7.0.0 ( 6th October 2026 )
 A Brand New Look!
 - Every layout redesigned: Block view is a grid, List view (was Vertical) shows one tab per line, Rows view (was Horizontal) one window per row (#58)
 - Dark theme rebuilt with consistent colors; window colors show as a colored edge; scrollbars and controls are dark too (#99, #151)
