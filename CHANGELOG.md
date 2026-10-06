@@ -1,14 +1,14 @@
 7.0.0
 =====
 A Brand New Look!
-- Every layout redesigned: Block view is a grid, List view (was Vertical) shows one tab per line, Rows view (was Horizontal) one window per row (#58)
-- Dark theme rebuilt with consistent colors; window colors show as a colored edge; scrollbars and controls are dark too (#99, #151)
-- Theme: System, Light or Dark. System is the new default and follows your operating system's dark mode, also while the popup is open; if you had dark mode on, it stays dark
+- Every layout redesigned: Block view is a grid, List view (was Vertical) shows one tab per line, Rows view (was Horizontal) one window per row (#264)
+- Dark theme rebuilt with consistent colors; window colors show as a colored edge; scrollbars and controls are dark too; the active tab has a clear outline (#45, #67, #99, #147, #151, #241)
+- Theme: System, Light or Dark. System is the new default and follows your operating system's dark mode, also while the popup is open; if you had dark mode on, it stays dark (#84, #182)
 - New window color palette, with a matching set for the dark theme
 - New icons: every toolbar, window and options icon redrawn, crisp at any zoom in light and dark, with an icon for each setting, a recent-tabs clock whose three steps light up as it reaches further back, and an eye that shows when non-matching tabs are hidden
-- Favicons: white icons stay visible in the light theme, and icons refresh when a tab finishes loading (#251)
+- Favicons: white icons stay visible in the light theme, and icons refresh when a tab finishes loading (#220, #251)
 - Badges show a tab's state: playing sound, muted, asleep (put to sleep by the browser), pinned, active, selected. In List view as chips with a colored edge on the left (#171)
-- List view shows how recently each tab was used: four small bars at the right of the row, filled from the right and fading with age (green for the last minutes, grey after a week); hover them for the exact time
+- List view shows how recently each tab was used: four small bars at the right of the row, filled from the right and fading with age (green for the last minutes, grey after a week); hover them for the exact time (#40)
 - Windows show when they were last active, saved sessions when they were saved
 - Subtle animations when they are on: windows and tabs fade in, state changes ease instead of snapping, a playing row breathes
 
@@ -16,10 +16,10 @@ Faster
 - The popup opens with its final layout, theme and windows in the first frame instead of filling in afterwards
 - The popup script is about 40% smaller
 - Tab changes show up immediately
-- Typing right after opening the popup no longer loses the first characters
+- Typing right after opening the popup no longer loses the first characters (#122)
 
 Searching And Duplicates
-- Highlight Duplicates selects only the extra copies and keeps the one you used last, so Delete closes just the duplicates (#142, #188, #240, #248, #260)
+- Highlight Duplicates selects only the extra copies and keeps the one you used last, so Delete closes just the duplicates (#54, #142, #188, #240, #248, #260)
 - The header shows how many tabs have duplicates and how many are selected
 - Searching while duplicates are highlighted searches within them
 - Pasting a search term, or editing in the middle of it, now searches the right tabs
@@ -27,21 +27,21 @@ Searching And Duplicates
 - Search in titles only with `t:word`, in urls only with `u:word`
 - Exclude tabs from a search with `-word`, also `-u:word`
 - Search for a phrase with a space by quoting it: `"pull request"` (#224)
-- Search with a regular expression: `/\(\d+\)/` finds tabs with an unread count, `/localhost:\d+/` local dev servers, `/\.pdf$/` open PDFs (#247, #156)
+- Search with a regular expression: `/\(\d+\)/` finds tabs with an unread count, `/localhost:\d+/` local dev servers, `/\.pdf$/` open PDFs (#156, #194, #247)
 - Hover the search box for the whole search syntax
 - List view shows the part of a title that matched the search in bold
-- Highlight recently active tabs: the new clock button in the bar selects the tabs you used last: the shortest span (15 minutes, an hour, 3 hours, 12 hours, a day, 2 days ...) with more than one tab in it. Click again to reach further back, twice more (one more step lights up under the clock each time), a fourth click turns it off
+- Highlight recently active tabs: the new clock button in the bar selects the tabs you used last: the shortest span (15 minutes, an hour, 3 hours, 12 hours, a day, 2 days ...) with more than one tab in it. Click again to reach further back, twice more (one more step lights up under the clock each time), a fourth click turns it off (#203)
 
 Windows And Sessions
 - Automatic window names come from the sites in the window, with proper spelling (GitHub, Stack Overflow, Gmail, Google Docs), no more "Facebook, facebook & 5 more"
-- Window names and colors survive a browser restart, even when the window's tabs changed since
+- Window names and colors survive a browser restart, even when the window's tabs changed since (#16, #50, #103, #159, #178, #195, #223, #232, #236, #244)
 - Names and colors of windows closed for more than a day are cleaned up, so a new window cannot inherit an old name (#103, #244)
-- Restored windows keep their size and position, fitted to the screen they are restored on; a window saved maximized comes back maximized (#205, #208)
+- Restored windows keep their size and position, fitted to the screen they are restored on; a window saved maximized comes back maximized (#205, #207, #208)
 - Restoring a window in own-tab mode scrolls to it
 - Saved sessions could be lost when the update from version 5 was interrupted, e.g. by closing the popup
 - Saved sessions are no longer limited by the browser's 10 MB storage quota, and showing a session no longer changes it (which could corrupt exports)
 - Enabling the sessions feature shows your saved windows right away
-- The window order no longer resets on its own; the current window is always listed first and marked, also as a popup (#241)
+- The window order no longer resets on its own; the current window is always listed first and marked, also as a popup
 - Clicking the icon while Tab Manager Plus is already open in a tab switches to that tab
 - The "switch to previous tab" shortcut works again (#37, #108, #238)
 
@@ -65,7 +65,7 @@ Options
 - The options list each keyboard shortcut with its current key, or "Not set"
 - "Donate and Rate buttons" in the options hides those two buttons at the top of the popup
 - New default keys for new installs, as the browser took the old ones: Alt+Shift+M opens Tab Manager Plus, Alt+Shift+, switches to the previous tab (Ctrl+Shift+M and Ctrl+Shift+, on Mac). Existing installs keep their keys
-- The switches are readable in the dark theme and scale with the browser's zoom
+- The switches are readable in the dark theme and scale with the browser's zoom (#69)
 - Hovering anywhere over an option shows its help text in the header, and it stays while the mouse is there; Popup size, Incognito, Shortcut and What's new have help texts too
 - Enter no longer opens a new window while the options or the window color screen are open
 - The changelog page follows the dark theme
@@ -73,8 +73,8 @@ Options
 - Advanced settings: Export tabs for debugging saves a JSON file with your windows, tabs and settings, to attach to a bug report
 
 Firefox
-- "Minimize inactive windows" works on Firefox: keeps one window active, the others (on every monitor) are minimized
-- The options explain how to allow Tab Manager Plus in private windows and show whether it is allowed; "Change shortcut key" opens Firefox's shortcut settings
+- "Minimize inactive windows" works on Firefox: keeps one window active, the others (on every monitor) are minimized (#28)
+- The options explain how to allow Tab Manager Plus in private windows and show whether it is allowed; "Change shortcut key" opens Firefox's shortcut settings (#33, #166)
 
 6.0.0 (2024-10-01)
 =====
