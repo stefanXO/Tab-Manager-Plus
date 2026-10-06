@@ -4,8 +4,9 @@ import * as React from "react";
 import * as browser from 'webextension-polyfill';
 import { ICommand, ITabOptions, ITabOptionsState } from "@types";
 import {ManagerContext, ITabManagerActions, ISettings} from "../context";
-import {getLocalStorage, setLocalStorage} from "@helpers/storage";
-import {currentShowMonitors, saveSetting, Settings} from "@helpers/settings";
+import {getLocalStorage, getLocalStorageMap, setLocalStorage} from "@helpers/storage";
+import {currentShowMonitors, saveSetting, Settings, SETTING_DEFAULTS} from "@helpers/settings";
+import {buildDebugExport, debugFileName} from "../debugExport";
 import {switchShowMonitors} from "@helpers/monitors";
 import {sizePopup} from "@helpers/popup_size";
 import {getShortcuts} from "@helpers/shortcuts";
@@ -45,6 +46,7 @@ const HELP = {
 		? "Lists the keys set now, and how to change or turn off the key that opens Tab Manager Plus"
 		: "Lists the keys set now. The link opens the browser's shortcut settings, to change or turn off the key that opens Tab Manager Plus",
 	changelog: "Opens the list of changes of every release in a new tab",
+	debugExport: "Saves a JSON file with your windows and tabs (titles, urls, times) and the current settings, for reporting a bug or a bad automatic window name",
 	tabActions: "Adds 'Open a new tab' and 'Close this window' option to each window. Default : on",
 } as const;
 type HelpKey = keyof typeof HELP;
@@ -87,6 +89,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		}
 	}
 	componentWillUnmount() {
+		clearTimeout(this.debugCopiedTimer);
 		window.removeEventListener("focus", this.loadShortcuts);
 		if (!IS_FIREFOX) {
 			browser.permissions.onAdded?.removeListener(this.checkMonitorAccess);
@@ -377,6 +380,19 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 						<div className="option-description">The changes of every release, and where to leave a review or report a problem.</div>
 					</div>
 				</OptionsBox>
+				<OptionsBox title="Export tabs for debugging">
+					<div className="toggle-box" {...this.help("debugExport")}>
+						<div>
+							<button type="button" id="debug_export" onClick={this.exportDebug}>Save debug file</button>
+							&nbsp;
+							<button type="button" id="debug_copy"
+							        onClick={this.copyDebug}>{this.state.debugCopied ? "Copied" : "Copy to clipboard"}</button>
+						</div>
+						<div className="option-description">
+							Writes every open window and tab (title, url, last used, pinned, active), the automatic name Tab Manager Plus gave each window, and your settings to a JSON file. Nothing is sent anywhere. Attach it to a bug report when a window name or a search result looks wrong.
+						</div>
+					</div>
+				</OptionsBox>
 				<div className="optionsBox">
 					<div className="toggle-box">
 						<h4>Right mouse button</h4>
@@ -498,6 +514,62 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		// the help text only once the sync is done
 		if (_sessionsFeature) await this.context.sessionSync();
 		this.showHelp("sessions");
+	}
+	// the debug export as text, read fresh from the browser
+	private debugJson = async () : Promise<{ json : string, date : Date }> => {
+		const [windows, names, stored] = await Promise.all([
+			browser.windows.getAll({ populate: true }),
+			getLocalStorageMap<number, string>(S.windowNames),
+			browser.storage.local.get(Object.keys(SETTING_DEFAULTS))
+		]);
+		const date = new Date();
+		const data = buildDebugExport(windows, { ...SETTING_DEFAULTS, ...stored }, {
+			extension: browser.runtime.getManifest().version,
+			browser: navigator.userAgent,
+			exported: date,
+			names
+		});
+		return { json: JSON.stringify(data, null, 2), date };
+	}
+	exportDebug = async () => {
+		try {
+			const { json, date } = await this.debugJson();
+			const url = URL.createObjectURL(new Blob([json], { type: "application/json" }));
+			const a = document.createElement("a");
+			a.href = url;
+			a.download = debugFileName(date);
+			document.body.appendChild(a); // required for firefox
+			a.click();
+			a.remove();
+			setTimeout(() => URL.revokeObjectURL(url), 1000);
+		} catch (e) {
+			window.alert("The debug file could not be saved: " + (e instanceof Error ? e.message : e));
+		}
+	}
+	private debugCopiedTimer? : ReturnType<typeof setTimeout>;
+	copyDebug = async () => {
+		try {
+			const { json } = await this.debugJson();
+			try {
+				await navigator.clipboard.writeText(json);
+			} catch (e) {
+				const area = document.createElement("textarea");
+				area.value = json;
+				area.setAttribute("readonly", "");
+				area.style.position = "fixed";
+				area.style.opacity = "0";
+				document.body.appendChild(area);
+				area.select();
+				const ok = document.execCommand("copy");
+				area.remove();
+				if (!ok) throw e;
+			}
+			this.setState({ debugCopied: true });
+			clearTimeout(this.debugCopiedTimer);
+			this.debugCopiedTimer = setTimeout(() => this.setState({ debugCopied: false }), 1500);
+		} catch (e) {
+			window.alert("Could not copy to the clipboard: " + (e instanceof Error ? e.message : e));
+		}
 	}
 	exportSessions = () => {
 		if (this.props.sessions.length === 0) {
