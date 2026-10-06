@@ -236,7 +236,7 @@ describe("windowStats", () => {
 	test("only the popup's monitor known: a hint line, last", () => {
 		const tabs = [t(WORK, "https://a.test/")];
 		const s = windowStats({ id: WORK, width: 800, height: 600 }, tabs, { now: NOW, monitorHint: true });
-		assert.deepEqual(s.lines[s.lines.length - 1], { key: "monitorHint", text: "one monitor known · allow monitor access in options" });
+		assert.deepEqual(s.lines[s.lines.length - 1], { key: "monitorHint", text: "one monitor known · allow monitor access in options", icon: "hint" });
 		assert.equal(keyed(windowStats({ id: WORK }, tabs, { now: NOW }).lines, "monitorHint"), undefined);
 	});
 
@@ -314,21 +314,21 @@ describe("icons on the lines", () => {
 		assert.deepEqual(state.items, [{ icon: "playing", text: "playing sound" }]);
 	});
 
-	test("active, position, opener and copies lines have a line icon; zoom none", () => {
+	test("active, position, opener, copies and zoom lines have a line icon", () => {
 		const opener = t(WORK, "https://o.test/", { title: "Opener" });
 		const a = t(WORK, "https://dup.test/", { lastAccessed: NOW - MIN, openerTabId: opener.id });
 		const b = t(LIFE, "https://dup.test/");
 		const tabs = withIndex([opener, a]);
 		const s = tabStats(a, { now: NOW, windowTabs: tabs, allTabs: [...tabs, b], zoom: 2 });
 		const icons = Object.fromEntries(s.lines.map((l) => [l.key, l.icon]));
-		assert.deepEqual(icons, { active: "active", position: "position", opener: "opener", copies: "copies", zoom: undefined });
+		assert.deepEqual(icons, { active: "active", position: "position", opener: "opener", copies: "copies", zoom: "zoom" });
 	});
 
 	test("window counts row: an item per count, icons for pinned / asleep / playing", () => {
 		const tabs = [t(WORK, "https://a.test/", { pinned: true }), t(WORK, "https://b.test/", { discarded: true }), t(WORK, "https://c.test/", { audible: true })];
 		const counts = windowStats({ id: WORK }, tabs, { now: NOW }).lines.find((l) => l.key === "counts");
 		assert.deepEqual(counts.items, [
-			{ text: "3 tabs" },
+			{ icon: "tabs", text: "3 tabs" },
 			{ icon: "pinned", text: "1 pinned" },
 			{ icon: "asleep", text: "1 asleep" },
 			{ icon: "playing", text: "1 playing" },
@@ -339,6 +339,15 @@ describe("icons on the lines", () => {
 // ---------------------------------------------------------------------------
 // splitUrl
 // ---------------------------------------------------------------------------
+describe("window line icons", () => {
+	test("every window line has a line icon", () => {
+		const tabs = [t(WORK, "https://a.test/", { lastAccessed: NOW - HOUR })];
+		const s = windowStats({ id: WORK, state: "minimized", width: 800, height: 600 }, tabs, { now: NOW, lastActive: NOW - HOUR, offscreen: true, monitorHint: true });
+		const icons = Object.fromEntries(s.lines.map((l) => [l.key, l.icon ?? l.items?.[0].icon]));
+		assert.deepEqual(icons, { counts: "tabs", sites: "sites", lastActive: "active", used: "used", state: "window", size: "monitor", monitor: "monitor", monitorHint: "hint" });
+	});
+});
+
 describe("splitUrl", () => {
 	test("web url: scheme, host, rest", () => {
 		assert.deepEqual(splitUrl("https://news.ycombinator.com/item?id=1"), { before: "https://", host: "news.ycombinator.com", after: "/item?id=1" });
