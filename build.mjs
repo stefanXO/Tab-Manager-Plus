@@ -8,7 +8,7 @@
 //                              React DevTools (`npx react-devtools`) needs to connect
 //
 // A folder holds everything the browser needs: the merged manifest, the three
-// html pages, css/popup.css (the stylesheet bundle, see scripts/css.mjs), images/,
+// html pages, css/popup.css (the stylesheet bundle, see scripts/css.mjs), images/, fonts/,
 // dist/ (the esbuild output; it keeps that subpath so the <script src="dist/…">
 // references in the html files stay as they are) and the two legal documents. Load build/chrome unpacked in Chrome, and point
 // web-ext or about:debugging at build/firefox. readme.md and CHANGELOG.md stay
@@ -43,11 +43,11 @@ const outDir = join('build', browser)
 
 // copied verbatim next to the manifest; directories go in whole. css/ is not
 // here: the stylesheet is bundled (below), the raw files under css/ never ship
-const STATIC = ['popup.html', 'options.html', 'changelog.html', 'images', 'LICENSE.md', 'PRIVACY.md']
+const STATIC = ['popup.html', 'options.html', 'changelog.html', 'images', 'fonts', 'LICENSE.md', 'PRIVACY.md']
 
 // the sources watch mode keeps an eye on: the static files plus both manifests
 // (css/ is watched by the esbuild context of the stylesheet bundle)
-const WATCHED = ['popup.html', 'options.html', 'changelog.html', 'images', 'manifest.json', 'manifest.firefox.json']
+const WATCHED = ['popup.html', 'options.html', 'changelog.html', 'images', 'fonts', 'manifest.json', 'manifest.firefox.json']
 
 // React DevTools talks to the page over a websocket on 8097; only a dev build
 // may allow it, and only Chrome needs a policy for it at all
