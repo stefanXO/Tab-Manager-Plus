@@ -28,7 +28,7 @@ export async function buildApp({chrome = false} = {}) {
 	rmSync(app, {recursive: true, force: true})
 	mkdirSync(app, {recursive: true})
 	// current images / markup straight from the repo
-	for (const f of ['popup.html', 'options.html', 'changelog.html', 'images']) {
+	for (const f of ['popup.html', 'options.html', 'changelog.html', 'images', 'fonts']) {
 		cpSync(join(repo, f), join(app, f), {recursive: true})
 	}
 	// the demo favicons: downloaded into fav/ on first use, never committed
