@@ -34,7 +34,7 @@ English
 | Screenshots        | 1280×800    | `images/screenshot-1-1280x800.png` … `screenshot-5-1280x800.png`, in store order | 5 (the maximum) |
 | Small Promo Tile   | 440×280     | `images/promo-small-440x280.png`                                                 | Uploaded        |
 | Marquee Promo Tile | 1400×560    | `images/promo-marquee-1400x560.png`                                              | Uploaded        |
-| Promo Video        | YouTube URL | https://youtu.be/DiVPpG9uIvk                                                     | Uploaded        |
+| Promo Video        | YouTube URL | https://www.youtube.com/watch?v=3cGaydl4W-E                                      | Uploaded        |
 
 ## Additional fields
 
