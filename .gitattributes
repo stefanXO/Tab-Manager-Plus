@@ -39,3 +39,4 @@ yarn.lock -diff
 .gitignore export-ignore
 # Built output: skip diff rendering (huge one-line bundles/sourcemaps)
 dist/** -diff linguist-generated=true
+css/components/icons.css -diff linguist-generated=true
