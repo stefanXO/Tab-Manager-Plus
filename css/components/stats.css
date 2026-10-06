@@ -175,14 +175,12 @@
 	display: none;
 }
 
-/* the list view's state chip badges (layout/view-list.css), and toolbar images */
+/* the list view's state chip badges (layout/view-list.css); the toolbar
+   icons (.stats-icon-position, -opener, -copies) are in icons.css, generated */
 .stats-icon-asleep { background-image: var(--badge-suspended); }
 .stats-icon-muted { background-image: var(--badge-muted); }
 .stats-icon-playing { background-image: var(--badge-playing); }
 .stats-icon-pinned { background-image: var(--badge-pinned); }
-.stats-icon-position { background-image: url(../images/views/vertical.png); }
-.stats-icon-opener { background-image: url(../images/add64.png); }
-.stats-icon-copies { background-image: url(../images/duplicates.png); }
 
 /* the window card's monitor map (StatsCard.tsx): monitors outlined, the
    other windows faint, this window filled with the accent */

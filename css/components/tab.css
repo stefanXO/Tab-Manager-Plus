@@ -32,7 +32,10 @@
      icon-mono-dark   only black → inverted on the dark theme
    The tile draws its icon on ::after (so a filter can hit the icon alone, not
    the tile); the list layout uses the .iconoverlay child the same way. Size and
-   position come from the tile's own background-* rules via inherit.
+   position come from the tile's own background-* rules via inherit. The image
+   itself, var(--fav, <the icon set's page icon>) on .icon.tab::after and
+   .iconoverlay, is in icons.css (generated), so a tab without a favicon
+   shows the same page icon in both themes.
    The tint rules sit before .highlighted / .selected so those still win. */
 .icon.tab {
 	position: relative;
@@ -43,13 +46,9 @@
 	position: absolute;
 	inset: 0;
 	pointer-events: none;
-	background-image: var(--fav, url(../images/generic.png));
 	background-size: inherit;
 	background-position: inherit;
 	background-repeat: inherit;
-}
-.iconoverlay {
-	background-image: var(--fav, url(../images/generic.png));
 }
 /* the list layout draws the icon on .iconoverlay, not on the row */
 .icon.tab.full::after {

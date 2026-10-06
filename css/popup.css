@@ -36,6 +36,9 @@
 @import "components/window.css" layer(components);
 @import "components/tab.css" layer(components);
 @import "components/actions.css" layer(components);
+/* generated (npm run icons:css): the icons of actions.css, stats.css and
+   tab.css, and the --icon-* palette; after actions.css so its images win */
+@import "components/icons.css" layer(components);
 @import "components/session.css" layer(components);
 @import "components/colors.css" layer(components);
 @import "components/search.css" layer(components);

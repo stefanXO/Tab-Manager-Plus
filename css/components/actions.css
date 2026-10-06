@@ -1,6 +1,7 @@
 /* Square action buttons (.icon + an action class): the window card's action
    row (.windowaction / .tabaction), the header's donate / rate / options, and
-   the bottom bar's toolbar. Each action class carries its image. */
+   the bottom bar's toolbar. Each action class's image is in icons.css
+   (generated, see the end of this file); donate keeps its PayPal image here. */
 
 /* sizes and places in the header and the bottom bar: both rows are 2rem
    squares --bar-gap apart, --bar-inset from the right edge (layout/frame.css),
@@ -44,43 +45,7 @@
 .windowaction + .enabled {
 	background-color: var(--action-hover);
 }
-.save {
-	background-image: url(../images/star64.png);
-	background-color: var(--action-bg);
-	border: var(--action-border);
-}
-.restore {
-	background-image: url(../images/check64.png);
-	background-color: var(--action-bg);
-	border: var(--action-border);
-}
-.delete {
-	background-image: url(../images/del64.png);
-	background-color: var(--action-bg);
-	border: var(--action-border);
-}
-.add {
-	background-image: url(../images/add64.png);
-	background-color: var(--action-bg);
-	border: var(--action-border);
-}
-.close {
-	background-image: url(../images/cancel64.png);
-	background-color: var(--action-bg);
-	border: var(--action-border);
-}
-.minimize {
-	background-image: url(../images/min64.png);
-	background-color: var(--action-bg);
-	border: var(--action-border);
-}
-.maximize {
-	background-image: url(../images/max64.png);
-	background-color: var(--action-bg);
-	border: var(--action-border);
-}
-.colors {
-	background-image: url(../images/dna64.png);
+.save, .restore, .delete, .add, .close, .minimize, .maximize, .colors {
 	background-color: var(--action-bg);
 	border: var(--action-border);
 }
@@ -90,57 +55,17 @@
 .close:hover {
 	background-color: var(--action-close-hover);
 }
-.new {
-	background-image: url(../images/folder64.png);
-}
-.trash {
-	background-image: url(../images/remove64.png);
-}
-.discard {
-	background-image: url(../images/ram64.png);
-}
-.rate {
+.rate, .options {
 	float: right;
-	background-image: url(../images/heart.png);
 }
+/* the one image that is not drawn by the icon set: PayPal's mark */
 .donate {
 	float: right;
 	background-image: url(../images/paypal.png);
 }
-.options {
-	float: right;
-	background-image: url(../images/wrench64.png);
-}
-.blocks-big-view {
-	background-image: url(../images/views/big-blocks.png);
-}
-.blocks-view {
-	background-image: url(../images/views/blocks.png);
-}
-.horizontal-view {
-	background-image: url(../images/views/horizontal.png);
-}
-.vertical-view {
-	background-image: url(../images/views/vertical.png);
-}
-.pin {
-	background-image: url(../images/push-pin64.png);
-}
-.duplicates {
-	background-image: url(../images/duplicates.png);
-}
-/* Highlight recently active tabs: no image for it, the stats card's clock
-   drawn inline, in the text colour (light on the dark theme) */
-.recent {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	color: var(--text);
-}
-.recent > svg {
-	width: 1rem;
-	height: 1rem;
-}
-.filter {
-	background-image: url(../images/show64.png);
-}
+/* Every other image (.icon.save … .icon.filter, the four layout buttons, the
+   filter button's on state and the recent button's clock per level,
+   data-level 0..3: the clock, then more of it filled) is drawn by the icon
+   set in icons.css, generated from src/icons/families/muted.ts by
+   `npm run icons:css`; it follows this file in the same layer, so its images
+   win over anything here. */
