@@ -1,11 +1,11 @@
 "use strict";
 
 import * as React from "react";
-import {ControlLabel, DescribedOption, Description, LEFT_LABEL_STYLE} from "./shared";
+import {ControlLabel, DescribedOption, Description, LEFT_LABEL_STYLE, OptionTitle} from "./shared";
 
 // A number field. `labelFirst`: the title label goes before the field (the
 // popup size fields) instead of after it. No description when none is given.
-export function NumberOption({ id, help, label, description, notes, value, onChange, min, max, step, className = "", labelFirst = false } : DescribedOption & {
+export function NumberOption({ id, help, label, description, notes, icon, value, onChange, min, max, step, className = "", labelFirst = false } : DescribedOption & {
 	value : number,
 	onChange : (e : React.ChangeEvent<HTMLInputElement>) => void,
 	min : string,
@@ -16,7 +16,7 @@ export function NumberOption({ id, help, label, description, notes, value, onCha
 }) {
 	const title = (
 		<label className="textlabel" htmlFor={id} style={LEFT_LABEL_STYLE}>
-			{label}
+			<OptionTitle icon={icon}>{label}</OptionTitle>
 		</label>
 	);
 	return (

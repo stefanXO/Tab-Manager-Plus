@@ -12,9 +12,10 @@ import {switchShowMonitors} from "@helpers/monitors";
 import {sizePopup} from "@helpers/popup_size";
 import {getShortcuts} from "@helpers/shortcuts";
 import {applyTheme, Theme} from "@helpers/theme";
+import type {IconName} from "@icons/types";
 import * as S from "@strings";
-import {ActionOption, ChoiceOption, NumberOption, OptionsBox, SwitchOption} from "./options";
-import {Description} from "./options/shared";
+import {ActionOption, ChoiceOption, NumberOption, OptionsBox, OptionsRow, SwitchOption} from "./options";
+import {Description, OptionIcon, OptionTitle} from "./options/shared";
 
 // Firefox cannot open about:addons (nor chrome:// pages) from an extension.
 // Its shortcut settings open through commands.openShortcutSettings() (Firefox
@@ -57,10 +58,12 @@ type HelpKey = keyof typeof HELP;
 type SwitchSetting = "animations" | "windowTitles" | "supportLinks" | "compact" | "tabactions" | "badge" | "openInOwnTab" | "sessionsFeature" | "hideWindows";
 type OptionSetting = SwitchSetting | "theme" | "tabLimit" | "tabWidth" | "tabHeight";
 
-const THEME_CHOICES : readonly { value : Theme, label : string }[] = [
-	{ value: "system", label: "System" },
-	{ value: "light", label: "Light" },
-	{ value: "dark", label: "Dark" }
+// each choice's icon: the system theme, a sun, a moon (the last two are
+// optional in an icon family: without them the choice is just its label)
+const THEME_CHOICES : readonly { value : Theme, label : string, icon : IconName }[] = [
+	{ value: "system", label: "System", icon: "theme" },
+	{ value: "light", label: "Light", icon: "theme-light" },
+	{ value: "dark", label: "Dark", icon: "theme-dark" }
 ];
 
 export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
@@ -152,12 +155,14 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 
 	optionsSection() {
 		const p = this.props;
+		const importBlocked = this.importBlocked();
 		return (
 			<div className="toggle-options" key="options">
 				<OptionsBox title="Tab options">
 					<NumberOption
 						id="enable_tabLimit"
 						help={this.help("tabLimit")}
+						icon="tab-limit"
 						label="Limit Tabs Per Window"
 						value={p.tabLimit}
 						onChange={this.changeTabLimit}
@@ -172,31 +177,34 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 						this. If you want to have a better overview, instead you can right click on the Tab Manager Plus icon, and `open in own tab`. This will open the Tab
 						Manager in a new tab.
 					</div>
-					<NumberOption
-						id="enable_tabWidth"
-						help={this.help("tabWidth")}
-						label="Popup Width"
-						value={p.tabWidth}
-						onChange={this.changeTabWidth}
-						min="450" max="800" step="25"
-						className="half-size float-right"
-						labelFirst
-					/>
-					<NumberOption
-						id="enable_tabHeight"
-						help={this.help("tabHeight")}
-						label="Popup Height"
-						value={p.tabHeight}
-						onChange={this.changeTabHeight}
-						min="400" max="600" step="25"
-						className="half-size"
-						labelFirst
-					/>
+					<OptionsRow>
+						<NumberOption
+							id="enable_tabWidth"
+							help={this.help("tabWidth")}
+							icon="popup-width"
+							label="Popup Width"
+							value={p.tabWidth}
+							onChange={this.changeTabWidth}
+							min="450" max="800" step="25"
+							labelFirst
+						/>
+						<NumberOption
+							id="enable_tabHeight"
+							help={this.help("tabHeight")}
+							icon="popup-height"
+							label="Popup Height"
+							value={p.tabHeight}
+							onChange={this.changeTabHeight}
+							min="400" max="600" step="25"
+							labelFirst
+						/>
+					</OptionsRow>
 				</OptionsBox>
 				<OptionsBox title="Window style">
 					<ChoiceOption
 						id="theme_mode"
 						help={this.help("theme")}
+						icon="theme"
 						label="Theme"
 						value={p.theme}
 						choices={THEME_CHOICES}
@@ -207,6 +215,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 					<SwitchOption
 						id="compact_mode"
 						help={this.help("compact")}
+						icon="compact"
 						label="Compact mode"
 						checked={p.compact}
 						onChange={() => this.toggle("compact", "compact")}
@@ -216,6 +225,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 					<SwitchOption
 						id="enable_animations"
 						help={this.help("animations")}
+						icon="animations"
 						label="Animations"
 						checked={p.animations}
 						onChange={() => this.toggle("animations", "animations")}
@@ -225,6 +235,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 					<SwitchOption
 						id="enable_windowTitles"
 						help={this.help("windowTitles")}
+						icon="window-titles"
 						label="Window titles"
 						checked={p.windowTitles}
 						onChange={() => this.toggle("windowTitles", "windowTitles")}
@@ -234,6 +245,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 					<SwitchOption
 						id="enable_supportLinks"
 						help={this.help("supportLinks")}
+						icon="support-links"
 						label="Donate and Rate buttons"
 						checked={p.supportLinks}
 						onChange={() => this.toggle("supportLinks", "supportLinks")}
@@ -245,43 +257,55 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 					<SwitchOption
 						id="session_mode"
 						help={this.help("sessions")}
+						icon="sessions"
 						label="Save Windows for Later"
 						checked={p.sessionsFeature}
 						onChange={this.toggleSessions}
 						description="Allows you to save windows as sessions ( saved windows ). You can restore these saved windows later on. The restored windows won't have the history restored. This feature is currently in beta."
 						notes={["By default: disabled ( experimental feature )"]}
 					/>
-					{p.sessionsFeature && <ActionOption
-						id="session_export"
-						help={this.help("exportSessions")}
-						label="Export/Backup Sessions"
-						description="Allows you to backup your saved windows to an external file."
-						notes={[sessionsExportNote(p.sessions)]}
-					>
-						<button type="button" onClick={this.exportSessions} id="session_export" name="session_export">
-							Export/Backup Sessions
-						</button>
-					</ActionOption>}
-					{p.sessionsFeature && <ActionOption
-						id="session_import"
-						help={this.help("importSessions")}
-						label="Import/Restore Sessions"
-						description="Allows you to restore your backup from an external file. The restored windows will be added to your current saved windows."
-					>
-						<input
-							type="file"
-							accept="application/json"
-							onChange={this.importSessions}
+					{p.sessionsFeature && <OptionsRow>
+						<ActionOption
+							id="session_export"
+							help={this.help("exportSessions")}
+							icon="export-sessions"
+							label="Export/Backup Sessions"
+							description="Allows you to backup your saved windows to an external file."
+							notes={[sessionsExportNote(p.sessions)]}
+						>
+							<button type="button" onClick={this.exportSessions} id="session_export" name="session_export"
+							        disabled={!p.sessions?.length}>
+								Export/Backup Sessions
+							</button>
+						</ActionOption>
+						<ActionOption
 							id="session_import"
-							name="session_import"
-							placeholder="Import/Restore Sessions"
-						/>
-					</ActionOption>}
+							help={this.help("importSessions")}
+							icon="import-sessions"
+							label="Import/Restore Sessions"
+							description="Allows you to restore your backup from an external file. The restored windows will be added to your current saved windows."
+							notes={[
+								...(importBlocked ? ["Due to a Firefox bug session import does not work in the popup. Please use the options screen or open Tab Manager Plus in its own tab"] : []),
+								...(this.state.importError ? [this.state.importError] : [])
+							]}
+						>
+							<input
+								type="file"
+								accept="application/json"
+								onChange={this.importSessions}
+								disabled={importBlocked}
+								id="session_import"
+								name="session_import"
+								placeholder="Import/Restore Sessions"
+							/>
+						</ActionOption>
+					</OptionsRow>}
 				</OptionsBox>
 				<OptionsBox title="Popup icon">
 					<SwitchOption
 						id="badge_mode"
 						help={this.help("badge")}
+						icon="badge"
 						label="Count Tabs"
 						checked={p.badge}
 						onChange={this.toggleBadge}
@@ -291,6 +315,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 					<SwitchOption
 						id="openinowntab_mode"
 						help={this.help("openInOwnTab")}
+						icon="own-tab"
 						label="Open in own Tab by default"
 						checked={p.openInOwnTab}
 						onChange={this.toggleOpenInOwnTab}
@@ -303,6 +328,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 					<SwitchOption
 						id="auto_hide"
 						help={this.help("hide")}
+						icon="minimize-inactive"
 						label="Minimize inactive windows"
 						checked={p.hideWindows}
 						onChange={this.toggleHide}
@@ -314,6 +340,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 						<SwitchOption
 							id="monitors_mode"
 							help={this.help("monitors")}
+							icon="monitors"
 							label="Show all monitors"
 							checked={!!this.state.monitorAccess}
 							onChange={this.toggleMonitors}
@@ -324,6 +351,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 					<SwitchOption
 						id="tabactions_mode"
 						help={this.help("tabActions")}
+						icon="action-buttons"
 						label="Show action buttons"
 						checked={p.tabactions}
 						onChange={() => this.toggle("tabactions", "tabActions")}
@@ -335,7 +363,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 					{IS_FIREFOX ? (
 						<div className="toggle-box" {...this.help("incognito")}>
 							<div className="toggle-box">
-								<strong>Allow in Private Windows</strong>
+								<OptionTitle icon="private-windows"><strong>Allow in Private Windows</strong></OptionTitle>
 							</div>
 							<Description
 								text={
@@ -348,9 +376,11 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 					) : (
 						<div className="toggle-box" {...this.help("incognito")}>
 							<div className="toggle-box">
-								<a href="#" onClick={this.openIncognitoOptions}>
-									Allow in Incognito
-								</a>
+								<OptionTitle icon="private-windows">
+									<a href="#" onClick={this.openIncognitoOptions}>
+										Allow in Incognito
+									</a>
+								</OptionTitle>
 							</div>
 							<div className="option-description">
 								If you also want to see your incognito tabs in the Tab Manager overview, then enable incognito access for this extension.
@@ -359,7 +389,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 					)}
 					{IS_FIREFOX && !CAN_OPEN_SHORTCUTS ? (
 						<div className="toggle-box" {...this.help("shortcuts")}>
-							<strong>Change shortcut key</strong>
+							<OptionTitle icon="shortcuts"><strong>Change shortcut key</strong></OptionTitle>
 							{this.shortcutList()}
 							<div className="option-description">
 								If you want to disable or change the shortcut key with which to open Tab Manager Plus, you can do so in the add-ons settings: open about:addons,
@@ -368,44 +398,49 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 						</div>
 					) : (
 						<div className="toggle-box" {...this.help("shortcuts")}>
-							<a href="#" onClick={this.openShortcuts}>
-								Change shortcut key
-							</a>
+							<OptionTitle icon="shortcuts">
+								<a href="#" onClick={this.openShortcuts}>
+									Change shortcut key
+								</a>
+							</OptionTitle>
 							{this.shortcutList()}
 							<div className="option-description">If you want to disable or change the shortcut key with which to open Tab Manager Plus, you can do so here.</div>
 						</div>
 					)}
 					<div className="toggle-box" {...this.help("changelog")}>
-						<a href="changelog.html" target="_blank" rel="noopener">
-							What's new in this version
-						</a>
+						<OptionTitle icon="changelog">
+							<a href="changelog.html" target="_blank" rel="noopener">
+								What's new in this version
+							</a>
+						</OptionTitle>
 						<div className="option-description">The changes of every release, and where to leave a review or report a problem.</div>
 					</div>
 				</OptionsBox>
 				<OptionsBox title="Export tabs for debugging">
 					<div className="toggle-box" {...this.help("debugExport")}>
 						<div className="option-actions">
+							<OptionIcon icon="debug-export" />
 							<button type="button" id="debug_export" onClick={this.exportDebug}>Save debug file</button>
 							<button type="button" id="debug_copy"
 							        onClick={this.copyDebug}>{this.state.debugCopied ? "Copied" : "Copy to clipboard"}</button>
 						</div>
 						<Description
 							text="Writes every open window and tab (title, url, last used, pinned, active), the automatic name Tab Manager Plus gave each window, and your settings to a JSON file. Nothing is sent anywhere. Attach it to a bug report when a window name or a search result looks wrong."
-							notes={[debugExportNote(p.windowCount, p.tabCount)]}
+							notes={[debugExportNote(p.windowCount, p.tabCount), ...(this.state.debugError ? [this.state.debugError] : [])]}
 						/>
 					</div>
 				</OptionsBox>
 				<div className="optionsBox">
 					<div className="toggle-box">
-						<h4>Right mouse button</h4>
+						<h4><OptionTitle icon="mouse-right">Right mouse button</OptionTitle></h4>
 						<div className="option-description">With the right mouse button you can select tabs</div>
-						<h4>Shift+Right mouse button</h4>
+						<h4><OptionTitle icon="mouse-shift-right">Shift+Right mouse button</OptionTitle></h4>
 						<div className="option-description">
 							While holding shift, and pressing the right mouse button you can select all tabs between the last selected tab and the current one
 						</div>
-						<h4>Middle mouse button</h4>
+						<h4><OptionTitle icon="mouse-middle">Middle mouse button</OptionTitle></h4>
 						<div className="option-description">With the middle mouse button you can close a tab</div>
-						<h4>[Enter / Return] button</h4>
+						<h4><OptionTitle icon="key-enter">[Enter / Return] button</OptionTitle></h4>
 						<div className="option-description">
 							With the return button you can switch to the currently selected tab, or move multiple selected tabs to a new window
 						</div>
@@ -438,7 +473,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 					{link("https://github.com/joshperry/Tab-Manager", "joshperry/Tab-Manager")} and{" "}
 					{link("https://github.com/JonasNo/Tab-Manager", "JonasNo/Tab-Manager")}.
 					Licensed under {link("https://www.mozilla.org/MPL/2.0/", "MPL 2.0")}.<br />
-					Icons made by {link("https://www.freepik.com", "Freepik")} from {link("https://www.flaticon.com", "www.flaticon.com")},
+					Extension icon made by {link("https://www.freepik.com", "Freepik")} from {link("https://www.flaticon.com", "www.flaticon.com")},
 					licensed under {link("https://creativecommons.org/licenses/by/3.0/", "CC BY 3.0")}.
 					Font {link("https://fonts.google.com/noto/specimen/Noto+Sans", "Noto Sans")} by Google ({link("https://openfontlicense.org", "SIL OFL 1.1")}).
 					Uses {link("https://react.dev", "React")} and {link("https://github.com/necolas/normalize.css", "normalize.css")} (MIT)
@@ -534,6 +569,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		return { json: JSON.stringify(data, null, 2), date };
 	}
 	exportDebug = async () => {
+		this.setState({ debugError: undefined });
 		try {
 			const { json, date } = await this.debugJson();
 			const url = URL.createObjectURL(new Blob([json], { type: "application/json" }));
@@ -545,11 +581,12 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 			a.remove();
 			setTimeout(() => URL.revokeObjectURL(url), 1000);
 		} catch (e) {
-			window.alert("The debug file could not be saved: " + (e instanceof Error ? e.message : e));
+			this.setState({ debugError: "The debug file could not be saved: " + (e instanceof Error ? e.message : e) });
 		}
 	}
 	private debugCopiedTimer? : ReturnType<typeof setTimeout>;
 	copyDebug = async () => {
+		this.setState({ debugError: undefined });
 		try {
 			const { json } = await this.debugJson();
 			try {
@@ -570,14 +607,12 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 			clearTimeout(this.debugCopiedTimer);
 			this.debugCopiedTimer = setTimeout(() => this.setState({ debugCopied: false }), 1500);
 		} catch (e) {
-			window.alert("Could not copy to the clipboard: " + (e instanceof Error ? e.message : e));
+			this.setState({ debugError: "Could not copy to the clipboard: " + (e instanceof Error ? e.message : e) });
 		}
 	}
 	exportSessions = () => {
-		if (this.props.sessions.length === 0) {
-			window.alert("You have currently no windows saved for later. There is nothing to export.");
-			return;
-		}
+		// the button is disabled then (and the note says why): nothing to do
+		if (!this.props.sessions?.length) return;
 		let exportName = "tab-manager-plus-backup";
 		let today = new Date();
 		let y = today.getFullYear();
@@ -609,18 +644,17 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		this.showHelp("exportSessions");
 		this.context.reload();
 	}
+	// Firefox: the file picker does not work in the popup (a browser bug)
+	private importBlocked = () => IS_FIREFOX && !!window.inPopup;
 	importSessions = (evt : React.ChangeEvent<HTMLInputElement>) => {
-		if (IS_FIREFOX) {
-			if(window.inPopup) {
-				window.alert("Due to a Firefox bug session import does not work in the popup. Please use the options screen or open Tab Manager Plus in its' own tab");
-				return;
-			}
-		}
+		// the file picker is disabled then, with the reason as its note
+		if (this.importBlocked()) return;
+		this.setState({ importError: undefined });
 		try {
 			let inputField = evt.target; // #session_import
 			let files = evt.target.files;
 			if (!files.length) {
-				alert("No file selected!");
+				this.setState({ importError: "No file selected!" });
 				this.context.setBottomText("Error: Could not read the backup file!");
 				return;
 			}
@@ -634,8 +668,10 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 					backupFile = JSON.parse(event.target.result.toString());
 				} catch (err) {
 					console.error(err);
-					window.alert(err);
+					this.setState({ importError: "Could not read the backup file: " + (err instanceof Error ? err.message : err) });
 					this.context.setBottomText("Error: Could not read the backup file!");
+					inputField.value = "";
+					return;
 				}
 				if (!!backupFile && backupFile.length > 0) {
 					var success = backupFile.length;
@@ -664,7 +700,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 			reader.readAsText(file);
 		} catch (err) {
 			console.error(err);
-			window.alert(err);
+			this.setState({ importError: "Could not import the backup file: " + (err instanceof Error ? err.message : err) });
 		}
 		this.showHelp("importSessions");
 		this.context.reload();
