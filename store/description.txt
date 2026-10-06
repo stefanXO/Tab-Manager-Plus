@@ -29,6 +29,7 @@ A simple and super-fast Google Extension to help you get the best overview over 
 ➤ Pin/unpin Tabs
 ➤ Discard tabs to save memory
 ➤ See which tabs play sound, are muted, asleep or pinned
+➤ Windows are named after their sites automatically (GitHub, Gmail, Google Docs)
 ➤ Name and color your windows - names and colors survive a browser restart
 ➤ Save windows and restore them later, with their size and position
 ➤ Hold the mouse on a tab or window for details: last used, tab counts, sites, monitor
@@ -43,7 +44,7 @@ A Brand New Look!
 - Dark theme rebuilt with consistent colors; window colors show as a colored edge; scrollbars and controls are dark too (#99, #151)
 - Theme: System, Light or Dark. System is the new default and follows your operating system's dark mode, also while the popup is open; if you had dark mode on, it stays dark
 - New window color palette, with a matching set for the dark theme
-- New icons: every toolbar, window and options icon redrawn, crisp at any zoom in light and dark, with an icon for each setting, a recent-tabs clock that fills as it reaches further back, and an eye that shows when non-matching tabs are hidden
+- New icons: every toolbar, window and options icon redrawn, crisp at any zoom in light and dark, with an icon for each setting, a recent-tabs clock whose three steps light up as it reaches further back, and an eye that shows when non-matching tabs are hidden
 - Favicons: white icons stay visible in the light theme, and icons refresh when a tab finishes loading (#251)
 - Badges show a tab's state: playing sound, muted, asleep (put to sleep by the browser), pinned, active, selected. In List view as chips with a colored edge on the left (#171)
 - List view shows how recently each tab was used: four small bars at the right of the row, filled from the right and fading with age (green for the last minutes, grey after a week); hover them for the exact time
@@ -68,9 +69,10 @@ Searching And Duplicates
 - Search with a regular expression: /\(\d+\)/ finds tabs with an unread count, /localhost:\d+/ local dev servers, /\.pdf$/ open PDFs (#247, #156)
 - Hover the search box for the whole search syntax
 - List view shows the part of a title that matched the search in bold
-- Highlight recently active tabs: the new clock button in the bar selects the tabs you used last: the shortest span (15 minutes, an hour, 3 hours, 12 hours, a day, 2 days ...) with more than one tab in it. Click again to reach further back, twice more (the clock moves to 6 and 9), a fourth click turns it off
+- Highlight recently active tabs: the new clock button in the bar selects the tabs you used last: the shortest span (15 minutes, an hour, 3 hours, 12 hours, a day, 2 days ...) with more than one tab in it. Click again to reach further back, twice more (one more step lights up under the clock each time), a fourth click turns it off
 
 Windows And Sessions
+- Automatic window names come from the sites in the window, with proper spelling (GitHub, Stack Overflow, Gmail, Google Docs), no more "Facebook, facebook & 5 more"
 - Window names and colors survive a browser restart, even when the window's tabs changed since
 - Names and colors of windows closed for more than a day are cleaned up, so a new window cannot inherit an old name (#103, #244)
 - Restored windows keep their size and position, fitted to the screen they are restored on; a window saved maximized comes back maximized (#205, #208)
@@ -81,6 +83,14 @@ Windows And Sessions
 - The window order no longer resets on its own; the current window is always listed first and marked, also as a popup (#241)
 - Clicking the icon while Tab Manager Plus is already open in a tab switches to that tab
 - The "switch to previous tab" shortcut works again (#37, #108, #238)
+
+Smaller fixes
+- Settings, window names and colors no longer revert to an older state when the popup opens while they are being changed (#126, #131)
+- Closing, discarding or moving selected tabs works even when one of them was closed in the meantime
+- Window names and colors changed in the background refresh in the popup
+- Hover texts: restored when moving from a tab back to its window, sessions have one too, tab counts and plurals are right (#121, #183)
+- The drop indicator when dragging a tab fits every layout and shows in the dark theme; the color picker lists colors in order (#97)
+- The window name and color screen covers the whole popup, its close button shows a pointer and Escape closes only that screen
 
 Tab And Window Info
 - Hold the mouse on a tab to see when it was last used, its state (asleep, muted and why, playing, pinned), its position, which tab opened it, copies in other windows and its zoom
@@ -98,32 +108,19 @@ Options
 - Enter no longer opens a new window while the options or the window color screen are open
 - The changelog page follows the dark theme
 - The tip in the header no longer changes while the popup is loading
+- Advanced settings: Export tabs for debugging saves a JSON file with your windows, tabs and settings, to attach to a bug report
 
 ➤ 6.0.0 ( 1st October 2024 )
-- You can now open single tabs from your saved sessions
-- Experimental: Try to restore window names and colors after a browser restart
-- Fix: Vertical layout takes now the full width in popups
-- Fix: Vertical view has now nicer separators when used in full window, that take the whole screen width
-- Fix: Sometimes favicons would not load properly
-- Fix: Make sure session tabs are fully restored before closing the popup
-- Fix: Moving many tabs could stop early because of popup closing in the meantime
-- Fix: Closing many tabs could stop early because of popup closing in the meantime
-- Fix: Discarding many tabs could stop early because of popup closing in the meantime
-- Fix: Selecting a color for a window would hide all other windows until the next open
-- Fix: Windows that were saved out of bounds of the current monitor, could not be restored
-- Fix: Windows that were too big for the current monitor, would not be restored
-- Fix: Don't animate scrolling if animations are disabled
-- Fix: Dragging tabs would sometimes drop them in the wrong location, now they will be added to the closest tab in the new window
-- Fix: Favicons sometimes stuck, based on browser cache
-- Fix: Also use favicon url based on pending url if tab is loading
-- Fix: Don't attempt to show empty favicon
-- Fix: pending urls not being read when calculating window title
-- Fix: window title not updating after tabs fully loaded
-- Fix: IPs being shown as weird numbers in window title/name
-- Fix: title being based on whole url, instead of hostname while tab was loading
-- Fix: Try to find nicer window title if it matches hostname
-- Fix: Group by top-Ips, like 192.168.*.*
-- Fix: If you selected incognito tabs and normal tabs based on a search, and tried to move them to one window then it would fail because they can't be mixed together. Now it will open 2 windows - one with normal tabs, one with incognito tabs.
+- Open single tabs from your saved sessions
+- Experimental: restore window names and colors after a browser restart
+- Vertical layout takes the full width in popups, with nicer separators in a full window
+- Closing, moving or discarding many tabs no longer stops early when the popup closes
+- Saved windows restore fully, also when saved off-screen or bigger than the current monitor
+- Favicons load reliably, also while a tab is loading
+- Window titles update after tabs load, use the hostname, show IPs properly and group by IP range
+- Dragged tabs drop next to the closest tab; choosing a window color no longer hides the other windows
+- Moving a mix of incognito and normal tabs opens two windows, one of each
+- No scroll animation when animations are off
 
 ➤ 5.3.0 ( 22nd September 2024 )
 - Fix: Move to manifest v3
@@ -207,7 +204,7 @@ Are you stuck with lost duplicate tabs? Simply press the "duplicate tabs" icon, 
 
 ➤ The window is too big - the tabs take too much space? Switch to a compact view in the options - it's less beautiful, but more space efficient.
 
-➤ In each window you will find 2 action buttons. One + icon, that opens a new tab in that window, and a x icon, which closes the whole window. If you don't like these 2 buttons, then you can disable them in the options as well.
+➤ Each window has action buttons: the star saves it for later, + opens a new tab in it, the pen names and colors it, the arrow minimizes it and x closes the whole window. Don't need them? Turn off "Show action buttons" in the options.
 
 If you want to have an overview over your incognito tabs as well - make sure to go into the extension settings, and to enable the extension in Incognito mode.
 
@@ -227,7 +224,7 @@ If you like it, please leave a rating.
 ★★★★★
 If you have suggestions, leave a comment in the support box.
 
-★ Legalitites :
+★ Legalities :
 
 This app is not affiliated with Google or Google Chrome.
 Google Chrome is a registered trademark of Google, Inc.

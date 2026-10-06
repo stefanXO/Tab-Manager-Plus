@@ -5,7 +5,7 @@ A Brand New Look!
 - Dark theme rebuilt with consistent colors; window colors show as a colored edge; scrollbars and controls are dark too (#99, #151)
 - Theme: System, Light or Dark. System is the new default and follows your operating system's dark mode, also while the popup is open; if you had dark mode on, it stays dark
 - New window color palette, with a matching set for the dark theme
-- New icons: every toolbar, window and options icon redrawn, crisp at any zoom in light and dark, with an icon for each setting, a recent-tabs clock that fills as it reaches further back, and an eye that shows when non-matching tabs are hidden
+- New icons: every toolbar, window and options icon redrawn, crisp at any zoom in light and dark, with an icon for each setting, a recent-tabs clock whose three steps light up as it reaches further back, and an eye that shows when non-matching tabs are hidden
 - Favicons: white icons stay visible in the light theme, and icons refresh when a tab finishes loading (#251)
 - Badges show a tab's state: playing sound, muted, asleep (put to sleep by the browser), pinned, active, selected. In List view as chips with a colored edge on the left (#171)
 - List view shows how recently each tab was used: four small bars at the right of the row, filled from the right and fading with age (green for the last minutes, grey after a week); hover them for the exact time
@@ -30,7 +30,7 @@ Searching And Duplicates
 - Search with a regular expression: `/\(\d+\)/` finds tabs with an unread count, `/localhost:\d+/` local dev servers, `/\.pdf$/` open PDFs (#247, #156)
 - Hover the search box for the whole search syntax
 - List view shows the part of a title that matched the search in bold
-- Highlight recently active tabs: the new clock button in the bar selects the tabs you used last: the shortest span (15 minutes, an hour, 3 hours, 12 hours, a day, 2 days ...) with more than one tab in it. Click again to reach further back, twice more (the clock moves to 6 and 9), a fourth click turns it off
+- Highlight recently active tabs: the new clock button in the bar selects the tabs you used last: the shortest span (15 minutes, an hour, 3 hours, 12 hours, a day, 2 days ...) with more than one tab in it. Click again to reach further back, twice more (one more step lights up under the clock each time), a fourth click turns it off
 
 Windows And Sessions
 - Automatic window names come from the sites in the window, with proper spelling (GitHub, Stack Overflow, Gmail, Google Docs), no more "Facebook, facebook & 5 more"
