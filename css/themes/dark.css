@@ -53,13 +53,11 @@
 		--tile-border: var(--dk-line);
 		--tile-border-accent: var(--dk-line);
 		--tile-active-bg: var(--dk-tile-hover);
-		--tile-pinned-bg: rgba(255, 17, 119, 0.25);
 		--tile-incognito-active-bg: var(--dk-tile-hover);
 		--tile-incognito-active-border: var(--active-border);
 		/* no tint behind light favicons: the dark tile already gives them an edge */
 		--tile-tint: var(--dk-tile);
 		--tile-tint-active: var(--dk-tile);
-		--tile-tint-pinned: var(--dk-tile);
 		--tile-tint-selected: var(--dk-tile);
 		--tile-tint-selected-hover: var(--dk-select-hover);
 		/* white-only favicons as they are, black-only ones inverted */
@@ -134,6 +132,8 @@
 		--map-monitor-fill: rgba(255, 255, 255, 0.04);
 		--map-window: rgba(183, 154, 232, 0.4);
 		--map-window-edge: var(--dk-accent);
+		--map-window-minimized: rgba(183, 154, 232, 0.24);
+		--map-other-minimized: rgba(255, 255, 255, 0.1);
 		--code-bg: var(--dk-tile);
 
 		/* changelog page: link chips, inline code and the update notice */

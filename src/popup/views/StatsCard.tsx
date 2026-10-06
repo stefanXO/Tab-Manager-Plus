@@ -35,8 +35,9 @@ interface IStatsCardProps {
 // where a hidden card waits: far off screen, so it never covers anything
 const PARKED = "translate3d(-10000px, -10000px, 0)";
 
-// the two pictures no image in images/ has: a clock (active …) and a globe
-// (the url line); strokes in the text colour, drawn at the badges' 12px
+// the pictures no image in images/ has: a clock (active …), a globe (the url
+// line, sites) and the rest of the line drawings (StatsIcon); strokes in the
+// text colour, drawn at the badges' 12px
 const svgProps = { viewBox: "0 0 16 16", width: 12, height: 12, fill: "none", stroke: "currentColor", strokeWidth: 1.6, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
 // the clock is also the bottom bar's "Highlight recently active tabs" icon
 export const CLOCK = <svg {...svgProps}><circle cx="8" cy="8" r="6.2" /><path d="M8 4.6V8l2.4 1.6" /></svg>;
@@ -45,9 +46,24 @@ const clockAt = (hands : string) => <svg {...svgProps}><circle cx="8" cy="8" r="
 export const RECENT_CLOCKS = [CLOCK, clockAt("M8 4V8h3"), clockAt("M8 4V11"), clockAt("M8 4V8H5")];
 const GLOBE = <svg {...svgProps}><circle cx="8" cy="8" r="6.2" /><path d="M1.8 8h12.4M8 1.8c-3.2 3.4-3.2 9 0 12.4M8 1.8c3.2 3.4 3.2 9 0 12.4" /></svg>;
 
+const WINDOW_PATHS = <><rect x="1.8" y="2.5" width="12.4" height="11" rx="1.5" /><path d="M1.8 5.8h12.4" /></>;
+const DRAWN : Partial<Record<StatsIcon | "url", React.ReactElement>> = {
+	active: CLOCK,
+	url: GLOBE,
+	sites: GLOBE,
+	zoom: <svg {...svgProps}><circle cx="7" cy="7" r="4.8" /><path d="M10.5 10.5L14 14M5 7h4M7 5v4" /></svg>,
+	tabs: <svg {...svgProps}><rect x="1.8" y="5.3" width="10" height="8.4" rx="1.4" /><path d="M4.6 2.6h8.2c.8 0 1.4.6 1.4 1.4v6.6" /></svg>,
+	used: <svg {...svgProps}><path d="M4 1.8h8M4 14.2h8M5 1.8C5 5.6 11 6 11 8s-6 2.4-6 6.2M11 1.8C11 5.6 5 6 5 8s6 2.4 6 6.2" /></svg>,
+	window: <svg {...svgProps}>{WINDOW_PATHS}</svg>,
+	monitor: <svg {...svgProps}><rect x="1.5" y="2.3" width="13" height="8.7" rx="1.3" /><path d="M8 11v2.7M5.2 13.7h5.6" /></svg>,
+	hint: <svg {...svgProps}><circle cx="8" cy="8" r="6.2" /><path d="M8 7.4v3.6M8 4.9v.1" /></svg>,
+};
+// the window card's title icon, in the favicon's 16px spot
+const WINDOW_HEAD = <span className="stats-favicon stats-head-icon" aria-hidden="true"><svg {...svgProps} width={16} height={16}>{WINDOW_PATHS}</svg></span>;
+
 const Icon = ({name} : {name : StatsIcon | "url"}) => (
 	<span className={"stats-icon stats-icon-" + name} aria-hidden="true">
-		{name === "active" ? CLOCK : name === "url" ? GLOBE : null}
+		{DRAWN[name] || null}
 	</span>
 );
 
@@ -193,14 +209,16 @@ export class StatsCard extends React.Component<IStatsCardProps> {
 		const c = this.props.content;
 		// "shown" is switched on the element by sync() / hide(); rendered here
 		// too, so a className React rewrites (with-icon changed) keeps it
-		const cls = "stats-card" + (c && c.icon ? " with-icon" : "") + (this.visible ? " shown" : "");
+		// a window card (no url) has a window drawing where a tab has its favicon
+		const isWindow = !!c && c.url === undefined;
+		const cls = "stats-card" + (c && (c.icon || isWindow) ? " with-icon" : "") + (this.visible ? " shown" : "");
 		if (!c) return <div className={cls} role="tooltip" aria-hidden="true" ref={this.ref} />;
 		const {card, icon, url, sites, map} = c;
 		const parts = url !== undefined ? splitUrl(url) : null;
 		return (
 			<div className={cls} role="tooltip" ref={this.ref}>
 				<div className="stats-card-head">
-					{icon && <Favicon icon={icon} />}
+					{icon ? <Favicon icon={icon} /> : isWindow ? WINDOW_HEAD : null}
 					<div className="stats-card-title">{card.title}</div>
 					{sites && sites.length > 0 && (
 						<div className="stats-site-icons">

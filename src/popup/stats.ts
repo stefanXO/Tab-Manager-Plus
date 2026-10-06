@@ -37,9 +37,11 @@ export interface StatsWindow {
 }
 
 // the small pictures a card can put in front of a line or a word: the list
-// view's state chip badges (asleep, muted, playing, pinned) and a few of the
-// toolbar images (position, opener, copies), and a clock (active)
-export type StatsIcon = "active" | "asleep" | "muted" | "playing" | "pinned" | "position" | "opener" | "copies";
+// view's state chip badges (asleep, muted, playing, pinned), a few of the
+// toolbar images (position, opener, copies), and line drawings (active: a
+// clock, zoom, tabs, sites, used, window, monitor, hint)
+export type StatsIcon = "active" | "asleep" | "muted" | "playing" | "pinned" | "position" | "opener" | "copies"
+	| "zoom" | "tabs" | "sites" | "used" | "window" | "monitor" | "hint";
 
 // one word group of a line, drawn with its own icon ("· "-separated)
 export interface StatsItem {
@@ -152,7 +154,7 @@ export function tabStats(tab : StatsTab, ctx : TabStatsContext) : StatsCard {
 	}
 
 	if (typeof ctx.zoom === "number" && Math.round(ctx.zoom * 100) !== 100) {
-		add("zoom", "zoom " + Math.round(ctx.zoom * 100) + " %");
+		add("zoom", "zoom " + Math.round(ctx.zoom * 100) + " %", "zoom");
 	}
 
 	return { title: tab.title || tab.url || "Untitled tab", lines };
@@ -169,9 +171,9 @@ function hostOf(url : string | undefined) : string {
 
 export function windowStats(win : StatsWindow, tabs : StatsTab[], ctx : WindowStatsContext) : StatsCard {
 	const lines : StatsLine[] = [];
-	const add = (key : string, text : string) => lines.push({ key, text });
+	const add = (key : string, text : string, icon : StatsIcon) => lines.push({ key, text, icon });
 
-	const counts : StatsItem[] = [{ text: maybePluralize(tabs.length, "tab") }];
+	const counts : StatsItem[] = [{ icon: "tabs", text: maybePluralize(tabs.length, "tab") }];
 	const pinned = tabs.filter((t) => t.pinned).length;
 	const asleep = tabs.filter((t) => t.discarded).length;
 	const playing = tabs.filter((t) => t.audible && !isMuted(t)).length;
@@ -181,28 +183,28 @@ export function windowStats(win : StatsWindow, tabs : StatsTab[], ctx : WindowSt
 	lines.push(itemsLine("counts", counts));
 
 	const hosts = new Set(tabs.map((t) => hostOf(t.url)).filter(Boolean));
-	if (hosts.size) add("sites", maybePluralize(hosts.size, "site"));
+	if (hosts.size) add("sites", maybePluralize(hosts.size, "site"), "sites");
 
-	if (typeof ctx.lastActive === "number") add("lastActive", "last active " + timeAgo(ctx.lastActive, ctx.now));
+	if (typeof ctx.lastActive === "number") add("lastActive", "last active " + timeAgo(ctx.lastActive, ctx.now), "active");
 
 	const used = tabs.map((t) => t.lastAccessed).filter((a) : a is number => typeof a === "number");
 	if (used.length === 1) {
-		add("used", "tab used " + timeAgo(used[0], ctx.now));
+		add("used", "tab used " + timeAgo(used[0], ctx.now), "used");
 	} else if (used.length > 1) {
-		add("used", "oldest tab used " + timeAgo(Math.min(...used), ctx.now) + SEP + "newest " + timeAgo(Math.max(...used), ctx.now));
+		add("used", "oldest tab used " + timeAgo(Math.min(...used), ctx.now) + SEP + "newest " + timeAgo(Math.max(...used), ctx.now), "used");
 	}
 
 	const state : string[] = [];
 	if (ctx.focused) state.push("focused");
 	if (win.state === "minimized" || win.state === "maximized" || win.state === "fullscreen") state.push(win.state);
 	if (win.incognito) state.push("incognito");
-	if (state.length) add("state", state.join(SEP));
+	if (state.length) add("state", state.join(SEP), "window");
 
 	const size = typeof win.width === "number" && typeof win.height === "number" ? win.width + "×" + win.height : "";
 	const monitor = ctx.monitor && ctx.monitor.count > 1 ? "monitor " + ctx.monitor.index + " of " + ctx.monitor.count : "";
-	if (size || monitor) add("size", [size, monitor].filter(Boolean).join(SEP));
-	if (ctx.offscreen) add("monitor", "on another monitor");
-	if (ctx.monitorHint) add("monitorHint", "one monitor known · allow monitor access in options");
+	if (size || monitor) add("size", [size, monitor].filter(Boolean).join(SEP), "monitor");
+	if (ctx.offscreen) add("monitor", "on another monitor", "monitor");
+	if (ctx.monitorHint) add("monitorHint", "one monitor known · allow monitor access in options", "hint");
 
 	return { title: ctx.name || "Window", lines };
 }
