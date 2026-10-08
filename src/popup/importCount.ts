@@ -1,7 +1,7 @@
 "use strict";
 
 import { maybePluralize } from "../helpers/utils.ts";
-import { readSessionsFile } from "./sessionsFile.ts";
+import { isForeignFormat, readSessionsFile } from "./sessionsFile.ts";
 
 // The options screen's session import: sorts the parsed sessions file into the
 // saved windows that can be restored and the ones that cannot (with the
@@ -16,6 +16,8 @@ export interface ImportPlan<T> {
 	skipped : Partial<Record<SkipReason, number>>;
 	// the whole file is unusable (not a list), else undefined
 	fatal? : string;
+	// a sessions list under a format tag that is not ours
+	foreignFormat? : boolean;
 }
 
 export function planImport<T = unknown>(parsed : unknown) : ImportPlan<T> {
@@ -25,6 +27,7 @@ export function planImport<T = unknown>(parsed : unknown) : ImportPlan<T> {
 		plan.fatal = "The file is JSON, but not a list of saved windows";
 		return plan;
 	}
+	if (isForeignFormat(parsed)) plan.foreignFormat = true;
 	for (const entry of list as any[]) {
 		let reason : SkipReason | undefined;
 		if (!entry || typeof entry !== "object" || Array.isArray(entry)) reason = "not a saved window";
@@ -41,7 +44,14 @@ export function planImport<T = unknown>(parsed : unknown) : ImportPlan<T> {
 // failedWrites are valid entries the browser refused to store, alreadyThere
 // valid ones left out because a saved window with the same tabs is stored
 // (../sessionStore.ts importSessions)
+export const FOREIGN_FORMAT_NOTE = "The file was not in Tab Manager Plus's format.";
+
 export function importSummary(plan : ImportPlan<unknown>, failedWrites = 0, alreadyThere = 0) : string {
+	const text = importSummaryText(plan, failedWrites, alreadyThere);
+	return plan.foreignFormat ? text + ". " + FOREIGN_FORMAT_NOTE : text;
+}
+
+function importSummaryText(plan : ImportPlan<unknown>, failedWrites : number, alreadyThere : number) : string {
 	if (plan.fatal) return plan.fatal;
 	const restored = plan.valid.length - failedWrites - alreadyThere;
 	const parts : string[] = [];

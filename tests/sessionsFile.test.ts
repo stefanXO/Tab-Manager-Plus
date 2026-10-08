@@ -5,7 +5,7 @@
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { buildSessionsFile, everythingFileName, readSessionsFile, sessionsFileName } from "../src/popup/sessionsFile.ts";
+import { buildSessionsFile, everythingFileName, isForeignFormat, readSessionsFile, sessionsFileName } from "../src/popup/sessionsFile.ts";
 import { planImport } from "../src/popup/importCount.ts";
 
 describe("file names", () => {
@@ -34,7 +34,24 @@ describe("readSessionsFile", () => {
 			assert.deepEqual(readSessionsFile({ format, version: 1, sessions: list }), list);
 		}
 	});
-	test("unknown format tag", () => assert.equal(readSessionsFile({ format: "other", sessions: list }), undefined));
+	test("unknown format tag still gives the list", () => {
+		assert.deepEqual(readSessionsFile({ format: "other", sessions: list }), list);
+		assert.deepEqual(readSessionsFile({ format: 5, sessions: list }), list);
+	});
+	test("unknown format without a sessions list is refused", () => {
+		assert.equal(readSessionsFile({ format: "other", sessions: "x" }), undefined);
+		assert.equal(readSessionsFile({ format: "other" }), undefined);
+		assert.equal(planImport({ format: "other", windows: [] }).fatal !== undefined, true);
+	});
+	test("isForeignFormat", () => {
+		assert.equal(isForeignFormat({ format: "other", sessions: list }), true);
+		assert.equal(isForeignFormat({ format: 5, sessions: list }), true);
+		assert.equal(isForeignFormat({ format: "other" }), false);
+		assert.equal(isForeignFormat({ sessions: list }), false);
+		assert.equal(isForeignFormat(list), false);
+		assert.equal(isForeignFormat(buildSessionsFile(list)), false);
+		assert.equal(isForeignFormat({ format: "tab-manager-plus-debug", sessions: list }), false);
+	});
 	test("anything else", () => {
 		for (const v of [null, 5, "x", {}, { sessions: 1 }, { windows: [] }]) assert.equal(readSessionsFile(v), undefined);
 	});

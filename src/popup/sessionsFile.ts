@@ -39,13 +39,21 @@ export function everythingFileName(date : Date) : string {
 }
 
 // The list of saved windows in a parsed file, or undefined when the file is
-// neither a bare list nor an object with a `sessions` list.
+// neither a bare list nor an object with a `sessions` list. An object with a
+// format that is not ours is read too (see isForeignFormat).
 export function readSessionsFile(parsed : unknown) : unknown[] | undefined {
 	if (Array.isArray(parsed)) return parsed;
 	if (parsed && typeof parsed === "object" && Array.isArray((parsed as { sessions? : unknown }).sessions)) {
-		const format = (parsed as { format? : unknown }).format;
-		if (format !== undefined && format !== EXPORT_FORMAT && !LEGACY_FORMATS.includes(format as string)) return undefined;
 		return (parsed as { sessions : unknown[] }).sessions;
 	}
 	return undefined;
+}
+
+// Whether a readable file is an object whose `format` is set and not one of
+// ours; its sessions are imported anyway and the result says so.
+export function isForeignFormat(parsed : unknown) : boolean {
+	if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return false;
+	if (!Array.isArray((parsed as { sessions? : unknown }).sessions)) return false;
+	const format = (parsed as { format? : unknown }).format;
+	return format !== undefined && format !== EXPORT_FORMAT && !LEGACY_FORMATS.includes(format as string);
 }

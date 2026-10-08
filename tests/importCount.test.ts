@@ -5,7 +5,7 @@
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { planImport, importSummary } from "../src/popup/importCount.ts";
+import { planImport, importSummary, importWorked } from "../src/popup/importCount.ts";
 
 const good = (id : string) => ({ id, windowsInfo: {}, tabs: [{}] });
 
@@ -43,5 +43,37 @@ describe("importSummary", () => {
 
 	test("failed writes count as skipped", () => {
 		assert.equal(importSummary(planImport([good("a"), good("b")]), 1), "1 saved window restored, 1 skipped (1 could not be stored)");
+	});
+});
+
+describe("file in another format", () => {
+	const foreign = (sessions : unknown[]) => ({ format: "something-else", sessions });
+	test("is imported and the summary says so", () => {
+		const p = planImport(foreign([good("a"), good("b")]));
+		assert.equal(p.fatal, undefined);
+		assert.equal(p.foreignFormat, true);
+		assert.equal(importSummary(p), "2 saved windows restored. The file was not in Tab Manager Plus's format.");
+		assert.equal(importWorked(p), true);
+	});
+	test("note follows skipped and already-there counts", () => {
+		const p = planImport(foreign([good("a"), { id: "x", windowsInfo: {} }]));
+		assert.equal(importSummary(p), "1 saved window restored, 1 skipped (1 no tabs). The file was not in Tab Manager Plus's format.");
+	});
+	test("nothing usable is an error, still with the note", () => {
+		const p = planImport(foreign([5]));
+		assert.equal(importWorked(p), false);
+		assert.match(importSummary(p), /^No saved windows restored, 1 skipped .*format\.$/);
+	});
+	test("no sessions list is refused, without the note", () => {
+		const p = planImport({ format: "something-else", windows: [] });
+		assert.ok(p.fatal);
+		assert.equal(importSummary(p), p.fatal);
+	});
+	test("our formats and bare lists carry no note", () => {
+		for (const f of [[good("a")], { sessions: [good("a")] }, { format: "tab-manager-plus-export", sessions: [good("a")] }, { format: "tab-manager-plus-debug", sessions: [good("a")] }]) {
+			const p = planImport(f);
+			assert.equal(p.foreignFormat, undefined);
+			assert.equal(importSummary(p), "1 saved window restored");
+		}
 	});
 });
