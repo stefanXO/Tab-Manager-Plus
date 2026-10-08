@@ -427,7 +427,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 							        onClick={this.copyDebug}>{this.state.debugCopied ? "Copied" : "Copy to clipboard"}</button>
 						</div>
 						<Description
-							text="Writes every open window and tab (title, url, last used, pinned, active), the automatic name Tab Manager Plus gave each window, your saved windows and your settings to a JSON file (everything-date-time.json, which Import Sessions can also read). Nothing is sent anywhere. Attach it to a bug report when a window name or a search result looks wrong."
+							text="Writes every open window and tab (title, url, last used, pinned, active), the automatic name Tab Manager Plus gave each window, your saved windows and your settings to a JSON file (tab-manager-plus-everything-date-time.json, which Import Sessions can also read). Nothing is sent anywhere. Attach it to a bug report when a window name or a search result looks wrong."
 							notes={[debugExportNote(p.windowCount, p.tabCount)]}
 						/>
 					</div>

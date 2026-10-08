@@ -28,14 +28,14 @@ function stamp(date : Date) : string {
 		+ "-" + p(date.getHours()) + "-" + p(date.getMinutes()) + "-" + p(date.getSeconds());
 }
 
-// sessions-2030-01-02-03-04-05.json, in local time
+// tab-manager-plus-sessions-2030-01-02-03-04-05.json, in local time
 export function sessionsFileName(date : Date) : string {
-	return "sessions-" + stamp(date) + ".json";
+	return "tab-manager-plus-sessions-" + stamp(date) + ".json";
 }
 
-// everything-2030-01-02-03-04-05.json, in local time
+// tab-manager-plus-everything-2030-01-02-03-04-05.json, in local time
 export function everythingFileName(date : Date) : string {
-	return "everything-" + stamp(date) + ".json";
+	return "tab-manager-plus-everything-" + stamp(date) + ".json";
 }
 
 // The list of saved windows in a parsed file, or undefined when the file is
