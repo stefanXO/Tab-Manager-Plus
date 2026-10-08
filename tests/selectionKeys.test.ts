@@ -1,13 +1,13 @@
 "use strict";
 
-// Unit tests for what Delete, Backspace and Enter do with the selection
+// Unit tests for what Ctrl/Cmd+Delete, Ctrl/Cmd+Backspace and Enter do with the selection
 // (src/popup/selectionKeys.ts) and for the window Enter opens from selected
 // saved tabs (src/popup/savedRestore.ts).
 // Run with: npm test  (== node --test tests/)
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { selectionKeyAction, KEY_BACKSPACE, KEY_DELETE, KEY_ENTER } from "../src/popup/selectionKeys.ts";
+import { selectionKeyAction, deleteKeyName, KEY_BACKSPACE, KEY_DELETE, KEY_ENTER } from "../src/popup/selectionKeys.ts";
 import type { SelectionKeyContext } from "../src/popup/selectionKeys.ts";
 import { savedWindowFor } from "../src/popup/savedRestore.ts";
 import { SavedTabKeys } from "../src/popup/sessionKeys.ts";
@@ -19,17 +19,18 @@ const SAVED = [-2, -3];
 function ctx(over : Partial<SelectionKeyContext>) : SelectionKeyContext {
 	return {
 		keyCode: KEY_DELETE,
-		modified: false,
+		cmd: true,
 		mainScreen: true,
 		searchFocused: false,
+		searchHasText: false,
 		selection: new Set(OPEN),
 		...over
 	};
 }
 
-describe("selectionKeyAction: Delete and Backspace", () => {
+describe("selectionKeyAction: Ctrl/Cmd+Delete and Ctrl/Cmd+Backspace", () => {
 	for (const keyCode of [KEY_DELETE, KEY_BACKSPACE]) {
-		const name = keyCode === KEY_DELETE ? "Delete" : "Backspace";
+		const name = "Ctrl+" + (keyCode === KEY_DELETE ? "Delete" : "Backspace");
 
 		test(name + " with open tabs selected closes them", () => {
 			assert.equal(selectionKeyAction(ctx({ keyCode })), "close-open");
@@ -39,15 +40,19 @@ describe("selectionKeyAction: Delete and Backspace", () => {
 			assert.equal(selectionKeyAction(ctx({ keyCode, selection: new Set(SAVED) })), "delete-saved");
 		});
 
-		test(name + " in the focused search box edits the text, even when it is empty", () => {
-			assert.equal(selectionKeyAction(ctx({ keyCode, searchFocused: true })), null);
-			assert.equal(selectionKeyAction(ctx({ keyCode, searchFocused: true, selection: new Set(SAVED) })), null);
+		test(name + " in the focused search box that holds text deletes a word: nothing closes", () => {
+			assert.equal(selectionKeyAction(ctx({ keyCode, searchFocused: true, searchHasText: true })), null);
+			assert.equal(selectionKeyAction(ctx({ keyCode, searchFocused: true, searchHasText: true, selection: new Set(SAVED) })), null);
 		});
 
-		test(name + " acts while the search box holds text, as long as it is not focused (search, select, " + name + ")", () => {
-			// the search text is not part of the decision: only the focus is
-			assert.equal(selectionKeyAction(ctx({ keyCode })), "close-open");
-			assert.equal(selectionKeyAction(ctx({ keyCode, selection: new Set(SAVED) })), "delete-saved");
+		test(name + " in the focused but empty search box still acts", () => {
+			assert.equal(selectionKeyAction(ctx({ keyCode, searchFocused: true })), "close-open");
+			assert.equal(selectionKeyAction(ctx({ keyCode, searchFocused: true, selection: new Set(SAVED) })), "delete-saved");
+		});
+
+		test(name + " acts while the search box holds text, as long as it is not focused (search, right-click, " + name + ")", () => {
+			assert.equal(selectionKeyAction(ctx({ keyCode, searchHasText: true })), "close-open");
+			assert.equal(selectionKeyAction(ctx({ keyCode, searchHasText: true, selection: new Set(SAVED) })), "delete-saved");
 		});
 
 		test(name + " with nothing selected does nothing (no tab is closed)", () => {
@@ -57,11 +62,28 @@ describe("selectionKeyAction: Delete and Backspace", () => {
 		test(name + " off the window list does nothing", () => {
 			assert.equal(selectionKeyAction(ctx({ keyCode, mainScreen: false })), null);
 		});
+	}
 
-		test(name + " with Ctrl, Alt or Meta held is left to the browser", () => {
-			assert.equal(selectionKeyAction(ctx({ keyCode, modified: true })), null);
+	for (const keyCode of [KEY_DELETE, KEY_BACKSPACE]) {
+		const name = keyCode === KEY_DELETE ? "Delete" : "Backspace";
+
+		test("plain " + name + " never acts on the selection, saved or open, focused box or not", () => {
+			for (const selection of [new Set(OPEN), new Set(SAVED)]) {
+				for (const searchFocused of [false, true]) {
+					for (const searchHasText of [false, true]) {
+						assert.equal(selectionKeyAction(ctx({ keyCode, cmd: false, selection, searchFocused, searchHasText })), null);
+					}
+				}
+			}
 		});
 	}
+});
+
+describe("deleteKeyName", () => {
+	test("names the shortcut by platform", () => {
+		assert.equal(deleteKeyName(false), "Ctrl+Delete");
+		assert.equal(deleteKeyName(true), "Cmd+Delete");
+	});
 });
 
 describe("selectionKeyAction: Enter", () => {

@@ -6,7 +6,7 @@ import {parseQuery, matchTab, searchable} from "../search";
 import {duplicatesTitle, findDuplicates} from "../duplicates";
 import {recentTabs, recentText, recentTitle, RecentTabs, RECENT_LEVELS} from "../recent";
 import {onMainScreen} from "../screen";
-import {selectionKeyAction} from "../selectionKeys";
+import {selectionKeyAction, deleteKeyName} from "../selectionKeys";
 import {savedWindowFor} from "../savedRestore";
 import {isSavedTabKey, tabKind, keepKind, onlySavedSelected, dropMissingSaved, savedTabKeys} from "../sessionKeys";
 import {debounce, maybePluralize} from "@helpers/utils";
@@ -1551,7 +1551,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		} else {
 			this.setState({
 				topText: "Found " + maybePluralize(dup.size + orig.size, "tab") + " with duplicates, selected " + maybePluralize(dup.size, "duplicate"),
-				bottomText: "Delete closes the duplicates and keeps one of each. Enter moves them to a new window"
+				bottomText: deleteKeyName(this.mac) + " closes the duplicates and keeps one of each. Enter moves them to a new window"
 			});
 		}
 		this.setState({
@@ -1599,7 +1599,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			dupTabs: false,
 			recentLevel: recent && recent.count > 0 ? level : 0,
 			topText: recent ? recentText(recent) : "",
-			bottomText: recent && recent.count > 0 ? "Delete closes them. Enter moves them to a new window" : "",
+			bottomText: recent && recent.count > 0 ? deleteKeyName(this.mac) + " closes them. Enter moves them to a new window" : "",
 			dirty: true
 		});
 	}
@@ -1708,13 +1708,16 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	checkKey = async (e) => {
 		// enter: only on the window list. On the options screen or the window
 		// name / colour overlay it must not open or move to a window.
-		// Delete / Backspace / Enter with a selection (../selectionKeys.ts)
+		// Ctrl/Cmd+Delete / Backspace and Enter with a selection (../selectionKeys.ts).
+		// Plain Delete / Backspace are typing and fall through to the typed keys below
 		const search = this.searchBoxRef.current;
+		const searchFocused = !!search && document.activeElement === search;
 		const action = selectionKeyAction({
 			keyCode: e.keyCode,
-			modified: e.ctrlKey || e.altKey || e.metaKey,
+			cmd: (e.ctrlKey || e.metaKey) && !e.altKey,
 			mainScreen: onMainScreen(this.state),
-			searchFocused: !!search && document.activeElement === search,
+			searchFocused: searchFocused,
+			searchHasText: searchFocused && !!search.value,
 			selection: this.state.selection
 		});
 		// a held key (auto-repeat) acts once: only the first press counts
@@ -1733,8 +1736,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		if (action === "close-open") {
 			e.preventDefault();
 			if (e.repeat) return;
-			// straight to the worker: a key never falls back to closing the
-			// current tab the way the trash button does (deleteTabs)
+			// straight to the worker: the shortcut never falls back to closing
+			// the current tab the way the trash button does (deleteTabs)
 			const tabs = this.selectedTabs();
 			if (tabs.length) {
 				browser.runtime.sendMessage<ICommand>({command: S.close_tabs, tabs: tabs});
@@ -2106,8 +2109,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	selectionText() : Pick<ITabManagerState, "topText" | "bottomText"> {
 		const selected = this.state.selection.size;
 		if (selected === 0) return { topText: "No tabs selected", bottomText: " " };
-		// saved tabs (all of one kind, see select): Delete removes them, Enter has nothing to do yet
-		if (onlySavedSelected(this.state.selection)) return { topText: "Selected " + maybePluralize(selected, "saved tab"), bottomText: "Press enter to open " + (selected === 1 ? "it" : "them") + " in a new window, delete to remove " + (selected === 1 ? "it" : "them") };
+		// saved tabs (all of one kind, see select): Ctrl+Delete removes them, Enter opens them
+		if (onlySavedSelected(this.state.selection)) return { topText: "Selected " + maybePluralize(selected, "saved tab"), bottomText: "Press enter to open " + (selected === 1 ? "it" : "them") + " in a new window, " + deleteKeyName(this.mac) + " to remove " + (selected === 1 ? "it" : "them") };
 		if (selected === 1) return { topText: "Selected " + selected + " tab", bottomText: "Press enter to switch to it" };
 		return { topText: "Selected " + selected + " tabs", bottomText: "Press enter to move them to a new window" };
 	}
@@ -2395,7 +2398,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			"Find your local dev servers on any port: /localhost:\\d+/",
 			"Find open PDFs with a regular expression: /\\.pdf$/",
 			"Hover the search box for the whole search syntax",
-			"Highlight Duplicates selects the extra copies, Delete closes them all",
+			"Highlight Duplicates selects the extra copies, " + deleteKeyName(this.mac) + " closes them all",
 			"Search while duplicates are highlighted to narrow them down"
 		];
 

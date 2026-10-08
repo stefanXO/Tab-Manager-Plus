@@ -187,7 +187,7 @@ currently on disk — there is no stale copy to forget about.
   and the popup scrolls back to the saved window by itself (`apply.afterWait` leaves its timer time to run)
 - `saved-tabs-delete` (+ `-key`, `-all`, `-two`, `-undo`): deleting selected saved tabs
   (`src/popup/savedDelete.ts`): Ctrl+click tabs of a saved window, then the trash button
-  (`-key`: the Delete key, via a `{key: 46}` entry in `apply.clicks`); `-all` selects every
+  (`-key`: Ctrl+Delete, via a `{key: 46, ctrl: true}` entry in `apply.clicks`); `-all` selects every
   tab of "Tax 2029", so the window goes whole; `-two` takes tabs of both saved windows;
   `-undo` clicks Undo (`optional: true`: skipped when there is no such button, as before
   the step). The `-undo` shot equals the plain list

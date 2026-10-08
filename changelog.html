@@ -86,7 +86,8 @@
 						</ul>
 						<h4>Searching And Duplicates</h4>
 						<ul>
-							<li>Highlight Duplicates selects only the extra copies and keeps the one you used last, so Delete closes just the duplicates
+							<li>Highlight Duplicates selects only the extra copies and keeps the one you used
+								last, so Ctrl+Delete (Cmd+Delete on a Mac) closes just the duplicates
 								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/54" target="_blank" rel="noopener">#54</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/142" target="_blank" rel="noopener">#142</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/188" target="_blank" rel="noopener">#188</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/240" target="_blank" rel="noopener">#240</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/248" target="_blank" rel="noopener">#248</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/260" target="_blank" rel="noopener">#260</a>)
 							</li>
 							<li>The header shows how many tabs have duplicates and how many are selected</li>
@@ -159,15 +160,17 @@
 								in the settings), also after the update from 6.x when no saved window is stored;
 								the switch in the options still turns them off</li>
 							<li>Ctrl+click or right-click on a tab of a saved window selects it, instead of an
-								unrelated open tab that Delete would then close; saved windows are no longer
-								marked as the active window</li>
-							<li>Tabs of saved windows can be deleted: select them, then use the trash button,
-								Delete or Backspace; a saved window with no tab left is deleted, and the same
-								Undo notice applies (<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/180" target="_blank" rel="noopener">#180</a>). Delete and Backspace close selected open tabs too,
-								as the trash button does, whenever the search box is not focused, whatever it
-								holds (search, select results, Delete); selecting with a right-click, a modifier
-								click or the arrow keys takes the focus out of the search box, typing puts it
-								back. Enter with saved tabs selected opens them in one new window, in the order
+								unrelated open tab that Ctrl+Delete would then close; saved windows are no
+								longer marked as the active window</li>
+							<li>Tabs of saved windows can be deleted: select them, then use the trash button or
+								Ctrl+Delete or Ctrl+Backspace (Cmd on a Mac); a saved window with no tab left is
+								deleted, and the same Undo notice applies (<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/180" target="_blank" rel="noopener">#180</a>). The same keys close selected
+								open tabs, as the trash button does. Plain Delete and Backspace stay typing and
+								go to the search box; in a search box that has the focus and holds text,
+								Ctrl+Backspace and Ctrl+Delete delete a word as usual and close nothing, so
+								"search, select results, Ctrl+Delete" works once you right-click a result or use
+								the arrow keys (selecting takes the focus out of the search box, typing puts it
+								back). Enter with saved tabs selected opens them in one new window, in the order
 								shown; Enter after a search that selected no open tab does nothing instead of
 								opening an empty window</li>
 							<li>Selected tabs can be saved as a new saved window, named from their sites: the new button next to "Move tabs to new window" in the bottom bar

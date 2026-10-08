@@ -246,9 +246,9 @@ const STATES = [
 	{name: 'saved-tabs-delete', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {
 		clicks: [{sel: '#sessiontab_s1_1', ctrl: true}, {sel: '#sessiontab_s1_3', ctrl: true}, {sel: '.icon.windowaction.trash'}],
 		freezeClock: true, scrollInto: '#session-s1'}},
-	// the same with the Delete key instead of the button
+	// the same with Ctrl+Delete instead of the button
 	{name: 'saved-tabs-delete-key', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {
-		clicks: [{sel: '#sessiontab_s1_0', ctrl: true}, {key: 46}], freezeClock: true, scrollInto: '#session-s1'}},
+		clicks: [{sel: '#sessiontab_s1_0', ctrl: true}, {key: 46, ctrl: true}], freezeClock: true, scrollInto: '#session-s1'}},
 	// every tab of "Tax 2029" selected (Ctrl+click the first, Shift+right-click
 	// the last) and deleted: the saved window goes with them
 	{name: 'saved-tabs-delete-all', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {
@@ -650,7 +650,7 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 			}
 			if (c.key) {
 				// a key press on the list, as the root's onKeyDown sees it
-				q('#root').dispatchEvent(new KeyboardEvent('keydown', {bubbles: true, cancelable: true, keyCode: c.key, which: c.key}))
+				q('#root').dispatchEvent(new KeyboardEvent('keydown', {bubbles: true, cancelable: true, keyCode: c.key, which: c.key, ctrlKey: !!c.ctrl, metaKey: !!c.meta}))
 				await frame()
 				continue
 			}

@@ -471,9 +471,9 @@ try {
 		}, false)
 	}
 
-	// The keys (Delete, Backspace, Enter with a selection), pressed with the
+	// The keys (Ctrl+Delete, Ctrl+Backspace, Enter with a selection), pressed with the
 	// browser's own key events on the focus a click left behind. Own tab only.
-	// Delete / Backspace are checked on what the popup shows (a saved tab is
+	// Ctrl+Delete / Ctrl+Backspace are checked on what the popup shows (a saved tab is
 	// hidden at once, written when the Undo countdown ends) and on the open tabs.
 	for (const layout of ['blocks', 'vertical']) {
 		const key = (name, fn) => checks.push({name: 'keys ' + layout + ': ' + name, fn, mode: 'tab'})
@@ -487,25 +487,60 @@ try {
 			}
 			return out.length === 1 ? out[0] : out
 		}, before), want)
-		key('Delete, saved tabs selected: they go from their saved windows', async () => {
+		// Ctrl (Cmd on a Mac) held while `name` is pressed
+		const MOD = process.platform === 'darwin' ? 'Meta' : 'Control'
+		const withMod = async (p, name) => {
+			await p.keyboard.down(MOD)
+			await p.keyboard.press(name)
+			await p.keyboard.up(MOD)
+		}
+		// where the keyboard focus is, as the page names it
+		const focusAt = (p) => p.evaluate(() => {
+			const a = document.activeElement
+			return a ? a.tagName + '.' + a.className : null
+		})
+		key('Ctrl+Delete, saved tabs selected: they go from their saved windows', async () => {
 			await fixture(layout)
 			const p = await openPopup()
 			await ctrlClick(p, savedSel('Juliett'))
 			await ctrlClick(p, savedSel('Mike'))
-			await p.keyboard.press('Delete')
+			await withMod(p, 'Delete')
 			const want = [['Hotel', 'India', 'Kilo'], ['Lima', 'November']]
 			return {got: await settle(async () => [await shownIn(p, '#session-s1'), await shownIn(p, '#session-s2')], want), want}
 		})
-		key('Backspace, open tabs selected: they close', async () => {
+		key('Ctrl+Backspace, open tabs selected: they close', async () => {
 			const [w1] = await fixture(layout)
 			const p = await openPopup()
 			await ctrlClick(p, tabSel('Alpha'))
 			await ctrlClick(p, tabSel('Bravo'))
-			await p.keyboard.press('Backspace')
+			await withMod(p, 'Backspace')
 			const want = ['Charlie']
 			return {got: await settle(() => titlesOf(w1), want), want}
 		})
-		key('Delete in the focused search box edits it: nothing closes', async () => {
+		// 6.x: Delete and Backspace are typing, they go to the search box
+		for (const name of ['Delete', 'Backspace']) {
+			key('plain ' + name + ', open tabs selected: nothing closes, the search box takes the key', async () => {
+				const [w1] = await fixture(layout)
+				const p = await openPopup()
+				await ctrlClick(p, tabSel('Alpha'))
+				await ctrlClick(p, tabSel('Bravo'))
+				await p.keyboard.press(name)
+				await new Promise((r) => setTimeout(r, 600))
+				const want = [['Alpha', 'Bravo', 'Charlie'], 'INPUT.searchBoxInput']
+				return {got: [await titlesOf(w1), await focusAt(p)], want}
+			})
+			key('plain ' + name + ', saved tabs selected: they stay, the search box takes the key', async () => {
+				await fixture(layout)
+				const p = await openPopup()
+				await ctrlClick(p, savedSel('Juliett'))
+				await ctrlClick(p, savedSel('Mike'))
+				await p.keyboard.press(name)
+				await new Promise((r) => setTimeout(r, 600))
+				const want = [['Hotel', 'India', 'Juliett', 'Kilo'], ['Lima', 'Mike', 'November'], 'INPUT.searchBoxInput']
+				return {got: [await shownIn(p, '#session-s1'), await shownIn(p, '#session-s2'), await focusAt(p)], want}
+			})
+		}
+		key('plain Delete and Backspace in the focused search box edit it: nothing closes', async () => {
 			const [w1] = await fixture(layout)
 			const p = await openPopup()
 			await ctrlClick(p, tabSel('Alpha'))
@@ -518,9 +553,50 @@ try {
 			const want = [['Alpha', 'Bravo', 'Charlie'], ['Hotel', 'India', 'Juliett', 'Kilo']]
 			return {got: [await titlesOf(w1), await shownIn(p, '#session-s1')], want}
 		})
+		// the search box holds text: Ctrl+Backspace deletes a word there, and
+		// the tabs the search selected stay open
+		key('Ctrl+Backspace in the focused search box with text edits the text: nothing closes', async () => {
+			const [w1] = await fixture(layout)
+			const p = await openPopup()
+			await p.focus('.searchBoxInput')
+			await p.keyboard.type('Bravo')
+			await p.waitForFunction(() => document.querySelector('.searchBoxInput').value === 'Bravo')
+			await new Promise((r) => setTimeout(r, 300))
+			await withMod(p, 'Backspace')
+			await new Promise((r) => setTimeout(r, 600))
+			const want = [['Alpha', 'Bravo', 'Charlie'], '']
+			return {got: [await titlesOf(w1), await p.$eval('.searchBoxInput', (i) => i.value)], want}
+		})
+		key('Ctrl+Delete in the focused, empty search box closes the selection', async () => {
+			const [w1] = await fixture(layout)
+			const p = await openPopup()
+			await ctrlClick(p, tabSel('Alpha'))
+			await ctrlClick(p, tabSel('Bravo'))
+			await p.focus('.searchBoxInput')
+			await withMod(p, 'Delete')
+			const want = ['Charlie']
+			return {got: await settle(() => titlesOf(w1), want), want}
+		})
+		// Ctrl / Cmd on its own (held, auto-repeating, tapped) never moves the focus
+		key('holding Ctrl (or Cmd) does not move the focus', async () => {
+			await fixture(layout)
+			const p = await openPopup()
+			await ctrlClick(p, tabSel('Alpha'))
+			const before = await focusAt(p)
+			for (const name of ['Control', 'Meta']) {
+				await p.keyboard.down(name)
+				await p.keyboard.down(name)
+				await p.keyboard.down(name)
+				await p.keyboard.up(name)
+				await p.keyboard.down(name)
+				await p.keyboard.up(name)
+			}
+			await new Promise((r) => setTimeout(r, 300))
+			return {got: [await focusAt(p), before === 'INPUT.searchBoxInput'], want: [before, false]}
+		})
 		// patch 26: the search text does not hold the keys back, only the focus,
 		// and selecting takes the focus out of the box
-		key('Delete after a search and a right-click select: they close', async () => {
+		key('Ctrl+Delete after a search and a right-click select: they close', async () => {
 			const [w1] = await fixture(layout)
 			const p = await openPopup()
 			// the search selects Bravo; the right-click adds Alpha, its mousedown
@@ -530,18 +606,18 @@ try {
 			await p.waitForFunction(() => document.querySelector('.searchBoxInput').value === 'Bravo')
 			await new Promise((r) => setTimeout(r, 300))
 			await rightClick(p, tabSel('Alpha'))
-			await p.keyboard.press('Delete')
+			await withMod(p, 'Delete')
 			const want = [['Charlie'], 'Bravo']
 			return {got: [await settle(() => titlesOf(w1), want[0]), await p.$eval('.searchBoxInput', (i) => i.value)], want}
 		})
-		key('Delete after an arrow select from the empty search box: it closes', async () => {
+		key('Ctrl+Delete after an arrow select from the empty search box: it closes', async () => {
 			const [w1] = await fixture(layout)
 			const p = await openPopup()
 			await ctrlClick(p, tabSel('Alpha'))
 			await p.focus('.searchBoxInput')
 			// the next tab: Bravo (the list view's arrows run down the list)
 			await p.keyboard.press(layout === 'vertical' ? 'ArrowDown' : 'ArrowRight')
-			await p.keyboard.press('Delete')
+			await withMod(p, 'Delete')
 			const want = ['Alpha', 'Charlie']
 			return {got: await settle(() => titlesOf(w1), want), want}
 		})
