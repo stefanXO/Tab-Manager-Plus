@@ -38,6 +38,11 @@ export function everythingFileName(date : Date) : string {
 	return "tab-manager-plus-everything-" + stamp(date) + ".json";
 }
 
+// tab-manager-plus-settings-2030-01-02-03-04-05.json, in local time
+export function settingsFileName(date : Date) : string {
+	return "tab-manager-plus-settings-" + stamp(date) + ".json";
+}
+
 // The list of saved windows in a parsed file, or undefined when the file is
 // neither a bare list nor an object with a `sessions` list. An object with a
 // format that is not ours is read too (see isForeignFormat).

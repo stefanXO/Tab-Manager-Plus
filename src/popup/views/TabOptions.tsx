@@ -7,9 +7,11 @@ import {ManagerContext, ITabManagerActions, ISettings} from "../context";
 import {getLocalStorageMap} from "@helpers/storage";
 import {currentShowMonitors, saveSetting, Settings, SETTING_DEFAULTS} from "@helpers/settings";
 import {buildEverythingExport} from "../debugExport";
-import {buildSessionsFile, everythingFileName, sessionsFileName} from "../sessionsFile";
+import {buildSessionsFile, everythingFileName, sessionsFileName, settingsFileName} from "../sessionsFile";
+import {buildSettingsFile, planSettingsImport, settingsSummary, settingsWorked} from "../settingsFile";
 import {importSummary, importWorked, planImport} from "../importCount";
-import {debugExportNote, sessionsExportNote} from "../exportNotes";
+import {debugExportNote, sessionsExportNote, settingsExportNote} from "../exportNotes";
+import {ERROR_MS} from "../notices";
 import {switchShowMonitors} from "@helpers/monitors";
 import {sizePopup, popupScreen} from "@helpers/popup_size";
 import {restoreDisplays} from "../restoreDisplays";
@@ -39,6 +41,8 @@ const HELP = {
 	sessions: "Allows you to save/restore windows into sessions. ( Tab History will be lost ) Default : on",
 	exportSessions: "Allows you to export your saved windows to an external sessions file",
 	importSessions: "Allows you to restore your saved windows from an external sessions file",
+	exportSettings: "Allows you to export your Tab Manager Plus settings to an external settings file. Saved windows, window names and colors are not part of it",
+	importSettings: "Allows you to restore your settings from an external settings file. Ones that need a browser permission have to be turned on here first",
 	badge: "Shows the number of open tabs on the Tab Manager icon. Default : on",
 	openInOwnTab: "Open the Tab Manager by default in own tab, or as a popup?",
 	hide: "Automatically minimizes inactive browser windows. Default : off",
@@ -302,6 +306,42 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 							/>
 						</ActionOption>
 					</OptionsRow>}
+				</OptionsBox>
+				<OptionsBox title="Settings backup">
+					<OptionsRow>
+						<ActionOption
+							id="settings_export"
+							help={this.help("exportSettings")}
+							icon="export-settings"
+							label="Export Settings"
+							description="Allows you to save your settings to an external settings file, to keep them or to use them in another browser."
+							notes={[settingsExportNote(Object.keys(SETTING_DEFAULTS).length)]}
+						>
+							<button type="button" onClick={this.exportSettings} id="settings_export" name="settings_export">
+								Export Settings
+							</button>
+						</ActionOption>
+						<ActionOption
+							id="settings_import"
+							help={this.help("importSettings")}
+							icon="import-settings"
+							label="Import Settings"
+							description="Allows you to restore your settings from a settings file (or from a debug file, which holds them too). Settings that are not valid are skipped. Those that need a browser permission (Minimize inactive windows, Show all monitors) are only taken while that permission is granted: turn them on here first."
+							notes={[
+								...(importBlocked ? ["Due to a Firefox bug settings import does not work in the popup. Please use the options screen or open Tab Manager Plus in its own tab"] : []),
+							]}
+						>
+							<input
+								type="file"
+								accept="application/json"
+								onChange={this.importSettings}
+								disabled={importBlocked}
+								id="settings_import"
+								name="settings_import"
+								placeholder="Import Settings"
+							/>
+						</ActionOption>
+					</OptionsRow>
 				</OptionsBox>
 				<OptionsBox title="Popup icon">
 					<SwitchOption
@@ -705,6 +745,92 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		}
 		this.showHelp("importSessions");
 		this.context.reload();
+	}
+	// Saves text as a JSON download, the way the session export does
+	private downloadJson(json : string, fileName : string) {
+		const blob = new Blob([json], {type: "text/json"});
+		const anchor = document.createElement("a");
+		anchor.download = fileName;
+		anchor.href = window.URL.createObjectURL(blob);
+		anchor.dataset.downloadurl = ["text/json", anchor.download, anchor.href].join(":");
+		document.body.appendChild(anchor); // required for firefox
+		anchor.dispatchEvent(new MouseEvent("click", { view: window, bubbles: true, cancelable: true }));
+		anchor.remove();
+		const url = anchor.href;
+		setTimeout(() => URL.revokeObjectURL(url), 1000);
+	}
+	exportSettings = async () => {
+		try {
+			const stored = await browser.storage.local.get(Object.keys(SETTING_DEFAULTS));
+			const date = new Date();
+			const file = buildSettingsFile({ ...SETTING_DEFAULTS, ...stored }, SETTING_DEFAULTS, {
+				extension: browser.runtime.getManifest().version,
+				exported: date
+			});
+			this.downloadJson(JSON.stringify(file, null, 2), settingsFileName(date));
+		} catch (e) {
+			this.context.showError("The settings file could not be saved: " + (e instanceof Error ? e.message : e));
+		}
+		this.showHelp("exportSettings");
+	}
+	importSettings = (evt : React.ChangeEvent<HTMLInputElement>) => {
+		// the file picker is disabled then, with the reason as its note
+		if (this.importBlocked()) return;
+		this.context.closeNotices();
+		const inputField = evt.target; // #settings_import
+		const file = inputField.files?.[0];
+		if (!file) {
+			this.context.showError("No file selected!");
+			return;
+		}
+		const reader = new FileReader();
+		reader.onerror = () => {
+			this.context.showError("Could not read the settings file");
+			inputField.value = "";
+		};
+		reader.onload = async event => {
+			let parsed : unknown;
+			try {
+				parsed = JSON.parse(event.target.result.toString());
+			} catch (err) {
+				console.error(err);
+				this.context.showError("Could not read the settings file: " + (err instanceof Error ? err.message : err));
+				inputField.value = "";
+				return;
+			}
+			try {
+				const summary = await this.applySettingsFile(parsed);
+				if (summary.worked) this.context.showInfo(summary.text, ERROR_MS);
+				else this.context.showError(summary.text);
+			} catch (err) {
+				console.error(err);
+				this.context.showError("Could not import the settings file: " + (err instanceof Error ? err.message : err));
+			}
+			inputField.value = "";
+		};
+		reader.readAsText(file);
+		this.showHelp("importSettings");
+	}
+	// Writes the valid settings of a parsed file to storage and says what it did.
+	// The popup follows storage (TabManager.onStorageChanged: theme, size, layout,
+	// switches), so this screen shows the new values at once. A setting that needs
+	// system.display is only taken when the browser has granted it already: a file
+	// picker is no click on the setting's own switch, which is the only place the
+	// browser lets the permission be asked for (see settingsFile.ts).
+	private async applySettingsFile(parsed : unknown) : Promise<{ text : string, worked : boolean }> {
+		const [stored, systemDisplay] = await Promise.all([
+			browser.storage.local.get(Object.keys(SETTING_DEFAULTS)),
+			IS_FIREFOX ? false : browser.permissions.contains({ permissions: ["system.display"] }).catch(() => false)
+		]);
+		const plan = planSettingsImport(parsed, { defaults: SETTING_DEFAULTS, current: { ...SETTING_DEFAULTS, ...stored }, firefox: IS_FIREFOX, systemDisplay });
+		if (Object.keys(plan.values).length) {
+			await browser.storage.local.set(plan.values);
+			// what the worker only learns by being told
+			if ("badge" in plan.values) browser.runtime.sendMessage<ICommand>({ command: S.update_tab_count });
+			if ("openInOwnTab" in plan.values) browser.runtime.sendMessage<ICommand>({ command: S.reload_popup_controls });
+			if (!IS_FIREFOX && ("showMonitors" in plan.values || "hideWindows" in plan.values)) await this.checkMonitorAccess();
+		}
+		return { text: settingsSummary(plan), worked: settingsWorked(plan) };
 	}
 	// Chrome only. On: asks for the system.display permission from this click
 	// (when missing); denied leaves the setting and the switch off. Off: the

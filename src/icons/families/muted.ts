@@ -256,6 +256,15 @@ const MOON_LIT = "M" + [205, 65].map((deg) => { const a = deg * Math.PI / 180; r
 // a page with a folded corner, x 1.5..10.5
 const DOC = "M1.5 1.5h6l3 3v10h-9z";
 const doc = () : IconPart[] => [fill(DOC, "white"), fill("M7.5 1.5v3h3z", "grey-light"), line("M3.5 7H8.5M3.5 9H6", "grey", 1), ink(DOC), ink("M7.5 1.5v3h3", 0.8)];
+// the page of "export-settings" / "import-settings": two slider tracks with a knob each, where the
+// sessions' page has its text lines
+const sliders = () : IconPart[] => [
+	fill(DOC, "white"), fill("M7.5 1.5v3h3z", "grey-light"),
+	line("M3.5 6.6H8.5M3.5 8.6H8.5", "grey", 0.9),
+	fill(circ(5.2, 6.6, 1), "amber"), fill(circ(7, 8.6, 1), "coral"),
+	ink(circ(5.2, 6.6, 1), 0.6), ink(circ(7, 8.6, 1), 0.6),
+	ink(DOC), ink("M7.5 1.5v3h3", 0.8),
+];
 // a fat arrow from x0 to the tip at x1 (either way), centred on y
 function arrow(x0 : number, x1 : number, y : number, shaft = 1.5, head = 3.3, headLen = 3.6) : string {
 	const s = Math.sign(x1 - x0), b = x1 - s * headLen;
@@ -445,6 +454,14 @@ export const family : IconFamily = {
 		] },
 		"import-sessions": { parts: [
 			...doc(),
+			fill(arrow(15, 6, 11), "blue-soft"), ink(arrow(15, 6, 11), 0.9),
+		] },
+		"export-settings": { parts: [
+			...sliders(),
+			fill(arrow(6, 15, 11), "lime"), ink(arrow(6, 15, 11), 0.9),
+		] },
+		"import-settings": { parts: [
+			...sliders(),
 			fill(arrow(15, 6, 11), "blue-soft"), ink(arrow(15, 6, 11), 0.9),
 		] },
 		"badge": { parts: [

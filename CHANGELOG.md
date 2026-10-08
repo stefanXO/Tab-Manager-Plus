@@ -97,6 +97,7 @@ Options
 - The changelog page follows the dark theme
 - The tip in the header no longer changes while the popup is loading
 - Advanced settings: Export tabs for debugging saves a JSON file with your windows, tabs and settings, to attach to a bug report
+- "Settings backup" in the options: Export Settings saves your settings to tab-manager-plus-settings-YYYY-MM-DD-HH-MM-SS.json (not the saved windows, window names or colors) and Import Settings restores them, from that file or from a debug file; settings that are unknown, of the wrong type or out of range are skipped, as are Minimize inactive windows and Show all monitors when the browser has not granted the monitor permission (turn them on in the options first), and the notice lists what changed and what was skipped and why. Import Sessions and Import Settings each refuse the other's file with a message
 
 Firefox
 - "Minimize inactive windows" works on Firefox: keeps one window active, the others (on every monitor) are minimized (#28)

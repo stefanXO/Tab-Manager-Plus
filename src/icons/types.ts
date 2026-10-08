@@ -13,6 +13,7 @@ export const ACTION_ICONS = [
 export const OPTION_ICONS = [
 	"tab-limit", "popup-width", "popup-height", "theme", "compact", "animations",
 	"window-titles", "support-links", "sessions", "export-sessions", "import-sessions",
+	"export-settings", "import-settings",
 	"badge", "own-tab", "minimize-inactive", "monitors", "action-buttons",
 	"private-windows", "shortcuts", "changelog", "debug-export",
 	"mouse-right", "mouse-shift-right", "mouse-middle", "key-enter",

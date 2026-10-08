@@ -2,6 +2,7 @@
 
 import { maybePluralize } from "../helpers/utils.ts";
 import { isForeignFormat, readSessionsFile } from "./sessionsFile.ts";
+import { fileKind, SETTINGS_FILE_FOR_SESSIONS } from "./settingsFile.ts";
 
 // The options screen's session import: sorts the parsed sessions file into the
 // saved windows that can be restored and the ones that cannot (with the
@@ -22,6 +23,11 @@ export interface ImportPlan<T> {
 
 export function planImport<T = unknown>(parsed : unknown) : ImportPlan<T> {
 	const plan : ImportPlan<T> = { valid: [], skipped: {} };
+	// a settings file is for Import Settings (the debug file is read: it holds saved windows too)
+	if (fileKind(parsed) === "settings") {
+		plan.fatal = SETTINGS_FILE_FOR_SESSIONS;
+		return plan;
+	}
 	const list = readSessionsFile(parsed);
 	if (!list) {
 		plan.fatal = "The file is JSON, but not a list of saved windows";

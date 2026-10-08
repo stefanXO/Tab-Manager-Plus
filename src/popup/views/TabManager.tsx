@@ -301,7 +301,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			deleteSession: (session) => this.deleteSession(session),
 			leaveSearchBox: () => this.leaveSearchBox(),
 			showError: (text) => { this.board.error(text); },
-			showInfo: (text) => { this.board.info(text); },
+			showInfo: (text, ms) => { this.board.info(text, ms); },
 			closeNotices: () => this.closeNotices(),
 			reload: () => this.setState({ dirty: true }),
 			rerender: () => this.forceUpdate()

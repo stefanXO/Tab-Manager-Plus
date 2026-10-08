@@ -218,13 +218,15 @@
 	outline-offset: 2px;
 }
 /* an error: a red edge, a red tint and a red line. It says what went wrong, so
-   it may take more than one line. */
+   it may take more than one line. An info wraps too (a settings import lists
+   what it changed and skipped). */
 .notice.error {
 	background: var(--toast-error-bg);
 	border-left: 0.3rem solid var(--toast-error-edge);
 	padding-left: 0.6rem;
 }
-.notice.error .notice-text {
+.notice.error .notice-text,
+.notice.info .notice-text {
 	white-space: normal;
 	overflow-wrap: anywhere;
 }

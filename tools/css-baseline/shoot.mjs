@@ -89,6 +89,8 @@ const WIDTHS = [
 ]
 const THEMES = ['light', 'dark']
 const LAYOUTS = ['blocks', 'blocks-big', 'horizontal', 'vertical']
+// the settings an import state changes, put back before it (the light and dark shots share one page, so the dark one would find them already changed)
+const RESET_IMPORTED = {compact: false, tabLimit: 0, windowTitles: true, hideWindows: false, showMonitors: 'unset'}
 
 /**
  * A popup state. `layouts` limits which layouts it is shot in at dpr 1,
@@ -152,6 +154,27 @@ const STATES = [
 			{id: 3, index: 2, url: 'https://www.amazon.com/s?k=mechanical+keyboard', title: 'Keyboard'}]},
 		{id: 'imp1', name: 'Imported', color: '#888', date: 1, sessionStartTime: 1, customName: false, incognito: false, windowsInfo: {id: 1}, tabs: [{id: 1, index: 0, url: 'https://example.com', title: 'Example'}]}])}},
 	{name: 'options-sessions-badimport', layouts: ['blocks'], scaleLayouts: [], apply: {overlay: 'options', scrollTo: 'Session Management', importFile: '{"a":1}'}},
+	// the "Settings backup" box (Export Settings / Import Settings, side by side
+	// when wide, stacked when narrow). dpr 1 only
+	{name: 'options-settings', layouts: ['blocks'], scaleLayouts: [], apply: {overlay: 'options', scrollTo: 'Settings backup'}},
+	// importing a settings file (src/popup/settingsFile.ts): Compact mode, the tab limit and
+	// the window titles change (the screen follows at once: compact is on in the shot), a
+	// setting of the same value counts as already the same, an unknown key and a wrong type
+	// are skipped, and the two settings that need the system.display permission are skipped
+	// because it is not granted (`granted: false`): a notice with the summary. Chrome build
+	{name: 'options-settings-imported', chromeOnly: true, layouts: ['blocks'], scaleLayouts: [], apply: {overlay: 'options', scrollTo: 'Settings backup', granted: false, store: RESET_IMPORTED, importInput: '#settings_import', importFile: JSON.stringify({
+		format: 'tab-manager-plus-export', version: 1, kind: 'settings', extension: '7.0.0', exported: '2030-01-02T03:04:05.000Z',
+		settings: {compact: true, tabLimit: 15, windowTitles: false, badge: true, animations: false, hideWindows: true, showMonitors: 'on', tabWidth: 'wide', foo: 1}}, null, 2)}},
+	// the same with the permission granted: they are applied
+	{name: 'options-settings-imported-granted', chromeOnly: true, layouts: ['blocks'], scaleLayouts: [], apply: {overlay: 'options', scrollTo: 'Settings backup', store: RESET_IMPORTED, importInput: '#settings_import', importFile: JSON.stringify({
+		format: 'tab-manager-plus-export', version: 1, kind: 'settings', settings: {compact: true, hideWindows: true, showMonitors: 'on'}})}},
+	// the screen follows an import at once: the switches of "Window style" (Compact mode on, Window titles and
+	// Donate and Rate buttons off) after a settings file changed them
+	{name: 'options-settings-imported-switches', layouts: ['blocks'], scaleLayouts: [], apply: {overlay: 'options', scrollTo: 'Window style', store: {...RESET_IMPORTED, supportLinks: true}, importInput: '#settings_import', importFile: JSON.stringify({format: 'tab-manager-plus-export', version: 1, kind: 'settings', settings: {compact: true, windowTitles: false, supportLinks: false}})}},
+	// a saved windows file given to Import Settings: the red notice says so
+	{name: 'options-settings-wrongfile', layouts: ['blocks'], scaleLayouts: [], apply: {overlay: 'options', scrollTo: 'Settings backup', importInput: '#settings_import', importFile: JSON.stringify({format: 'tab-manager-plus-export', version: 1, sessions: []})}},
+	// and a settings file given to Import Sessions
+	{name: 'options-sessions-settingsfile', layouts: ['blocks'], scaleLayouts: [], apply: {overlay: 'options', scrollTo: 'Session Management', importFile: JSON.stringify({format: 'tab-manager-plus-export', version: 1, kind: 'settings', settings: {compact: true}})}},
 	{name: 'options-debug', layouts: ['blocks'], scaleLayouts: [], apply: {overlay: 'options', scrollTo: 'Export tabs for debugging'}},
 	// the window colour/name screen does take the layout as a prop
 	{name: 'windowopts', layouts: ['blocks', 'vertical'], scaleLayouts: ['blocks'], apply: {overlay: 'colors'}},
@@ -611,7 +634,7 @@ async function settle(page) {
 }
 
 /** Applies a popup state absolutely: the result never depends on what came before. */
-async function apply(page, {layout, dark, search = '', dup = false, recent = 0, overlay = null, scrollTo = null, store = {}, granted = true, savedFocused = null, clicks = [], scrollInto = null, importFile = null, freezeClock = false, scrollEnd = false, typeName = null, pickColor = null, savedInfo = null, freshSessions = false, savedAuto = null, savedLong = false, afterWait = 0, quota = false, keepNotices = false, barAt = 0, noticeHover = false, savedUpdated = null, incognito = [], savedPrivate = null}) {
+async function apply(page, {layout, dark, search = '', dup = false, recent = 0, overlay = null, scrollTo = null, store = {}, granted = true, savedFocused = null, clicks = [], scrollInto = null, importFile = null, importInput = '#session_import', freezeClock = false, scrollEnd = false, typeName = null, pickColor = null, savedInfo = null, freshSessions = false, savedAuto = null, savedLong = false, afterWait = 0, quota = false, keepNotices = false, barAt = 0, noticeHover = false, savedUpdated = null, incognito = [], savedPrivate = null}) {
 	await page.evaluate(async (s) => {
 		const q = (sel) => document.querySelector(sel)
 		const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
@@ -830,10 +853,10 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 			el.dispatchEvent(new MouseEvent(c.button ? 'mousedown' : 'click', init))
 			await frame()
 		}
-		// 9. a backup file chosen in the options' session import (needs overlay options)
+		// 9. a file chosen in the options' session import (needs overlay options); importInput picks another file input, e.g. the settings import
 		if (s.importFile) {
-			const input = q('#session_import')
-			if (!input) throw new Error('no #session_import')
+			const input = q(s.importInput)
+			if (!input) throw new Error('no ' + s.importInput)
 			const dt = new DataTransfer()
 			dt.items.add(new File([s.importFile], 'backup.json', {type: 'application/json'}))
 			input.files = dt.files
@@ -864,7 +887,7 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 		if (s.afterWait) await new Promise((r) => setTimeout(r, s.afterWait))
 		// the list scrolled to its very end: the padding the notice makes room with shows
 		if (s.scrollEnd) { const c = q('.window-container'); if (c) c.scrollTop = c.scrollHeight }
-	}, {layout, dark, search, dup, recent, overlay, store, granted, savedFocused, clicks, scrollInto, importFile, freezeClock, scrollEnd, typeName, pickColor, savedInfo, freshSessions, savedAuto, savedLong, afterWait, quota, keepNotices, barAt, noticeHover, savedUpdated, incognito, savedPrivate})
+	}, {layout, dark, search, dup, recent, overlay, store, granted, savedFocused, clicks, scrollInto, importFile, importInput, freezeClock, scrollEnd, typeName, pickColor, savedInfo, freshSessions, savedAuto, savedLong, afterWait, quota, keepNotices, barAt, noticeHover, savedUpdated, incognito, savedPrivate})
 	await settle(page)
 	// 7. scroll the options box headed `scrollTo` to the top of its scroller
 	if (scrollTo) {

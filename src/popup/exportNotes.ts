@@ -12,6 +12,12 @@ export function sessionsExportNote(sessions : { tabs? : unknown[] }[] | undefine
 	return "Will export " + maybePluralize(sessions.length, "saved window") + " with " + maybePluralize(tabs, "tab");
 }
 
+// Export Settings: every setting of the extension; the saved windows and the
+// window names and colors are not part of it
+export function settingsExportNote(count : number) : string {
+	return "Will export " + maybePluralize(count, "setting") + ", not the saved windows or the window names and colors";
+}
+
 // Export tabs for debugging: every open window and tab
 export function debugExportNote(windows : number, tabs : number) : string {
 	if (windows === 0) return "No windows to export";

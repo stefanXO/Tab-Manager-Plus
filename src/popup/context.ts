@@ -75,8 +75,9 @@ export interface ITabManagerActions {
 	// refused write or a failure. The text says what, e.g. refusedText() in
 	// ./notices.ts.
 	showError(text : string) : void;
-	// a neutral notice of the same kind, for what an action did (an import)
-	showInfo(text : string) : void;
+	// a neutral notice of the same kind, for what an action did (an import); `ms`:
+	// how long it stays, when it is long to read (default: INFO_MS, ./notices.ts)
+	showInfo(text : string, ms? : number) : void;
 	// closes every notice and writes what an Undo notice still holds (an
 	// import starts: nothing may be pending under it)
 	closeNotices() : void;
