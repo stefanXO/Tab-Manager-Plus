@@ -558,20 +558,19 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		return value;
 	}
 
-	changeTabLimit = async (e : React.ChangeEvent<HTMLInputElement>) => {
-		await this.store("tabLimit", parseInt(e.target.value));
+	// the number fields hand over real numbers only (options/NumberOption.tsx)
+	changeTabLimit = async (value : number) => {
+		await this.store("tabLimit", value);
 		this.showHelp("tabLimit");
 	}
-	changeTabWidth = async (e : React.ChangeEvent<HTMLInputElement>) => {
-		var _tab_width = parseInt(e.target.value);
-		await this.store("tabWidth", _tab_width);
-		if (window.inPopup) sizePopup(_tab_width, this.props.tabHeight);
+	changeTabWidth = async (value : number) => {
+		await this.store("tabWidth", value);
+		if (window.inPopup) sizePopup(value, this.props.tabHeight);
 		this.showHelp("tabWidth");
 	}
-	changeTabHeight = async (e : React.ChangeEvent<HTMLInputElement>) => {
-		var _tab_height = parseInt(e.target.value);
-		await this.store("tabHeight", _tab_height);
-		if (window.inPopup) sizePopup(this.props.tabWidth, _tab_height);
+	changeTabHeight = async (value : number) => {
+		await this.store("tabHeight", value);
+		if (window.inPopup) sizePopup(this.props.tabWidth, value);
 		this.showHelp("tabHeight");
 	}
 	changeTheme = async (theme : Theme) => {

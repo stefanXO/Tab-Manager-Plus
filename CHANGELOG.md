@@ -109,6 +109,7 @@ Options
 - The switches are readable in the dark theme and scale with the browser's zoom (#69)
 - Hovering anywhere over an option shows its help text in the header, and it stays while the mouse is there; Popup size, Incognito, Shortcut and What's new have help texts too
 - Enter no longer opens a new window while the options or the window color screen are open
+- Limit Tabs Per Window and the popup width and height: emptying the field to type a new number no longer stores NaN (the field then showed "NaN" and the popup lost its size); a value outside the limits is corrected when you leave the field
 - The changelog page follows the dark theme
 - The tip in the header no longer changes while the popup is loading
 - Advanced settings: Export tabs for debugging saves a JSON file with your windows, tabs and settings, to attach to a bug report
