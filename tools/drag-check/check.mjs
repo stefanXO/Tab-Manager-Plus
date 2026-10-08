@@ -872,8 +872,10 @@ try {
 				return {got: await newWindow(before, want), want}
 			})
 		}
-		// an s: search never selects an open tab: Enter must not open an empty window
-		key('Enter after an s: search that selected nothing: no new window', async () => {
+		// an s: search never selects an open tab; with no open match it selects the
+		// saved matches (7d6d064), so Enter opens them in one new window, never an
+		// empty one
+		key('Enter after an s: search: opens the selected saved match, no empty window', async () => {
 			await fixture(layout)
 			const p = await openPopup()
 			const before = await windowsNow()
@@ -882,7 +884,7 @@ try {
 			await new Promise((r) => setTimeout(r, 300))
 			await p.keyboard.press('Enter')
 			await new Promise((r) => setTimeout(r, 800))
-			const want = []
+			const want = ['Kilo']
 			return {got: await newWindow(before, want), want}
 		})
 		key('Enter, open tabs selected: the old move to a new window', async () => {
