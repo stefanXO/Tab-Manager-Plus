@@ -235,7 +235,9 @@
 							<li>Search finds tabs in saved windows too: matching saved tabs stay clear while the
 								others fade (or hide, with Hide non-matching tabs on, together with saved
 								windows that have no match and hold no selected tab, instead of all saved
-								windows disappearing), and the header counts them; a search never selects them</li>
+								windows disappearing), and the header counts them. A search selects the open
+								tabs it matches, and the saved ones only when no open tab matches (then Enter
+								opens them in a new window), so open and saved tabs are never selected together</li>
 							<li>Selected tabs are always shown: Hide non-matching tabs (and the hide mode of
 								Highlight Duplicates and Highlight recently active tabs) never hides a selected
 								tab, open or saved. A selected tab that does not match stays on screen,
@@ -252,9 +254,9 @@
 								(<code>s: u:github t:tax</code>, <code>-s: tax</code>) limits the whole search to saved or to open
 								windows, and with Hide non-matching tabs on, the other kind hides. A search that
 								only saved tabs can match reads "N tabs in M saved windows" in the header. A
-								query of only <code>-s:</code> shows the open windows and selects nothing. Both only work
-								while saved windows are switched on; off, <code>s:tax</code> is plain text, and the <code>s:</code> rows
-								of the search help and its tip are hidden</li>
+								query of only <code>s:</code> or only <code>-s:</code> shows those windows and selects nothing. Both only
+								work while saved windows are switched on; off, <code>s:tax</code> is plain text, and the <code>s:</code>
+								rows of the search help and its tip are hidden</li>
 							<li>The window order no longer resets on its own; the current window is always listed first and marked, also as a popup</li>
 							<li>Clicking the icon while Tab Manager Plus is already open in a tab switches to that tab</li>
 							<li>The "switch to previous tab" shortcut works again (<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/37" target="_blank" rel="noopener">#37</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/108" target="_blank" rel="noopener">#108</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/238" target="_blank" rel="noopener">#238</a>)</li>

@@ -8,12 +8,14 @@
 // stays selected, and therefore on screen (./selectedShown.ts), as if "Hide
 // non-matching tabs" were off for it.
 //
-// Selected saved tabs are always selected by hand (a search never selects
-// them) and stay too. The selection never mixes open and saved tabs
-// (./sessionKeys.ts), so while saved tabs are selected the search marks the
-// open matches without selecting them.
+// The search selects saved tabs only when no open tab matches: "google.com"
+// with open and saved matches selects the open ones, with saved matches only
+// it selects those. The selection never mixes open and saved tabs
+// (./sessionKeys.ts), so while saved tabs are selected by hand the search
+// marks the open matches without selecting them, and while open tabs are
+// selected by hand it selects no saved tab.
 
-import { onlySavedSelected } from "./sessionKeys.ts";
+import { isSavedTabKey, onlySavedSelected } from "./sessionKeys.ts";
 
 // The open tab ids the search (or Highlight Duplicates / Highlight recently
 // active tabs) selected and the user has not touched since.
@@ -34,6 +36,11 @@ export class SearchPicks {
 	touch(id : number) : void {
 		this.picked.delete(id);
 	}
+	// the saved tabs an earlier search selected leave (before a new pass, so
+	// the open tabs see only the user's saved tabs)
+	unpickSaved(selection : Set<number>) : void {
+		for (const id of [...this.picked]) if (isSavedTabKey(id)) this.unpick(selection, id);
+	}
 	// the search was cleared: what it selected leaves, the user's tabs stay
 	unpickAll(selection : Set<number>) : void {
 		for (const id of this.picked) selection.delete(id);
@@ -52,6 +59,14 @@ export class SearchPicks {
 // the open tabs and selects none), and not while saved tabs are selected.
 export function searchSelects(selection : ReadonlySet<number>, scopeOnly : boolean) : boolean {
 	return !scopeOnly && !onlySavedSelected(selection);
+}
+
+// Whether a search selects the saved tabs it matches: only when no open tab
+// matched, it is not a bare s: or -s:, and no open tab is selected by hand.
+export function searchSelectsSaved(selection : ReadonlySet<number>, openMatches : number, scopeOnly : boolean) : boolean {
+	if (scopeOnly || openMatches > 0) return false;
+	for (const id of selection) if (!isSavedTabKey(id)) return false;
+	return true;
 }
 
 // One open tab of a search pass: a match is selected (when the search

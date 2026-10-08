@@ -6,7 +6,7 @@
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { SearchPicks, searchSelects, searchTab, keptByHand } from "../src/popup/searchPicks.ts";
+import { SearchPicks, searchSelects, searchSelectsSaved, searchTab, keptByHand } from "../src/popup/searchPicks.ts";
 import { SavedTabKeys } from "../src/popup/sessionKeys.ts";
 
 // one search pass over the open tabs `ids`, `matches` being the ones it matches
@@ -141,5 +141,69 @@ describe("a bare -s: and selected saved tabs", () => {
 		assert.equal(searchSelects(new Set(), false), true);
 		assert.equal(searchSelects(new Set([4]), false), true);
 		assert.equal(searchSelects(new Set(), true), false);
+	});
+});
+
+// One whole pass as runSearch does it: earlier saved picks leave, the open tabs
+// are searched, and the saved matches are selected when no open tab matched.
+function searchBoth(selection : Set<number>, picks : SearchPicks, matches : number[], savedMatches : number[], scopeOnly = false) {
+	picks.unpickSaved(selection);
+	search(selection, picks, TABS, matches, scopeOnly);
+	if (searchSelectsSaved(selection, matches.length, scopeOnly)) for (const key of savedMatches) picks.pick(selection, key);
+}
+
+describe("saved tabs are selected when no open tab matches", () => {
+	const keys = new SavedTabKeys();
+	const a = keys.key("s1", 0), b = keys.key("s1", 1);
+
+	test("open and saved matches: only the open ones are selected", () => {
+		const selection = new Set<number>();
+		const picks = new SearchPicks();
+		searchBoth(selection, picks, [2, 4], [a, b]);
+		assert.deepEqual(sorted(selection), [2, 4]);
+	});
+
+	test("only saved matches: those are selected, and Enter has them alone", () => {
+		const selection = new Set<number>();
+		const picks = new SearchPicks();
+		searchBoth(selection, picks, [], [a, b]);
+		assert.deepEqual(sorted(selection), [b, a]);
+		assert.equal(keptByHand(selection, picks), false);
+	});
+
+	test("typing on until open tabs match: the saved picks leave, the open matches come in", () => {
+		const selection = new Set<number>();
+		const picks = new SearchPicks();
+		searchBoth(selection, picks, [], [a]);
+		searchBoth(selection, picks, [3], [a]);
+		assert.deepEqual(sorted(selection), [3]);
+		searchBoth(selection, picks, [], [b]);
+		assert.deepEqual(sorted(selection), [b]);
+		picks.unpickAll(selection);
+		assert.equal(selection.size, 0);
+	});
+
+	test("an open tab selected by hand: no saved tab is selected", () => {
+		const selection = new Set<number>([5]);
+		const picks = new SearchPicks();
+		searchBoth(selection, picks, [], [a]);
+		assert.deepEqual(sorted(selection), [5]);
+	});
+
+	test("a saved tab selected by hand: saved matches join it, open matches do not", () => {
+		const selection = new Set<number>([b]);
+		const picks = new SearchPicks();
+		searchBoth(selection, picks, [], [a]);
+		assert.deepEqual(sorted(selection), [b, a]);
+		searchBoth(selection, picks, [1], [a]);
+		assert.deepEqual(sorted(selection), [b]);
+	});
+
+	test("a bare s: or -s: selects nothing", () => {
+		const selection = new Set<number>();
+		const picks = new SearchPicks();
+		searchBoth(selection, picks, [], [a, b], true);
+		assert.equal(selection.size, 0);
+		assert.equal(searchSelectsSaved(new Set(), 0, true), false);
 	});
 });

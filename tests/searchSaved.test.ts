@@ -130,6 +130,19 @@ describe("searchSummary", () => {
 		assert.match(s.bottom, /not selected/);
 		assert.equal(searchSummary("tax", 0, { tabs: 4, windows: 2 }).top, "4 matches for 'tax' in 2 saved windows");
 	});
+
+	test("saved matches the search selected: Enter opens them", () => {
+		assert.equal(searchSummary("tax", 0, { tabs: 1, windows: 1 }, "all", 0, true).bottom, "Press enter to open it in a new window");
+		assert.equal(searchSummary("tax", 0, { tabs: 3, windows: 2 }, "all", 0, true).bottom, "Press enter to open them in a new window");
+		assert.equal(searchSummary("s:tax", 0, { tabs: 3, windows: 2 }, "saved", 0, true).bottom, "Press enter to open them in a new window");
+	});
+
+	test("matched lists the keys of the matching saved tabs", () => {
+		const keys = new SavedTabKeys();
+		const r = searchSaved(SESSIONS, parseQuery("google"), false, keys);
+		assert.deepEqual(r.matched, [keys.key("s2", 0), keys.key("s2", 1)]);
+		assert.deepEqual(searchSaved(SESSIONS, parseQuery("google"), true, keys).matched, []);
+	});
 });
 
 describe("searchSaved with s:", () => {

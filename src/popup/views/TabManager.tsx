@@ -30,7 +30,7 @@ import {savedDeleteItems} from "../savedDelete";
 import {editSession, shownSavedName, SessionEdit} from "../sessionEdit";
 import {searchSaved, searchSummary, SavedSearch, SummaryKind} from "../searchSaved";
 import {isHiddenTab, savedSelectionSignature, shownWithSelection} from "../selectedShown";
-import {SearchPicks, searchSelects, searchTab, keptByHand} from "../searchPicks";
+import {SearchPicks, searchSelects, searchSelectsSaved, searchTab, keptByHand} from "../searchPicks";
 import {draggedSaved, openableSaved, openedText} from "../savedDrag";
 import {moveSession, reorderShown} from "../sessionOrder";
 import {tidyStored, listSessions, addSessions, importSessions} from "../sessionStore";
@@ -1806,6 +1806,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	}
 	runSearch(query : string) {
 		let hiddenCount = this.state.hiddenCount || 0;
+		let saved : SavedSearch | null = null;
+		let savedPicked = false;
 		const searchQuery = query || "";
 		const searchLen = searchQuery.length;
 		// see src/popup/search.ts for the grammar; s: and -s: are syntax only
@@ -1824,11 +1826,14 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			this.clearHiddenTabs();
 			hiddenCount = 0;
 		} else {
-			// The search selects the open tabs it matches and takes back what an
-			// earlier search selected; tabs selected by hand stay selected, and so
-			// on screen, matching or not (saved tabs too: then it selects nothing,
-			// the selection never mixes them, see ../searchPicks.ts)
+			// The search selects the open tabs it matches, or the saved ones when
+			// no open tab matches, and takes back what an earlier search selected;
+			// tabs selected by hand stay selected, and so on screen, matching or
+			// not (saved tabs by hand: then it selects no open tab, the selection
+			// never mixes them, see ../searchPicks.ts)
+			this.searchPicks.unpickSaved(this.state.selection);
 			const selects = searchSelects(this.state.selection, parsed.scopeOnly);
+			let openMatches = 0;
 			let idList : number[] = [ ...this.state.tabsbyid.keys() ];
 			if(this.state.dupTabs) {
 				const duplicates = this.getDuplicates();
@@ -1842,6 +1847,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				const tab = this.state.tabsbyid.get(id);
 				const match = matchTab(searchable(tab.title, tab.url || tab.pendingUrl), parsed);
 				if (match) {
+					openMatches++;
 					hiddenCount -= this.state.hiddenTabs.has(id) ? 1 : 0;
 					this.state.hiddenTabs.delete(id);
 				} else {
@@ -1854,6 +1860,15 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 					lastSelect: id,
 					dirty: true
 				});
+			}
+			saved = searchSaved(
+				this.visibleSessions(),
+				parsed,
+				this.state.dupTabs || this.state.recentLevel > 0
+			);
+			if (searchSelectsSaved(this.state.selection, openMatches, parsed.scopeOnly)) {
+				for (const key of saved.matched) this.searchPicks.pick(this.state.selection, key);
+				savedPicked = saved.matched.length > 0;
 			}
 		}
 
@@ -1871,8 +1886,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				bottomText: ""
 			});
 		} else {
-			// saved tabs that match are counted beside the open ones (never selected)
-			const saved = searchSaved(
+			// saved tabs that match are counted beside the open ones (selected
+			// only when no open tab matches)
+			if (!saved) saved = searchSaved(
 				this.visibleSessions(),
 				parsed,
 				this.state.dupTabs || this.state.recentLevel > 0
@@ -1888,7 +1904,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				for (const [id, tab] of this.state.tabsbyid) if (!this.state.hiddenTabs.has(id)) shown.add(tab.windowId);
 				openWindows = shown.size;
 			} else if (reach.saved && !reach.open) kind = "saved";
-			const summary = searchSummary(searchQuery, matches, saved, kind, openWindows);
+			const summary = searchSummary(searchQuery, matches, saved, kind, openWindows, savedPicked);
 			this.setState({
 				topText: summary.top,
 				// tabs selected by hand go along with Enter: say what Enter does
