@@ -56,7 +56,7 @@ html, body {
 	z-index: 999999;
 }
 /* the text starts on the bars' inset, the cards' left edge, and stops
-   short of the four icons (narrow.css: no icons there) */
+   short of the four icons (also in the narrow layout) */
 .window.top input {
 	width: 100%;
 	border: 0;
