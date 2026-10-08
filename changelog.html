@@ -158,8 +158,12 @@
 								(information notes such as an import summary for 5): a save or rename the
 								browser refused (full browser storage), a sessions file that could not be read
 								or imported, saved tabs that could not be opened, a saved window that could not
-								be restored; they replace the red text in the header and the note under the file
-								picker. Starting an import closes the notices and writes a pending delete first</li>
+								be restored, and a drag and drop that does nothing or only part of what was
+								dragged, with the reason (the saved window or tab is gone, private and normal
+								tabs cannot mix, Firefox cannot save about: pages, nothing to add) and how many
+								tabs were left out; they replace the red text in the header and the note under
+								the file picker. Starting an import closes the notices and writes a pending
+								delete first</li>
 							<li>Saved windows can be renamed and recolored with the same name and color screen
 								as open windows, from the color button on the saved window's card or by clicking
 								its name (anywhere on it, however long it is; a long name shows as much as fits,
@@ -194,7 +198,10 @@
 								Tab Manager tab or sidebar other than the one the drag started in</li>
 							<li>Dragging several tabs (open or saved) shows them as a small stack of tabs with
 								their number under the mouse: with titles in the List view, icons only in the
-								views that show tabs as icons, as big as that view's tabs</li>
+								views that show tabs as icons, as big as that view's tabs. Tabs that Hide
+								non-matching tabs hides never move, whichever way tabs are moved (dropped on
+								another window or a saved window, Enter or the new window button): they stay
+								selected and where they are, and the stack counts only the tabs that move</li>
 							<li>Tabs of saved windows can be reordered: drag one before or after another tab of
 								the same saved window, onto a tab of another saved window to move it there, or
 								onto another saved window's title or edge to add it at the end; selected saved
@@ -262,6 +269,9 @@
 								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/97" target="_blank" rel="noopener">#97</a>)
 							</li>
 							<li>A tab dragged from one Tab Manager tab or sidebar into another moves that tab, instead of the tabs selected in the other one</li>
+							<li>A window whose tabs were all hidden by Hide non-matching tabs shows again when
+								the search ends or the hiding is turned off, also after the tabs on screen moved
+								to another window</li>
 							<li>The window name and color screen covers the whole popup, its close button shows a pointer and Escape closes only that screen</li>
 							<li>Firefox-based browsers (LibreWolf, Zen, Waterfox) are detected as Firefox</li>
 						</ul>

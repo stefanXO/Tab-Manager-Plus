@@ -244,6 +244,13 @@ export class Session extends React.Component<ISession, ISessionState> {
 		const onTab = !!(e.target as Element).closest?.(".tab");
 		if (onTab || !this.context.savedDropMoves(this.props.session.id, undefined, false)) {
 			if (this.state.dropMarker) this.setState({ dropMarker: "" });
+			// refused for a reason: no marker, but the drop is taken and the
+			// error notice says why (TabManager.dropSaved)
+			if (!onTab && this.context.savedDropRefused(this.props.session.id, undefined, false)) {
+				e.preventDefault();
+				e.stopPropagation();
+				e.dataTransfer.dropEffect = isOpenTabDrag(e.dataTransfer.types) ? "copy" : "move";
+			}
 			return;
 		}
 		e.preventDefault();
@@ -260,7 +267,9 @@ export class Session extends React.Component<ISession, ISessionState> {
 		if (isSavedTabDrag(e.dataTransfer?.types) || isOpenTabDrag(e.dataTransfer?.types)) {
 			const into = this.state.dropMarker === "into";
 			this.setState({ dropMarker: "" });
-			if (!into) return;
+			// no marker: a drop refused for a reason (not on a tab, which takes its own)
+			// is taken, to say why
+			if (!into && ((e.target as Element).closest?.(".tab") || !this.context.savedDropRefused(this.props.session.id, undefined, false))) return;
 			e.preventDefault();
 			e.stopPropagation();
 			this.context.dropSaved(this.props.session.id, undefined, false, readTabDrag(e.dataTransfer));

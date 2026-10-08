@@ -37,6 +37,10 @@ export interface ITabManagerActions {
 	// this stored index (undefined: on the card, at its end) changes anything;
 	// for dragged open tabs, whether copies of them can go there
 	savedDropMoves(sessionId : string, index : number | undefined, before : boolean) : boolean;
+	// whether a drop there is refused for a reason (private and normal mixed,
+	// nothing to save): no marker, but the drop is taken and the error notice
+	// says why
+	savedDropRefused(sessionId : string, index : number | undefined, before : boolean) : boolean;
 	// the dragged saved tabs dropped there: moved, in one write; dragged open
 	// tabs: copied there, and they stay open
 	dropSaved(sessionId : string, index : number | undefined, before : boolean, dragged : TabDrag | null) : void;

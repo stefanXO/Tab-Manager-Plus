@@ -219,7 +219,9 @@ try {
 	// With `into` (another page), the drag leaves `p` and is dropped in
 	// `into`, as when a drag crosses from one window to another: the page
 	// that takes the drop never saw it start.
-	async function drag(p, from, to, into = p) {
+	// `opts.afterStart` runs once the drag has started and before it moves on: a
+	// change made behind the drag's back (a saved tab deleted by another popup).
+	async function drag(p, from, to, into = p, opts = {}) {
 		const cdp = await p.createCDPSession()
 		const target = into === p ? cdp : await into.createCDPSession()
 		try {
@@ -235,6 +237,7 @@ try {
 			for (let i = 1; i <= 5; i++) await mouse('mouseMoved', {x: src.x + i * 3, y: src.y + i * 3}, {buttons: 1})
 			const data = await intercepted
 			if (process.env.DRAG_DEBUG) console.log('      [drag data] ' + JSON.stringify(data))
+			if (opts.afterStart) await opts.afterStart()
 			// measured once the drag runs (dragstart may re-render), and scrolled
 			// to, as a user does in a small popup
 			const dst = await point(into, to.selector || to, to.fx, to.fy)
@@ -822,6 +825,201 @@ try {
 			const want = [['Deleted 1 tab from “Reading”', 'Removed “Taxes” (left empty)'],
 				['Hotel', 'India', 'Juliett', 'Kilo', 'Lima', 'Mike', 'November'], ['Removed “Taxes” (left empty)']]
 			return {got: [notices, await settle(() => shownIn(p, '#session-s1'), want[1]), await undoNotices(p)], want}
+		})
+	}
+
+	// Round 3, drops3, with real drags and real keys. (a) Hidden tabs never
+	// move ("if we can't see them, we can't move them"): tabs selected and then
+	// hidden by "Hide non-matching tabs" stay in their window, stay selected, and
+	// are not in the drag image's count, whatever the drop does. (b) A drop that
+	// does nothing, or only part of what was dragged, says why in the red notice:
+	// private and normal never mix (a saved window marked private is seeded; the
+	// headless browser has no private windows), the dragged saved tab is gone
+	// (deleted behind the drag's back). A drop refused for a reason shows no
+	// marker, but must still be taken by the page (the drop event has to come
+	// for the notice to be shown). Own tab, Blocks and List.
+	for (const layout of ['blocks', 'vertical']) {
+		const drops = (name, fn) => checks.push({name: 'drops ' + layout + ': ' + name, fn, mode: 'tab'})
+		const SEARCH = 'Alpha OR Charlie OR Delta'
+		const windowsNow = () => api(async () => (await chrome.windows.getAll()).map((w) => w.id))
+		const newWindows = (known, want) => settle(() => api(async (known) => {
+			const out = []
+			for (const w of await chrome.windows.getAll({populate: true})) {
+				if (known.includes(w.id)) continue
+				out.push(w.tabs.map((t) => t.title || t.pendingUrl || t.url).sort())
+			}
+			return out
+		}, known), want)
+		const sorted = (titles) => [...titles].sort()
+		const selectedIn = (p, card) => p.evaluate((card) => [...document.querySelectorAll(card + ' .tab.selected')]
+			.map((t) => (t.getAttribute('data-hover') || '').split('\n')[0]).sort(), card)
+		// Hidden tabs are not on the page at all; to see which ones are still selected,
+		// "Hide non-matching tabs" is turned off again (the faded tabs show). Last in a check.
+		const revealed = async (p, card) => {
+			await click(p, '.windowaction.filter')
+			await p.waitForFunction(() => !document.querySelector('.windowaction.filter.enabled'), {timeout: 3000})
+			await new Promise((r) => setTimeout(r, 300))
+			return selectedIn(p, card)
+		}
+		const noticesOf = (p) => p.evaluate(() => [...document.querySelectorAll('.notice.error .notice-text')].map((e) => e.textContent))
+		// Searched, Bravo (faded: not a match) selected with Ctrl+click, then "Hide
+		// non-matching tabs" on: Bravo is selected and out of sight, the matches
+		// (Alpha, Charlie, Delta) are selected and on screen.
+		async function hiddenSelected(p, query = SEARCH, extra = []) {
+			await p.focus('.searchBoxInput')
+			await p.keyboard.type(query)
+			await p.waitForFunction((q) => document.querySelector('.searchBoxInput').value === q, {}, query)
+			await new Promise((r) => setTimeout(r, 400))
+			for (const sel of extra) await ctrlClick(p, sel)
+			await click(p, '.windowaction.filter')
+			await p.waitForFunction(() => document.querySelector('.windowaction.filter.enabled'), {timeout: 3000})
+			await p.waitForFunction((sel) => [...document.querySelectorAll(sel)].every((t) => !t.offsetParent), {timeout: 3000}, tabSel('Bravo'))
+		}
+		// the drag image's count and its front tile, as the page built them
+		const stackOf = async (stacks) => (await stacks()).map((st) => ({label: st.label, tiles: st.tiles.length, front: st.tiles[0]}))
+		const stackIs = (count, front) => [{label: count + ' tabs', tiles: Math.min(count, 3), front: layout === 'vertical' ? front : ''}]
+		// a saved window, as the fixture makes them
+		const savedWindow = (id, name, titles, extra = {}) => {
+			const now = Date.now()
+			return {id, name, color: 'color9', customName: true, incognito: false, date: now - 864e5, sessionStartTime: now - 864e5, order: 5,
+				tabs: titles.map((t, i) => ({id: 9100 + i, index: i, windowId: 900, title: t, url: page(t), active: i === 0, pinned: false, audible: false,
+					discarded: false, highlighted: i === 0, incognito: !!extra.incognito, status: 'complete'})),
+				windowsInfo: {id: 900, focused: false, incognito: !!extra.incognito, type: 'normal', state: 'normal', left: 0, top: 0, width: 900, height: 700}, ...extra}
+		}
+		// the stored saved windows changed before the popup opens (patch: fields to set by id; add: new ones)
+		const seedSaved = (patch = {}, add = {}) => api(async (patch, add) => {
+			const {sessions} = await chrome.storage.local.get('sessions')
+			for (const [id, fields] of Object.entries(patch)) Object.assign(sessions[id], fields)
+			Object.assign(sessions, add)
+			await chrome.storage.local.set({sessions})
+		}, patch, add)
+		const SAVED = {s1: ['Hotel', 'India', 'Juliett', 'Kilo'], s2: ['Lima', 'Mike', 'November']}
+
+		// (a) open tabs between open windows
+		drops('hidden selected tab: dropped on a tab, only the three on screen move, it stays in place and selected', async () => {
+			const [w1, w2] = await fixture(layout)
+			const p = await openPopup()
+			await hiddenSelected(p, SEARCH, [tabSel('Bravo')])
+			const stacks = await watchStacks(p)
+			await drag(p, tabSel('Alpha'), {selector: tabSel('Delta'), fx: 0.1, fy: 0.1})
+			const want = [['Bravo'], ['Alpha', 'Charlie', 'Delta', 'Echo', 'Foxtrot'], ['Bravo'], stackIs(3, 'Alpha')]
+			const got = [await settle(() => titlesOf(w1), want[0])]
+			got.push(await settle(async () => sorted(await titlesOf(w2)), want[1]))
+			got.push(await stackOf(stacks))
+			got.splice(2, 0, await revealed(p, '.window:not(.session)'))
+			return {got, want}
+		})
+		drops('hidden selected tab: dropped on a saved window, the copies are the three on screen', async () => {
+			const [w1] = await fixture(layout)
+			const p = await openPopup()
+			// (Hotel matches too, so the saved window stays on screen to be dropped on)
+			await hiddenSelected(p, SEARCH + ' OR Hotel', [tabSel('Bravo')])
+			const stacks = await watchStacks(p)
+			await drag(p, tabSel('Alpha'), '#session-s1 h3.windowTitle')
+			const want = [['Alpha', 'Charlie', 'Delta', 'Hotel', 'India', 'Juliett', 'Kilo'], ['Alpha', 'Bravo', 'Charlie'], ['Bravo'], stackIs(3, 'Alpha')]
+			const got = [await settle(async () => sorted((await savedTitles()).s1), want[0])]
+			got.push(sorted(await titlesOf(w1)))
+			got.push(await stackOf(stacks))
+			got.splice(2, 0, await revealed(p, '.window:not(.session)'))
+			return {got, want}
+		})
+		// Enter, the other way tabs move to a new window
+		drops('hidden selected tab: Enter moves the three on screen to a new window, the hidden one stays', async () => {
+			const [w1] = await fixture(layout)
+			const p = await openPopup()
+			const known = await windowsNow()
+			await hiddenSelected(p, SEARCH, [tabSel('Bravo')])
+			await p.focus('.searchBoxInput')
+			await p.keyboard.press('Enter')
+			const want = [[['Alpha', 'Charlie', 'Delta']], ['Bravo'], true]
+			const got = [await newWindows(known, want[0])]
+			got.push(await settle(() => titlesOf(w1), want[1]))
+			await new Promise((r) => setTimeout(r, 500))
+			got.push((await revealed(p, '.window:not(.session)')).includes('Bravo'))
+			return {got, want}
+		})
+		drops('only hidden tabs selected: Enter moves nothing, no empty window, the notice says why', async () => {
+			const [w1] = await fixture(layout)
+			const p = await openPopup()
+			const known = await windowsNow()
+			// Alpha is the only match (selected); Bravo is added, Alpha deselected again
+			await hiddenSelected(p, 'Alpha', [tabSel('Bravo')])
+			await ctrlClick(p, tabSel('Alpha'))
+			await p.focus('.searchBoxInput')
+			await p.keyboard.press('Enter')
+			const want = [['Nothing moved: the selected tabs are hidden by the search'], [], ['Alpha', 'Bravo', 'Charlie'], ['Bravo']]
+			const got = [await settle(() => noticesOf(p), want[0])]
+			await new Promise((r) => setTimeout(r, 600))
+			got.push(await newWindows(known, []))
+			got.push(sorted(await titlesOf(w1)))
+			got.push(await revealed(p, '.window:not(.session)'))
+			return {got, want}
+		})
+		// the saved side of the same rule: a saved tab the search hides stays too
+		drops('hidden selected saved tab: dragged out, only the two on screen open, the hidden one stays in its window and selected', async () => {
+			const [, w2] = await fixture(layout)
+			const p = await openPopup()
+			// Hotel and India match (and Delta, the target), Kilo does not: Ctrl+clicked, then hidden
+			await hiddenSelected(p, 'Hotel OR India OR Delta', [savedSel('Hotel'), savedSel('India'), savedSel('Kilo')])
+			await p.waitForFunction((sel) => [...document.querySelectorAll(sel)].every((t) => !t.offsetParent), {timeout: 3000}, savedSel('Kilo'))
+			const stacks = await watchStacks(p)
+			await drag(p, savedSel('Hotel'), {selector: tabSel('Delta'), fx: 0.1, fy: 0.1})
+			const want = [['Hotel', 'India', 'Delta', 'Echo', 'Foxtrot'], ['Kilo'], SAVED, stackIs(2, 'Hotel')]
+			const got = [await settle(() => titlesOf(w2), want[0])]
+			got.push(await savedTitles())
+			got.push(await stackOf(stacks))
+			got.splice(1, 0, await revealed(p, '.session'))
+			return {got, want}
+		})
+
+		// (b) drops that do nothing, or only part, say why
+		drops('normal saved tab dropped on a private saved window: refused, nothing moves, the notice says why', async () => {
+			await fixture(layout)
+			await seedSaved({s2: {incognito: true}})
+			const p = await openPopup()
+			await drag(p, savedSel('Hotel'), '#session-s2 h3.windowTitle')
+			const want = [["Nothing moved: 1 normal saved tab can't move into a private saved window"], SAVED]
+			return {got: [await settle(() => noticesOf(p), want[0]), await savedTitles()], want}
+		})
+		drops('normal open tab dropped on a private saved window: refused, nothing is added, the notice says why', async () => {
+			const [w1] = await fixture(layout)
+			await seedSaved({s2: {incognito: true}})
+			const p = await openPopup()
+			await drag(p, tabSel('Bravo'), '#session-s2 h3.windowTitle')
+			const want = [["Nothing added: 1 normal tab can't be added to a private saved window"], SAVED, ['Alpha', 'Bravo', 'Charlie']]
+			return {got: [await settle(() => noticesOf(p), want[0]), await savedTitles(), await titlesOf(w1)], want}
+		})
+		drops('private and normal saved tabs selected, dropped on a normal saved window: the normal one moves, the private one is reported', async () => {
+			await fixture(layout)
+			await seedSaved({}, {s3: savedWindow('s3', 'Private', ['Oscar', 'Papa'], {incognito: true})})
+			const p = await openPopup()
+			await ctrlClick(p, savedSel('Hotel'))
+			await ctrlClick(p, savedSel('Oscar'))
+			await drag(p, savedSel('Hotel'), '#session-s2 h3.windowTitle')
+			const want = [["1 of 2 saved tabs left out: 1 private saved tab can't move into a normal saved window"],
+				{s1: ['India', 'Juliett', 'Kilo'], s2: ['Lima', 'Mike', 'November', 'Hotel'], s3: ['Oscar', 'Papa']}]
+			return {got: [await settle(() => noticesOf(p), want[0]), await settle(savedTitles, want[1])], want}
+		})
+		drops('the dragged saved tab is deleted meanwhile, dropped on a saved window: nothing moves, the notice says so', async () => {
+			await fixture(layout)
+			const p = await openPopup()
+			await drag(p, savedSel('Kilo'), '#session-s2 h3.windowTitle', p, {afterStart: async () => {
+				await seedSaved({s1: {tabs: [0, 1, 2].map((i) => ({index: i, id: 9000 + i, windowId: 900, title: SAVED.s1[i], url: page(SAVED.s1[i]), active: false, pinned: false, audible: false, discarded: false, highlighted: false, incognito: false, status: 'complete'}))}})
+				await p.waitForFunction((sel) => !document.querySelector(sel), {timeout: 5000}, savedSel('Kilo'))
+			}})
+			const want = [['Nothing moved: the dragged saved tab is gone'], ['Hotel', 'India', 'Juliett'], SAVED.s2]
+			const stored = await savedTitles()
+			return {got: [await settle(() => noticesOf(p), want[0]), stored.s1, stored.s2], want}
+		})
+		drops('the dragged saved tab is deleted meanwhile, dropped on an open tab: nothing opens, the notice says so', async () => {
+			const [, w2] = await fixture(layout)
+			const p = await openPopup()
+			await drag(p, savedSel('Kilo'), {selector: tabSel('Echo'), fx: 0.1, fy: 0.1}, p, {afterStart: async () => {
+				await seedSaved({s1: {tabs: [0, 1, 2].map((i) => ({index: i, id: 9000 + i, windowId: 900, title: SAVED.s1[i], url: page(SAVED.s1[i]), active: false, pinned: false, audible: false, discarded: false, highlighted: false, incognito: false, status: 'complete'}))}})
+				await p.waitForFunction((sel) => !document.querySelector(sel), {timeout: 5000}, savedSel('Kilo'))
+			}})
+			const want = [['Nothing opened: the dragged saved tab is gone'], ['Delta', 'Echo', 'Foxtrot']]
+			return {got: [await settle(() => noticesOf(p), want[0]), await titlesOf(w2)], want}
 		})
 	}
 

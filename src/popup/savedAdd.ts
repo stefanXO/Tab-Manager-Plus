@@ -22,13 +22,14 @@ export function isOpenTabDrag(types : ArrayLike<string> | null | undefined) : bo
 	return !!types && Array.from(types).includes(OPEN_TAB_DRAG);
 }
 
-// The open tabs a drag onto a saved window copies: the selected ones (`tabs`,
-// the dragged one among them), without the ones the search hides when "Hide
+// The open tabs a drag takes (copied into a saved window, or moved to an open
+// window): the selected ones (`tabs`, the dragged one among them), without the ones the search hides when "Hide
 // non-matching tabs" is on (`hidden`: their ids). The dragged one always
-// goes: it is on screen.
-export function draggedOpen<T extends { id? : number }>(tabs : readonly T[], dragged : number, hidden? : ReadonlySet<number>) : T[] {
+// goes: it is on screen. Without a dragged tab (Enter's move to a new
+// window) the hidden ones are simply left out.
+export function draggedOpen<T extends { id? : number }>(tabs : readonly T[], dragged? : number, hidden? : ReadonlySet<number>) : T[] {
 	if (!hidden) return tabs.slice();
-	return tabs.filter((tab) => tab.id === dragged || tab.id === undefined || !hidden.has(tab.id));
+	return tabs.filter((tab) => (dragged !== undefined && tab.id === dragged) || tab.id === undefined || !hidden.has(tab.id));
 }
 
 // the part of an open tab a copy is made from (browser.Tabs.Tab has more)
@@ -140,12 +141,12 @@ export function addOpenTabs<T extends MovableWindow>(stored : Readonly<Record<st
 	return { stored: out, moves, count: copies.length, skipped: tabs.length - copies.length };
 }
 
-// the header after the drop
-export function addedText(count : number, skipped : number, windowName : string) : { topText : string, bottomText : string } {
+// The header after the drop. `asked`: how many open tabs were dragged (the
+// ones left out are in the error notice, ./dropReasons.ts).
+export function addedText(count : number, windowName : string, asked : number = count) : { topText : string, bottomText : string } {
 	const tabs = count === 1 ? "1 tab" : count + " tabs";
-	const left = skipped === 0 ? "" : skipped === 1 ? "; 1 tab could not be saved" : "; " + skipped + " tabs could not be saved";
 	return {
 		topText: "Added " + tabs + (windowName ? " to “" + windowName + "”" : " to the saved window"),
-		bottomText: (count + skipped === 1 ? "The open tab stays open" : "The open tabs stay open") + left
+		bottomText: asked === 1 ? "The open tab stays open" : "The open tabs stay open"
 	};
 }

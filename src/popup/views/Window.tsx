@@ -51,7 +51,18 @@ export class Window extends React.Component<IWindow, IWindowState> {
 		return tabs.map((t) => t.id + ":" + t.status + ":" + (t.pendingUrl || t.url || "")).join("|");
 	}
 
+	// Whether the window has nothing to show: no tab, or (with "Hide
+	// non-matching tabs" on) every tab hidden by the search
+	private hidesAll() : boolean {
+		return this.props.tabs.every((tab) => this.props.hiddenTabs.has(tab.id) && this.props.filterTabs);
+	}
+
 	async componentDidUpdate(prevProps : IWindow) {
+		// Tabs hidden by the search come back when the search ends or the filter
+		// goes off, not only when the tabs change: a window whose visible tabs
+		// moved away (hidden selected tabs stay behind) must show again then
+		const hide = this.hidesAll();
+		if (hide !== this.state.hidden) this.setState({ hidden: hide });
 		const sig = this.signature(this.props.tabs);
 		if (sig !== this.tabsSignature) {
 			// tabs added, removed or navigated: the auto title may have changed
@@ -77,20 +88,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 
 	async update() {
 		let tabs = this.props.tabs;
-		if (tabs.length == 0) {
-			this.setState({
-				hidden: true
-			})
-		} else {
-			let hideWindow = true;
-			for (let tab of tabs) {
-				const isHidden: boolean = this.props.hiddenTabs.has(tab.id) && this.props.filterTabs;
-				if (!isHidden) hideWindow = false;
-			}
-			this.setState({
-				hidden: hideWindow
-			});
-		}
+		this.setState({ hidden: this.hidesAll() });
 
 		let name : string;
 		if (!!this.props.window.title) {

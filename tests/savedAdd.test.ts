@@ -166,10 +166,10 @@ describe("addOpenTabs with the selection and pending deletes", () => {
 
 describe("addedText / isOpenTabDrag", () => {
 	test("the header", () => {
-		assert.deepEqual(addedText(1, 0, "Tax 2029"), { topText: "Added 1 tab to “Tax 2029”", bottomText: "The open tab stays open" });
-		assert.deepEqual(addedText(2, 0, "Tax 2029"), { topText: "Added 2 tabs to “Tax 2029”", bottomText: "The open tabs stay open" });
-		assert.deepEqual(addedText(1, 1, ""), { topText: "Added 1 tab to the saved window", bottomText: "The open tabs stay open; 1 tab could not be saved" });
-		assert.equal(addedText(1, 3, "A").bottomText, "The open tabs stay open; 3 tabs could not be saved");
+		assert.deepEqual(addedText(1, "Tax 2029"), { topText: "Added 1 tab to “Tax 2029”", bottomText: "The open tab stays open" });
+		assert.deepEqual(addedText(2, "Tax 2029"), { topText: "Added 2 tabs to “Tax 2029”", bottomText: "The open tabs stay open" });
+		// (the tabs left out are in the error notice, dropReasons.ts); of two dragged, one went in
+		assert.deepEqual(addedText(1, "", 2), { topText: "Added 1 tab to the saved window", bottomText: "The open tabs stay open" });
 	});
 
 	test("the drag type", () => {
@@ -189,6 +189,12 @@ describe("draggedOpen", () => {
 	test("with \"Hide non-matching tabs\" on: not the ones the search hides, but always the dragged one", () => {
 		assert.deepEqual(draggedOpen(tabs, 2, new Set([1, 2])).map((t) => t.id), [2, 3]);
 		assert.deepEqual(draggedOpen(tabs, 2, new Set()).map((t) => t.id), [1, 2, 3]);
+	});
+
+	test("without a dragged tab (Enter's move): the hidden ones are simply left out", () => {
+		assert.deepEqual(draggedOpen(tabs, undefined, new Set([1, 2])).map((t) => t.id), [3]);
+		assert.deepEqual(draggedOpen(tabs, undefined, new Set([1, 2, 3])).map((t) => t.id), []);
+		assert.deepEqual(draggedOpen(tabs, undefined).map((t) => t.id), [1, 2, 3]);
 	});
 
 	test("never changes the list it gets", () => {

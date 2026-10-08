@@ -64,11 +64,22 @@ export async function closeTabs(tabs) {
 	}
 }
 
-export async function moveTabsToWindow(windowId, tabs) {
+// the open tabs dragged onto an open window (not onto one of its tabs): moved
+// to its end, one after the other. A tab the browser refuses (closed
+// meanwhile, a private tab into a normal window) is logged and skipped, the
+// rest still move. Resolves with how many moved, so the popup can say so.
+export async function moveTabsToWindow(windowId, tabs) : Promise<number> {
+	let moved = 0;
 	for (const tab of tabs) {
-		await browser.tabs.move(tab.id, {windowId: windowId, index: -1});
-		await browser.tabs.update(tab.id, {pinned: tab.pinned});
+		try {
+			await browser.tabs.move(tab.id, {windowId: windowId, index: -1});
+			moved++;
+			await browser.tabs.update(tab.id, {pinned: tab.pinned});
+		} catch (e) {
+			console.error("could not move the tab", tab.id, e);
+		}
 	}
+	return moved;
 }
 
 // saved tabs dragged from a saved window into an open window (the popup waits

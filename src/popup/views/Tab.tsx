@@ -342,6 +342,12 @@ export class Tab extends React.Component<ITab, ITabState> {
 		const before = list ? e.clientY < rect.top + rect.height / 2 : e.clientX < rect.left + rect.width / 2;
 		if (!this.context.savedDropMoves(this.props.session.id, this.props.tab.index, before)) {
 			if (this.state.draggingOver) this.setState({ draggingOver: "" });
+			// refused for a reason: no marker, but the drop is taken and the
+			// error notice says why (TabManager.dropSaved)
+			if (this.context.savedDropRefused(this.props.session.id, this.props.tab.index, before)) {
+				e.preventDefault();
+				e.dataTransfer.dropEffect = open ? "copy" : "move";
+			}
 			return;
 		}
 		e.preventDefault();
@@ -358,11 +364,18 @@ export class Tab extends React.Component<ITab, ITabState> {
 		if ((!isSavedTabDrag(e.dataTransfer?.types) && !isOpenTabDrag(e.dataTransfer?.types)) || !this.props.session) return;
 		const side = this.state.draggingOver;
 		this.setState({ draggingOver: "" });
-		if (!side) return;
+		const list = this.props.layout === LAYOUT.list;
+		let before = side === "left" || side === "top";
+		if (!side) {
+			// no marker: a drop that is refused for a reason is taken, to say why
+			const rect = e.currentTarget.getBoundingClientRect();
+			before = list ? e.clientY < rect.top + rect.height / 2 : e.clientX < rect.left + rect.width / 2;
+			if (!this.context.savedDropRefused(this.props.session.id, this.props.tab.index, before)) return;
+		}
 		// the card under it takes no drop of its own then
 		e.preventDefault();
 		e.stopPropagation();
-		this.context.dropSaved(this.props.session.id, this.props.tab.index, side === "left" || side === "top", readTabDrag(e.dataTransfer));
+		this.context.dropSaved(this.props.session.id, this.props.tab.index, before, readTabDrag(e.dataTransfer));
 	}
 	selectTo(tabId : number) {
 		if (!!tabId && !!this.props.tabs) this.context.selectTo(tabId, this.props.tabs);
