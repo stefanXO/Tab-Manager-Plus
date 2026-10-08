@@ -32,6 +32,12 @@ titled rows in List and icon tiles only in the three icon layouts, three tiles w
 the count "3 tabs", every tile has a favicon (the page icon for a tab without one), the icon tiles and their
 favicons are the size of that layout's own tab tiles, and the front tile has the theme's tile colours.
 
+Nine more checks (`--only title`, every layout: Blocks, Big blocks, Rows, List; own tab, small and real popup) click
+a saved window's title with real mouse events (`Input.dispatchMouseEvent`): a title far longer than its card and a
+short one, at the start, middle and end of the text. Each click must open the name / colour screen and create no
+window, the title must show inside its bar (no bare "..." from the bar's own ellipsis), and a click on the card
+away from the title still restores the window.
+
 ## What it does
 
 - Starts its **own headless** Chrome for Testing (the newest under `~/.cache/puppeteer/chrome`,

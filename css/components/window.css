@@ -119,9 +119,12 @@
 	margin-left: auto;
 	margin-right: auto;
 }
-/* the name inside the title bar: shrinks to its text, truncates like the bar */
+/* the name inside the title bar: shrinks to its text, truncates like the bar
+   (border-box: its side padding counts in max-width, else a long name spills
+   past the bar by the padding and the bar cuts the end of the ellipsis off) */
 .windowName {
 	display: inline-block;
+	box-sizing: border-box;
 	max-width: 100%;
 	overflow: hidden;
 	text-overflow: ellipsis;

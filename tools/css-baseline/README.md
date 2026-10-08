@@ -185,6 +185,10 @@ currently on disk — there is no stale copy to forget about.
   stale stored name) shows the automatic name from its tabs in the card, the screen's placeholder and the window
   card. `saved-edit-scroll`: a title click on "Tax 2029", name typed, colour picked; the page starts at the top
   and the popup scrolls back to the saved window by itself (`apply.afterWait` leaves its timer time to run)
+- `saved-long-title` (+ `-hover`, `-opts`): saved windows named with a sentence and with one long word run
+  (`apply.savedLong`), every layout at 800x600 and 380x900: the title shows as much of the name as fits, with an
+  ellipsis of its own, never a bare "..."; `-hover`: the mouse on it; `-opts`: the name screen a click on it opens.
+  The real clicks on these titles are `tools/drag-check` `--only title`
 - `saved-tabs-delete` (+ `-key`, `-all`, `-two`, `-undo`): deleting selected saved tabs
   (`src/popup/savedDelete.ts`): Ctrl+click tabs of a saved window, then the trash button
   (`-key`: Ctrl+Delete, via a `{key: 46, ctrl: true}` entry in `apply.clicks`); `-all` selects every

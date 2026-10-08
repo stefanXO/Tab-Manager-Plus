@@ -751,6 +751,85 @@ try {
 		})
 	}
 
+	// Real clicks on a saved window's title (patch sesstitle, a fix to 22): the
+	// title opens the name / colour screen and restores nothing, wherever on the
+	// text the click lands (start, middle, end), for a title that is far longer
+	// than the card and for a short one, in every layout; a click on the card
+	// away from the title still restores the window. In the own tab and in both
+	// kinds of popup.
+	const LONG_NAME = 'Conference reading list for the quarterly planning review in Berlin and Lisbon, to finish before the end of October, then the notes for the whole team and the travel plans after that'
+	for (const [layout, m] of [['blocks', 'tab'], ['blocks-big', 'tab'], ['horizontal', 'tab'], ['vertical', 'tab'],
+		['blocks', 'small'], ['horizontal', 'small'], ['vertical', 'small'], ['blocks-big', 'action'], ['vertical', 'action']]) {
+		checks.push({name: 'title ' + (m === 'tab' ? '' : m + ' ') + layout + ': a click on a saved window title opens the name screen, on the card it restores', mode: m, fn: async () => {
+			await fixture(layout)
+			// s1 gets the long name, s2 keeps "Taxes"
+			await api(async (name) => {
+				const {sessions} = await chrome.storage.local.get('sessions')
+				sessions.s1.name = name
+				await chrome.storage.local.set({sessions})
+			}, LONG_NAME)
+			const p = await openPopup()
+			await p.waitForFunction((name) => [...document.querySelectorAll('#session-s1 .windowName')].some((e) => e.textContent.includes(name.slice(0, 20))), {timeout: 5000}, LONG_NAME)
+			const windowsNow = () => api(async () => (await chrome.windows.getAll()).map((w) => w.id).sort())
+			const before = await windowsNow()
+			const got = [], want = []
+			// the title's box on the page (inside the title bar, not spilling out of it
+			// to be cut off by it), and what the click lands on there
+			const probe = (sel, fx) => p.evaluate((sel, fx) => {
+				const el = document.querySelector(sel)
+				if (!el) return null
+				el.scrollIntoView({block: 'nearest', inline: 'nearest'})
+				const h3 = el.closest('h3'), r = el.getBoundingClientRect(), bar = h3.getBoundingClientRect()
+				const x = r.left + r.width * fx, y = r.top + r.height / 2
+				return {x, y, // nothing spills out of the bar: its own ellipsis (which would replace the name
+					// with a bare "...") is not in play, the name truncates itself
+					inCard: r.left >= bar.left - 1 && r.right <= bar.right + 1 && h3.scrollWidth <= h3.clientWidth + 1, wide: r.width,
+					hit: !!document.elementFromPoint(x, y)?.closest(sel)}
+			}, sel, fx)
+			const clickAt = async (at) => {
+				const cdp = await p.createCDPSession()
+				await cdp.send('Input.dispatchMouseEvent', {type: 'mouseMoved', x: at.x, y: at.y})
+				await cdp.send('Input.dispatchMouseEvent', {type: 'mousePressed', x: at.x, y: at.y, button: 'left', buttons: 1, clickCount: 1})
+				await cdp.send('Input.dispatchMouseEvent', {type: 'mouseReleased', x: at.x, y: at.y, button: 'left', buttons: 0, clickCount: 1})
+				await cdp.detach()
+			}
+			for (const [which, card] of [['long', 's1'], ['short', 's2']]) {
+				for (const [where, fx] of [['start', 0.04], ['middle', 0.5], ['end', 0.96]]) {
+					const sel = '#session-' + card + ' .windowName'
+					const at = await probe(sel, fx)
+					// the title shows inside its card, wide enough to read, and is under the click
+					got.push(which + ' ' + where + ': ' + (at && at.inCard && at.wide > 40 && at.hit ? 'title under the click' : 'title missing ' + JSON.stringify(at)))
+					want.push(which + ' ' + where + ': title under the click')
+					if (!at) continue
+					const known = await windowsNow()
+					await clickAt(at)
+					const opened = await p.waitForSelector('.window-colors', {timeout: 2000}).then(() => true, () => false)
+					await new Promise((r) => setTimeout(r, 300))
+					got.push(which + ' ' + where + ': ' + (opened ? 'name screen' : 'no name screen') + ', ' + ((await windowsNow()).join() === known.join() ? 'no window' : 'a window was created'))
+					want.push(which + ' ' + where + ': name screen, no window')
+					if (opened) {
+						await p.keyboard.press('Escape')
+						await p.waitForFunction(() => !document.querySelector('.window-colors'), {timeout: 3000}).catch(() => {})
+						// the popup scrolls back by itself after 150 ms
+						await new Promise((r) => setTimeout(r, 400))
+					}
+				}
+			}
+			// a click on the card, not on its title: the window is restored
+			const edge = await p.evaluate(() => {
+				const el = document.querySelector('#session-s2')
+				el.scrollIntoView({block: 'nearest', inline: 'nearest'})
+				const r = el.getBoundingClientRect()
+				return {x: r.left + 3, y: r.top + r.height / 2}
+			})
+			await clickAt(edge)
+			const created = await settle(async () => (await windowsNow()).filter((id) => !before.includes(id)).length, 1)
+			got.push('card body: ' + created + ' new window')
+			want.push('card body: 1 new window')
+			return {got, want}
+		}})
+	}
+
 	for (const c of checks) {
 		if (only && !c.name.includes(only)) continue
 		mode = c.mode

@@ -177,6 +177,13 @@ const STATES = [
 	// colour picked, the screen closes and the popup scrolls back to the saved
 	// window by itself (the shot does not scroll; the page starts at the top)
 	{name: 'saved-edit-scroll', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {overlay: 'session-title-s2', typeName: 'Tax 2029 (filed)', pickColor: 'color9', afterWait: 500}},
+	// saved windows with titles longer than the card (a long sentence and one
+	// long word run): the full title as far as it fits, in every layout, with
+	// the mouse on the first one's title (the hover mark), and the name screen a
+	// click on it opens (patch sesstitle)
+	{name: 'saved-long-title', layouts: LAYOUTS, scaleLayouts: [], widths: ['800x600', '380x900'], apply: {savedLong: true, scrollInto: '#session-s1'}},
+	{name: 'saved-long-title-hover', layouts: LAYOUTS, scaleLayouts: [], widths: ['800x600', '380x900'], apply: {savedLong: true, scrollInto: '#session-s1'}, stats: '#session-s1 .windowName'},
+	{name: 'saved-long-title-opts', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {savedLong: true, overlay: 'session-title'}},
 	// the "Window style" box with the real mouse on it: over the Compact mode
 	// switch (which shows its help text in the header), then onto that option's
 	// description text. The only state that moves the mouse, so :hover applies.
@@ -540,7 +547,7 @@ async function settle(page) {
 }
 
 /** Applies a popup state absolutely: the result never depends on what came before. */
-async function apply(page, {layout, dark, search = '', dup = false, recent = 0, overlay = null, scrollTo = null, store = {}, granted = true, savedFocused = null, clicks = [], scrollInto = null, importFile = null, freezeClock = false, scrollEnd = false, typeName = null, pickColor = null, savedInfo = null, freshSessions = false, savedAuto = null, afterWait = 0, quota = false, barAt = 0, noticeHover = false, savedUpdated = null}) {
+async function apply(page, {layout, dark, search = '', dup = false, recent = 0, overlay = null, scrollTo = null, store = {}, granted = true, savedFocused = null, clicks = [], scrollInto = null, importFile = null, freezeClock = false, scrollEnd = false, typeName = null, pickColor = null, savedInfo = null, freshSessions = false, savedAuto = null, savedLong = false, afterWait = 0, quota = false, barAt = 0, noticeHover = false, savedUpdated = null}) {
 	await page.evaluate(async (s) => {
 		const q = (sel) => document.querySelector(sel)
 		const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
@@ -578,6 +585,16 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 		// older builds: an on/off button without data-level
 		const level = () => +(q('.icon.windowaction.recent')?.dataset.level ?? (q('.icon.windowaction.recent.enabled') ? 1 : 0))
 		for (let i = 0; recentBtn && level() !== s.recent && i < 4; i++) { q('.icon.windowaction.recent').click(); await frame() }
+
+		// 4b. long names of their own (a sentence; a long run with no spaces), so the
+		// title is wider than the card in every layout; set before the overlay opens
+		if (s.savedLong) {
+			const {sessions} = await window.__fake.storage.local.get(['sessions'])
+			Object.assign(sessions.s1, {customName: true, name: 'Conference reading list for the quarterly planning review in Berlin and Lisbon, to finish before the end of October'})
+			Object.assign(sessions.s2, {customName: true, name: 'Tax-2029-filing-documents-and-receipts-for-the-accountant'})
+			await window.__fake.storage.local.set({sessions})
+			await frame()
+		}
 
 		// 5. open the requested overlay
 		if (s.overlay === 'options') { q('.icon.windowaction.options')?.click(); await frame() }
@@ -748,7 +765,7 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 		if (s.afterWait) await new Promise((r) => setTimeout(r, s.afterWait))
 		// the list scrolled to its very end: the padding the notice makes room with shows
 		if (s.scrollEnd) { const c = q('.window-container'); if (c) c.scrollTop = c.scrollHeight }
-	}, {layout, dark, search, dup, recent, overlay, store, granted, savedFocused, clicks, scrollInto, importFile, freezeClock, scrollEnd, typeName, pickColor, savedInfo, freshSessions, savedAuto, afterWait, quota, barAt, noticeHover, savedUpdated})
+	}, {layout, dark, search, dup, recent, overlay, store, granted, savedFocused, clicks, scrollInto, importFile, freezeClock, scrollEnd, typeName, pickColor, savedInfo, freshSessions, savedAuto, savedLong, afterWait, quota, barAt, noticeHover, savedUpdated})
 	await settle(page)
 	// 7. scroll the options box headed `scrollTo` to the top of its scroller
 	if (scrollTo) {

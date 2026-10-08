@@ -113,13 +113,18 @@ export class Session extends React.Component<ISession, ISessionState> {
 				if (name) {
 					tabs.unshift(
 						<h3 key={"session-" + this.props.session.id + "-windowTitle"} className="center windowTitle">
-							{savedMark()}
-							{/* the name opens the name / colour screen, as an open window's does */}
+							{/* The name opens the name / colour screen, as an open window's does.
+							    The saved marker goes inside the name's span, not beside it: the span
+							    is an atomic inline (max-width 100%, ellipsis of its own), and next to
+							    the marker a long name no longer fitted the title bar, so the bar's
+							    own text-overflow dropped the whole span for a bare "..." (which is
+							    not the span: a click on it went to the card and restored the window). */}
 							<span
 								className="editName windowName"
 								onClick={this.openOptions}
 								data-hover="Change the name of this saved window"
 							>
+								{savedMark()}
 								{name}
 							</span>
 						</h3>
