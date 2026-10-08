@@ -139,6 +139,10 @@
 .window.vertical .tab.full > .tab-discarded::before {
 	background-image: var(--badge-suspended);
 }
+/* a row the search hides (a saved window's tabs): .tab.hidden loses to the row's display:flex above */
+.window.vertical .tab.full.hidden {
+	display: none;
+}
 /* a chip that is not on: the generic .hidden loses to the chip rule above by cascade order */
 .window.vertical .tab.full > .tab-pinned.hidden,
 .window.vertical .tab.full > .tab-highlighted.hidden,

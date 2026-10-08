@@ -47,6 +47,7 @@ Windows And Sessions
 - Ctrl+click or right-click on a tab of a saved window selects it, instead of an unrelated open tab that Delete would then close; saved windows are no longer marked as the active window
 - Saved windows look different from open windows: a dashed edge, a saved icon before the name, and faded favicons that regain their color under the mouse; they are no longer dimmed as a whole, so their tabs stay readable
 - Resting the mouse on a tab of a saved window shows a card like an open tab's: when it was saved, its place in the saved window, and the windows it is open in right now; an open tab's card lists the saved windows that also hold it
+- Search finds tabs in saved windows too: matching saved tabs stay clear while the others fade (or hide, with Hide non-matching tabs on, together with saved windows that have no match, instead of all saved windows disappearing), and the header counts them; they are never selected, so Enter and Delete still only act on open tabs
 - The window order no longer resets on its own; the current window is always listed first and marked, also as a popup
 - Clicking the icon while Tab Manager Plus is already open in a tab switches to that tab
 - The "switch to previous tab" shortcut works again (#37, #108, #238)

@@ -20,6 +20,7 @@ import {StatsLayer, StatsSource} from "./StatsLayer";
 import {UndoNotice} from "./UndoNotice";
 import {PendingDeletes, withoutSessions, noticeText} from "../pendingDelete";
 import {editSession, SessionEdit} from "../sessionEdit";
+import {searchSaved, searchSummary, SavedSearch} from "../searchSaved";
 
 // the settings the manager holds in its state and applies
 type ManagerSettings = Omit<Settings, "showMonitors">;
@@ -286,6 +287,19 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			return this.state.sessions.filter((s) => !hidden.has(s.id));
 		}
 	};
+	// What the search (or Highlight Duplicates / recent) does to the saved
+	// windows, worked out again only when its inputs change (render runs on
+	// every header hover).
+	private savedMemo : { sessions : ISavedSession[], query : unknown, openOnly : boolean, result : SavedSearch } | null = null;
+	savedSearch(sessions : ISavedSession[]) : SavedSearch {
+		const query = this.state.query;
+		const openOnly = this.state.dupTabs || this.state.recentLevel > 0;
+		const m = this.savedMemo;
+		if (m && m.sessions.length === sessions.length && m.sessions.every((s, i) => s === sessions[i]) && m.query === query && m.openOnly === openOnly) return m.result;
+		const result = searchSaved(sessions, query, openOnly);
+		this.savedMemo = { sessions, query, openOnly, result };
+		return result;
+	}
 	hoverIcon = (text : string, hold = false) => {
 		let bottom = " ";
 		if (text.indexOf("\n") > -1) {
@@ -357,14 +371,15 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		const sessions = this.state.sessions.filter((s) => !hiddenSessions.has(s.id));
 		// the saved window the name / colour screen is open on
 		const namedSession = this.state.colorsSession ? this.state.sessions.find((s) => s.id === this.state.colorsSession) : undefined;
+		// the search, as far as it reaches saved tabs: which fade or hide
+		const saved = this.savedSearch(sessions);
 		if (this.state.sessionsFeature) {
 			if (sessions.length > 0) haveSess = true;
-			// disable session window if we have filtering enabled
-			// and filter active
-			if (haveSess && this.state.filterTabs) {
-				if (this.state.searchLen > 0 || this.state.hiddenTabs.size > 0) {
-					haveSess = false;
-				}
+			// with "Hide non-matching tabs" on, a saved window with no match
+			// goes (its tabs hide, ../searchSaved.ts); the divider with the
+			// last one
+			if (haveSess && this.state.filterTabs && saved.active && saved.shown.size === 0) {
+				haveSess = false;
 			}
 		}
 
@@ -488,7 +503,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 										searchActive={this.state.searchLen > 0}
 										query={this.state.query}
 										tabactions={this.state.tabactions}
-										hiddenTabs={this.state.hiddenTabs}
+										hiddenTabs={saved.hidden}
 										filterTabs={this.state.filterTabs}
 										windowTitles={this.state.windowTitles}
 										draggable={false}
@@ -542,7 +557,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 								<td className="one">
 									<input className="searchBoxInput" type="text" placeholder="Start typing to search tabs..." aria-describedby="search-help" tabIndex={1} onChange={this.search} ref={this.searchBoxRef} />
 									<div className="search-help" role="tooltip" id="search-help">
-										<p className="search-help-intro">Type to search titles and urls. Every word must match.</p>
+										<p className="search-help-intro">Type to search titles and urls, in saved windows too. Every word must match.</p>
 										<table className="search-help-table">
 											<tbody>
 												<tr><td><code>github issue</code></td><td>both words, anywhere</td></tr>
@@ -1135,20 +1150,18 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				topText: "",
 				bottomText: ""
 			});
-		} else if (matches === 0) {
+		} else {
+			// saved tabs that match are counted beside the open ones (never selected)
+			const hiddenSessions = this.pending.hidden();
+			const saved = searchSaved(
+				this.state.sessions.filter((s) => !hiddenSessions.has(s.id)),
+				parsed,
+				this.state.dupTabs || this.state.recentLevel > 0
+			);
+			const summary = searchSummary(searchQuery, matches, saved);
 			this.setState({
-				topText: "No matches for '" + searchQuery + "'",
-				bottomText: ""
-			});
-		} else if (matches > 1) {
-			this.setState({
-				topText: matches + " matches for '" + searchQuery + "'",
-				bottomText: "Press enter to move them to a new window"
-			});
-		} else if (matches === 1) {
-			this.setState({
-				topText: matches + " match for '" + searchQuery + "'",
-				bottomText: "Press enter to switch to the tab"
+				topText: summary.top,
+				bottomText: summary.bottom
 			});
 		}
 		this.setState({

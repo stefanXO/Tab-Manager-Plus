@@ -201,6 +201,18 @@ const STATES = [
 	// kinds of card look (css/components/session.css). dpr 1, every layout,
 	// 800x600 and 380x900
 	{name: 'saved-look', layouts: LAYOUTS, scaleLayouts: [], widths: ['800x600', '380x900'], apply: {scrollEnd: true}},
+	// searching with saved windows (src/popup/searchSaved.ts): "google" matches
+	// open tabs and two tabs of "Tax 2029"; "Conference reading" has none, so its
+	// tabs fade. The saved windows are scrolled into view. dpr 1, every layout,
+	// 800x600 and 380x900
+	{name: 'search-saved', layouts: LAYOUTS, scaleLayouts: [], widths: ['800x600', '380x900'], apply: {search: 'google', scrollEnd: true}},
+	// the same with "Hide non-matching tabs" on: "react" leaves one tab of
+	// "Conference reading" and hides "Tax 2029" (and the rest of the card)
+	{name: 'search-saved-hide', layouts: LAYOUTS, scaleLayouts: [], widths: ['800x600', '380x900'], apply: {search: 'react', store: {'filter-tabs': true}, scrollEnd: true}},
+	// hide on, nothing saved matches: the "Saved windows" divider goes too
+	{name: 'search-saved-none', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {search: 'github', store: {'filter-tabs': true}, scrollEnd: true}},
+	// Highlight Duplicates with saved windows around: they are not part of it
+	{name: 'dup-saved', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {dup: true, scrollEnd: true}},
 ]
 
 /**
