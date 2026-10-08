@@ -55,6 +55,9 @@ export interface ITabManagerActions {
 	// stored saved windows goes through the manager, one after the other.
 	// Rejects when the browser refused the write.
 	addSavedWindows(sessions : ISavedSession[]) : Promise<void>;
+	// an import: the same, but saved windows whose tabs (addresses, in order)
+	// one on screen already has are left out; resolves with how many
+	importSavedWindows(sessions : ISavedSession[]) : Promise<number>;
 	// delete a saved window, with an Undo countdown before it leaves storage
 	deleteSession(session : ISavedSession) : void;
 	// An error notice (red edge and tint, closes by itself after a while or

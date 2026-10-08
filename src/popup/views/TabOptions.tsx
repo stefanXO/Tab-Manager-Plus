@@ -8,7 +8,7 @@ import {getLocalStorageMap} from "@helpers/storage";
 import {currentShowMonitors, saveSetting, Settings, SETTING_DEFAULTS} from "@helpers/settings";
 import {buildEverythingExport} from "../debugExport";
 import {buildSessionsFile, everythingFileName, sessionsFileName} from "../sessionsFile";
-import {importSummary, planImport} from "../importCount";
+import {importSummary, importWorked, planImport} from "../importCount";
 import {debugExportNote, sessionsExportNote} from "../exportNotes";
 import {switchShowMonitors} from "@helpers/monitors";
 import {sizePopup} from "@helpers/popup_size";
@@ -664,17 +664,21 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 				const plan = planImport<ISavedSession>(backupFile);
 				// One write through the manager, after any other change to the
 				// saved windows; listed first, with new order numbers and their
-				// tab indexes fixed (../sessionStore.ts). Refused: none is stored.
+				// tab indexes fixed (../sessionStore.ts); the ones with the same
+				// tabs as a saved window already there are left out. Refused:
+				// none is stored.
 				let failed = 0;
+				let already = 0;
 				try {
-					await this.context.addSavedWindows(plan.valid);
+					already = await this.context.importSavedWindows(plan.valid);
 				} catch (err) {
 					console.error(err);
 					failed = plan.valid.length;
 				}
-				const summary = importSummary(plan, failed);
-				// nothing restored, or the browser refused some: an error
-				if (plan.valid.length - failed > 0 && failed === 0) this.context.showInfo(summary);
+				const summary = importSummary(plan, failed, already);
+				// something restored, or all of it already there: a note; nothing
+				// restored, or the browser refused some: an error
+				if (importWorked(plan, failed, already)) this.context.showInfo(summary);
 				else this.context.showError(summary);
 				inputField.value = "";
 			};

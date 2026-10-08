@@ -131,9 +131,9 @@
 							<li>Saved sessions are no longer limited by the browser's 10 MB storage quota, and
 								showing a session no longer changes it (which could corrupt exports)</li>
 							<li>Enabling the sessions feature shows your saved windows right away</li>
-							<li>Importing a backup says how many saved windows it restored and how many it skipped, and why
-								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/39" target="_blank" rel="noopener">#39</a>)
-							</li>
+							<li>Importing a backup says how many saved windows it restored and how many it
+								skipped, and why (<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/39" target="_blank" rel="noopener">#39</a>); saved windows that are already there (the same tabs in
+								the same order) are not imported twice and are counted as already there</li>
 							<li>Exported files are named sessions-YYYY-MM-DD-HH-MM-SS.json (saved windows) and
 								everything-YYYY-MM-DD-HH-MM-SS.json (debug export, which also holds your saved
 								windows); Import Sessions reads both and older backup files</li>
@@ -179,8 +179,9 @@
 							<li>Tabs of saved windows can be reordered: drag one before or after another tab of
 								the same saved window, onto a tab of another saved window to move it there, or
 								onto another saved window's title or edge to add it at the end; selected saved
-								tabs move together and stay selected, a saved window left with no tab is
-								removed, and tabs do not move between private and normal saved windows</li>
+								tabs move together and stay selected, a saved window left with no tab is removed
+								with an Undo notice that puts the tabs back and brings the window back with its
+								name and color, and tabs do not move between private and normal saved windows</li>
 							<li>Open tabs can be added to a saved window: drag a tab (all selected tabs, when
 								the dragged one is selected) onto a tab of a saved window to put a copy before
 								or after it, or onto the saved window's title or edge to add it at the end; the
@@ -201,6 +202,10 @@
 							<li>Resting the mouse on a saved window shows a card like an open window's: its tabs
 								and sites, when it was saved, the size and state it was saved with, and a map of
 								the monitors showing where it would land if restored now</li>
+							<li>Saved windows remember when their tabs last changed (tabs moved in, out or
+								within them, added or deleted; not a new name or color): the card's "saved …
+								ago" counts from then, and the hover cards show "created … ago" and "last saved
+								… ago" when the two differ</li>
 							<li>Search finds tabs in saved windows too: matching saved tabs stay clear while the
 								others fade (or hide, with Hide non-matching tabs on, together with saved
 								windows that have no match, instead of all saved windows disappearing), and the

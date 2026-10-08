@@ -8,6 +8,7 @@
 // front, visits) are for a later version and slot in as more keyed lines.
 import { timeAgo, maybePluralize } from "../helpers/utils.ts";
 import { dupKey } from "./duplicates.ts";
+import { savedTimes } from "./savedUpdated.ts";
 
 // the tabs.Tab fields the card reads
 export interface StatsTab {
@@ -82,8 +83,10 @@ export interface TabStatsContext {
 // the card of a tab of a saved window
 export interface SavedTabStatsContext {
 	now : number;
-	// when the saved window was saved
+	// when the saved window was saved, and when its tabs last changed (none:
+	// not since); "created … ago" and "last saved … ago" when they differ
 	savedAt : number;
+	updatedAt? : number;
 	// the saved window's display name and its tabs as the popup lists them
 	// (without the ones a pending delete hides): "tab N of M" counts these, as
 	// the stored indexes can have gaps (deleted saved tabs, about: pages left
@@ -122,8 +125,9 @@ export interface SavedWindowStatsContext {
 	now : number;
 	// its display name (stored, else automatic)
 	name : string;
-	// when it was saved
+	// when it was saved, and when its tabs last changed (as for a saved tab)
 	savedAt : number;
+	updatedAt? : number;
 	// where it would land if restored now (helpers/geometry.ts predictLanding);
 	// undefined: not known (no monitors yet), the line is left out
 	landing? : {
@@ -240,7 +244,7 @@ export function savedTabStats(tab : StatsTab, ctx : SavedTabStatsContext) : Stat
 	const lines : StatsLine[] = [];
 	const add = (key : string, text : string, icon : StatsIcon) => lines.push({ key, text, icon });
 
-	add("saved", "saved " + timeAgo(ctx.savedAt, ctx.now), "saved");
+	for (const t of savedTimes({ date: ctx.savedAt, updated: ctx.updatedAt }, ctx.now)) add(t.key, t.text, "saved");
 	if (tab.pinned) lines.push(itemsLine("state", [{ icon: "pinned", text: "pinned" }]));
 
 	let at = ctx.windowTabs.indexOf(tab);
@@ -320,7 +324,7 @@ export function savedWindowStats(info : StatsWindow & { left? : number; top? : n
 	const hosts = new Set(tabs.map((t) => hostOf(t.url)).filter(Boolean));
 	if (hosts.size) add("sites", maybePluralize(hosts.size, "site"), "sites");
 
-	add("saved", "saved " + timeAgo(ctx.savedAt, ctx.now), "saved");
+	for (const t of savedTimes({ date: ctx.savedAt, updated: ctx.updatedAt }, ctx.now)) add(t.key, t.text, "saved");
 
 	const state : string[] = [];
 	if (info.state === "minimized" || info.state === "maximized" || info.state === "fullscreen") state.push(info.state);

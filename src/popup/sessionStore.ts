@@ -8,6 +8,7 @@
 
 import { sortSessions, firstOrders } from "./sessionOrder.ts";
 import type { Orderable } from "./sessionOrder.ts";
+import { sameTabUrls } from "./savedUpdated.ts";
 
 // the part of a saved window this module reads (ISavedSession has more)
 export interface StoredWindow extends Orderable {
@@ -88,4 +89,24 @@ export function addSessions<T extends StoredWindow>(stored : Readonly<Record<str
 		next[s.id] = { ...s, tabs: fixTabIndexes(s.tabs), order: orders[i] };
 	});
 	return next;
+}
+
+export interface ImportResult<T> {
+	// `stored` with the new saved windows in it (addSessions)
+	stored : Record<string, T>;
+	// the saved windows of the file that were added, in file order
+	added : T[];
+	// how many were already there (the same tabs as a saved window in `existing`)
+	duplicates : number;
+}
+
+// An import (the options' backup file): `added` goes in like a save
+// (addSessions), except a saved window whose tabs (addresses, in order) are
+// those of a saved window in `existing` (default: `stored`; the caller leaves
+// out what a pending delete takes away): that one is already there and left
+// out. Never changes either.
+export function importSessions<T extends StoredWindow & { tabs : { url? : string }[] }>(stored : Readonly<Record<string, T>>, added : readonly T[], existing : Readonly<Record<string, T>> = stored) : ImportResult<T> {
+	const there = Object.values(existing).filter(isSavedWindow) as T[];
+	const kept = added.filter((s) => !there.some((e) => sameTabUrls(e.tabs, s.tabs)));
+	return { stored: kept.length ? addSessions(stored, kept) : { ...stored }, added: kept, duplicates: added.length - kept.length };
 }

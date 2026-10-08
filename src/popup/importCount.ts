@@ -37,19 +37,30 @@ export function planImport<T = unknown>(parsed : unknown) : ImportPlan<T> {
 	return plan;
 }
 
-// "2 saved windows restored, 1 skipped (no tabs)"; failedWrites are valid
-// entries the browser refused to store
-export function importSummary(plan : ImportPlan<unknown>, failedWrites = 0) : string {
+// "2 saved windows restored, 1 already there, 1 skipped (no tabs)";
+// failedWrites are valid entries the browser refused to store, alreadyThere
+// valid ones left out because a saved window with the same tabs is stored
+// (../sessionStore.ts importSessions)
+export function importSummary(plan : ImportPlan<unknown>, failedWrites = 0, alreadyThere = 0) : string {
 	if (plan.fatal) return plan.fatal;
-	const restored = plan.valid.length - failedWrites;
+	const restored = plan.valid.length - failedWrites - alreadyThere;
 	const parts : string[] = [];
 	for (const [reason, n] of Object.entries(plan.skipped)) parts.push(n + " " + reason);
 	if (failedWrites) parts.push(failedWrites + " could not be stored");
-	const skipped = (plan.valid.length + Object.values(plan.skipped).reduce((a, b) => a + b, 0)) - restored;
+	const skipped = Object.values(plan.skipped).reduce((a, b) => a + b, 0) + failedWrites;
+	let tail = "";
+	if (alreadyThere) tail += ", " + alreadyThere + " already there";
+	if (skipped) tail += ", " + skipped + " skipped (" + parts.join(", ") + ")";
 	if (restored <= 0) {
-		return skipped ? "No saved windows restored, " + skipped + " skipped (" + parts.join(", ") + ")" : "No saved windows in the file";
+		if (alreadyThere) return "No new saved windows" + tail;
+		return skipped ? "No saved windows restored" + tail : "No saved windows in the file";
 	}
-	let msg = maybePluralize(restored, "saved window") + " restored";
-	if (skipped) msg += ", " + skipped + " skipped (" + parts.join(", ") + ")";
-	return msg;
+	return maybePluralize(restored, "saved window") + " restored" + tail;
+}
+
+// whether the import went well enough to say so as a note, not an error:
+// something was restored, or everything usable was already there
+export function importWorked(plan : ImportPlan<unknown>, failedWrites = 0, alreadyThere = 0) : boolean {
+	if (plan.fatal) return false;
+	return plan.valid.length - failedWrites - alreadyThere > 0 || (alreadyThere > 0 && failedWrites === 0);
 }

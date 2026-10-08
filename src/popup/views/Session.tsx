@@ -3,7 +3,7 @@
 import {Tab} from "@views";
 import {isBlockLayout} from "@helpers/settings";
 import * as React from "react";
-import {maybePluralize, timeAgo} from "@helpers/utils";
+import {maybePluralize} from "@helpers/utils";
 import * as browser from 'webextension-polyfill';
 import {ICommand, ISession} from '@types';
 import * as S from "@strings";
@@ -20,6 +20,7 @@ import {dropSide, isSavedWindowDrag, SAVED_WINDOW_DRAG} from "../sessionOrder";
 import {isSavedTabDrag} from "../savedDrag";
 import {isOpenTabDrag} from "../savedAdd";
 import {readTabDrag} from "../dragPayload";
+import {savedLabel, savedHover} from "../savedUpdated";
 
 interface ISessionState {
 	// this card is being dragged (it fades)
@@ -84,9 +85,9 @@ export class Session extends React.Component<ISession, ISessionState> {
 					<div
 						key={"sessionage_" + this.props.session.id}
 						className="window-age"
-						data-hover={"Saved " + timeAgo(this.props.session.date) + "\n" + new Date(this.props.session.date).toLocaleString()}
+						data-hover={savedHover(this.props.session, Date.now())}
 					>
-						{"saved " + timeAgo(this.props.session.date)}
+						{savedLabel(this.props.session, Date.now())}
 					</div>,
 					<div key={"sessionwa_" + this.props.session.id} className="window-actions">
 						<div

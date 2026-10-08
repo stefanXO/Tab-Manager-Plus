@@ -22,16 +22,18 @@ import {applyTheme} from "@helpers/theme";
 import {StatsLayer, StatsSource} from "./StatsLayer";
 import {Notice} from "./Notice";
 import {NoticeBoard, isMacPlatform, isUndoKey, undoKeyCaps, undoKeyForField, refusedText, openFailedText} from "../notices";
-import {PendingDeletes, PendingItem, withoutItems, visibleSessions, noticeText, goneUrls} from "../pendingDelete";
+import {PendingDeletes, PendingItem, withoutItems, visibleSessions, noticeText, goneUrls, UNDO_MS} from "../pendingDelete";
 import {savedDeleteItems} from "../savedDelete";
 import {editSession, shownSavedName, SessionEdit} from "../sessionEdit";
 import {searchSaved, searchSummary, SavedSearch} from "../searchSaved";
 import {draggedSaved, savedTabsToOpen, openedText} from "../savedDrag";
 import {moveSession, reorderShown} from "../sessionOrder";
-import {tidyStored, listSessions, addSessions} from "../sessionStore";
+import {tidyStored, listSessions, addSessions, importSessions} from "../sessionStore";
 import {moveSavedTabs, remapSavedKeys, renumberedIndex, movedText, SavedTabMove, SavedDropTarget} from "../savedMove";
 import {addOpenTabs, addedText, draggedOpen, SavedAddResult} from "../savedAdd";
 import {SavedWrites, SavedChange} from "../savedWrites";
+import {stampUpdated} from "../savedUpdated";
+import {moveUndoRecord, undoMove, emptiedText, undoneText, UndoOffer, MoveUndo} from "../moveUndo";
 import type {SavedTabRef} from "../sessionKeys";
 import {stackTiles, encodeSaved, encodeIds, TabDrag} from "../dragPayload";
 import {setStackImage, StackTile} from "../dragImage";
@@ -89,13 +91,21 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	// Ctrl+Z (Cmd+Z on a Mac) while an Undo notice is up
 	private readonly mac = isMacPlatform((navigator as any).userAgentData?.platform || navigator.platform);
 	private readonly onUndoKey = (e : KeyboardEvent) => {
-		if (!this.pending.items.length || !isUndoKey(e, this.mac)) return;
+		if (!(this.pending.items.length || this.moveUndo.current) || !isUndoKey(e, this.mac)) return;
 		const el = e.target instanceof HTMLElement ? e.target : null;
 		if (!undoKeyForField(el && { tag: el.tagName, type: (el as HTMLInputElement).type, value: (el as HTMLInputElement).value, contentEditable: el.isContentEditable })) return;
 		e.preventDefault();
 		e.stopPropagation();
-		this.undoDelete();
+		// the notice shown: a delete's Undo, else a move's (one at a time)
+		if (this.pending.items.length) this.undoDelete();
+		else this.undoMove();
 	};
+	// a move that left a saved window without a tab, offered to be taken
+	// back for a while (the Undo notice; ../moveUndo.ts)
+	private readonly moveUndo = new UndoOffer<{ record : MoveUndo<ISavedSession>, text : string }>({
+		delay: UNDO_MS,
+		onChange: () => { if (!this.unmounted) this.forceUpdate(); }
+	});
 	// leaving the popup writes the deletes that are still counting down
 	private readonly flushPending = () => this.pending.flush(true);
 	private readonly flushPendingHidden = () => { if (document.visibilityState === "hidden") this.pending.flush(true); };
@@ -248,6 +258,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			setBottomText: (text) => this.setState({ bottomText: text }),
 			sessionSync: () => this.sessionSync(),
 			addSavedWindows: (sessions) => this.addSavedWindows(sessions),
+			importSavedWindows: (sessions) => this.importSavedWindows(sessions),
 			deleteSession: (session) => this.deleteSession(session),
 			showError: (text) => { this.board.error(text); },
 			showInfo: (text) => { this.board.info(text); },
@@ -295,6 +306,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		this.unmounted = true;
 		this.pending.flush(true);
 		this.board.closeAll();
+		this.moveUndo.clear();
 	}
 
 	syncMasonry() {
@@ -782,6 +794,17 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 						onClose={this.commitNow}
 						onHold={(held) => this.pending.hold(held)}
 					/>}
+					{this.pending.items.length === 0 && this.moveUndo.current && <Notice
+						key="undo-move"
+						kind="undo"
+						text={this.moveUndo.current.text}
+						countdown={this.moveUndo.countdown}
+						run={this.moveUndo.runs}
+						onUndo={this.undoMove}
+						keys={undoKeyCaps(this.mac)}
+						onClose={this.dropMoveUndo}
+						onHold={(held) => this.moveUndo.hold(held)}
+					/>}
 				</div>}
 				<StatsLayer source={this.statsSource} version={this.listVersion} />
 			</div>
@@ -912,6 +935,20 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		if (sessions.length === 0) return;
 		await this.mutateSessions((stored) => addSessions(stored, sessions));
 	}
+	// An import (the options' backup file): added like a save, except the saved
+	// windows whose tabs (addresses, in order) a saved window on screen already
+	// has (../sessionStore.ts importSessions). Resolves with how many of those
+	// were left out; rejects when the browser refused the write.
+	async importSavedWindows(sessions : ISavedSession[]) : Promise<number> {
+		let duplicates = 0;
+		await this.mutateSessions((stored) => {
+			// not the saved windows (or tabs) a pending delete takes away
+			const r = importSessions(stored, sessions, withoutItems(stored, this.pending.hiding()));
+			duplicates = r.duplicates;
+			return r.added.length ? r.stored : null;
+		});
+		return duplicates;
+	}
 	// Deletes a saved window: hidden now, removed from storage when the
 	// countdown ends (./pendingDelete.ts)
 	deleteSession(session : ISavedSession) {
@@ -920,6 +957,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		// added to elsewhere)
 		const all = this.state.sessions.find((s) => s.id === session.id) || session;
 		this.pending.add({id: session.id, name: this.savedName(all), tabs: session.tabs.length, urls: goneUrls(all.tabs)});
+		// one notice: the delete's Undo replaces a move's
+		this.moveUndo.clear();
 		// its selected tabs go with it
 		dropMissingSaved(this.state.selection, this.visibleSessions());
 		this.setState(this.selectionText());
@@ -931,6 +970,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		const items = savedDeleteItems(this.state.selection, this.visibleSessions().map((s) => ({...s, name: this.savedName(s)})));
 		if (items.length === 0) return;
 		for (const item of items) this.pending.add(item);
+		this.moveUndo.clear();
 		// everything selected was just deleted
 		this.clearSelection();
 		this.setState(this.selectionText());
@@ -1107,10 +1147,40 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		const refs = dragged ? (dragged.kind === "saved" ? dragged.refs : []) : this.draggedRefs();
 		this.draggingSaved = null;
 		if (refs.length === 0 || !moveSavedTabs(this.shownSavedStore(), refs, target)) return;
-		const moved = await this.renumberingChange("move the saved tabs", (stored) => moveSavedTabs(stored, refs, target));
+		// what Undo needs when the move leaves a saved window without a tab
+		let undo = null as MoveUndo<ISavedSession> | null;
+		const moved = await this.renumberingChange("move the saved tabs", (stored) => {
+			const result = moveSavedTabs(stored, refs, target);
+			if (!result) return null;
+			undo = moveUndoRecord(stored, refs, result);
+			return { ...result, stored: stampUpdated(stored, result.stored, Date.now()) };
+		});
 		if (!moved) return;
 		const name = this.storedName(moved.stored, sessionId);
 		this.setState({ ...movedText(moved.count, name, moved.emptied.length) });
+		if (undo) this.offerMoveUndo(undo);
+	}
+	// Offers to take back a move that removed saved windows (left without a
+	// tab), with the Undo notice. One notice at a time: the deletes still
+	// counting down are written now, as their Undo goes.
+	private offerMoveUndo(record : MoveUndo<ISavedSession>) {
+		this.pending.flush();
+		const names = record.emptied.map((id) => {
+			const s = record.before.find((x) => x.id === id);
+			return s ? this.savedName(s) : "";
+		});
+		this.moveUndo.offer({ record, text: emptiedText(names) });
+	}
+	// Undo on that notice: the moved tabs go back and the removed saved
+	// windows come back, from the snapshot, on what is stored by now
+	// (../moveUndo.ts); written like any other change.
+	undoMove = async () => {
+		const offer = this.moveUndo.take();
+		if (!offer) return;
+		const done = await this.renumberingChange("undo the move", (stored) => undoMove(stored, offer.record, Date.now()));
+		if (!done) return;
+		const names = done.restored.map((id) => this.storedName(done.stored, id));
+		this.setState({ ...undoneText(done.count, names) });
 	}
 	// copies of the open tabs `tabs` added at `target` (../savedAdd.ts), in
 	// the order the popup lists the open windows
@@ -1123,7 +1193,10 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	// tabs. The saved window's tabs are numbered anew, as after a move.
 	async addOpenTabs(target : SavedDropTarget, tabs : browser.Tabs.Tab[]) {
 		if (tabs.length === 0 || !this.addOpen(this.shownSavedStore(), tabs, target)) return;
-		const added = await this.renumberingChange("add the tabs to the saved window", (stored) => this.addOpen(stored, tabs, target));
+		const added = await this.renumberingChange("add the tabs to the saved window", (stored) => {
+			const result = this.addOpen(stored, tabs, target);
+			return result && { ...result, stored: stampUpdated(stored, result.stored, Date.now()) };
+		});
 		if (!added) return;
 		if (tabs.some((tab) => this.state.selection.has(tab.id))) this.clearSelection();
 		const name = this.storedName(added.stored, target.sessionId);
@@ -1168,13 +1241,18 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		this.pending.flush();
 	}
 	private noticeCount() : number {
-		return this.board.items.length + (this.pending.items.length ? 1 : 0);
+		return this.board.items.length + (this.pending.items.length || this.moveUndo.current ? 1 : 0);
+	}
+	// the close button of a move's Undo notice: the move stands (it is stored)
+	private readonly dropMoveUndo = () => {
+		this.moveUndo.clear();
 	}
 	// Starting an import: the notices go, what is pending is written first (the
 	// import's own write is queued after it, savedWrites.ts)
 	closeNotices() {
 		this.pending.flush();
 		this.board.closeAll();
+		this.moveUndo.clear();
 	}
 	// Removes saved windows (or some of their tabs) from storage. The state
 	// changes before the promise resolves (the ids stop being hidden right
@@ -1184,7 +1262,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	async commitDeletes(items : PendingItem[], sync : boolean) {
 		const change = (stored : Record<string, ISavedSession>) => {
 			const mine = this.pending.claim(items);
-			return mine.length ? withoutItems(stored, mine) : null;
+			// saved windows that lose some tabs were last saved now
+			return mine.length ? stampUpdated(stored, withoutItems(stored, mine), Date.now()) : null;
 		};
 		// The popup is closing: the write starts now, from the copy, not after
 		// the changes queued before it (one on its way already went from the

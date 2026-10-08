@@ -136,11 +136,21 @@ const STATES = [
 	// no saved windows: Export/Backup Sessions is disabled, its note says why
 	{name: 'options-sessions-empty', layouts: ['blocks'], scaleLayouts: [], apply: {overlay: 'options', scrollTo: 'Session Management', store: {sessions: {}}}},
 	// importing a backup with one good window, one without tabs and one without
-	// an id: the note under the picker says what was restored and skipped
-	{name: 'options-sessions-imported', layouts: ['blocks'], scaleLayouts: [], apply: {overlay: 'options', scrollTo: 'Session Management', importFile: JSON.stringify([
+	// an id: the note under the picker says what was restored and skipped (from
+	// the fixture's saved windows, so the second run does not find it there)
+	{name: 'options-sessions-imported', layouts: ['blocks'], scaleLayouts: [], apply: {overlay: 'options', scrollTo: 'Session Management', freshSessions: true, importFile: JSON.stringify([
 		{id: 'imp1', name: 'Imported', color: '#888', date: 1, sessionStartTime: 1, customName: false, incognito: false, windowsInfo: {id: 1}, tabs: [{id: 1, index: 0, url: 'https://example.com', title: 'Example'}]},
 		{id: 'imp2', windowsInfo: {id: 2}, tabs: []},
 		{windowsInfo: {id: 3}, tabs: [{id: 1, index: 0, url: 'https://example.org'}]}])}},
+	// a backup with "Tax 2029" (the same tabs in the same order, another id) and
+	// one new window: the new one is restored, "Tax 2029" is already there
+	// (src/popup/sessionStore.ts importSessions)
+	{name: 'options-sessions-imported-dup', layouts: ['blocks'], scaleLayouts: [], apply: {overlay: 'options', scrollTo: 'Session Management', freshSessions: true, importFile: JSON.stringify([
+		{id: 'dup1', name: 'Taxes', color: 'color2', date: 1, sessionStartTime: 1, customName: true, incognito: false, windowsInfo: {id: 1}, tabs: [
+			{id: 1, index: 0, url: 'https://docs.google.com/document/d/q3-planning', title: 'Q3 planning'},
+			{id: 2, index: 1, url: 'https://mail.google.com/mail/u/0/#inbox', title: 'Inbox'},
+			{id: 3, index: 2, url: 'https://www.amazon.com/s?k=mechanical+keyboard', title: 'Keyboard'}]},
+		{id: 'imp1', name: 'Imported', color: '#888', date: 1, sessionStartTime: 1, customName: false, incognito: false, windowsInfo: {id: 1}, tabs: [{id: 1, index: 0, url: 'https://example.com', title: 'Example'}]}])}},
 	{name: 'options-sessions-badimport', layouts: ['blocks'], scaleLayouts: [], apply: {overlay: 'options', scrollTo: 'Session Management', importFile: '{"a":1}'}},
 	{name: 'options-debug', layouts: ['blocks'], scaleLayouts: [], apply: {overlay: 'options', scrollTo: 'Export tabs for debugging'}},
 	// the window colour/name screen does take the layout as a prop
@@ -197,6 +207,11 @@ const STATES = [
 	{name: 'saved-window-stats', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {}, stats: '#session-s1 .windowTitle'},
 	{name: 'saved-window-stats-s2', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {}, stats: '#session-s2 .windowTitle'},
 	{name: 'saved-window-stats-max', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {savedInfo: {id: 's1', info: {state: 'maximized'}}}, stats: '#session-s1 .windowTitle'},
+	// a saved window whose tabs changed 3 hours ago (`updated`,
+	// src/popup/savedUpdated.ts): its card says "created 2 days ago" and "last
+	// saved 3 hours ago", as does the card of one of its tabs
+	{name: 'saved-updated-window-stats', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {savedUpdated: {id: 's1', ago: 3 * 3600e3}}, stats: '#session-s1 .windowTitle'},
+	{name: 'saved-updated-tab-stats', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {savedUpdated: {id: 's1', ago: 3 * 3600e3}}, stats: '#sessiontab_s1_1'},
 	{name: 'saved-window-stats-monitors', chromeOnly: true, layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {}, stats: '#session-s2 .windowTitle'},
 	// saved maximized on the second monitor (its work area 1920,-180 2560x1400, as saved: with the few pixels a maximized window overhangs): comes back maximized there, not on the popup's
 	{name: 'saved-window-stats-max-monitor', chromeOnly: true, layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {savedInfo: {id: 's2', info: {state: 'maximized', left: 1912, top: -188, width: 2576, height: 1416}}}, stats: '#session-s2 .windowTitle'},
@@ -347,6 +362,24 @@ const STATES = [
 	{name: 'saved-move-sel', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {
 		clicks: [{key: 27}, {sel: '.session .tab[data-hover^="Tab (interface)"]', ctrl: true}, {sel: '.session .tab[data-hover^="react - npm"]', ctrl: true},
 			{drag: '.session .tab[data-hover^="react - npm"]', over: '#session-s2 h3.windowTitle', drop: true}], scrollEnd: true}},
+	// every tab of "Tax 2029" selected (Ctrl+click the first, Shift+right-click
+	// the last) and dragged onto the title of "Conference reading": they move
+	// there, "Tax 2029" is left empty and removed, and the Undo notice offers to
+	// take the move back (src/popup/moveUndo.ts). From the fixture's saved
+	// windows each time; the clock is frozen so the bar stays full. dpr 1,
+	// blocks + List, 800x600 and 380x900
+	{name: 'saved-move-empty', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {freshSessions: true,
+		clicks: [{key: 27}, {sel: '#sessiontab_s2_0', ctrl: true}, {sel: '#sessiontab_s2_2', shift: true, button: 2},
+			{drag: '#sessiontab_s2_2', over: '#session-s1 h3.windowTitle', drop: true}], freezeClock: true, scrollEnd: true}},
+	// the same, then Undo: "Tax 2029" is back with its name and colour, and
+	// "Conference reading" has its four tabs again
+	{name: 'saved-move-empty-undo', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {freshSessions: true,
+		clicks: [{key: 27}, {sel: '#sessiontab_s2_0', ctrl: true}, {sel: '#sessiontab_s2_2', shift: true, button: 2},
+			{drag: '#sessiontab_s2_2', over: '#session-s1 h3.windowTitle', drop: true}, {sel: '.notice.undo .notice-undo'}], scrollEnd: true}},
+	// "Conference reading" with its tabs changed 3 hours ago: its card says
+	// "saved 3 hours ago" (the time of the change), "Tax 2029" still "saved 3
+	// weeks ago". dpr 1, blocks + List, 800x600 and 380x900
+	{name: 'saved-updated-look', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {savedUpdated: {id: 's1', ago: 3 * 3600e3}, scrollEnd: true}},
 	// adding open tabs to a saved window (src/popup/savedAdd.ts): copies go in,
 	// the open tabs stay open. Every add grows the saved window, so these states
 	// start from the fixture's saved windows again (`freshSessions`).
@@ -498,7 +531,7 @@ async function settle(page) {
 }
 
 /** Applies a popup state absolutely: the result never depends on what came before. */
-async function apply(page, {layout, dark, search = '', dup = false, recent = 0, overlay = null, scrollTo = null, store = {}, granted = true, savedFocused = null, clicks = [], scrollInto = null, importFile = null, freezeClock = false, scrollEnd = false, typeName = null, pickColor = null, savedInfo = null, freshSessions = false, savedAuto = null, afterWait = 0, quota = false, barAt = 0, noticeHover = false}) {
+async function apply(page, {layout, dark, search = '', dup = false, recent = 0, overlay = null, scrollTo = null, store = {}, granted = true, savedFocused = null, clicks = [], scrollInto = null, importFile = null, freezeClock = false, scrollEnd = false, typeName = null, pickColor = null, savedInfo = null, freshSessions = false, savedAuto = null, afterWait = 0, quota = false, barAt = 0, noticeHover = false, savedUpdated = null}) {
 	await page.evaluate(async (s) => {
 		const q = (sel) => document.querySelector(sel)
 		const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
@@ -588,6 +621,14 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 		if (s.savedAuto) {
 			const {sessions} = await window.__fake.storage.local.get(['sessions'])
 			Object.assign(sessions[s.savedAuto], {customName: false, name: 'Stale name from save time'})
+			await window.__fake.storage.local.set({sessions})
+			await frame()
+		}
+
+		// 7b'. a saved window whose tabs changed `ago` ms before now (`updated`)
+		if (s.savedUpdated) {
+			const {sessions} = await window.__fake.storage.local.get(['sessions'])
+			sessions[s.savedUpdated.id].updated = Date.now() - s.savedUpdated.ago
 			await window.__fake.storage.local.set({sessions})
 			await frame()
 		}
@@ -698,7 +739,7 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 		if (s.afterWait) await new Promise((r) => setTimeout(r, s.afterWait))
 		// the list scrolled to its very end: the padding the notice makes room with shows
 		if (s.scrollEnd) { const c = q('.window-container'); if (c) c.scrollTop = c.scrollHeight }
-	}, {layout, dark, search, dup, recent, overlay, store, granted, savedFocused, clicks, scrollInto, importFile, freezeClock, scrollEnd, typeName, pickColor, savedInfo, freshSessions, savedAuto, afterWait, quota, barAt, noticeHover})
+	}, {layout, dark, search, dup, recent, overlay, store, granted, savedFocused, clicks, scrollInto, importFile, freezeClock, scrollEnd, typeName, pickColor, savedInfo, freshSessions, savedAuto, afterWait, quota, barAt, noticeHover, savedUpdated})
 	await settle(page)
 	// 7. scroll the options box headed `scrollTo` to the top of its scroller
 	if (scrollTo) {

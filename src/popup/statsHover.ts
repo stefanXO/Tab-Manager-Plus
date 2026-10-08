@@ -349,7 +349,7 @@ export class StatsHover {
 			map = monitorMap(this.displays.list, l.bounds ? [...windows, { id: LANDING_ID, ...l.bounds }] : windows, LANDING_ID, STATS_MAP_WIDTH, STATS_MAP_HEIGHT);
 			landing = { bounds: l.bounds, maximized: l.maximized, monitor: map ? map.monitor : null };
 		}
-		const card = savedWindowStats(info, s.tabs, { now, name: this.savedName(s), savedAt: s.date, landing });
+		const card = savedWindowStats(info, s.tabs, { now, name: this.savedName(s), savedAt: s.date, updatedAt: s.updated, landing });
 		const sites = topSites(s.tabs, STATS_WINDOW_SITES).map((tab) => this.tileFavicon(savedTile(savedTabKeys.key(s.id, tab.index))));
 		return { card, sites, saved: true, map: map && map.target ? map : null };
 	}
@@ -379,6 +379,7 @@ export class StatsHover {
 			const card = savedTabStats(saved.tab, {
 				now,
 				savedAt: saved.session.date,
+				updatedAt: saved.session.updated,
 				windowName: this.savedName(saved.session),
 				windowTabs: saved.session.tabs,
 				allTabs: st.tabsbyid.values(),

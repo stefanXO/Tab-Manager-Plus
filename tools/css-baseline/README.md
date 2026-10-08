@@ -235,6 +235,20 @@ currently on disk — there is no stale copy to forget about.
   title of "Tax 2029" (outlined; the copy goes at the end); `-sel`: Ctrl+click "Sprint board"
   (Work) and "Browser extension" (Research), drop the second on "Tax 2029": both copied to
   its end in popup order, the selection cleared, the open tabs still open
+- `saved-move-empty` (+ `-undo`): every tab of "Tax 2029" selected (Ctrl+click the first,
+  Shift+right-click the last) and dropped on the title of "Conference reading": "Tax 2029" is
+  left empty and removed, and the Undo notice offers to take the move back
+  (`src/popup/moveUndo.ts`; clock frozen, blocks + List, 800x600 and 380x900); `-undo` then
+  clicks Undo: "Tax 2029" is back with its name and colour (blocks + List, 800x600). Both set
+  `freshSessions`
+- `saved-updated-look`, `saved-updated-window-stats`, `saved-updated-tab-stats`: "Conference
+  reading" with its tabs changed 3 hours ago (`apply.savedUpdated: {id, ago}` sets its
+  `updated` to now minus `ago`, `src/popup/savedUpdated.ts`): its card says "saved 3 hours
+  ago", its hover card and its tabs' cards "created 2 days ago" and "last saved 3 hours ago"
+- `options-sessions-imported-dup`: importing a backup with "Tax 2029" under another id (the
+  same tabs in the same order) and one new window: "1 saved window restored, 1 already there"
+  (`src/popup/sessionStore.ts` `importSessions`). It and `options-sessions-imported` set
+  `freshSessions`, so the dark run imports into the fixture's saved windows again
 - `drag-stack-saved` / `drag-stack-open`: the drag image of a drag that takes several tabs
   (`src/popup/dragImage.ts`). The `{drag, over, ..., image: true}` entry catches what the
   page hands `setDragImage` (an element that lives off screen for a moment; the browser
