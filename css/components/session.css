@@ -26,3 +26,71 @@
 .hrSpan {
 	font-size: 12px; background-color: var(--divider-label-bg); color: var(--divider-label-text); padding: 0 10px;
 }
+
+/* The Undo notice after a saved window was deleted (src/popup/views/UndoNotice.tsx):
+   a bar over the bottom bar, the text, the seconds left, Undo, and a line along
+   its foot that drains with the countdown. layout/narrow.css lifts it over the
+   taller bottom bar there. */
+.undo-notice {
+	position: fixed;
+	left: 50%;
+	transform: translateX(-50%);
+	bottom: calc(3.2rem + 0.6rem);
+	z-index: 999998;
+	box-sizing: border-box;
+	max-width: calc(100% - 1rem);
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	padding: 0.45rem 0.6rem 0.55rem 0.8rem;
+	border-radius: 0.4rem;
+	overflow: hidden;
+	background: var(--toast-bg);
+	color: var(--toast-text);
+	box-shadow: var(--shadow-popover);
+	font-size: 0.8rem;
+}
+.undo-notice .undo-text {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.undo-notice .undo-seconds {
+	flex: none;
+	min-width: 1.6em;
+	text-align: right;
+	opacity: 0.7;
+	font-variant-numeric: tabular-nums;
+}
+.undo-notice .undo-button {
+	flex: none;
+	padding: 0.15rem 0.6rem;
+	border: 1px solid var(--toast-accent);
+	border-radius: 0.3rem;
+	background: transparent;
+	color: var(--toast-accent);
+	font: inherit;
+	font-weight: bold;
+	cursor: pointer;
+}
+.undo-notice .undo-button:hover {
+	background: var(--toast-accent);
+	color: var(--toast-bg);
+}
+.undo-notice .undo-button:focus-visible {
+	outline: 2px solid var(--toast-accent);
+	outline-offset: 2px;
+}
+.undo-notice .undo-bar {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 3px;
+	background: var(--toast-track);
+}
+.undo-notice .undo-bar-fill {
+	height: 100%;
+	background: var(--toast-accent);
+}

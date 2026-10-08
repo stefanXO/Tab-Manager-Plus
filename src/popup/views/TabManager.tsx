@@ -17,6 +17,8 @@ import {attachMasonry, Masonry} from "../masonry";
 import {sizePopup} from "@helpers/popup_size";
 import {applyTheme} from "@helpers/theme";
 import {StatsLayer, StatsSource} from "./StatsLayer";
+import {UndoNotice} from "./UndoNotice";
+import {PendingDeletes, withoutSessions, noticeText} from "../pendingDelete";
 
 // the settings the manager holds in its state and applies
 type ManagerSettings = Omit<Settings, "showMonitors">;
@@ -33,6 +35,17 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	// row-span packing for the block layouts, attached to whatever container is mounted
 	private masonry : Masonry | null = null;
 	private masonryTarget : HTMLElement | null = null;
+	// the whole `sessions` object as storage last had it: the write of a delete
+	// that has to start as the popup closes cannot wait for a read
+	private storedSessions : Record<string, ISavedSession> | null = null;
+	// saved windows deleted and not yet removed from storage (the Undo notice)
+	private readonly pending = new PendingDeletes({
+		commit: (ids, sync) => this.commitDeletes(ids, sync),
+		onChange: () => this.forceUpdate()
+	});
+	// leaving the popup writes the deletes that are still counting down
+	private readonly flushPending = () => this.pending.flush(true);
+	private readonly flushPendingHidden = () => { if (document.visibilityState === "hidden") this.pending.flush(true); };
 
 	private readonly runUpdate = () => this.setState({ dirty: true });
 	private readonly runSlowUpdate = debounce(this.runUpdate, 250);
@@ -159,6 +172,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			setSetting: (key, value) => this.setSetting(key, value),
 			setBottomText: (text) => this.setState({ bottomText: text }),
 			sessionSync: () => this.sessionSync(),
+			deleteSession: (session) => this.deleteSession(session),
 			reload: () => this.setState({ dirty: true }),
 			rerender: () => this.forceUpdate()
 		};
@@ -192,6 +206,10 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 
 		browser.storage.onChanged.removeListener(this.sessionSync);
 		browser.storage.onChanged.removeListener(this.onStorageChanged);
+
+		window.removeEventListener("pagehide", this.flushPending);
+		document.removeEventListener("visibilitychange", this.flushPendingHidden);
+		this.pending.flush(true);
 	}
 
 	syncMasonry() {
@@ -326,8 +344,11 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			if (this.state.windows[i].state === "minimized") haveMin = true;
 		}
 
+		// a deleted saved window is hidden while its Undo countdown runs
+		const hiddenSessions = this.pending.hidden();
+		const sessions = this.state.sessions.filter((s) => !hiddenSessions.has(s.id));
 		if (this.state.sessionsFeature) {
-			if (this.state.sessions.length > 0) haveSess = true;
+			if (sessions.length > 0) haveSess = true;
 			// disable session window if we have filtering enabled
 			// and filter active
 			if (haveSess && this.state.filterTabs) {
@@ -347,7 +368,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 					(this.state.animations ? "animations" : "no-animations") +
 					" " +
 					(this.state.windowTitles ? "windowTitles" : "no-windowTitles") +
-					(this.state.supportLinks ? "" : " no-supportLinks")
+					(this.state.supportLinks ? "" : " no-supportLinks") +
+					(this.pending.items.length ? " undo-showing" : "")
 				}
 				onKeyDown={this.checkKey}
 				onMouseOver={this.hoverOver}
@@ -437,7 +459,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 						</div>
 					</div>
 					{haveSess
-						? this.state.sessions.map((window : ISavedSession) => {
+						? sessions.map((window : ISavedSession) => {
 								return (
 									<Session
 										key={"session" + window.id}
@@ -473,7 +495,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 						hideWindows={this.state.hideWindows}
 						sessionsFeature={this.state.sessionsFeature}
 						supportLinks={this.state.supportLinks}
-						sessions={this.state.sessions}
+						sessions={sessions}
 						windowCount={this.state.windows.length}
 						tabCount={this.state.tabCount}
 					/>
@@ -602,6 +624,12 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 					</table>
 				</div>}
 				<div className="window placeholder" />
+				{this.pending.items.length > 0 && <UndoNotice
+					text={noticeText(this.pending.items)}
+					deadline={this.pending.deadline}
+					countdown={this.pending.countdown}
+					onUndo={this.undoDelete}
+				/>}
 				<StatsLayer source={this.statsSource} version={this.listVersion} />
 			</div>
 			</ManagerContext.Provider>
@@ -649,6 +677,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		browser.storage.onChanged.addListener(this.sessionSync);
 		browser.storage.onChanged.addListener(this.onStorageChanged);
 
+		window.addEventListener("pagehide", this.flushPending);
+		document.addEventListener("visibilitychange", this.flushPendingHidden);
+
 		await this.sessionSync();
 
 		// keys typed while the popup was booting (see src/popup/early.ts)
@@ -693,10 +724,41 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		}
 		// selected saved tabs of a saved window that was deleted or changed
 		dropMissingSaved(this.state.selection, sessions);
+		this.storedSessions = values;
 		this.setState({
 			sessions: sessions
 		});
 		await this.update();
+	}
+	// Deletes a saved window: hidden now, removed from storage when the
+	// countdown ends (./pendingDelete.ts)
+	deleteSession(session : ISavedSession) {
+		this.pending.add({id: session.id, name: session.name, tabs: session.tabs.length});
+		// its selected tabs go with it
+		const hidden = this.pending.hidden();
+		dropMissingSaved(this.state.selection, this.state.sessions.filter((s) => !hidden.has(s.id)));
+		this.setState(this.selectionText());
+	}
+	undoDelete = () => {
+		this.pending.undo();
+	}
+	// removes saved windows from storage. When the popup is closing (sync) the
+	// write starts without a read, from the copy sessionSync keeps: the set
+	// itself completes even as the page goes.
+	async commitDeletes(ids : string[], sync : boolean) {
+		if (sync && this.storedSessions) {
+			void setLocalStorage(S.sessions, withoutSessions(this.storedSessions, ids));
+			return;
+		}
+		const sessions = await getLocalStorage(S.sessions, {});
+		const next = withoutSessions(sessions, ids) as Record<string, ISavedSession>;
+		await setLocalStorage(S.sessions, next);
+		// Bring the state up to date before the promise resolves: the ids stop
+		// being hidden right after, and the storage.onChanged -> sessionSync
+		// read may not be done yet, so state.sessions would show the deleted
+		// window for a moment. A failed set rejects above: the window shows again.
+		this.storedSessions = next;
+		this.setState({sessions: this.state.sessions.filter((s) => !ids.includes(s.id))});
 	}
 	focusRoot() {
 		this.setState({

@@ -1,6 +1,5 @@
 "use strict"
 
-import {getLocalStorage, setLocalStorage} from "@helpers/storage";
 import {Tab} from "@views";
 import {isBlockLayout} from "@helpers/settings";
 import * as React from "react";
@@ -164,19 +163,9 @@ export class Session extends React.Component<ISession, ISessionState> {
 			}, 500);
 		}
 	}
-	close = async (e) => {
+	close = (e) => {
 		e.stopPropagation();
-
-		var sessions = await getLocalStorage(S.sessions, {});
-		delete sessions[this.props.session.id];
-
-		var value = await setLocalStorage(S.sessions, sessions).catch(function (err) {
-			console.log(err);
-			console.error(err.message);
-		});
-
-		console.log(value);
-		this.context.reload();
-		// browser.windows.remove(this.props.session.windowsInfo.id);
+		// hidden at once; removed from storage when the Undo countdown ends
+		this.context.deleteSession(this.props.session);
 	}
 }

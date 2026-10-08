@@ -37,6 +37,11 @@
 		--divider-label-bg: var(--dk-ground);
 		--divider-label-text: var(--dk-text-2);
 
+		--toast-bg: var(--dk-tile-hover);
+		--toast-text: var(--dk-text);
+		--toast-accent: var(--dk-select);
+		--toast-track: rgba(255, 255, 255, 0.18);
+
 		--minimized-opacity: 0.85;
 		--session-opacity: 0.85;
 

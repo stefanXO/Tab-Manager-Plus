@@ -1,6 +1,6 @@
 import * as React from "react";
 import * as browser from "webextension-polyfill";
-import {ITabManagerState} from "@types";
+import {ITabManagerState, ISavedSession} from "@types";
 
 // Settings that live in TabManager state and can be changed from the options screen
 export type ISettings = Pick<ITabManagerState,
@@ -26,6 +26,8 @@ export interface ITabManagerActions {
 	setSetting<K extends keyof ISettings>(key : K, value : ISettings[K]) : void;
 	setBottomText(text : string) : void;
 	sessionSync() : Promise<void>;
+	// delete a saved window, with an Undo countdown before it leaves storage
+	deleteSession(session : ISavedSession) : void;
 	// browser state changed (windows/tabs/sessions): refetch and re-render
 	reload() : void;
 	// only in-place mutated state (selection, hiddenTabs) changed: re-render without refetch

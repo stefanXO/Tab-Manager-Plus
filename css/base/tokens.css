@@ -207,6 +207,12 @@
 	--row-selected-bg: rgba(255, 230, 0, 0.45);
 	--row-selected-hover: rgba(255, 230, 0, 0.6);
 
+	/* the Undo notice after a delete: an inverse bar (dark on the light theme) */
+	--toast-bg: var(--gray-850);
+	--toast-text: var(--white);
+	--toast-accent: var(--yellow-soft);
+	--toast-track: rgba(255, 255, 255, 0.22);
+
 	/* the search box's help panel */
 	--popover-border: rgba(0, 0, 0, 0.15);
 	--popover-text: var(--gray-850);

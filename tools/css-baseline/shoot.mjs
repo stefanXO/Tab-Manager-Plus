@@ -169,6 +169,15 @@ const STATES = [
 	{name: 'saved-select', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {
 		clicks: [{sel: '#tab-15', ctrl: true}, {sel: '#sessiontab_s1_1', ctrl: true}, {sel: '#sessiontab_s1_3', shift: true, button: 2}],
 		scrollInto: '#session-s1'}},
+	// deleting saved windows (src/popup/pendingDelete.ts): the card is hidden at
+	// once and the Undo notice shows over the bottom bar. The clock is frozen
+	// after the click so the countdown reads 8s and the bar is full. One delete
+	// (blocks + List, 800x600 and 380x900), then a second one on top of it: the
+	// notice names both. dpr 1
+	{name: 'saved-delete', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {
+		clicks: [{sel: '#session-s1 .icon.tabaction.delete'}], freezeClock: true, scrollEnd: true}},
+	{name: 'saved-delete-two', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {
+		clicks: [{sel: '#session-s1 .icon.tabaction.delete'}, {sel: '#session-s2 .icon.tabaction.delete'}], freezeClock: true}},
 	// a saved window that was the focused window when it was saved (its stored
 	// windowsInfo says focused, with the id of the focused open window "Work"):
 	// it must not look like the active window. dpr 1, blocks + List, 800x600
@@ -269,10 +278,15 @@ async function settle(page) {
 }
 
 /** Applies a popup state absolutely: the result never depends on what came before. */
-async function apply(page, {layout, dark, search = '', dup = false, recent = 0, overlay = null, scrollTo = null, store = {}, granted = true, savedFocused = null, clicks = [], scrollInto = null, importFile = null}) {
+async function apply(page, {layout, dark, search = '', dup = false, recent = 0, overlay = null, scrollTo = null, store = {}, granted = true, savedFocused = null, clicks = [], scrollInto = null, importFile = null, freezeClock = false, scrollEnd = false}) {
 	await page.evaluate(async (s) => {
 		const q = (sel) => document.querySelector(sel)
 		const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+
+		// 0. an Undo notice from the state before: unfreeze the clock, take it back
+		if (window.__realNow) { Date.now = window.__realNow; window.__realNow = null }
+		q('.undo-notice .undo-button')?.click()
+		await frame()
 
 		// 1. close whatever overlay is up, so the window container is reachable
 		if (q('.window-colors')) { q('.window-colors h2.window-x')?.click(); await frame() }
@@ -338,8 +352,18 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 			input.dispatchEvent(new Event('change', {bubbles: true}))
 			for (let i = 0; i < 20; i++) await frame()
 		}
+		// 10. a still countdown: Date.now stops where it is (the notice reads it)
+		if (s.freezeClock) {
+			await frame()
+			const t = Date.now()
+			window.__realNow = Date.now
+			Date.now = () => t
+			await frame()
+		}
 		if (s.scrollInto) q(s.scrollInto)?.scrollIntoView({block: 'nearest', inline: 'nearest'})
-	}, {layout, dark, search, dup, recent, overlay, store, granted, savedFocused, clicks, scrollInto, importFile})
+		// the list scrolled to its very end: the padding the notice makes room with shows
+		if (s.scrollEnd) { const c = q('.window-container'); if (c) c.scrollTop = c.scrollHeight }
+	}, {layout, dark, search, dup, recent, overlay, store, granted, savedFocused, clicks, scrollInto, importFile, freezeClock, scrollEnd})
 	await settle(page)
 	// 7. scroll the options box headed `scrollTo` to the top of its scroller
 	if (scrollTo) {
