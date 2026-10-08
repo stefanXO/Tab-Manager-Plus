@@ -2,7 +2,7 @@
 
 import {cleanupDebounce} from "@background/tracking";
 import {getLocalStorage, getLocalStorageMap, setLocalStorage, setLocalStorageMap, serialized} from "@helpers/storage";
-import {placeWindow, usableBounds, windowsToMinimize} from "@helpers/geometry";
+import {restoreCreate, knownDisplayList, windowsToMinimize} from "@helpers/geometry";
 import {hashcode} from "@helpers/windows";
 import {setWindowColor, setWindowName} from "@background/actions";
 import * as S from "@strings";
@@ -162,42 +162,25 @@ export async function createWindowWithSessionTabs(session: ISavedSession, tabId:
 	return newWindow.id;
 }
 
-// How a saved window comes back. A maximized window is restored maximized
-// (a window cannot be created with both a state and bounds). Anything else
-// gets its saved position and size, fitted into a display that exists now:
-// the monitor it was saved on may be gone or smaller (#208; a window saved
-// on an ultrawide, restored on a laptop). The displays come from the
+// How a saved window comes back (helpers/geometry.ts restoreCreate): a
+// maximized window maximized, anything else at its saved position and size,
+// fitted into a display that exists now (#208; a window saved on an
+// ultrawide, restored on a laptop). The displays come from the
 // system.display permission when granted, else the one display the popup
 // reported. The old fix squeezed every window into 800x600 at the top left
-// corner (#205).
+// corner (#205). The popup's landing preview (the saved window's hover card)
+// calls the same function with the same display list.
 async function windowGeometry(saved : browser.Windows.Window, screen? : IScreenBounds) : Promise<browser.Windows.CreateCreateDataType> {
-	const create : browser.Windows.CreateCreateDataType = {
-		type: "normal",
-		incognito: !!saved.incognito
-	};
-	if (saved.state === "maximized" || saved.state === "fullscreen") {
-		create.state = "maximized";
-		return create;
-	}
-	const bounds = { left: saved.left, top: saved.top, width: saved.width, height: saved.height };
-	if (!usableBounds(bounds)) return create;
-	const placed = placeWindow(bounds, await knownDisplays(screen));
-	// no display known: the browser's default placement
-	if (placed) Object.assign(create, placed);
-	return create;
+	return restoreCreate(saved, await knownDisplays(screen));
 }
 
 // the displays available now: all of them with the permission, else the one
 // the popup is on (first in the list, so it is the fallback target)
 async function knownDisplays(screen? : IScreenBounds) : Promise<IScreenBounds[]> {
-	const list : IScreenBounds[] = screen ? [screen] : [];
 	if (!IS_FIREFOX && await browser.permissions.contains({ permissions: ["system.display"] })) {
-		for (const d of await chrome.system.display.getInfo()) {
-			const b = d.workArea || d.bounds;
-			if (!list.some((s) => s.left === b.left && s.top === b.top)) list.push({ left: b.left, top: b.top, width: b.width, height: b.height });
-		}
+		return knownDisplayList(screen, await chrome.system.display.getInfo());
 	}
-	return list;
+	return knownDisplayList(screen, []);
 }
 
 export function focusOnWindowDelayed(windowId: number) {

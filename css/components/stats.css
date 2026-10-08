@@ -229,8 +229,15 @@
 	fill: var(--map-other-minimized);
 	stroke-opacity: 0.6;
 }
-/* "one monitor known · allow monitor access in options" */
-.stats-line-monitorHint {
+/* a saved window's landing preview: where Restore would put it, dashed like
+   the saved card's edge (css/components/session.css) */
+.stats-map-window.landing {
+	stroke-dasharray: 3 2;
+}
+/* "one monitor known · allow monitor access in options", and a saved
+   window's "click to restore it · click a tab for just that one" */
+.stats-line-monitorHint,
+.stats-line-restoreHint {
 	font-size: 11px;
 	opacity: 0.8;
 }

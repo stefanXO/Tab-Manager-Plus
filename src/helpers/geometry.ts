@@ -37,6 +37,83 @@ export function usableBounds(b : Partial<Bounds>) : b is Bounds {
 	return values.every((v) => typeof v === "number" && isFinite(v)) && b.width >= 100 && b.height >= 100;
 }
 
+// ---- restoring a saved window ----
+// The worker (background/windows.ts windowGeometry) and the popup's landing
+// preview (the saved window's hover card) both go through restoreCreate, so
+// the preview cannot drift from what Restore does.
+
+// what a saved window stored about itself (its windows.Window at save time)
+export interface SavedWindowInfo {
+	state? : string;
+	incognito? : boolean;
+	left? : number;
+	top? : number;
+	width? : number;
+	height? : number;
+}
+
+// the windows.create() data a restore uses (a windows.CreateCreateDataType)
+export interface RestoreCreate {
+	type : "normal";
+	incognito : boolean;
+	state? : "maximized";
+	left? : number;
+	top? : number;
+	width? : number;
+	height? : number;
+}
+
+// How a saved window comes back on the displays known now (the first one is
+// the popup's). A maximized (or fullscreen) window is restored maximized: a
+// window cannot be created with both a state and bounds. Anything else gets
+// its saved position and size, fitted into a display that exists now (the
+// monitor it was saved on may be gone or smaller, #208); unusable bounds or
+// no display known: the browser's default placement (no bounds at all).
+export function restoreCreate(saved : SavedWindowInfo, displays : Bounds[]) : RestoreCreate {
+	const create : RestoreCreate = { type: "normal", incognito: !!saved.incognito };
+	if (saved.state === "maximized" || saved.state === "fullscreen") {
+		create.state = "maximized";
+		return create;
+	}
+	const bounds = { left: saved.left, top: saved.top, width: saved.width, height: saved.height };
+	if (!usableBounds(bounds)) return create;
+	const placed = placeWindow(bounds, displays);
+	if (placed) Object.assign(create, placed);
+	return create;
+}
+
+// Where restoreCreate's window shows up: its bounds; a maximized one fills
+// the display a new window opens on (the browser picks it: the one of the
+// window in use, i.e. the popup's, first in the list); null when the browser
+// places it itself.
+export interface Landing {
+	bounds : Bounds | null;
+	maximized : boolean;
+}
+
+export function landingOf(create : RestoreCreate, displays : Bounds[]) : Landing {
+	if (create.state === "maximized") return { bounds: displays.length ? { ...displays[0] } : null, maximized: true };
+	const b = { left: create.left, top: create.top, width: create.width, height: create.height };
+	return { bounds: Object.values(b).every((v) => typeof v === "number") ? b as Bounds : null, maximized: false };
+}
+
+// where a saved window would land if restored now
+export function predictLanding(saved : SavedWindowInfo, displays : Bounds[]) : Landing {
+	return landingOf(restoreCreate(saved, displays), displays);
+}
+
+// The displays a restore knows: the popup's own (first, so it is the
+// fallback target), then each system.display monitor's work area (its
+// bounds without one) that is not the popup's already.
+export function knownDisplayList(screen : Bounds | undefined, infos : { bounds : Bounds, workArea? : Bounds }[]) : Bounds[] {
+	const list : Bounds[] = screen ? [screen] : [];
+	for (const d of infos) {
+		const b = d.workArea || d.bounds;
+		if (!list.some((s) => s.left === b.left && s.top === b.top)) list.push({ left: b.left, top: b.top, width: b.width, height: b.height });
+	}
+	return list;
+}
+
 // "Minimize inactive windows": the ids of the windows to minimize when the
 // window targetId gets the focus. Windows that are already minimized are
 // left out.

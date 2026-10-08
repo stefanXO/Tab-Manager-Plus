@@ -43,9 +43,10 @@ export interface HoverNode {
 
 // The card target under the pointer: "t<tab id>", "s<saved window id>_<index>"
 // (a tab of a saved window; its element id is "sessiontab_<that>"),
-// "w<window id>", or "" for none. A tab tile wins; else the window card
+// "w<window id>", "S<saved window id>" (its element id is "session-<that>"),
+// or "" for none. A tab tile wins; else the window card (open or saved)
 // around the pointer, except over its action buttons (the card would sit over
-// the row about to be clicked). A saved window itself has no card yet.
+// the row about to be clicked).
 export function hoverKey(target : HoverNode, windowAnywhere = STATS_WINDOW_ANYWHERE) : string {
 	const tab = target.closest(".window-container .tab[id^='tab-']");
 	if (tab) return "t" + tab.id.slice(4);
@@ -54,15 +55,19 @@ export function hoverKey(target : HoverNode, windowAnywhere = STATS_WINDOW_ANYWH
 	if (target.closest(".window-actions")) return "";
 	if (!windowAnywhere && !target.closest(".window-container .window-age")) return "";
 	const win = target.closest(".window-container .window[id^='window-']");
-	return win ? "w" + win.id.slice(7) : "";
+	if (win) return "w" + win.id.slice(7);
+	const session = target.closest(".window-container .window[id^='session-']");
+	return session ? "S" + session.id.slice(8) : "";
 }
 
 export type ParsedKey =
 	| { kind : "tab" | "window", id : number }
-	| { kind : "saved", sessionId : string, index : number };
+	| { kind : "saved", sessionId : string, index : number }
+	| { kind : "session", sessionId : string };
 
 export function parseKey(key : string) : ParsedKey | null {
 	if (key.length < 2) return null;
+	if (key[0] === "S") return { kind: "session", sessionId: key.slice(1) };
 	if (key[0] === "s") {
 		// the index is what follows the last "_" (a saved window's id may hold one)
 		const cut = key.lastIndexOf("_");
@@ -91,13 +96,14 @@ export type HoverAction =
 // The pointer moved onto `key` (see hoverKey) from `prev`.
 // Onto another target an open card stays until the new one replaces it, so
 // crossing the gap between two tiles (a moment on the window) does not blink
-// it off and on. Warm onto a tab: swap right away. Warm onto a window: settle
+// it off and on. Warm onto a tab: swap right away. Warm onto a window (open
+// or saved): settle
 // first, so crossing that gap does not flash the window card in between.
 // Cold: settle, or the target's own delay if that is longer.
 export function hoverAction(key : string, prev : string, open : boolean, warm : boolean, t : StatsTimings = STATS_TIMINGS) : HoverAction {
 	if (key === prev) return { kind: "none" };
 	if (!key) return { kind: "close", left: open };
-	const isWindow = key[0] === "w";
+	const isWindow = key[0] === "w" || key[0] === "S";
 	if (warm && !isWindow) return { kind: "show", key, delay: 0 };
 	const delay = warm ? t.settle : Math.max(t.settle, isWindow ? t.windowDelay : t.tabDelay);
 	return { kind: "show", key, delay };

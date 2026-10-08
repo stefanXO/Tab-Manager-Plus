@@ -171,6 +171,11 @@ currently on disk — there is no stale copy to forget about.
   tabs carry `lastAccessed` (first copy of every duplicate url the most recent,
   so Highlight Duplicates keeps the same originals), `openerTabId` and
   `mutedInfo.reason` for this
+- `saved-window-stats` (+ `-s2`, `-max`, and Chrome build only `-monitors`): the mouse on a
+  saved window's title, its card with the landing preview (where Restore would put it,
+  `src/helpers/geometry.ts` `predictLanding`). The fixture's saved windows carry the bounds
+  they were saved at ("Tax 2029" on the second monitor); `-max` stores "Conference reading"
+  as maximized (`apply.savedInfo`)
 - `fresh` / `fresh-compact`: the List view's freshness bars (`src/popup/freshness.ts`, drawn at the end of every List row from the fixture's `lastAccessed`, 0 min .. 14 days: all five levels) — `fresh` as `plain`, `fresh-compact` with the `compact` setting on. `vertical` × 2 themes × `800x600`, dpr 1 only
 - `page-options-na-<theme>-<width>`: `options.html` standalone, 2 × 3 = 6
 - `page-changelog-na-<theme>-<width>`: `changelog.html` standalone, 2 × 3 = 6.

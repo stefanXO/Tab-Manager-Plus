@@ -97,9 +97,11 @@ const zoom = { 2: 1.25, 15: 1.1 };
 const sessionTab = (i, title, url, fav, extra = {}) =>
 	({ id: 9000 + i, index: i, windowId: 900, title, url, favIconUrl: fav, active: false, pinned: false, audible: false,
 		discarded: false, highlighted: false, incognito: false, status: "complete", mutedInfo: { muted: false }, ...extra });
-const session = (id, name, color, ageMs, tabs) => ({
+// where each was when it was saved (the saved window card's landing preview):
+// "Conference reading" on the primary monitor, "Tax 2029" on the second one
+const session = (id, name, color, ageMs, tabs, [left, top, width, height] = [0, 0, 1600, 900]) => ({
 	id, name, color, customName: true, incognito: false, date: now - ageMs, sessionStartTime: now - ageMs,
-	tabs, windowsInfo: { id: 900, focused: false, incognito: false, type: "normal", state: "normal", left: 0, top: 0, width: 1600, height: 900 },
+	tabs, windowsInfo: { id: 900, focused: false, incognito: false, type: "normal", state: "normal", left, top, width, height },
 });
 const sessions = {
 	s1: session("s1", "Conference reading", "color4", 2 * 24 * 3600e3, [
@@ -112,7 +114,7 @@ const sessions = {
 		sessionTab(0, "Q3 planning - Google Docs", "https://docs.google.com/document/d/q3-planning", F("docs.google.com")),
 		sessionTab(1, "Inbox (3) - you@acme.dev - Gmail", "https://mail.google.com/mail/u/0/#inbox", F("mail.google.com")),
 		sessionTab(2, "Mechanical keyboard - Amazon.com", "https://www.amazon.com/s?k=mechanical+keyboard", F("amazon.com")),
-	]),
+	], [2400, 0, 1400, 900]),
 };
 
 const store = {

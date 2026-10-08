@@ -5,7 +5,8 @@ import {ITabManagerState, ISavedSession} from "@types";
 import {LAYOUT, currentShowMonitors} from "@helpers/settings";
 import {popupScreen} from "@helpers/popup_size";
 import {onMainScreen} from "./screen";
-import {tabStats, savedTabStats, savedWindowsWith, windowStats, topSites, monitorMap, Bounds, MonitorMap, Rect} from "./stats";
+import {tabStats, savedTabStats, savedWindowStats, savedWindowsWith, windowStats, topSites, monitorMap, Bounds, MonitorMap, Rect} from "./stats";
+import {predictLanding, knownDisplayList} from "@helpers/geometry";
 import {savedTabKeys} from "./sessionKeys";
 import {savedTile} from "./savedTiles";
 import {windowName as autoWindowName} from "./windowName";
@@ -18,13 +19,18 @@ const STATS_WINDOW_SITES = 4;
 // the full width; the height limit keeps stacked ones in bounds)
 const STATS_MAP_WIDTH = 180;
 const STATS_MAP_HEIGHT = 90;
+// the landing preview's rect in the map goes by this window id (no open
+// window has a negative one)
+const LANDING_ID = -2;
 
 // what the open card is for, and where it opened: at the pointer (it then
 // follows it) or next to an element (the keyboard's selected row)
 export interface IStatsTarget {
-	// "saved": a tab of a saved window, id is its selection key (sessionKeys.ts)
-	kind : "tab" | "window" | "saved";
+	// "saved": a tab of a saved window, id is its selection key (sessionKeys.ts);
+	// "session": a saved window, `session` is its id (and id is -1)
+	kind : "tab" | "window" | "saved" | "session";
 	id : number;
+	session? : string;
 	pointer? : { x : number, y : number };
 	anchor? : Rect;
 }
@@ -73,8 +79,9 @@ export class StatsHover {
 	private readonly pointer = { x: 0, y: 0 };
 	// tabs.getZoom answers, per tab, for this popup's life
 	private readonly zoomCache = new Map<number, number>();
-	// the monitors for the window card's map, see loadDisplays()
-	private displays : { list : Bounds[], onlyPopup : boolean } | null = null;
+	// the monitors for the window card's map, and the ones a restore knows
+	// (`restore`, for the saved window card's landing preview), see loadDisplays()
+	private displays : { list : Bounds[], onlyPopup : boolean, restore : Bounds[] } | null = null;
 
 	constructor(view : StatsView, source : StatsSource) {
 		this.view = view;
@@ -133,11 +140,13 @@ export class StatsHover {
 		this.key = key;
 		const parsed = parseKey(key);
 		if (!parsed) return;
-		// a saved tab goes by the selection key its tile was given
+		// a saved tab goes by the selection key its tile was given, a saved
+		// window by its id
 		const kind = parsed.kind;
-		const id = parsed.kind === "saved" ? savedTabKeys.key(parsed.sessionId, parsed.index) : parsed.id;
-		if (action.delay === 0) this.show(kind, id);
-		else this.timer = window.setTimeout(() => this.show(kind, id), action.delay);
+		const id = parsed.kind === "saved" ? savedTabKeys.key(parsed.sessionId, parsed.index) : parsed.kind === "session" ? -1 : parsed.id;
+		const session = parsed.kind === "session" ? parsed.sessionId : undefined;
+		if (action.delay === 0) this.show(kind, id, false, session);
+		else this.timer = window.setTimeout(() => this.show(kind, id, false, session), action.delay);
 	}
 
 	// the card follows the pointer right away, in the same event, straight
@@ -207,17 +216,20 @@ export class StatsHover {
 		return el.getBoundingClientRect();
 	}
 
-	private show(kind : "tab" | "window" | "saved", id : number, keyboard = false) {
+	private show(kind : IStatsTarget["kind"], id : number, keyboard = false, session? : string) {
 		const st = this.source.state();
 		if (!onMainScreen(st)) return;
-		if (kind === "saved" ? !this.savedTab(id) : kind === "tab" ? !st.tabsbyid.has(id) : !st.windowsbyid.has(id)) return;
+		const exists = kind === "saved" ? !!this.savedTab(id)
+			: kind === "session" ? this.source.sessions().some((s) => s.id === session)
+			: kind === "tab" ? st.tabsbyid.has(id) : st.windowsbyid.has(id);
+		if (!exists) return;
 		let target : IStatsTarget;
 		if (keyboard) {
 			const anchor = this.anchor(id);
 			if (!anchor) return;
 			target = { kind, id, anchor };
 		} else {
-			target = { kind, id, pointer: { ...this.pointer } };
+			target = { kind, id, session, pointer: { ...this.pointer } };
 		}
 		// a zoom asked for before (this popup) is shown at once, no line popping in
 		const cached = kind === "tab" ? this.zoomCache.get(id) : undefined;
@@ -274,14 +286,21 @@ export class StatsHover {
 	// "off": every monitor, the primary one first; else (Chrome without it or
 	// switched off, Firefox) the popup's own monitor, `onlyPopup`. Applies the
 	// setting's unset -> on rule on the way (helpers/monitors.ts).
+	// The landing preview needs what the worker will know when it restores:
+	// every monitor's work area whenever the permission is granted (whatever
+	// the setting), after the popup's own (helpers/geometry.ts knownDisplayList).
 	private displaysRun = 0;
 	private async loadDisplays() {
 		const run = ++this.displaysRun;
 		let list : Bounds[] = [];
+		let restore = knownDisplayList(popupScreen(), []);
 		if (!IS_FIREFOX) {
 			try {
-				if ((await currentShowMonitors()).enabled) {
-					const info = await chrome.system.display.getInfo();
+				const show = (await currentShowMonitors()).enabled;
+				const granted = show || await browser.permissions.contains({ permissions: ["system.display"] });
+				const info = granted ? await chrome.system.display.getInfo() : [];
+				restore = knownDisplayList(popupScreen(), info);
+				if (show) {
 					list = info
 						.map((d, i) => ({ d, i }))
 						.sort((a, b) => (Number(!!b.d.isPrimary) - Number(!!a.d.isPrimary)) || a.i - b.i)
@@ -294,7 +313,7 @@ export class StatsHover {
 		// only the latest load counts: an older one may have read the setting
 		// from before a switch
 		if (run !== this.displaysRun) return;
-		this.displays = list.length ? { list, onlyPopup: false } : { list: [popupScreen()], onlyPopup: true };
+		this.displays = list.length ? { list, onlyPopup: false, restore } : { list: [popupScreen()], onlyPopup: true, restore };
 		// an open window card picks the map up
 		this.view.refresh();
 	}
@@ -312,6 +331,27 @@ export class StatsHover {
 	private map(windowId : number) : MonitorMap | null {
 		if (!this.displays) return null;
 		return monitorMap(this.displays.list, this.source.state().windows, windowId, STATS_MAP_WIDTH, STATS_MAP_HEIGHT);
+	}
+
+	// The card of a saved window. Its landing preview: where Restore would put
+	// it now (helpers/geometry.ts predictLanding, the worker's own placement,
+	// over the displays the worker will know), drawn in the monitor map over
+	// the open windows. Once the monitors are known, as for the window card.
+	private resolveSession(id : string | undefined, now : number) : IStatsCardContent | null {
+		const s = this.source.sessions().find((x) => x.id === id);
+		if (!s) return null;
+		const info = s.windowsInfo || {} as ISavedSession["windowsInfo"];
+		let map : MonitorMap | null = null;
+		let landing : Parameters<typeof savedWindowStats>[2]["landing"];
+		if (this.displays) {
+			const l = predictLanding(info, this.displays.restore);
+			const windows = this.source.state().windows;
+			map = monitorMap(this.displays.list, l.bounds ? [...windows, { id: LANDING_ID, ...l.bounds }] : windows, LANDING_ID, STATS_MAP_WIDTH, STATS_MAP_HEIGHT);
+			landing = { bounds: l.bounds, maximized: l.maximized, monitor: map ? map.monitor : null };
+		}
+		const card = savedWindowStats(info, s.tabs, { now, name: this.savedName(s), savedAt: s.date, landing });
+		const sites = topSites(s.tabs, STATS_WINDOW_SITES).map((tab) => this.tileFavicon(savedTile(savedTabKeys.key(s.id, tab.index))));
+		return { card, sites, saved: true, map: map && map.target ? map : null };
 	}
 
 	// the card of a target, from the manager's data; null: nothing to show
@@ -346,6 +386,7 @@ export class StatsHover {
 			});
 			return { card, icon: this.tileFavicon(savedTile(t.id)), url: saved.tab.url || saved.tab.pendingUrl || "" };
 		}
+		if (t.kind === "session") return this.resolveSession(t.session, now);
 		const win = st.windowsbyid.get(t.id);
 		if (!win) return null;
 		const map = this.map(t.id);

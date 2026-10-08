@@ -114,6 +114,24 @@ export interface WindowStatsContext {
 	monitorHint? : boolean;
 }
 
+// the card of a saved window
+export interface SavedWindowStatsContext {
+	now : number;
+	// its display name (stored, else automatic)
+	name : string;
+	// when it was saved
+	savedAt : number;
+	// where it would land if restored now (helpers/geometry.ts predictLanding);
+	// undefined: not known (no monitors yet), the line is left out
+	landing? : {
+		bounds : Bounds | null;
+		maximized : boolean;
+		// the monitor it lands on, as the map counts them; null: on none the
+		// map shows (the map knows only the popup's monitor)
+		monitor : { index : number; count : number } | null;
+	};
+}
+
 const SEP = " · ";
 
 const MUTED_BY : Record<string, string> = {
@@ -279,6 +297,52 @@ export function windowStats(win : StatsWindow, tabs : StatsTab[], ctx : WindowSt
 	if (ctx.monitorHint) add("monitorHint", "one monitor known · allow monitor access in options", "hint");
 
 	return { title: ctx.name || "Window", lines };
+}
+
+// The card of a saved window: its tabs and sites, when it was saved, the
+// size and state it was saved with, and where Restore would put it now. The
+// saved tabs' asleep/playing state says nothing about now, so only pinned
+// is counted.
+export function savedWindowStats(info : StatsWindow & { left? : number; top? : number }, tabs : StatsTab[], ctx : SavedWindowStatsContext) : StatsCard {
+	const lines : StatsLine[] = [];
+	const add = (key : string, text : string, icon : StatsIcon) => lines.push({ key, text, icon });
+
+	const counts : StatsItem[] = [{ icon: "tabs", text: maybePluralize(tabs.length, "tab") }];
+	const pinned = tabs.filter((t) => t.pinned).length;
+	if (pinned) counts.push({ icon: "pinned", text: pinned + " pinned" });
+	lines.push(itemsLine("counts", counts));
+
+	const hosts = new Set(tabs.map((t) => hostOf(t.url)).filter(Boolean));
+	if (hosts.size) add("sites", maybePluralize(hosts.size, "site"), "sites");
+
+	add("saved", "saved " + timeAgo(ctx.savedAt, ctx.now), "saved");
+
+	const state : string[] = [];
+	if (info.state === "minimized" || info.state === "maximized" || info.state === "fullscreen") state.push(info.state);
+	if (info.incognito) state.push("incognito");
+	const size = typeof info.width === "number" && typeof info.height === "number" ? info.width + "×" + info.height : "";
+	const saved = [size, ...state].filter(Boolean);
+	if (saved.length) add("savedAs", "saved as " + saved.join(SEP), "window");
+
+	const landing = ctx.landing;
+	if (landing) {
+		const where = landing.monitor && landing.monitor.count > 1 ? " on monitor " + landing.monitor.index + " of " + landing.monitor.count : "";
+		let text : string;
+		if (!landing.bounds) text = "restores where the browser puts new windows";
+		else if (!landing.monitor) text = "restores on another monitor";
+		else if (landing.maximized) text = "restores maximized" + where;
+		else {
+			const b = landing.bounds;
+			const shrunk = typeof info.width === "number" && typeof info.height === "number" && (b.width < info.width || b.height < info.height);
+			const moved = !shrunk && (b.left !== info.left || b.top !== info.top);
+			text = "restores at " + b.width + "×" + b.height + where + (shrunk ? SEP + "shrunk to fit" : moved ? SEP + "moved to fit" : "");
+		}
+		add("landing", text, "monitor");
+	}
+
+	add("restoreHint", "click to restore it · click a tab for just that one", "hint");
+
+	return { title: ctx.name || "Saved window", lines };
 }
 
 // A url in three parts for the card's url line: the host is drawn strong,

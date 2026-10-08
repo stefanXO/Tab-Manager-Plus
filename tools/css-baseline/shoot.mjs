@@ -170,6 +170,18 @@ const STATES = [
 	{name: 'saved-tab-stats-s2', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {}, stats: '#sessiontab_s2_2'},
 	{name: 'tab-stats-saved', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {}, stats: '#tab-19'},
 	{name: 'window-stats', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {}, stats: '#window-101 .windowTitle'},
+	// the saved window's card (src/popup/stats.ts savedWindowStats) with its
+	// landing preview (helpers/geometry.ts predictLanding), the mouse on the
+	// title: "Conference reading" (saved at 0,0 1600x900: lands as saved),
+	// "Tax 2029" (saved on the second monitor: the default Firefox build knows
+	// only the popup's monitor, so it is moved onto it), "Conference reading"
+	// saved maximized (fills the popup's monitor), and, Chrome build only
+	// (--chrome, every monitor known), "Tax 2029" landing on monitor 2 of 2.
+	// dpr 1
+	{name: 'saved-window-stats', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {}, stats: '#session-s1 .windowTitle'},
+	{name: 'saved-window-stats-s2', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {}, stats: '#session-s2 .windowTitle'},
+	{name: 'saved-window-stats-max', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {savedInfo: {id: 's1', info: {state: 'maximized'}}}, stats: '#session-s1 .windowTitle'},
+	{name: 'saved-window-stats-monitors', chromeOnly: true, layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {}, stats: '#session-s2 .windowTitle'},
 	// the List view's freshness bars (src/popup/freshness.ts; every List view
 	// shot has them, the fixture's lastAccessed spans 0 min .. 14 days), here
 	// also in compact mode. dpr 1, 800x600 only
@@ -309,7 +321,7 @@ async function settle(page) {
 }
 
 /** Applies a popup state absolutely: the result never depends on what came before. */
-async function apply(page, {layout, dark, search = '', dup = false, recent = 0, overlay = null, scrollTo = null, store = {}, granted = true, savedFocused = null, clicks = [], scrollInto = null, importFile = null, freezeClock = false, scrollEnd = false, typeName = null, pickColor = null}) {
+async function apply(page, {layout, dark, search = '', dup = false, recent = 0, overlay = null, scrollTo = null, store = {}, granted = true, savedFocused = null, clicks = [], scrollInto = null, importFile = null, freezeClock = false, scrollEnd = false, typeName = null, pickColor = null, savedInfo = null}) {
 	await page.evaluate(async (s) => {
 		const q = (sel) => document.querySelector(sel)
 		const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
@@ -380,6 +392,13 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 			await window.__fake.storage.local.set({sessions})
 			await frame()
 		}
+		// 7b. a saved window's stored windowsInfo changed (its state, bounds)
+		if (s.savedInfo) {
+			const {sessions} = await window.__fake.storage.local.get(['sessions'])
+			Object.assign(sessions[s.savedInfo.id].windowsInfo, s.savedInfo.info)
+			await window.__fake.storage.local.set({sessions})
+			await frame()
+		}
 
 		// 8. clicks with modifiers, as the user makes them: a left click is a
 		// click event, any other button a mousedown (Tab.tsx onMouseDown)
@@ -411,7 +430,7 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 		if (s.scrollInto) q(s.scrollInto)?.scrollIntoView({block: 'nearest', inline: 'nearest'})
 		// the list scrolled to its very end: the padding the notice makes room with shows
 		if (s.scrollEnd) { const c = q('.window-container'); if (c) c.scrollTop = c.scrollHeight }
-	}, {layout, dark, search, dup, recent, overlay, store, granted, savedFocused, clicks, scrollInto, importFile, freezeClock, scrollEnd, typeName, pickColor})
+	}, {layout, dark, search, dup, recent, overlay, store, granted, savedFocused, clicks, scrollInto, importFile, freezeClock, scrollEnd, typeName, pickColor, savedInfo})
 	await settle(page)
 	// 7. scroll the options box headed `scrollTo` to the top of its scroller
 	if (scrollTo) {

@@ -20,6 +20,9 @@ export interface IStatsCardContent {
 	// window card: favicons of its biggest sites, and the monitor map
 	sites? : IStatsFavicon[];
 	map? : MonitorMap | null;
+	// a saved window's card: the saved drawing as its title icon, and the map's
+	// window is where it would land if restored now (drawn dashed)
+	saved? : boolean;
 }
 
 interface IStatsCardProps {
@@ -45,6 +48,8 @@ export const CLOCK = <svg {...svgProps}><circle cx="8" cy="8" r="6.2" /><path d=
 const GLOBE = <svg {...svgProps}><circle cx="8" cy="8" r="6.2" /><path d="M1.8 8h12.4M8 1.8c-3.2 3.4-3.2 9 0 12.4M8 1.8c3.2 3.4 3.2 9 0 12.4" /></svg>;
 
 const WINDOW_PATHS = <><rect x="1.8" y="2.5" width="12.4" height="11" rx="1.5" /><path d="M1.8 5.8h12.4" /></>;
+// a bookmark ribbon: saved
+const SAVED_PATH = <path d="M4 1.8h8v12.4l-4-3.1-4 3.1z" />;
 const DRAWN : Partial<Record<StatsIcon | "url", React.ReactElement>> = {
 	active: CLOCK,
 	url: GLOBE,
@@ -54,12 +59,13 @@ const DRAWN : Partial<Record<StatsIcon | "url", React.ReactElement>> = {
 	used: <svg {...svgProps}><path d="M4 1.8h8M4 14.2h8M5 1.8C5 5.6 11 6 11 8s-6 2.4-6 6.2M11 1.8C11 5.6 5 6 5 8s6 2.4 6 6.2" /></svg>,
 	window: <svg {...svgProps}>{WINDOW_PATHS}</svg>,
 	monitor: <svg {...svgProps}><rect x="1.5" y="2.3" width="13" height="8.7" rx="1.3" /><path d="M8 11v2.7M5.2 13.7h5.6" /></svg>,
-	// a bookmark ribbon: saved
-	saved: <svg {...svgProps}><path d="M4 1.8h8v12.4l-4-3.1-4 3.1z" /></svg>,
+	saved: <svg {...svgProps}>{SAVED_PATH}</svg>,
 	hint: <svg {...svgProps}><circle cx="8" cy="8" r="6.2" /><path d="M8 7.4v3.6M8 4.9v.1" /></svg>,
 };
 // the window card's title icon, in the favicon's 16px spot
 const WINDOW_HEAD = <span className="stats-favicon stats-head-icon" aria-hidden="true"><svg {...svgProps} width={16} height={16}>{WINDOW_PATHS}</svg></span>;
+// a saved window's: the bookmark ribbon of the "saved" lines
+const SAVED_HEAD = <span className="stats-favicon stats-head-icon" aria-hidden="true"><svg {...svgProps} width={16} height={16}>{SAVED_PATH}</svg></span>;
 
 const Icon = ({name} : {name : StatsIcon | "url"}) => (
 	<span className={"stats-icon stats-icon-" + name} aria-hidden="true">
@@ -73,11 +79,12 @@ const Icon = ({name} : {name : StatsIcon | "url"}) => (
 const Box = ({r, className} : {r : MapRect, className : string}) => (
 	<rect className={className + (r.minimized ? " minimized" : "")} x={r.x + 0.5} y={r.y + 0.5} width={Math.max(r.w - 1, 1)} height={Math.max(r.h - 1, 1)} rx={1.5} />
 );
-const MapSvg = ({map} : {map : MonitorMap}) => (
+// (a saved window's landing preview: the window dashed, where it would land)
+const MapSvg = ({map, landing} : {map : MonitorMap, landing? : boolean}) => (
 	<svg className="stats-map" width={map.width} height={map.height} viewBox={"0 0 " + map.width + " " + map.height} aria-hidden="true">
 		{map.monitors.map((r, i) => <Box key={"m" + i} r={r} className="stats-map-monitor" />)}
 		{map.others.map((r, i) => <Box key={"o" + i} r={r} className="stats-map-other" />)}
-		{map.target && <Box r={map.target} className="stats-map-window" />}
+		{map.target && <Box r={map.target} className={"stats-map-window" + (landing ? " landing" : "")} />}
 	</svg>
 );
 
@@ -216,12 +223,12 @@ export class StatsCard extends React.Component<IStatsCardProps> {
 		const isWindow = !!c && c.url === undefined;
 		const cls = "stats-card" + (c && (c.icon || isWindow) ? " with-icon" : "") + (this.visible ? " shown" : "");
 		if (!c) return <div className={cls} role="tooltip" aria-hidden="true" ref={this.ref} />;
-		const {card, icon, url, sites, map} = c;
+		const {card, icon, url, sites, map, saved} = c;
 		const parts = url !== undefined ? splitUrl(url) : null;
 		return (
 			<div className={cls} role="tooltip" ref={this.ref}>
 				<div className="stats-card-head">
-					{icon ? <Favicon icon={icon} /> : isWindow ? WINDOW_HEAD : null}
+					{icon ? <Favicon icon={icon} /> : saved ? SAVED_HEAD : isWindow ? WINDOW_HEAD : null}
 					<div className="stats-card-title">{card.title}</div>
 					{sites && sites.length > 0 && (
 						<div className="stats-site-icons">
@@ -240,7 +247,7 @@ export class StatsCard extends React.Component<IStatsCardProps> {
 					</div>
 				)}
 				{card.lines.map((line) => <Line key={line.key} line={line} />)}
-				{map && <MapSvg map={map} />}
+				{map && <MapSvg map={map} landing={saved} />}
 			</div>
 		);
 	}

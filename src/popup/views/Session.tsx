@@ -125,7 +125,9 @@ export class Session extends React.Component<ISession> {
 					}
 					onClick={this.windowClick}
 				>
-					<div className="windowcontainer" title={"Restore this saved window\nWill restore " + maybePluralize(this.props.tabs.length, "tab") + " in a new window. Click a single tab to restore only that one"}>{children}</div>
+					{/* data-hover (the header's hover text), not title: a native tooltip
+					would cover the saved window's hover card (../statsHover.ts) */}
+					<div className="windowcontainer" data-hover={"Restore this saved window\nWill restore " + maybePluralize(this.props.tabs.length, "tab") + " in a new window. Click a single tab to restore only that one"}>{children}</div>
 				</div>
 			);
 		} else {
