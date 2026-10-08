@@ -175,7 +175,10 @@ currently on disk — there is no stale copy to forget about.
   saved window's title, its card with the landing preview (where Restore would put it,
   `src/helpers/geometry.ts` `predictLanding`). The fixture's saved windows carry the bounds
   they were saved at ("Tax 2029" on the second monitor); `-max` stores "Conference reading"
-  as maximized (`apply.savedInfo`)
+  as maximized (`apply.savedInfo`); Chrome build only
+  `-max-monitor` ("Tax 2029" saved maximized on the second monitor: the card says it restores
+  maximized on monitor 2 of 2, map and all) and `-max-gone` (saved maximized on a monitor that is not
+  connected: maximized on the popup's monitor)
 - `saved-tabs-delete` (+ `-key`, `-all`, `-two`, `-undo`): deleting selected saved tabs
   (`src/popup/savedDelete.ts`): Ctrl+click tabs of a saved window, then the trash button
   (`-key`: the Delete key, via a `{key: 46}` entry in `apply.clicks`); `-all` selects every

@@ -182,6 +182,10 @@ const STATES = [
 	{name: 'saved-window-stats-s2', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {}, stats: '#session-s2 .windowTitle'},
 	{name: 'saved-window-stats-max', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {savedInfo: {id: 's1', info: {state: 'maximized'}}}, stats: '#session-s1 .windowTitle'},
 	{name: 'saved-window-stats-monitors', chromeOnly: true, layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {}, stats: '#session-s2 .windowTitle'},
+	// saved maximized on the second monitor (its work area 1920,-180 2560x1400, as saved: with the few pixels a maximized window overhangs): comes back maximized there, not on the popup's
+	{name: 'saved-window-stats-max-monitor', chromeOnly: true, layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {savedInfo: {id: 's2', info: {state: 'maximized', left: 1912, top: -188, width: 2576, height: 1416}}}, stats: '#session-s2 .windowTitle'},
+	// saved maximized on a monitor that is gone (5000,0): comes back maximized on the popup's monitor
+	{name: 'saved-window-stats-max-gone', chromeOnly: true, layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {savedInfo: {id: 's2', info: {state: 'maximized', left: 5000, top: 0, width: 1920, height: 1040}}}, stats: '#session-s2 .windowTitle'},
 	// the List view's freshness bars (src/popup/freshness.ts; every List view
 	// shot has them, the fixture's lastAccessed spans 0 min .. 14 days), here
 	// also in compact mode. dpr 1, 800x600 only

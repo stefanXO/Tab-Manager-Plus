@@ -2,7 +2,7 @@
 
 import {cleanupDebounce} from "@background/tracking";
 import {getLocalStorage, getLocalStorageMap, setLocalStorage, setLocalStorageMap, serialized} from "@helpers/storage";
-import {restoreCreate, knownDisplayList, windowsToMinimize} from "@helpers/geometry";
+import {restorePlan, knownDisplayList, windowsToMinimize, RestorePlan} from "@helpers/geometry";
 import {hashcode} from "@helpers/windows";
 import {firefoxCanOpen} from "@helpers/aboutPages";
 import {setWindowColor, setWindowName} from "@background/actions";
@@ -86,13 +86,21 @@ export async function createWindowWithSessionTabs(session: ISavedSession, tabId:
 		whitelistTab = ["url", "active", "pinned", "index"];
 	}
 
-	const filteredWindow = await windowGeometry(session.windowsInfo, screen);
+	const plan = await windowGeometry(session.windowsInfo, screen);
+	const filteredWindow = plan.create;
 
 	// console.log("filtered window", filteredWindow);
 
 	let newWindow : browser.Windows.Window | void = await browser.windows.create(filteredWindow).catch(function (error) {
 		console.error("restoring with the saved geometry failed, using the fallback", filteredWindow, error);
 	});
+	if (newWindow && plan.maximize) {
+		// created normal inside the monitor it was saved on (a state and bounds
+		// cannot go together), maximized now; refused: it stays that size
+		await browser.windows.update(newWindow.id, {state: "maximized"}).catch(function (error) {
+			console.error("maximizing the restored window failed", error);
+		});
+	}
 	if (!newWindow) {
 		// the browser refused the geometry: the old, always-accepted 800x600 at the corner
 		newWindow = await browser.windows.create({
@@ -162,16 +170,17 @@ export async function createWindowWithSessionTabs(session: ISavedSession, tabId:
 	return newWindow.id;
 }
 
-// How a saved window comes back (helpers/geometry.ts restoreCreate): a
-// maximized window maximized, anything else at its saved position and size,
-// fitted into a display that exists now (#208; a window saved on an
+// How a saved window comes back (helpers/geometry.ts restorePlan): a
+// maximized window maximized on the monitor it was saved on when that is
+// connected (created normal inside it, then maximized), else on the popup's;
+// anything else at its saved position and size, fitted into a display that exists now (#208; a window saved on an
 // ultrawide, restored on a laptop). The displays come from the
 // system.display permission when granted, else the one display the popup
 // reported. The old fix squeezed every window into 800x600 at the top left
 // corner (#205). The popup's landing preview (the saved window's hover card)
 // calls the same function with the same display list.
-async function windowGeometry(saved : browser.Windows.Window, screen? : IScreenBounds) : Promise<browser.Windows.CreateCreateDataType> {
-	return restoreCreate(saved, await knownDisplays(screen));
+async function windowGeometry(saved : browser.Windows.Window, screen? : IScreenBounds) : Promise<RestorePlan> {
+	return restorePlan(saved, await knownDisplays(screen));
 }
 
 // the displays available now: all of them with the permission, else the one

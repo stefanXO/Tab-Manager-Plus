@@ -9,7 +9,7 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { restoreCreate, predictLanding, landingOf, knownDisplayList } from "../src/helpers/geometry.ts";
+import { restoreCreate, restorePlan, predictLanding, landingOf, knownDisplayList } from "../src/helpers/geometry.ts";
 import type { Bounds, SavedWindowInfo } from "../src/helpers/geometry.ts";
 import { savedWindowStats } from "../src/popup/stats.ts";
 import type { StatsLine } from "../src/popup/stats.ts";
@@ -49,16 +49,31 @@ describe("landing preview = the worker's restore", () => {
 		["off screen (its monitor is gone)", saved({ left: 5000, top: 200, width: 1200, height: 800 }), BOTH],
 		["off screen, only the popup's monitor known", saved({ left: 2400, top: 0, width: 1400, height: 900 }), ONLY_POPUP],
 		["too big for its monitor", saved({ left: 0, top: 0, width: 3440, height: 1440 }), BOTH],
-		["maximized", saved({ state: "maximized", left: 2000, top: -180, width: 2560, height: 1400 }), BOTH],
-		["fullscreen", saved({ state: "fullscreen" }), ONLY_POPUP],
+		["maximized on the second monitor", saved({ state: "maximized", left: 1912, top: -188, width: 2576, height: 1416 }), BOTH],
+		["maximized on the popup's monitor", saved({ state: "maximized", left: -8, top: -8, width: 1936, height: 1056 }), BOTH],
+		["maximized, its monitor is gone", saved({ state: "maximized", left: 5000, top: 0, width: 1920, height: 1040 }), BOTH],
+		["maximized, only the popup's monitor known", saved({ state: "maximized", left: 1912, top: -188, width: 2576, height: 1416 }), ONLY_POPUP],
+		["maximized without bounds", saved({ state: "maximized" }), BOTH],
+		["fullscreen", saved({ state: "fullscreen", left: 0, top: 0, width: 1920, height: 1080 }), BOTH],
+		["fullscreen without bounds", saved({ state: "fullscreen" }), ONLY_POPUP],
 		["unusable bounds", saved({ left: 0, top: 0, width: 50, height: 50 }), BOTH],
 		["no display known", saved({ left: 0, top: 0, width: 800, height: 600 }), []],
 	];
 	for (const [name, info, displays] of cases) {
 		test(name + ": the preview's bounds are the ones the worker creates", () => {
 			const l = predictLanding(info, displays);
-			const c = restoreCreate(info, displays);
-			if (c.state === "maximized") {
+			const plan = restorePlan(info, displays);
+			const c = plan.create;
+			if (plan.maximize) {
+				// created normal inside its monitor, then maximized: it fills that monitor
+				assert.equal(l.maximized, true);
+				assert.equal(c.state, undefined);
+				assert.deepEqual(l.bounds, plan.display);
+				assert.ok(displays.some((d) => d.left === l.bounds.left && d.top === l.bounds.top));
+				const b = workerBounds(info, displays);
+				assert.ok(b.left >= l.bounds.left && b.top >= l.bounds.top);
+				assert.ok(b.left + b.width <= l.bounds.left + l.bounds.width && b.top + b.height <= l.bounds.top + l.bounds.height);
+			} else if (c.state === "maximized") {
 				assert.equal(l.maximized, true);
 				assert.equal(workerBounds(info, displays), null);
 				// a window created maximized fills the display a new window opens on
@@ -78,20 +93,65 @@ describe("landing preview = the worker's restore", () => {
 		assert.deepEqual(predictLanding(cases[3][1], ONLY_POPUP).bounds, { left: 520, top: 0, width: 1400, height: 900 });
 		// shrunk to the popup's work area
 		assert.deepEqual(predictLanding(cases[4][1], BOTH).bounds, { left: 0, top: 0, width: 1920, height: 1040 });
-		assert.deepEqual(predictLanding(cases[5][1], BOTH), { bounds: POPUP, maximized: true });
-		assert.deepEqual(predictLanding(cases[7][1], BOTH), { bounds: null, maximized: false });
-		assert.deepEqual(predictLanding(cases[8][1], []), { bounds: null, maximized: false });
+		assert.deepEqual(predictLanding(cases[5][1], BOTH), { bounds: SECOND_INFO.workArea, maximized: true });
+		assert.deepEqual(predictLanding(cases[6][1], BOTH), { bounds: POPUP, maximized: true });
+		// not connected / unknown: the display a new window opens on, the popup's
+		for (const i of [7, 8, 9, 11]) assert.deepEqual(predictLanding(cases[i][1], cases[i][2]), { bounds: POPUP, maximized: true }, cases[i][0]);
+		// fullscreen is restored like maximized
+		assert.deepEqual(predictLanding(cases[10][1], BOTH), { bounds: POPUP, maximized: true });
+		assert.deepEqual(predictLanding(cases[12][1], BOTH), { bounds: null, maximized: false });
+		assert.deepEqual(predictLanding(cases[13][1], []), { bounds: null, maximized: false });
+	});
+
+	test("a window saved maximized comes back maximized on the monitor it was saved on", () => {
+		// second monitor, saved with the few pixels a maximized window overhangs: created normal inside its work area, then maximized
+		const plan = restorePlan(cases[5][1], BOTH);
+		assert.equal(plan.maximize, true);
+		assert.deepEqual(plan.display, SECOND_INFO.workArea);
+		assert.deepEqual(plan.create, { type: "normal", incognito: false, left: 1920, top: -180, width: 2560, height: 1400 });
+		// the popup's monitor
+		assert.deepEqual(restorePlan(cases[6][1], BOTH).create, { type: "normal", incognito: false, left: 0, top: 0, width: 1920, height: 1040 });
+		// a state never goes together with bounds (Chrome refuses it)
+		for (const c of cases) {
+			const create = restoreCreate(c[1], c[2]);
+			assert.ok(!(create.state && typeof create.left === "number"), c[0]);
+		}
+		// its centre decides, not the corner: a window mostly on the second monitor
+		const mostly = saved({ state: "maximized", left: 1800, top: 0, width: 2000, height: 1000 });
+		assert.deepEqual(restorePlan(mostly, BOTH).display, SECOND_INFO.workArea);
+	});
+
+	test("a maximized window whose monitor is not connected is created maximized, for the popup's monitor", () => {
+		for (const i of [7, 8, 9, 11]) {
+			const plan = restorePlan(cases[i][1], cases[i][2]);
+			assert.equal(plan.maximize, false, cases[i][0]);
+			assert.deepEqual(plan.create, { type: "normal", incognito: false, state: "maximized" }, cases[i][0]);
+			assert.deepEqual(landingOf(plan, cases[i][2]), { bounds: cases[i][2][0], maximized: true });
+		}
+	});
+
+	test("a second monitor placed left of or above the popup's works too", () => {
+		const left : Bounds = { left: -1280, top: 100, width: 1280, height: 900 };
+		const displays = knownDisplayList(POPUP, [PRIMARY_INFO, { bounds: left, workArea: left }]);
+		const plan = restorePlan(saved({ state: "maximized", left: -1288, top: 92, width: 1296, height: 916 }), displays);
+		assert.equal(plan.maximize, true);
+		assert.deepEqual(plan.display, left);
+		assert.deepEqual(plan.create, { type: "normal", incognito: false, ...left });
 	});
 
 	test("restoreCreate keeps incognito and the window type", () => {
 		assert.deepEqual(restoreCreate(saved({ incognito: true, state: "maximized" }), BOTH), { type: "normal", incognito: true, state: "maximized" });
-		assert.deepEqual(landingOf({ type: "normal", incognito: false }, BOTH), { bounds: null, maximized: false });
+		assert.deepEqual(restoreCreate(saved({ incognito: true, state: "maximized", left: 0, top: 0, width: 1920, height: 1040 }), BOTH),
+			{ type: "normal", incognito: true, left: 0, top: 0, width: 1920, height: 1040 });
+		assert.deepEqual(landingOf({ create: { type: "normal", incognito: false }, maximize: false }, BOTH), { bounds: null, maximized: false });
 	});
 
 	// the two callers must keep going through the shared functions
 	test("the worker and the popup call the shared placement", () => {
 		const worker = readFileSync(new URL("../src/service_worker/background/windows.ts", import.meta.url), "utf8");
-		assert.match(worker, /return restoreCreate\(saved, await knownDisplays\(screen\)\);/);
+		assert.match(worker, /return restorePlan\(saved, await knownDisplays\(screen\)\);/);
+		// created normal inside the monitor, then maximized, when the plan says so
+		assert.match(worker, /plan\.maximize[\s\S]{0,300}browser\.windows\.update\(newWindow\.id, \{state: "maximized"\}\)/);
 		assert.match(worker, /knownDisplayList\(screen, await chrome\.system\.display\.getInfo\(\)\)/);
 		const popup = readFileSync(new URL("../src/popup/statsHover.ts", import.meta.url), "utf8");
 		assert.match(popup, /predictLanding\(info, this\.displays\.restore\)/);

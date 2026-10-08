@@ -64,34 +64,70 @@ export interface RestoreCreate {
 }
 
 // How a saved window comes back on the displays known now (the first one is
-// the popup's). A maximized (or fullscreen) window is restored maximized: a
-// window cannot be created with both a state and bounds. Anything else gets
-// its saved position and size, fitted into a display that exists now (the
-// monitor it was saved on may be gone or smaller, #208); unusable bounds or
-// no display known: the browser's default placement (no bounds at all).
-export function restoreCreate(saved : SavedWindowInfo, displays : Bounds[]) : RestoreCreate {
-	const create : RestoreCreate = { type: "normal", incognito: !!saved.incognito };
-	if (saved.state === "maximized" || saved.state === "fullscreen") {
-		create.state = "maximized";
-		return create;
-	}
-	const bounds = { left: saved.left, top: saved.top, width: saved.width, height: saved.height };
-	if (!usableBounds(bounds)) return create;
-	const placed = placeWindow(bounds, displays);
-	if (placed) Object.assign(create, placed);
-	return create;
+// the popup's), as the data for windows.create() plus what to do once it
+// exists:
+// - A window saved maximized (or fullscreen) comes back maximized on the
+//   monitor it was saved on, when that monitor is connected: its centre lies
+//   in one of the displays (a maximized window's corner may sit a few pixels
+//   outside, so not the corner). Chrome refuses a state together with bounds,
+//   so it is created normal inside that display and then maximized
+//   (`maximize`, a windows.update afterwards; `display` is the monitor).
+// - A maximized window whose monitor is not known (gone, saved without
+//   usable bounds, or this browser knows only the popup's monitor) is created
+//   maximized, so the browser opens it on the popup's monitor.
+// - Anything else gets its saved position and size, fitted into a display
+//   that exists now (the monitor it was saved on may be gone or smaller,
+//   #208); unusable bounds or no display known: the browser's default
+//   placement (no bounds at all).
+export interface RestorePlan {
+	create : RestoreCreate;
+	// true: maximize the window right after creating it
+	maximize : boolean;
+	// the display that window ends up filling (when maximize)
+	display? : Bounds;
 }
 
-// Where restoreCreate's window shows up: its bounds; a maximized one fills
-// the display a new window opens on (the browser picks it: the one of the
-// window in use, i.e. the popup's, first in the list); null when the browser
-// places it itself.
+export function restorePlan(saved : SavedWindowInfo, displays : Bounds[]) : RestorePlan {
+	const create : RestoreCreate = { type: "normal", incognito: !!saved.incognito };
+	const bounds = { left: saved.left, top: saved.top, width: saved.width, height: saved.height };
+	if (saved.state === "maximized" || saved.state === "fullscreen") {
+		const home = usableBounds(bounds) ? displayOfCentre(bounds, displays) : undefined;
+		if (!home) {
+			create.state = "maximized";
+			return { create, maximize: false };
+		}
+		Object.assign(create, fitInto(bounds, home));
+		return { create, maximize: true, display: { ...home } };
+	}
+	if (!usableBounds(bounds)) return { create, maximize: false };
+	const placed = placeWindow(bounds, displays);
+	if (placed) Object.assign(create, placed);
+	return { create, maximize: false };
+}
+
+// the first display holding the centre of the bounds
+function displayOfCentre(b : Bounds, displays : Bounds[]) : Bounds | undefined {
+	const centre = { left: b.left + b.width / 2, top: b.top + b.height / 2 };
+	return displays.find((d) => isInBounds(centre, d));
+}
+
+// the windows.create() data of restorePlan
+export function restoreCreate(saved : SavedWindowInfo, displays : Bounds[]) : RestoreCreate {
+	return restorePlan(saved, displays).create;
+}
+
+// Where the plan's window shows up: its bounds; a maximized one fills its
+// display (the monitor it was saved on, or else the display a new window
+// opens on: the browser picks it, the one of the window in use, i.e. the
+// popup's, first in the list); null when the browser places it itself.
 export interface Landing {
 	bounds : Bounds | null;
 	maximized : boolean;
 }
 
-export function landingOf(create : RestoreCreate, displays : Bounds[]) : Landing {
+export function landingOf(plan : RestorePlan, displays : Bounds[]) : Landing {
+	const create = plan.create;
+	if (plan.maximize && plan.display) return { bounds: { ...plan.display }, maximized: true };
 	if (create.state === "maximized") return { bounds: displays.length ? { ...displays[0] } : null, maximized: true };
 	const b = { left: create.left, top: create.top, width: create.width, height: create.height };
 	return { bounds: Object.values(b).every((v) => typeof v === "number") ? b as Bounds : null, maximized: false };
@@ -99,7 +135,7 @@ export function landingOf(create : RestoreCreate, displays : Bounds[]) : Landing
 
 // where a saved window would land if restored now
 export function predictLanding(saved : SavedWindowInfo, displays : Bounds[]) : Landing {
-	return landingOf(restoreCreate(saved, displays), displays);
+	return landingOf(restorePlan(saved, displays), displays);
 }
 
 // The displays a restore knows: the popup's own (first, so it is the
