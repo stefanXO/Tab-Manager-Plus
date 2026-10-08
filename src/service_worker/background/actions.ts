@@ -4,6 +4,7 @@ import { globalTabsActive, tabsActiveLoaded, persistTabsActive } from '@context'
 import * as S from "@strings";
 import { focusOnWindow, focusOnWindowDelayed, createWindowWithTabs, createWindowWithSessionTabs, restoreDiagnostic } from '@background/windows';
 import { hashcode } from "@helpers/windows";
+import { workerVersion } from "@helpers/workerVersion";
 import { getLocalStorageMap, setLocalStorageMap, serialized } from "@helpers/storage";
 import { setupPopup } from "@ui/open";
 import { updateTabCount, discardTabs, moveTabsToWindow, closeTabs, focusOnTabAndWindow, focusOnTabAndWindowDelayed, openSavedTabs } from "@background/tabs";
@@ -69,6 +70,9 @@ function dispatch(request : ICommand) : Promise<unknown> | void {
 			return createWindowWithSessionTabs(request.session, request.tab_id, request.screen, request.displays);
 		case S.restore_diagnostic:
 			return restoreDiagnostic(request.screen, request.displays);
+		// which worker code this is, for the popup's out-of-date check (popup/workerCheck.ts)
+		case S.worker_version:
+			return Promise.resolve(workerVersion());
 		case S.close_tabs:
 			return closeTabs(request.tabs);
 		case S.open_saved_tabs:

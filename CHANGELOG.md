@@ -78,6 +78,7 @@ Smaller fixes
 - A window whose tabs were all hidden by Hide non-matching tabs shows again when the search ends or the hiding is turned off, also when its tabs changed meanwhile
 - The window name and color screen covers the whole popup, its close button shows a pointer and Escape closes only that screen
 - Firefox-based browsers (LibreWolf, Zen, Waterfox) are detected as Firefox
+- The popup warns once, with a red notice, when the background part of the extension is older than the popup (a rebuilt extension that was not reloaded) and says where to reload it (chrome://extensions, in Firefox about:debugging); it compares a fingerprint of the background code, so a rebuild that leaves that code unchanged raises no warning
 
 Tab And Window Info
 - Hold the mouse on a tab to see when it was last used, its state (asleep, muted and why, playing, pinned), its position, which tab opened it, copies in other windows and its zoom

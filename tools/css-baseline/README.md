@@ -392,3 +392,12 @@ branch — commit `tools/css-baseline/` first, then start the refactor.)
 | `baseline-scale/` | generated (`--scales-only`), gitignored |
 | `after-*/` | after-shots of a change (e.g. `after-b1/dpr1`, `after-b1/scale`), gitignored |
 | `report/`, `reports/` | `report.mjs` output, gitignored |
+
+## Service worker version (patch workerver)
+
+The popup asks the service worker for its version about 1.5 s after it rendered and shows a red notice when it differs
+(`src/popup/workerCheck.ts`). The fake `runtime.sendMessage` answers `worker_version` with the version `build-app.mjs` defines
+for the popup (`REQUIRED_WORKER_VERSION`), so no shot shows the notice. The state `notice-worker-stale` makes the fake worker
+answer another one (`staleWorker: true` on the state: `window.__fakeWorkerVersion` is set before the page loads, every shot is its
+own page load that waits for the notice, `apply.keepNotices` leaves it up). The harness bundle is the Firefox build unless
+`--chrome` is given, so the notice names about:debugging.

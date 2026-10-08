@@ -201,6 +201,9 @@ function fakeCreate(data) {
 	return Promise.resolve({ id: t.id, index: t.index });
 }
 async function fakeWorker(msg) {
+	// the worker the popup was built for (build-app.mjs defines the version); a shot can set
+	// window.__fakeWorkerVersion to make it another one (shoot.mjs `staleWorker`)
+	if (msg && msg.command === "worker_version") return globalThis.__fakeWorkerVersion ?? REQUIRED_WORKER_VERSION;
 	if (!msg || msg.command !== "open_saved_tabs") return undefined;
 	let index = msg.index;
 	if (index !== undefined) index -= all.filter((t) => droppedIds.includes(t.id) && t.windowId === msg.window_id && t.index < msg.index).length;

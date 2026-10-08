@@ -283,6 +283,13 @@ const STATES = [
 	{name: 'notice-error-undo', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {quota: true,
 		clicks: [{sel: '#session-s1 .icon.tabaction.delete'}, {sel: '#window-101 .icon.save'}], freezeClock: true, barAt: 0.25, scrollEnd: true}},
 	{name: 'notice-error-rename', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {quota: true, overlay: 'session-colors', typeName: 'Q3 conference notes', freezeClock: true, barAt: 0.1}},
+	// the popup built for another service worker than the one it talks to (src/popup/workerCheck.ts):
+	// the fake worker answers worker_version with a different value (`staleWorker`), so about 1.5 s
+	// after the popup rendered the red notice comes up. Every shot is its own page load (the check
+	// runs once per load); every other state here has a worker that answers the right version and
+	// shows no notice. dpr 1
+	{name: 'notice-worker-stale', staleWorker: true, layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {
+		keepNotices: true, freezeClock: true, barAt: 0.1}},
 	{name: 'notice-undo-key', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {
 		clicks: [{sel: '#session-s1 .icon.tabaction.delete'}, {keydown: 'z', ctrl: true}], scrollEnd: true}},
 	// two Undo notices stacked: a move that empties "Tax 2029" (its tabs go to
@@ -604,7 +611,7 @@ async function settle(page) {
 }
 
 /** Applies a popup state absolutely: the result never depends on what came before. */
-async function apply(page, {layout, dark, search = '', dup = false, recent = 0, overlay = null, scrollTo = null, store = {}, granted = true, savedFocused = null, clicks = [], scrollInto = null, importFile = null, freezeClock = false, scrollEnd = false, typeName = null, pickColor = null, savedInfo = null, freshSessions = false, savedAuto = null, savedLong = false, afterWait = 0, quota = false, barAt = 0, noticeHover = false, savedUpdated = null, incognito = [], savedPrivate = null}) {
+async function apply(page, {layout, dark, search = '', dup = false, recent = 0, overlay = null, scrollTo = null, store = {}, granted = true, savedFocused = null, clicks = [], scrollInto = null, importFile = null, freezeClock = false, scrollEnd = false, typeName = null, pickColor = null, savedInfo = null, freshSessions = false, savedAuto = null, savedLong = false, afterWait = 0, quota = false, keepNotices = false, barAt = 0, noticeHover = false, savedUpdated = null, incognito = [], savedPrivate = null}) {
 	await page.evaluate(async (s) => {
 		const q = (sel) => document.querySelector(sel)
 		const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
@@ -613,9 +620,11 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 		// writes, take an Undo back and close the errors
 		if (window.__realNow) { Date.now = window.__realNow; window.__realNow = null }
 		window.__fakeQuota = !!s.quota
-		q('.notice.undo .notice-undo')?.click()
-		for (const x of document.querySelectorAll('.notice .notice-close')) x.click()
-		await frame()
+		if (!s.keepNotices) {
+			q('.notice.undo .notice-undo')?.click()
+			for (const x of document.querySelectorAll('.notice .notice-close')) x.click()
+			await frame()
+		}
 
 		// 1. close whatever overlay is up, so the window container is reachable
 		if (q('.window-colors')) { q('.window-colors h2.window-x')?.click(); await frame() }
@@ -855,7 +864,7 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 		if (s.afterWait) await new Promise((r) => setTimeout(r, s.afterWait))
 		// the list scrolled to its very end: the padding the notice makes room with shows
 		if (s.scrollEnd) { const c = q('.window-container'); if (c) c.scrollTop = c.scrollHeight }
-	}, {layout, dark, search, dup, recent, overlay, store, granted, savedFocused, clicks, scrollInto, importFile, freezeClock, scrollEnd, typeName, pickColor, savedInfo, freshSessions, savedAuto, savedLong, afterWait, quota, barAt, noticeHover, savedUpdated, incognito, savedPrivate})
+	}, {layout, dark, search, dup, recent, overlay, store, granted, savedFocused, clicks, scrollInto, importFile, freezeClock, scrollEnd, typeName, pickColor, savedInfo, freshSessions, savedAuto, savedLong, afterWait, quota, keepNotices, barAt, noticeHover, savedUpdated, incognito, savedPrivate})
 	await settle(page)
 	// 7. scroll the options box headed `scrollTo` to the top of its scroller
 	if (scrollTo) {
@@ -944,7 +953,7 @@ let shot = 0, skipped = []
 const want = (name) => !only || name.includes(only)
 
 /** A fresh page in its own browser context; dispose of it with closePage(). */
-async function newPage(size, scale = DPR1, seed = null) {
+async function newPage(size, scale = DPR1, seed = null, staleWorker = false) {
 	const context = await browser.createBrowserContext()
 	const page = await context.newPage()
 	page.on('pageerror', (e) => console.log('  pageerror:', e.message))
@@ -966,6 +975,8 @@ async function newPage(size, scale = DPR1, seed = null) {
 			}
 		})
 	}, KILL_CARET, extCss ? EXT_CSS : '')
+	// the fake worker (fake-browser.js) answers worker_version with this instead of the version the popup requires
+	if (staleWorker) await page.evaluateOnNewDocument(() => { window.__fakeWorkerVersion = 'built-before-the-worker-changed' })
 	if (seed) await page.evaluateOnNewDocument((s) => {
 		window.__fakeSeed = s
 		try { localStorage.setItem('tmpBootCache', JSON.stringify(s)) } catch {}
@@ -1015,8 +1026,10 @@ function shootPopup(scale, sizes, layoutsOf) {
 			for (const theme of THEMES) for (const layout of layoutsOf(state)) names.push([theme, layout, `${state.name}-${layout}-${theme}-${size.name}${suffix}`])
 			if (!names.some(([, , n]) => want(n))) continue
 
-			tasks.push(async () => {
-				const page = await newPage(size, scale)
+			// a state that needs its notice from a fresh load (staleWorker) gets one page per shot
+			const groups = (state.staleWorker ? names.map((n) => [n]) : [names]).filter((g) => g.some(([, , n]) => want(n)))
+			for (const group of groups) tasks.push(async () => {
+				const page = await newPage(size, scale, null, !!state.staleWorker)
 				try {
 					await page.goto(origin + '/popup.html', {waitUntil: 'load'})
 					await page.waitForFunction(() => document.querySelector('.searchBoxInput') && document.querySelectorAll('.window').length >= 3, {timeout: 20000})
@@ -1024,8 +1037,10 @@ function shootPopup(scale, sizes, layoutsOf) {
 					// so the first shot is not raced by the async icon classification
 					await settle(page)
 					await new Promise((r) => setTimeout(r, 900))
+					// the out-of-date notice comes a moment after the first render
+					if (state.staleWorker) await page.waitForSelector('.notice.error', {timeout: 10000})
 
-					for (const [theme, layout, name] of names) {
+					for (const [theme, layout, name] of group) {
 						if (!want(name)) continue
 						await apply(page, {layout, dark: theme === 'dark', ...state.apply})
 						// sanity: the overlay states must really be open, else skip

@@ -7,7 +7,7 @@ runs the drags through Chrome itself instead, against the built extension.
 
 ```sh
 node build.mjs                          # build/chrome
-node tools/drag-check/check.mjs         # every check (185), ~7 min
+node tools/drag-check/check.mjs         # every check, ~7 min
 node tools/drag-check/check.mjs --only "saved tab -> open"
 ```
 
@@ -67,6 +67,13 @@ possible (private and normal saved tabs together over a normal saved window) is 
 leaves the viewport and the drag ends out there with dragCancel, no drop: the page's dragend reports that position).
 A dragleave without relatedTarget does not mean the pointer left the page: Chrome sends one to a target that refuses
 the release, too.
+
+Five more checks (`--only "worker ("`, own tab and the toolbar button's popup) cover the service worker's version (patch workerver):
+the built worker answers `worker_version` with the hash the build appended to it, the built popup contains that same hash, and
+2.5 s after the popup rendered no notice is up. In the own tab, a worker that answers nothing (an older worker that does not know
+the command), another version, or an error (the popup's `chrome.runtime.sendMessage` is replaced before its scripts run, the
+toolbar popup cannot be reached that early) shows one red notice naming chrome://extensions, which does not come back after it
+was closed.
 
 Sixteen more checks (`--only "drag image"`, own tab) cover the drag image of a several-tab drag in every layout
 (blocks, blocks-big, horizontal, vertical), light and dark, for three saved and three open tabs: the stack is

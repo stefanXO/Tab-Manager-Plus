@@ -22,7 +22,7 @@
 // and never starts a visible browser.
 
 import {createServer} from 'node:http'
-import {existsSync, readdirSync, mkdtempSync, rmSync} from 'node:fs'
+import {existsSync, readdirSync, readFileSync, mkdtempSync, rmSync} from 'node:fs'
 import {tmpdir, homedir} from 'node:os'
 import {dirname, join, resolve} from 'node:path'
 import {fileURLToPath} from 'node:url'
@@ -165,7 +165,8 @@ try {
 		}
 	}
 	// `opts.privateWindow`: the id of an open window the popup is told is private
-	// (the headless browser has no private windows the extension may see)
+	// (the headless browser has no private windows the extension may see);
+	// `opts.beforeLoad(arg)`, with `opts.beforeLoadArg`: runs in the popup before its scripts
 	async function openPopup(opts = {}) {
 		let p
 		if (mode === 'action') {
@@ -191,6 +192,7 @@ try {
 		} else {
 			p = await browser.newPage()
 			if (opts.privateWindow) await p.evaluateOnNewDocument(makePrivate, opts.privateWindow)
+			if (opts.beforeLoad) await p.evaluateOnNewDocument(opts.beforeLoad, opts.beforeLoadArg)
 			await p.setViewport(mode === 'small' ? {width: 800, height: 600} : {width: 1100, height: 1400})
 			if (process.env.DRAG_DEBUG) {
 				p.on('console', (m) => console.log('      [popup] ' + m.text()))
@@ -1551,6 +1553,50 @@ try {
 			want.push('card body: 1 new window')
 			return {got, want}
 		}})
+	}
+
+	// The service worker's version (src/popup/workerCheck.ts, scripts/bundle.mjs): the built
+	// worker reports the hash the build stamped into it, the popup was built to require the
+	// same, and so no notice shows; a worker that answers another version, nothing (an older
+	// worker, which does not know the command) or an error shows the red notice, once.
+	// Own tab, and the toolbar button's popup, which share the code path with the options page.
+	{
+		const dist = (file) => readFileSync(join(extDir, 'dist', file), 'utf8')
+		const stamped = /self\.TMP_WORKER_VERSION="([0-9a-f]{12})";\s*$/.exec(dist('service_worker/service_worker.js'))?.[1]
+		const noticeTexts = (p) => p.evaluate(() => [...document.querySelectorAll('.notice')].map((n) => n.className.split(' ').filter((c) => c === 'error' || c === 'info' || c === 'undo').join('') + ': ' + n.querySelector('.notice-text')?.textContent))
+		const worker = (name, m, fn) => checks.push({name: 'worker (' + m + '): ' + name, fn, mode: m})
+		// replaces the answer to worker_version in the popup, before its scripts run (a page
+		// of ours: the toolbar button's own popup cannot be reached before its scripts)
+		const answering = (kind) => {
+			const original = chrome.runtime.sendMessage.bind(chrome.runtime)
+			chrome.runtime.sendMessage = (message, ...rest) => {
+				if (!message || message.command !== 'worker_version') return original(message, ...rest)
+				if (kind === 'reject') return Promise.reject(new Error('Could not establish connection. Receiving end does not exist.'))
+				return Promise.resolve(kind === 'undefined' ? undefined : 'built-before-the-worker-changed')
+			}
+		}
+		for (const m of ['tab', 'action']) {
+			worker('the worker answers the version the build stamped; the popup requires it and shows no notice', m, async () => {
+				await fixture('blocks')
+				const p = await openPopup()
+				const answer = await p.evaluate(() => chrome.runtime.sendMessage({command: 'worker_version'}))
+				// well after the check ran (1.5 s after the popup rendered)
+				await new Promise((r) => setTimeout(r, 3000))
+				return {got: [answer, dist('popup/popup.js').includes(stamped), await noticeTexts(p)], want: [stamped, true, []]}
+			})
+			for (const [kind, what] of m === 'tab' ? [['undefined', 'does not answer (an older worker)'], ['other', 'answers another version'], ['reject', 'cannot be reached']] : []) {
+				worker('a worker that ' + what + ': one red notice naming chrome://extensions', m, async () => {
+					await fixture('blocks')
+					const want = ['error: The background part of Tab Manager Plus is out of date. Reload the extension in chrome://extensions.']
+					const p = await openPopup({beforeLoad: answering, beforeLoadArg: kind})
+					const first = await settle(() => noticeTexts(p), want)
+					// it is asked once: the notice closes, nothing brings it back
+					await p.evaluate(() => document.querySelector('.notice .notice-close')?.click())
+					await new Promise((r) => setTimeout(r, 2500))
+					return {got: [first, await noticeTexts(p)], want: [want, []]}
+				})
+			}
+		}
 	}
 
 	for (const c of checks) {

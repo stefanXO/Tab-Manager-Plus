@@ -20,6 +20,7 @@ import {ManagerContext, ITabManagerActions, ISettings} from "../context";
 import {attachMasonry, Masonry} from "../masonry";
 import {sizePopup, popupScreen} from "@helpers/popup_size";
 import {restoreDisplays} from "../restoreDisplays";
+import {scheduleWorkerCheck, requiredWorkerVersion, staleWorkerText} from "../workerCheck";
 import {applyTheme} from "@helpers/theme";
 import {StatsLayer, StatsSource} from "./StatsLayer";
 import {Notice} from "./Notice";
@@ -101,6 +102,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	private readonly board = new NoticeBoard({
 		onChange: () => { if (!this.unmounted) this.forceUpdate(); }
 	});
+	// cancels the pending "is the service worker the one this popup was built
+	// for" check (../workerCheck.ts); it runs once, a moment after mounting
+	private stopWorkerCheck : (() => void) | null = null;
 	// moves that left a saved window without a tab, offered to be taken
 	// back for a while (an Undo notice each; ../moveUndo.ts)
 	private readonly moveOffers = new UndoOffers<{ record : MoveUndo<ISavedSession>, text : string }>({
@@ -320,6 +324,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 
 	componentWillUnmount() {
 		this.masonry?.disconnect();
+		this.stopWorkerCheck?.();
 
 		browser.tabs.onCreated.removeListener(this.runUpdate);
 		browser.tabs.onUpdated.removeListener(this.runSlowUpdate);
@@ -874,6 +879,13 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		browser.windows.onRemoved.addListener(this.runUpdate);
 
 		browser.runtime.onMessage.addListener(this.onRuntimeMessage);
+
+		// not awaited and not before the popup has had time to render: a timer
+		this.stopWorkerCheck = scheduleWorkerCheck({
+			ask: () => browser.runtime.sendMessage<ICommand>({command: S.worker_version}),
+			required: requiredWorkerVersion(),
+			onStale: () => { this.board.error(staleWorkerText(IS_FIREFOX)); }
+		});
 
 		browser.storage.onChanged.addListener(this.sessionSync);
 		browser.storage.onChanged.addListener(this.onStorageChanged);

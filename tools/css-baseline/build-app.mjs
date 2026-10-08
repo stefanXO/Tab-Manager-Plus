@@ -51,6 +51,8 @@ export async function buildApp({chrome = false} = {}) {
 			'process.env.VERSION': JSON.stringify('7.0.0'),
 			'process.env.BROWSER': JSON.stringify(chrome ? 'chrome' : 'firefox'),
 			'process.env.NODE_ENV': JSON.stringify('production'),
+			// the version of the (fake) service worker the popup asks for (src/popup/workerCheck.ts)
+			REQUIRED_WORKER_VERSION: JSON.stringify('css-baseline-worker'),
 			// The Firefox build is the one that can run outside an extension: the
 			// Chrome build resolves favicons through `chrome-extension://<id>/_favicon/`,
 			// which does not exist on a plain page, so every tab would render

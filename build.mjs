@@ -14,6 +14,13 @@
 // web-ext or about:debugging at build/firefox. readme.md and CHANGELOG.md stay
 // out: the stores want the extension, not its documentation.
 //
+// The service worker is bundled first, on its own. Its version is a hash of the
+// bytes that bundle came out as, so it changes only when worker code (or code
+// bundled into it) changes, never on a plain rebuild. The version is appended to
+// the written worker file and baked into the popup and options bundles, which ask
+// the worker for it after rendering and say so when it is not the one they were
+// built for (an extension rebuilt but not reloaded). See scripts/bundle.mjs.
+//
 // The browser is a compile-time constant: IS_FIREFOX and IS_CHROME are replaced
 // by true/false before bundling, so a bundle carries only its own browser's code.
 //
@@ -29,6 +36,7 @@ import { readFileSync, writeFileSync, rmSync, mkdirSync, cpSync, existsSync, sta
 import { dirname, join } from 'node:path'
 import { firefoxManifest } from './scripts/manifest.mjs'
 import { cssOptions } from './scripts/css.mjs'
+import { workerOptions, appOptions, stampWorkerOutputs } from './scripts/bundle.mjs'
 
 const args = new Set(process.argv.slice(2))
 const watch = args.has('--watch')
@@ -53,33 +61,20 @@ const WATCHED = ['popup.html', 'options.html', 'changelog.html', 'images', 'font
 // may allow it, and only Chrome needs a policy for it at all
 const DEVTOOLS_CSP = { extension_pages: "script-src 'self' http://localhost:8097; object-src 'self'" }
 
-const entries = {
-	'popup/early': 'src/popup/early.ts',
-	'popup/changelog': 'src/popup/changelog.ts',
-	'popup/popup': 'src/popup/popup.tsx',
-	'popup/options': 'src/popup/options.js',
-	'service_worker/service_worker': 'src/service_worker/service_worker.ts',
-}
+// The service worker is built first and on its own: its version is a hash of
+// what it came out as, and the popup bundles are built to require that version
+// (see scripts/bundle.mjs). A rebuild without a change in worker code gives the
+// same version, so the popup raises no "reload the extension" notice for it.
+const bundleBase = { browser, dev, outDir, version }
 
-/** @type {esbuild.BuildOptions} */
-const options = {
-	entryPoints: entries,
-	outdir: join(outDir, 'dist'),
-	bundle: true,
-	// the manifests' minimum versions, like the stylesheet (scripts/css.mjs)
-	target: ['chrome104', 'firefox140'],
-	minify: !dev,
-	sourcemap: dev,
-	define: {
-		'process.env.VERSION': JSON.stringify(version),
-		'process.env.BROWSER': JSON.stringify(browser),
-		// compile-time constants, like C#'s #if: the other browser's branches are removed
-		IS_FIREFOX: String(browser === 'firefox'),
-		IS_CHROME: String(browser === 'chrome'),
-		// React picks its production or development build from this
-		'process.env.NODE_ENV': JSON.stringify(dev ? 'development' : 'production'),
-	},
-	logLevel: 'info',
+/** Writes the worker's in-memory build with its version line added; returns the version. */
+function writeWorker(result) {
+	const { version: workerVersion, files } = stampWorkerOutputs(result.outputFiles)
+	for (const file of files) {
+		mkdirSync(dirname(file.path), { recursive: true })
+		writeFileSync(file.path, file.contents)
+	}
+	return workerVersion
 }
 
 /** The stylesheet bundle: css/popup.css and its imports -> build/<browser>/css/popup.css */
@@ -137,8 +132,34 @@ copyStatic()
 writeManifest()
 
 if (watch) {
-	const ctx = await esbuild.context(options)
-	await ctx.watch()
+	// the worker's context rewrites the worker on every build; when its version
+	// changed, the popup bundles are rebuilt for the new one (their define is fixed
+	// per context, so that context is replaced)
+	let workerVersion = writeWorker(await esbuild.build(workerOptions(bundleBase)))
+	let appCtx = null
+	async function startApp() {
+		await appCtx?.dispose()
+		appCtx = await esbuild.context(appOptions({ ...bundleBase, workerVersion }))
+		await appCtx.watch()
+	}
+	await startApp()
+	const workerCtx = await esbuild.context({
+		...workerOptions(bundleBase),
+		plugins: [{
+			name: 'worker-version',
+			setup(build) {
+				build.onEnd(async (result) => {
+					if (result.errors.length > 0 || !result.outputFiles) return
+					const next = writeWorker(result)
+					if (next === workerVersion) return
+					workerVersion = next
+					console.log(`service worker changed (${next}), rebuilding the popup bundles`)
+					await startApp()
+				})
+			},
+		}],
+	})
+	await workerCtx.watch()
 	// a second context for the stylesheet: rebuilds on any change under css/
 	const cssCtx = await esbuild.context(css)
 	await cssCtx.watch()
@@ -193,6 +214,7 @@ if (watch) {
 
 	console.log(`watching ${outDir} (${version}, development)…`)
 } else {
-	await Promise.all([esbuild.build(options), esbuild.build(css)])
-	console.log(`built ${version} for ${browser} into ${outDir} (${dev ? 'development' : 'production'})`)
+	const workerVersion = writeWorker(await esbuild.build(workerOptions(bundleBase)))
+	await Promise.all([esbuild.build(appOptions({ ...bundleBase, workerVersion })), esbuild.build(css)])
+	console.log(`built ${version} for ${browser} into ${outDir} (${dev ? 'development' : 'production'}), service worker ${workerVersion}`)
 }
