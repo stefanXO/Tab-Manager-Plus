@@ -148,6 +148,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	// the open tabs the search (or a highlight) selected, as opposed to the
 	// ones selected by hand, which a new search leaves selected (../searchPicks.ts)
 	private readonly searchPicks = new SearchPicks();
+	// Ctrl/Cmd+Delete closed the selected tabs: once they are gone from the
+	// selection, update() puts the header back to its no-selection line
+	private closedByKey = false;
 	// the saved tabs being dragged (../savedDrag.ts), from dragstart until the
 	// drop or the drag's end; null while open tabs (or nothing) are dragged
 	private draggingSaved : number[] | null = null;
@@ -1630,6 +1633,12 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				this.setState({lastSelect: id});
 			}
 		}
+		// the tabs Ctrl/Cmd+Delete closed were the whole selection: no
+		// "Selected N tabs" left in the header (as after Escape)
+		if (this.closedByKey && this.state.selection.size === 0) {
+			this.closedByKey = false;
+			this.setState({topText: "", bottomText: ""});
+		}
 		// the cursor tab went (closed, moved to a window the popup does not
 		// show), and with it the header's "Press enter to switch to the tab"
 		if (this.state.keyCursor && !this.state.tabsbyid.has(this.state.keyCursor)) {
@@ -2032,6 +2041,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		});
 	}
 	clearSelection = () => {
+		this.closedByKey = false;
 		this.state.selection.clear();
 		this.searchPicks.clear();
 		this.setState({
@@ -2106,6 +2116,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			// the current tab the way the trash button does (deleteTabs)
 			const tabs = this.selectedTabs();
 			if (tabs.length) {
+				this.closedByKey = true;
 				browser.runtime.sendMessage<ICommand>({command: S.close_tabs, tabs: tabs});
 			}
 			return;
@@ -2149,6 +2160,10 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			}
 			this.clearSelection();
 			this.clearHiddenTabs();
+			// no selection and no search left: the header's no-selection line
+			// at once, not the "Selected N tabs" (or the search summary) until
+			// the pointer moves
+			this.setState({topText: "", bottomText: ""});
 			return;
 		}
 		// any typed keys

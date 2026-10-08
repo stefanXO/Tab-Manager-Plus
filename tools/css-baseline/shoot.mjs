@@ -528,6 +528,9 @@ const STATES = [
 	// `escape`: each starts from no selection and no cursor, whatever the shot
 	// before left
 	{name: 'arrows-space', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {escape: true, search: 'github', clicks: [{focus: '.window-container'}, {key: 39, listKey: 40}, {key: 39, listKey: 40}, {key: 32}]}},
+	// `arrows-escape-header`: Space selects two tabs by the cursor, Escape
+	// clears them; the header is back to "N tabs in M windows" at once
+	{name: 'arrows-escape-header', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {escape: true, clicks: [{focus: '.window-container'}, {key: 39, listKey: 40}, {key: 32}, {key: 39, listKey: 40}, {key: 32}, {key: 27}]}},
 	{name: 'arrows-shift', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {escape: true, clicks: [{focus: '.window-container'}, {key: 39, listKey: 40, shift: true}, {key: 39, listKey: 40, shift: true}]}},
 	// the search syntax help (hover the search box) with its s: rows; with saved windows
 	// switched off the s: rows are not listed

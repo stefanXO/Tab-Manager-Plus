@@ -131,6 +131,7 @@ Firefox
 - The options explain how to allow Tab Manager Plus in private windows and show whether it is allowed already. "Change shortcut key" opens Firefox's shortcut settings, so you can change the keys there (#33, #166)
 
 Smaller fixes
+- Escape clears the header line that shows the selection, together with the selection
 - Settings, window names and colors no longer go back to an older state when the popup opens while you are changing them (#126, #131)
 - Clicking a tab or a window in the popup now switches to it every time, and clicking a tab of a saved session opens it. After the browser sat idle, the first click used to only close the popup (#242, #246, #252)
 - Closing, discarding or moving selected tabs now works even when one of them was closed in the meantime. Window names and colors that change in the background also update in the popup
