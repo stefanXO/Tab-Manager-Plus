@@ -10,6 +10,7 @@ import {ICommand, ISession, ISessionState} from '@types';
 import * as S from "@strings";
 import {popupScreen} from "@helpers/popup_size";
 import {ManagerContext, ITabManagerActions} from '../context';
+import {savedTabKeys} from '../sessionKeys';
 
 export class Session extends React.Component<ISession, ISessionState> {
 	static contextType = ManagerContext;
@@ -29,15 +30,16 @@ export class Session extends React.Component<ISession, ISessionState> {
 	render() {
 		let hideWindow = true;
 		let titleAdded = false;
-		let tabs = this.props.tabs.map((tab) => {
-			let tabId = tab.id * tab.id * tab.id * 100;
-			let isHidden = this.props.hiddenTabs.has(tabId) && this.props.filterTabs;
-			let isSelected = this.props.selection.has(tabId);
+		// A saved tab's stored id belonged to an open tab when the window was
+		// saved, and its index is an ordinary open tab id too: in the selection
+		// and hiddenTabs it goes by a key that never clashes with an open tab
+		// (../sessionKeys.ts). Render copies carrying the key, so the stored
+		// session is never changed by rendering; restoring still sends the index.
+		const sessionTabs = this.props.tabs.map((tab) => Object.assign({}, tab, {id: savedTabKeys.key(this.props.session.id, tab.index)}));
+		let tabs = sessionTabs.map((tab) => {
+			let isHidden = this.props.hiddenTabs.has(tab.id) && this.props.filterTabs;
+			let isSelected = this.props.selection.has(tab.id);
 			let isFaded: boolean = this.props.hiddenTabs.has(tab.id) && !this.props.filterTabs;
-			// session tabs are addressed by their index when restoring; render
-			// a copy so the stored session (and the tabId derived above) is
-			// never changed by rendering
-			const sessionTab = Object.assign({}, tab, {id: tab.index});
 			if (!isHidden) hideWindow = false;
 			return (
 				<Tab
@@ -46,7 +48,8 @@ export class Session extends React.Component<ISession, ISessionState> {
 					onOpen={this.openTab}
 					session={this.props.session}
 					layout={this.props.layout}
-					tab={sessionTab}
+					tab={tab}
+					tabs={sessionTabs}
 					selected={isSelected}
 					hidden={isHidden}
 					faded={isFaded}
@@ -99,10 +102,6 @@ export class Session extends React.Component<ISession, ISessionState> {
 			for (var j = 0; j < tabs.length; j++) {
 				children.push(tabs[j]);
 			}
-			var focused = false;
-			if (this.props.session.windowsInfo.focused || this.props.lastOpenWindow === this.props.session.windowsInfo.id) {
-				focused = true;
-			}
 			return (
 				<div
 					key={"session-" + this.props.session.id}
@@ -110,8 +109,6 @@ export class Session extends React.Component<ISession, ISessionState> {
 					className={
 						"window " +
 						this.props.session.windowsInfo.state +
-						" " +
-						(focused ? "activeWindow" : "") +
 						" session " +
 						(isBlockLayout(this.props.layout) ? "block" : "") +
 						" " +
@@ -119,9 +116,7 @@ export class Session extends React.Component<ISession, ISessionState> {
 						" " +
 						this.state.color +
 						" " +
-						(this.props.session.windowsInfo.incognito ? " incognito" : "") +
-						" " +
-						(focused ? " focused" : "")
+						(this.props.session.windowsInfo.incognito ? " incognito" : "")
 					}
 					onClick={this.windowClick}
 				>

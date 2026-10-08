@@ -41,6 +41,7 @@ Windows And Sessions
 - Saved sessions could be lost when the update from version 5 was interrupted, e.g. by closing the popup
 - Saved sessions are no longer limited by the browser's 10 MB storage quota, and showing a session no longer changes it (which could corrupt exports)
 - Enabling the sessions feature shows your saved windows right away
+- Ctrl+click or right-click on a tab of a saved window selects it, instead of an unrelated open tab that Delete would then close; saved windows are no longer marked as the active window
 - The window order no longer resets on its own; the current window is always listed first and marked, also as a popup
 - Clicking the icon while Tab Manager Plus is already open in a tab switches to that tab
 - The "switch to previous tab" shortcut works again (#37, #108, #238)

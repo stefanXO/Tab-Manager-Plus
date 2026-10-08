@@ -5,6 +5,7 @@ import {parseQuery, matchTab, searchable} from "../search";
 import {duplicatesTitle, findDuplicates} from "../duplicates";
 import {recentTabs, recentText, recentTitle, RecentTabs, RECENT_LEVELS} from "../recent";
 import {onMainScreen} from "../screen";
+import {isSavedTabKey, tabKind, keepKind, onlySavedSelected, dropMissingSaved} from "../sessionKeys";
 import {debounce, maybePluralize} from "@helpers/utils";
 import {Window, Session, TabOptions, Tab, WindowOptions} from "@views";
 import * as React from "react";
@@ -316,6 +317,10 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 
 		let haveMin = false;
 		let haveSess = false;
+		// only saved tabs selected: the open-tab actions below have nothing to act on
+		const savedSel = onlySavedSelected(this.state.selection);
+		const savedSelTitle = "Saved tabs are selected\nSelect open tabs to use this";
+		const savedSelStyle : React.CSSProperties = { opacity: 0.25 };
 
 		for (let i = this.state.windows.length - 1; i >= 0; i--) {
 			if (this.state.windows[i].state === "minimized") haveMin = true;
@@ -447,7 +452,6 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 										hiddenTabs={this.state.hiddenTabs}
 										filterTabs={this.state.filterTabs}
 										windowTitles={this.state.windowTitles}
-										lastOpenWindow={this.state.lastOpenWindow}
 										draggable={false}
 									/>
 								);
@@ -526,8 +530,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 									/>
 									<div
 										className="icon windowaction trash"
+										style={savedSel ? savedSelStyle : {}}
 										title={
-											this.state.selection.size > 0
+											savedSel ? savedSelTitle : this.state.selection.size > 0
 												? "Close selected tabs\nWill close " + maybePluralize(this.state.selection.size, 'tab')
 												: "Close current Tab"
 										}
@@ -536,12 +541,12 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 									<div
 										className="icon windowaction discard"
 										title={
-											this.state.selection.size > 0
+											savedSel ? savedSelTitle : this.state.selection.size > 0
 												? "Discard selected tabs\nWill put " + maybePluralize(this.state.selection.size, 'tab') + " to sleep - freeing memory"
 												: "Select tabs to put them to sleep and free up memory"
 										}
 										style={
-											this.state.selection.size > 0
+											this.state.selection.size > 0 && !savedSel
 												? {}
 												: { opacity: 0.25 }
 										}
@@ -549,8 +554,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 									/>
 									<div
 										className="icon windowaction pin"
+										style={savedSel ? savedSelStyle : {}}
 										title={
-											this.state.selection.size > 0
+											savedSel ? savedSelTitle : this.state.selection.size > 0
 												? "Pin selected tabs\nWill pin " + maybePluralize(this.state.selection.size, 'tab')
 												: "Pin current Tab"
 										}
@@ -571,8 +577,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 									/>
 									<div
 										className="icon windowaction new"
+										style={savedSel ? savedSelStyle : {}}
 										title={
-											this.state.selection.size > 0
+											savedSel ? savedSelTitle : this.state.selection.size > 0
 												? "Move tabs to new window\nWill move " + maybePluralize(this.state.selection.size, 'selected tab') + " to it"
 												: "Open new empty window"
 										}
@@ -684,6 +691,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				sessions.push(sess);
 			}
 		}
+		// selected saved tabs of a saved window that was deleted or changed
+		dropMissingSaved(this.state.selection, sessions);
 		this.setState({
 			sessions: sessions
 		});
@@ -737,7 +746,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		]);
 		const patch = this.windowState(sortWindows(windows, sort_windows instanceof Array ? sort_windows : []));
 		for (let id of this.state.selection.keys()) {
-			if (!this.state.tabsbyid.has(id)) {
+			// saved tabs are never in tabsbyid (sessionSync drops the ones that are gone)
+			if (!isSavedTabKey(id) && !this.state.tabsbyid.has(id)) {
 				this.state.selection.delete(id);
 				this.setState({lastSelect: id});
 			}
@@ -772,6 +782,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		};
 	}
 	deleteTabs = async () => {
+		// only saved tabs selected: not the current tab either
+		if (onlySavedSelected(this.state.selection)) return;
 		const tabs = this.selectedTabs();
 		if (tabs.length) {
 			browser.runtime.sendMessage<ICommand>({command: S.close_tabs, tabs: tabs});
@@ -786,6 +798,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		browser.tabs.remove(tabId);
 	}
 	discardTabs = async () => {
+		if (onlySavedSelected(this.state.selection)) return;
 		const tabs = this.selectedTabs();
 		if (tabs.length) {
 			browser.runtime.sendMessage<ICommand>({command: S.discard_tabs, tabs: tabs});
@@ -796,6 +809,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		browser.tabs.discard(tabId);
 	}
 	addWindow = async () => {
+		// only saved tabs selected: no new empty window either (Enter lands here too)
+		if (onlySavedSelected(this.state.selection)) return;
 		const tabs = this.selectedTabs();
 		const count = tabs.length;
 
@@ -826,6 +841,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		if (!!window.inPopup) window.close();
 	}
 	pinTabs = async () => {
+		if (onlySavedSelected(this.state.selection)) return;
 		const tabs = this.selectedTabs()
 			.sort(function(a, b) {
 				return a.index - b.index;
@@ -979,6 +995,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			this.clearHiddenTabs();
 			hiddenCount = 0;
 		} else {
+			// search selects open tabs only: selected saved tabs are dropped
+			keepKind(this.state.selection, "open");
 			let idList : number[] = [ ...this.state.tabsbyid.keys() ];
 			if(this.state.dupTabs) {
 				const duplicates = this.getDuplicates();
@@ -1399,32 +1417,28 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				lastSelect: id
 			});
 		} else {
+			// open and saved tabs are never selected together (../sessionKeys.ts)
+			keepKind(this.state.selection, tabKind(id));
 			this.state.selection.add(id);
 			this.setState({
 				lastSelect: id
 			});
 		}
 		this.scrollTo('tab', id.toString());
-
-		var selected = this.state.selection.size;
-		if (selected === 0) {
-			this.setState({
-				topText: "No tabs selected",
-				bottomText: " "
-			});
-		} else if (selected === 1) {
-			this.setState({
-				topText: "Selected " + selected + " tab",
-				bottomText: "Press enter to switch to it"
-			});
-		} else {
-			this.setState({
-				topText: "Selected " + selected + " tabs",
-				bottomText: "Press enter to move them to a new window"
-			});
-		}
+		this.setState(this.selectionText());
+	}
+	// the header while tabs are being selected
+	selectionText() : Pick<ITabManagerState, "topText" | "bottomText"> {
+		const selected = this.state.selection.size;
+		if (selected === 0) return { topText: "No tabs selected", bottomText: " " };
+		// saved tabs (all of one kind, see select): nothing for Enter to do yet
+		if (onlySavedSelected(this.state.selection)) return { topText: "Selected " + maybePluralize(selected, "saved tab"), bottomText: " " };
+		if (selected === 1) return { topText: "Selected " + selected + " tab", bottomText: "Press enter to switch to it" };
+		return { topText: "Selected " + selected + " tabs", bottomText: "Press enter to move them to a new window" };
 	}
 	selectTo(id : number, tabs : browser.Tabs.Tab[]) {
+		// a range is of one kind; `tabs` is one window's (or one saved window's)
+		keepKind(this.state.selection, tabKind(id));
 		let activate = false;
 		const lastSelect = this.state.lastSelect;
 		if (id === lastSelect) {
@@ -1535,30 +1549,11 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		}
 
 		this.scrollTo('tab', this.state.lastSelect.toString());
-
-		const selected = this.state.selection.size;
-		if (selected === 0) {
-			this.setState({
-				topText: "No tabs selected",
-				bottomText: " ",
-				dirty: true
-			});
-		} else if (selected === 1) {
-			this.setState({
-				topText: "Selected " + selected + " tab",
-				bottomText: "Press enter to switch to it",
-				dirty: true
-			});
-		} else {
-			this.setState({
-				topText: "Selected " + selected + " tabs",
-				bottomText: "Press enter to move them to a new window",
-				dirty: true
-			});
-		}
+		this.setState({ ...this.selectionText(), dirty: true });
 	}
 	drag(e : React.DragEvent<HTMLDivElement>, id : number) {
 		if (!this.state.selection.has(id)) {
+			keepKind(this.state.selection, tabKind(id));
 			this.state.selection.add(id);
 			this.setState({
 				lastSelect: id

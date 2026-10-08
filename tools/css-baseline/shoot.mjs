@@ -154,6 +154,18 @@ const STATES = [
 	// also in compact mode. dpr 1, 800x600 only
 	{name: 'fresh', layouts: ['vertical'], scaleLayouts: [], widths: ['800x600'], apply: {}},
 	{name: 'fresh-compact', layouts: ['vertical'], scaleLayouts: [], widths: ['800x600'], apply: {store: {compact: true}}},
+	// selecting saved tabs (src/popup/sessionKeys.ts): Ctrl+click the muted Lofi
+	// tab in "Life", then Ctrl+click the second tab of the saved window
+	// "Conference reading" and Shift+right-click its fourth. A saved tab clears
+	// the open-tab selection; the range stays inside the saved window. The saved
+	// windows are scrolled into view. dpr 1, blocks + List, 800x600 and 380x900
+	{name: 'saved-select', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {
+		clicks: [{sel: '#tab-15', ctrl: true}, {sel: '#sessiontab_s1_1', ctrl: true}, {sel: '#sessiontab_s1_3', shift: true, button: 2}],
+		scrollInto: '#session-s1'}},
+	// a saved window that was the focused window when it was saved (its stored
+	// windowsInfo says focused, with the id of the focused open window "Work"):
+	// it must not look like the active window. dpr 1, blocks + List, 800x600
+	{name: 'saved-focused', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {savedFocused: 's1', scrollInto: '#session-s1'}},
 ]
 
 /**
@@ -250,7 +262,7 @@ async function settle(page) {
 }
 
 /** Applies a popup state absolutely: the result never depends on what came before. */
-async function apply(page, {layout, dark, search = '', dup = false, recent = 0, overlay = null, scrollTo = null, store = {}, granted = true}) {
+async function apply(page, {layout, dark, search = '', dup = false, recent = 0, overlay = null, scrollTo = null, store = {}, granted = true, savedFocused = null, clicks = [], scrollInto = null}) {
 	await page.evaluate(async (s) => {
 		const q = (sel) => document.querySelector(sel)
 		const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
@@ -289,7 +301,28 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 		document.querySelectorAll('.window-container, #root').forEach((e) => { e.scrollTop = 0; e.scrollLeft = 0 })
 		document.documentElement.scrollTop = 0
 		if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur()
-	}, {layout, dark, search, dup, recent, overlay, store, granted})
+
+		// 7. a saved window stored as the focused window, with the id of the
+		// focused open window (the first in windowAge)
+		if (s.savedFocused) {
+			const {sessions, windowAge} = await window.__fake.storage.local.get(['sessions', 'windowAge'])
+			const info = sessions[s.savedFocused].windowsInfo
+			Object.assign(info, {focused: true, id: windowAge[0]})
+			await window.__fake.storage.local.set({sessions})
+			await frame()
+		}
+
+		// 8. clicks with modifiers, as the user makes them: a left click is a
+		// click event, any other button a mousedown (Tab.tsx onMouseDown)
+		for (const c of s.clicks) {
+			const el = q(c.sel)
+			if (!el) throw new Error('nothing to click at ' + c.sel)
+			const init = {bubbles: true, cancelable: true, button: c.button || 0, ctrlKey: !!c.ctrl, shiftKey: !!c.shift}
+			el.dispatchEvent(new MouseEvent(c.button ? 'mousedown' : 'click', init))
+			await frame()
+		}
+		if (s.scrollInto) q(s.scrollInto)?.scrollIntoView({block: 'nearest', inline: 'nearest'})
+	}, {layout, dark, search, dup, recent, overlay, store, granted, savedFocused, clicks, scrollInto})
 	await settle(page)
 	// 7. scroll the options box headed `scrollTo` to the top of its scroller
 	if (scrollTo) {

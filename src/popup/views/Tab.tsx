@@ -184,16 +184,20 @@ export class Tab extends React.Component<ITab, ITabState> {
 	}
 	onMouseDown = async (e : React.MouseEvent<HTMLDivElement>) => {
 		if (e.button === 0) return;
-		if (!this.props.draggable) return;
+		// open tabs, and saved tabs (onOpen): right-click selects them too
+		if (!this.props.draggable && !this.props.onOpen) return;
 		await this.click(e);
 	}
 	click = async (e : React.MouseEvent<HTMLDivElement>) => {
 		this.stopProp(e);
 
+		// an open tab's id, or a saved tab's key (../sessionKeys.ts), which
+		// select / selectTo take alike
 		var tabId : number = this.props.tab.id;
 
 		if (e.button === 1) {
-			this.context.deleteTab(tabId);
+			// middle click closes an open tab; a saved tab is not closed that way
+			if (!this.props.onOpen) this.context.deleteTab(tabId);
 		} else if (e.button === 2 || e.nativeEvent.metaKey || e.nativeEvent.altKey || e.nativeEvent.shiftKey || e.nativeEvent.ctrlKey) {
 			e.preventDefault();
 			if (e.button === 2 && (e.nativeEvent.metaKey || e.nativeEvent.altKey || e.nativeEvent.shiftKey || e.nativeEvent.ctrlKey)) {
@@ -203,8 +207,9 @@ export class Tab extends React.Component<ITab, ITabState> {
 			}
 		} else {
 			if (!!this.props.onOpen) {
-				// a saved session's tab: restoreSession() waits for the worker and closes the popup itself
-				await this.props.onOpen(e, this.props.tab.id);
+				// a saved session's tab, restored by its index: restoreSession() waits
+				// for the worker and closes the popup itself
+				await this.props.onOpen(e, this.props.tab.index);
 				return false;
 			} else {
 				let windowId = this.props.window.id;
