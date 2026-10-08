@@ -5,7 +5,7 @@
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { planImport, importSummary, importWorked } from "../src/popup/importCount.ts";
+import { planImport, importSummary, importWorked, importNoticeKind } from "../src/popup/importCount.ts";
 
 const good = (id : string) => ({ id, windowsInfo: {}, tabs: [{}] });
 
@@ -63,6 +63,18 @@ describe("file in another format", () => {
 		const p = planImport(foreign([5]));
 		assert.equal(importWorked(p), false);
 		assert.match(importSummary(p), /^No saved windows restored, 1 skipped .*format\.$/);
+	});
+	test("a foreign file that restores nothing is an info, not an error", () => {
+		assert.equal(importNoticeKind(planImport(foreign([5]))), "info");
+		assert.equal(importNoticeKind(planImport(foreign([]))), "info");
+	});
+	test("a foreign file with a refused write, or a fatal plan, stays an error", () => {
+		assert.equal(importNoticeKind(planImport(foreign([good("a")])), 1, 0), "error");
+		assert.equal(importNoticeKind(planImport({ format: "something-else", windows: [] })), "error");
+	});
+	test("our own format that restores nothing is an error", () => {
+		assert.equal(importNoticeKind(planImport([5])), "error");
+		assert.equal(importNoticeKind(planImport([good("a")])), "info");
 	});
 	test("no sessions list is refused, without the note", () => {
 		const p = planImport({ format: "something-else", windows: [] });

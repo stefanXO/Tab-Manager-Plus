@@ -80,3 +80,11 @@ export function importWorked(plan : ImportPlan<unknown>, failedWrites = 0, alrea
 	if (plan.fatal) return false;
 	return plan.valid.length - failedWrites - alreadyThere > 0 || (alreadyThere > 0 && failedWrites === 0);
 }
+
+// Which notice words the result. A file in another program's format that
+// restores nothing is not a failure of ours (the note says why), so it is an
+// info; a refused write or an unusable file stays an error.
+export function importNoticeKind(plan : ImportPlan<unknown>, failedWrites = 0, alreadyThere = 0) : "info" | "error" {
+	if (importWorked(plan, failedWrites, alreadyThere)) return "info";
+	return plan.foreignFormat && !plan.fatal && failedWrites === 0 ? "info" : "error";
+}

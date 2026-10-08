@@ -9,7 +9,7 @@ import {currentShowMonitors, saveSetting, Settings, SETTING_DEFAULTS} from "@hel
 import {buildEverythingExport} from "../debugExport";
 import {buildSessionsFile, everythingFileName, sessionsFileName, settingsFileName} from "../sessionsFile";
 import {buildSettingsFile, planSettingsImport, settingsSummary, settingsWorked} from "../settingsFile";
-import {importSummary, importWorked, planImport} from "../importCount";
+import {importNoticeKind, importSummary, planImport} from "../importCount";
 import {debugExportNote, sessionsExportNote, settingsExportNote} from "../exportNotes";
 import {ERROR_MS} from "../notices";
 import {switchShowMonitors} from "@helpers/monitors";
@@ -732,9 +732,10 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 					failed = plan.valid.length;
 				}
 				const summary = importSummary(plan, failed, already);
-				// something restored, or all of it already there: a note; nothing
-				// restored, or the browser refused some: an error
-				if (importWorked(plan, failed, already)) this.context.showInfo(summary);
+				// something restored, or all of it already there, or a foreign file
+				// that gave nothing: a note; nothing restored, or the browser
+				// refused some: an error
+				if (importNoticeKind(plan, failed, already) === "info") this.context.showInfo(summary);
 				else this.context.showError(summary);
 				inputField.value = "";
 			};
