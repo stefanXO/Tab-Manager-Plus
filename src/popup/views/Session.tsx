@@ -16,12 +16,14 @@ import {Icon} from "@icons/Icon";
 import {ICON_FAMILY} from "../icons";
 import {dropSide, isSavedWindowDrag, SAVED_WINDOW_DRAG} from "../sessionOrder";
 import {isSavedTabDrag} from "../savedDrag";
+import {isOpenTabDrag} from "../savedAdd";
 
 interface ISessionState {
 	// this card is being dragged (it fades)
 	dragging : boolean;
 	// another card held over this one: the side its drop marker shows on;
-	// "into": saved tabs held over it (not over a tab), they would go at its end
+	// "into": saved tabs (or open tabs, copied) held over it (not over a tab),
+	// they would go at its end
 	dropMarker : "" | "left" | "right" | "top" | "bottom" | "into";
 }
 
@@ -191,11 +193,10 @@ export class Session extends React.Component<ISession, ISessionState> {
 		this.setState({ dragging: false, dropMarker: "" });
 	}
 	dragOver = (e : React.DragEvent<HTMLDivElement>) => {
-		if (isSavedTabDrag(e.dataTransfer?.types)) {
+		if (isSavedTabDrag(e.dataTransfer?.types) || isOpenTabDrag(e.dataTransfer?.types)) {
 			this.savedTabOver(e);
 			return;
 		}
-		// an open tab dragged over a saved window: not taken here
 		if (!isSavedWindowDrag(e.dataTransfer?.types)) return;
 		const card = e.currentTarget;
 		// the cards stand side by side while their grid has more than one column
@@ -214,9 +215,9 @@ export class Session extends React.Component<ISession, ISessionState> {
 		if (marker !== this.state.dropMarker) this.setState({ dropMarker: marker });
 	}
 	// Saved tabs (../savedMove.ts) held over the card but not over one of its
-	// tabs (its title, its edge, the gaps): they would go at its end. Over a
-	// tab, the tab shows where they go (Tab.savedDragOver) and the card shows
-	// nothing.
+	// tabs (its title, its edge, the gaps): they would go at its end; open tabs
+	// (../savedAdd.ts) too, as copies. Over a tab, the tab shows where they go
+	// (Tab.savedDragOver) and the card shows nothing.
 	savedTabOver(e : React.DragEvent<HTMLDivElement>) {
 		const onTab = !!(e.target as Element).closest?.(".tab");
 		if (onTab || !this.context.savedDropMoves(this.props.session.id, undefined, false)) {
@@ -225,7 +226,7 @@ export class Session extends React.Component<ISession, ISessionState> {
 		}
 		e.preventDefault();
 		e.stopPropagation();
-		e.dataTransfer.dropEffect = "move";
+		e.dataTransfer.dropEffect = isOpenTabDrag(e.dataTransfer.types) ? "copy" : "move";
 		if (this.state.dropMarker !== "into") this.setState({ dropMarker: "into" });
 	}
 	dragLeave = (e : React.DragEvent<HTMLDivElement>) => {
@@ -234,7 +235,7 @@ export class Session extends React.Component<ISession, ISessionState> {
 		if (this.state.dropMarker) this.setState({ dropMarker: "" });
 	}
 	drop = (e : React.DragEvent<HTMLDivElement>) => {
-		if (isSavedTabDrag(e.dataTransfer?.types)) {
+		if (isSavedTabDrag(e.dataTransfer?.types) || isOpenTabDrag(e.dataTransfer?.types)) {
 			const into = this.state.dropMarker === "into";
 			this.setState({ dropMarker: "" });
 			if (!into) return;

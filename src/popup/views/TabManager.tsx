@@ -26,7 +26,8 @@ import {searchSaved, searchSummary, SavedSearch} from "../searchSaved";
 import {draggedSaved, savedTabsToOpen, openedText} from "../savedDrag";
 import {moveSession, reorderShown} from "../sessionOrder";
 import {tidyStored, listSessions, addSessions} from "../sessionStore";
-import {moveSavedTabs, remapSavedKeys, renumberedIndex, movedText, SavedTabMove, SavedMoveResult} from "../savedMove";
+import {moveSavedTabs, remapSavedKeys, renumberedIndex, movedText, SavedTabMove, SavedDropTarget} from "../savedMove";
+import {addOpenTabs, addedText, SavedAddResult} from "../savedAdd";
 import type {SavedTabRef} from "../sessionKeys";
 
 // the focus is in a text box that holds text: Delete edits that text
@@ -76,6 +77,10 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	// the saved tabs being dragged (../savedDrag.ts), from dragstart until the
 	// drop or the drag's end; null while open tabs (or nothing) are dragged
 	private draggingSaved : number[] | null = null;
+	// the open tabs being dragged (the dragged one, or the selection it is in),
+	// from dragstart until the drop or the drag's end: dropped on a saved
+	// window they are copied into it (../savedAdd.ts)
+	private draggingOpen : browser.Tabs.Tab[] | null = null;
 	// the saved window whose card is being dragged (../sessionOrder.ts), from
 	// dragstart until the drop or the drag's end
 	private draggingSession : string | null = null;
@@ -200,8 +205,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			drop: (id, before) => { this.drop(id, before); },
 			dropWindow: (windowId) => { this.dropWindow(windowId); },
 			dragFavicon: (icon) => this.dragFavicon(icon),
-			dragEnd: () => { this.draggingSaved = null; },
-			dragSession: (id) => { this.draggingSession = id; },
+			dragEnd: () => { this.draggingSaved = null; this.draggingOpen = null; },
+			dragSession: (id) => { this.draggingSession = id; if (id) this.draggingOpen = null; },
 			sessionDropMoves: (target, before) => this.sessionDropMoves(target, before),
 			dropSession: (target, before) => { void this.dropSession(target, before); },
 			savedDropMoves: (sessionId, index, before) => this.savedDropMoves(sessionId, index, before),
@@ -953,12 +958,13 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	}
 	// Whether the dragged saved tabs would move if dropped before / after the
 	// saved tab `index` of `sessionId` (undefined: at its end), among what is
-	// on screen.
+	// on screen; for dragged open tabs, whether copies of them can go there.
 	// Asked on every dragover of every saved tab and card: the answers are
 	// kept for as long as the drag, what is shown and the search stay the same.
-	private dropMovesMemo : { dragged : number[], shown : ISavedSession[], search : SavedSearch, filter : boolean, store : Record<string, ISavedSession>, refs : SavedTabRef[], answers : Map<string, boolean> } | null = null;
+	private dropMovesMemo : { dragged : readonly unknown[], shown : ISavedSession[], search : SavedSearch, filter : boolean, store : Record<string, ISavedSession>, refs : SavedTabRef[], answers : Map<string, boolean> } | null = null;
 	savedDropMoves(sessionId : string, index : number | undefined, before : boolean) : boolean {
-		const dragged = this.draggingSaved;
+		const open = this.draggingOpen;
+		const dragged = this.draggingSaved || open;
 		if (!dragged) return false;
 		const shown = this.visibleSessions();
 		const search = this.savedSearch(shown);
@@ -971,7 +977,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		const key = JSON.stringify([sessionId, index ?? null, before]);
 		let answer = m.answers.get(key);
 		if (answer === undefined) {
-			answer = moveSavedTabs(m.store, m.refs, { sessionId, index, before }) !== null;
+			const target = { sessionId, index, before };
+			answer = (open ? this.addOpen(m.store, open, target) : moveSavedTabs(m.store, m.refs, target)) !== null;
 			m.answers.set(key, answer);
 		}
 		return answer;
@@ -979,16 +986,51 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	// The dragged saved tabs dropped on a saved tab or a saved window card:
 	// moved there (../savedMove.ts), every saved window touched written in the
 	// one write of `sessions`. The selected ones stay selected, a pending delete
-	// keeps hiding its tabs under their new numbers.
+	// keeps hiding its tabs under their new numbers. Dragged open tabs are
+	// copied there instead (addOpenTabs).
 	async dropSaved(sessionId : string, index : number | undefined, before : boolean) {
+		const target = { sessionId, index, before };
+		if (this.draggingOpen) {
+			await this.addOpenTabs(target);
+			return;
+		}
 		const refs = this.draggedRefs();
 		this.draggingSaved = null;
-		const target = { sessionId, index, before };
 		if (refs.length === 0 || !moveSavedTabs(this.shownSavedStore(), refs, target)) return;
-		let done : SavedMoveResult<ISavedSession> | null = null;
+		const moved = await this.renumberingChange((stored) => moveSavedTabs(stored, refs, target));
+		if (!moved) return;
+		const name = Object.values(moved.stored).find((s) => s && s.id === sessionId)?.name || "";
+		this.setState({ ...movedText(moved.count, name, moved.emptied.length) });
+	}
+	// copies of the open tabs `tabs` added at `target` (../savedAdd.ts), in
+	// the order the popup lists the open windows
+	private addOpen(stored : Record<string, ISavedSession>, tabs : browser.Tabs.Tab[], target : SavedDropTarget) : SavedAddResult<ISavedSession> | null {
+		return addOpenTabs(stored, tabs, target, { windowOrder: this.state.windows.map((w) => w.id), firefox: IS_FIREFOX });
+	}
+	// The dragged open tabs dropped on a saved tab or a saved window card:
+	// copies of them go in there (../savedAdd.ts), in one write. The open tabs
+	// stay open; the selection they were is done with, as after moving open
+	// tabs. The saved window's tabs are numbered anew, as after a move.
+	async addOpenTabs(target : SavedDropTarget) {
+		const tabs = this.draggingOpen;
+		this.draggingOpen = null;
+		if (!tabs || tabs.length === 0 || !this.addOpen(this.shownSavedStore(), tabs, target)) return;
+		const added = await this.renumberingChange((stored) => this.addOpen(stored, tabs, target));
+		if (!added) return;
+		if (tabs.some((tab) => this.state.selection.has(tab.id))) this.clearSelection();
+		const name = Object.values(added.stored).find((s) => s && s.id === target.sessionId)?.name || "";
+		this.setState({ ...addedText(added.count, added.skipped, name), dirty: true });
+	}
+	// A change to the stored saved windows that numbers saved tabs anew (a
+	// move, an add), written like any other (mutateSessions). The selection
+	// (showSessions) and the pending deletes follow the tabs to their new
+	// numbers. Resolves with the change's result; null when it changed nothing
+	// or the browser refused the write.
+	private async renumberingChange<R extends { stored : Record<string, ISavedSession>, moves : SavedTabMove[] }>(change : (stored : Record<string, ISavedSession>) => R | null) : Promise<R | null> {
+		let done : R | null = null;
 		try {
 			await this.mutateSessions((stored) => {
-				const result = moveSavedTabs(stored, refs, target);
+				const result = change(stored);
 				if (!result) return null;
 				done = result;
 				this.renumbered = result.moves;
@@ -1002,14 +1044,11 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			// delete the tabs that now hold those numbers.
 			console.error(e);
 			this.renumbered = null;
-			const moved : SavedMoveResult<ISavedSession> | null = done;
-			if (moved) this.pending.renumber(renumberedIndex(moved.moves.map((m) => ({ from: m.to, to: m.from }))));
-			return;
+			const failed : R | null = done;
+			if (failed) this.pending.renumber(renumberedIndex(failed.moves.map((m) => ({ from: m.to, to: m.from }))));
+			return null;
 		}
-		if (!done) return;
-		const moved : SavedMoveResult<ISavedSession> = done;
-		const name = Object.values(moved.stored).find((s) => s && s.id === sessionId)?.name || "";
-		this.setState({ ...movedText(moved.count, name, moved.emptied.length) });
+		return done;
 	}
 	undoDelete = () => {
 		this.pending.undo();
@@ -1938,6 +1977,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	private readonly dragDone = () => {
 		this.draggingSession = null;
 		this.draggingSaved = null;
+		this.draggingOpen = null;
 	}
 	drag(e : React.DragEvent<HTMLDivElement>, id : number) {
 		// a tab drag: no saved window card is being dragged
@@ -1946,6 +1986,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		// tabs; it is opened, not moved, so the selection stays as it is
 		if (isSavedTabKey(id)) {
 			this.draggingSaved = draggedSaved(id, this.state.selection);
+			this.draggingOpen = null;
 			return;
 		}
 		this.draggingSaved = null;
@@ -1956,6 +1997,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				lastSelect: id
 			});
 		}
+		// what a drop on a saved window copies (../savedAdd.ts)
+		this.draggingOpen = this.selectedTabs();
 	}
 	async drop(id : number, before : boolean) {
 		// a saved window card is no tab (open tabs and windows take no drop from it)

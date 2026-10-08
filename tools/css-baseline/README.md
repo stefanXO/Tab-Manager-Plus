@@ -215,6 +215,17 @@ currently on disk — there is no stale copy to forget about.
   (the card is outlined; it goes at the end); `-sel`: Escape (clears what the run before
   left selected), Ctrl+click "Tab (interface)" and "react - npm", drop the second on "Tax
   2029": both move to its end and stay selected
+- `saved-add-over` (+ `-drop`, `saved-add-card-over`, `saved-add-card-drop`, `saved-add-sel`):
+  adding open tabs to a saved window (`src/popup/savedAdd.ts`) with the same `{drag, over,
+  side, drop}` entry, an open tab (`#tab-N`) as the source. Every add grows the saved window,
+  so these states set `freshSessions`: the saved windows go back to the fixture's
+  (`window.__fake.sessions`, kept by `fake-browser.js`) before the clicks, and every shot
+  shows one add. Escape first clears the selection the shot before left. `saved-add-*`:
+  "Calendar - Week of Sep 28" of "Life" before "react - npm" in "Conference reading"
+  (blocks + List, 800x600 and 380x900); `-card-*`: "r/webdev" held over / dropped on the
+  title of "Tax 2029" (outlined; the copy goes at the end); `-sel`: Ctrl+click "Sprint board"
+  (Work) and "Browser extension" (Research), drop the second on "Tax 2029": both copied to
+  its end in popup order, the selection cleared, the open tabs still open
 - `fresh` / `fresh-compact`: the List view's freshness bars (`src/popup/freshness.ts`, drawn at the end of every List row from the fixture's `lastAccessed`, 0 min .. 14 days: all five levels) — `fresh` as `plain`, `fresh-compact` with the `compact` setting on. `vertical` × 2 themes × `800x600`, dpr 1 only
 - `page-options-na-<theme>-<width>`: `options.html` standalone, 2 × 3 = 6
 - `page-changelog-na-<theme>-<width>`: `changelog.html` standalone, 2 × 3 = 6.

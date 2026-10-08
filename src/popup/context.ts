@@ -29,9 +29,11 @@ export interface ITabManagerActions {
 	// the dragged card dropped before / after this saved window: the new order is stored
 	dropSession(target : string, before : boolean) : void;
 	// whether dropping the dragged saved tabs before / after the saved tab with
-	// this stored index (undefined: on the card, at its end) changes anything
+	// this stored index (undefined: on the card, at its end) changes anything;
+	// for dragged open tabs, whether copies of them can go there
 	savedDropMoves(sessionId : string, index : number | undefined, before : boolean) : boolean;
-	// the dragged saved tabs dropped there: moved, in one write
+	// the dragged saved tabs dropped there: moved, in one write; dragged open
+	// tabs: copied there, and they stay open
 	dropSaved(sessionId : string, index : number | undefined, before : boolean) : void;
 	hoverIcon(text : string) : void;
 	openWindowOptions(windowId : number, autoName : string) : void;

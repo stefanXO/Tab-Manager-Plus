@@ -300,6 +300,30 @@ const STATES = [
 	{name: 'saved-move-sel', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {
 		clicks: [{key: 27}, {sel: '.session .tab[data-hover^="Tab (interface)"]', ctrl: true}, {sel: '.session .tab[data-hover^="react - npm"]', ctrl: true},
 			{drag: '.session .tab[data-hover^="react - npm"]', over: '#session-s2 h3.windowTitle', drop: true}], scrollEnd: true}},
+	// adding open tabs to a saved window (src/popup/savedAdd.ts): copies go in,
+	// the open tabs stay open. Every add grows the saved window, so these states
+	// start from the fixture's saved windows again (`freshSessions`).
+	// "Calendar - Week of Sep 28" of "Life" held over the left / top quarter of
+	// "react - npm" in "Conference reading": the marker shows there. dpr 1,
+	// blocks + List, 800x600 and 380x900
+	{name: 'saved-add-over', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {freshSessions: true,
+		clicks: [{key: 27}, {drag: '#tab-14', over: '#session-s1 .tab[data-hover^="react - npm"]', side: 'before'}], scrollInto: '#session-s1'}},
+	// the same, dropped: "Conference reading" holds a copy before "react - npm"
+	// (five tabs), "Life" still has its Calendar tab
+	{name: 'saved-add-drop', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {freshSessions: true,
+		clicks: [{key: 27}, {drag: '#tab-14', over: '#session-s1 .tab[data-hover^="react - npm"]', side: 'before', drop: true}], scrollInto: '#session-s1'}},
+	// "r/webdev" held over the title of "Tax 2029" (the card, not a tab): the
+	// card is outlined, the copy would go at its end
+	{name: 'saved-add-card-over', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {freshSessions: true,
+		clicks: [{key: 27}, {drag: '#tab-13', over: '#session-s2 h3.windowTitle'}], scrollEnd: true}},
+	{name: 'saved-add-card-drop', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {freshSessions: true,
+		clicks: [{key: 27}, {drag: '#tab-13', over: '#session-s2 h3.windowTitle', drop: true}], scrollEnd: true}},
+	// two open tabs selected ("Sprint board" of "Work", "Browser extension" of
+	// "Research"), the second dragged onto "Tax 2029": both are copied to its
+	// end, in the order the popup lists them, and the selection is done with
+	{name: 'saved-add-sel', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {freshSessions: true,
+		clicks: [{key: 27}, {sel: '#tab-6', ctrl: true}, {sel: '#tab-22', ctrl: true},
+			{drag: '#tab-22', over: '#session-s2 h3.windowTitle', drop: true}], scrollEnd: true}},
 	// a saved window that was the focused window when it was saved (its stored
 	// windowsInfo says focused, with the id of the focused open window "Work"):
 	// it must not look like the active window. dpr 1, blocks + List, 800x600
@@ -417,7 +441,7 @@ async function settle(page) {
 }
 
 /** Applies a popup state absolutely: the result never depends on what came before. */
-async function apply(page, {layout, dark, search = '', dup = false, recent = 0, overlay = null, scrollTo = null, store = {}, granted = true, savedFocused = null, clicks = [], scrollInto = null, importFile = null, freezeClock = false, scrollEnd = false, typeName = null, pickColor = null, savedInfo = null}) {
+async function apply(page, {layout, dark, search = '', dup = false, recent = 0, overlay = null, scrollTo = null, store = {}, granted = true, savedFocused = null, clicks = [], scrollInto = null, importFile = null, freezeClock = false, scrollEnd = false, typeName = null, pickColor = null, savedInfo = null, freshSessions = false}) {
 	await page.evaluate(async (s) => {
 		const q = (sel) => document.querySelector(sel)
 		const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
@@ -496,6 +520,12 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 			await frame()
 		}
 
+		// 7c. the saved windows as the page started (states that add to them)
+		if (s.freshSessions) {
+			await window.__fake.storage.local.set({sessions: window.__fake.sessions})
+			for (let i = 0; i < 3; i++) await frame()
+		}
+
 		// 8. clicks with modifiers, as the user makes them: a left click is a
 		// click event, any other button a mousedown (Tab.tsx onMouseDown)
 		for (const c of s.clicks) {
@@ -562,7 +592,7 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 		if (s.scrollInto) q(s.scrollInto)?.scrollIntoView({block: 'nearest', inline: 'nearest'})
 		// the list scrolled to its very end: the padding the notice makes room with shows
 		if (s.scrollEnd) { const c = q('.window-container'); if (c) c.scrollTop = c.scrollHeight }
-	}, {layout, dark, search, dup, recent, overlay, store, granted, savedFocused, clicks, scrollInto, importFile, freezeClock, scrollEnd, typeName, pickColor, savedInfo})
+	}, {layout, dark, search, dup, recent, overlay, store, granted, savedFocused, clicks, scrollInto, importFile, freezeClock, scrollEnd, typeName, pickColor, savedInfo, freshSessions})
 	await settle(page)
 	// 7. scroll the options box headed `scrollTo` to the top of its scroller
 	if (scrollTo) {

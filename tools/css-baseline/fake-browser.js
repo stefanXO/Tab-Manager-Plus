@@ -229,8 +229,10 @@ export const commands = {
 	},
 };
 
-// the video drives settings through the same storage the options page writes
-globalThis.__fake = { storage };
+// the video drives settings through the same storage the options page writes;
+// `sessions`: the saved windows as the page starts, for a shot that must start
+// from them again (shoot.mjs `freshSessions`: adding tabs grows them every run)
+globalThis.__fake = { storage, sessions: clone(sessions) };
 // The header tip is picked with Math.random() once per popup open (TabManager.tsx;
 // it used to be on every render, which this pin hid). A constant pins the tip
 // across runs whatever else draws random numbers first.

@@ -11,6 +11,7 @@ import {titleHits} from "../search";
 import {sendAndWait} from "../messaging";
 import {isSavedWindowDrag} from "../sessionOrder";
 import {SAVED_TAB_DRAG, isSavedTabDrag} from "../savedDrag";
+import {OPEN_TAB_DRAG, isOpenTabDrag} from "../savedAdd";
 
 export class Tab extends React.Component<ITab, ITabState> {
 	static contextType = ManagerContext;
@@ -157,7 +158,8 @@ export class Tab extends React.Component<ITab, ITabState> {
 		} else if (!!this.props.onOpen) {
 			// a saved tab: dropped on an open window or tab it opens there
 			// (TabManager.drop); dropped on a saved tab it moves there
-			// (../savedMove.ts), and saved tabs take no other drop
+			// (../savedMove.ts). Open tabs dropped on it are copied in next to
+			// it (../savedAdd.ts); saved tabs take no other drop
 			tabDom.onDragStart = this.dragStart;
 			tabDom.onDragEnd = this.dragEnd;
 			tabDom.onDragEnter = this.savedDragOver;
@@ -261,6 +263,8 @@ export class Tab extends React.Component<ITab, ITabState> {
 			e.dataTransfer.effectAllowed = "all";
 		} else {
 			e.dataTransfer.setData("Text", this.props.tab.id.toString());
+			// saved windows take copies of it (../savedAdd.ts)
+			e.dataTransfer.setData(OPEN_TAB_DRAG, this.props.tab.id.toString());
 		}
 		e.dataTransfer.setData("text/uri-list", this.props.tab.url || "");
 		this.context.drag(e, this.props.tab.id);
@@ -320,11 +324,13 @@ export class Tab extends React.Component<ITab, ITabState> {
 		this.props.onDragChange?.();
 	}
 	// A saved tab dragged over this saved tab: the drop marker on the side it
-	// would go, when a drop there moves anything (TabManager.savedDropMoves).
-	// Not stopped here: the saved window card sees the event too, and clears
-	// its own marker while the pointer is over a tab.
+	// would go, when a drop there moves anything (TabManager.savedDropMoves);
+	// an open tab: where its copy would go. Not stopped here: the saved window
+	// card sees the event too, and clears its own marker while the pointer is
+	// over a tab.
 	savedDragOver = (e : React.DragEvent<HTMLDivElement>) => {
-		if (!isSavedTabDrag(e.dataTransfer?.types) || !this.props.session) return;
+		const open = isOpenTabDrag(e.dataTransfer?.types);
+		if ((!open && !isSavedTabDrag(e.dataTransfer?.types)) || !this.props.session) return;
 		const rect = e.currentTarget.getBoundingClientRect();
 		const list = this.props.layout === LAYOUT.list;
 		const before = list ? e.clientY < rect.top + rect.height / 2 : e.clientX < rect.left + rect.width / 2;
@@ -333,7 +339,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 			return;
 		}
 		e.preventDefault();
-		e.dataTransfer.dropEffect = "move";
+		e.dataTransfer.dropEffect = open ? "copy" : "move";
 		const side = list ? (before ? "top" : "bottom") : (before ? "left" : "right");
 		if (side !== this.state.draggingOver) this.setState({ draggingOver: side });
 	}
@@ -343,7 +349,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 		if (this.state.draggingOver) this.setState({ draggingOver: "" });
 	}
 	savedDrop = (e : React.DragEvent<HTMLDivElement>) => {
-		if (!isSavedTabDrag(e.dataTransfer?.types) || !this.props.session) return;
+		if ((!isSavedTabDrag(e.dataTransfer?.types) && !isOpenTabDrag(e.dataTransfer?.types)) || !this.props.session) return;
 		const side = this.state.draggingOver;
 		this.setState({ draggingOver: "" });
 		if (!side) return;
