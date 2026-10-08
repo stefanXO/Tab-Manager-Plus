@@ -14,7 +14,7 @@ import {shownSavedName} from "./sessionEdit";
 import {hoverKey, hoverAction, isWarm, parseKey, arrowsMoveCard, ACTION_SELECTOR, STATS_KEYBOARD_DELAY} from "./statsHoverLogic";
 import {actionCard} from "./actionHelp";
 import {isMacPlatform} from "./notices";
-import {stripUserinfo} from "./safeUrl";
+import {shownUrl} from "./safeUrl";
 import type {IStatsFavicon, IStatsCardContent} from "./views/StatsCard";
 
 // how many site favicons the window card shows
@@ -442,7 +442,7 @@ export class StatsHover {
 				zoom,
 				savedIn: savedWindowsWith(tab.url || tab.pendingUrl, this.source.sessions().map((s) => ({ name: this.savedName(s), tabs: s.tabs })))
 			});
-			return { card, icon: this.favicon(tab), url: stripUserinfo(tab.url || tab.pendingUrl) };
+			return { card, icon: this.favicon(tab), url: shownUrl(tab.url || tab.pendingUrl) };
 		}
 		if (t.kind === "saved") {
 			const saved = this.savedTab(t.id);
@@ -456,7 +456,7 @@ export class StatsHover {
 				allTabs: st.tabsbyid.values(),
 				openWindowName: (id) => this.windowName(id)
 			});
-			return { card, icon: this.tileFavicon(savedTile(t.id)), url: stripUserinfo(saved.tab.url || saved.tab.pendingUrl) };
+			return { card, icon: this.tileFavicon(savedTile(t.id)), url: shownUrl(saved.tab.url || saved.tab.pendingUrl) };
 		}
 		if (t.kind === "session") return this.resolveSession(t.session, now);
 		const win = st.windowsbyid.get(t.id);

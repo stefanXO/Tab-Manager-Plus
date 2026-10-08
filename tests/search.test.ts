@@ -1210,3 +1210,25 @@ describe("s: and -s: with the saved windows feature off", () => {
 		assert.deepEqual(titleHits("about s:tax", parseQuery("s:tax", true), false), []);
 	});
 });
+
+describe("international hosts match in both forms", () => {
+	const URL_JA = "https://xn--wgv71a119e.jp/page";
+	const hit = (q : string, url = URL_JA, title = "Page") => matchTab(searchable(title, url), parseQuery(q));
+	test("u: and plain terms match the Unicode host", () => {
+		assert.equal(hit("u:日本語"), true);
+		assert.equal(hit("日本語"), true);
+		assert.equal(hit("u:bücher", "https://www.xn--bcher-kva.example/"), true);
+		assert.equal(hit("u:BÜCHER", "https://www.xn--bcher-kva.example/"), true);
+		assert.equal(hit("/日本.\\.jp/"), true);
+	});
+	test("and still the punycode form", () => {
+		assert.equal(hit("u:xn--wgv71a119e"), true);
+		assert.equal(hit("u:xn--bcher", "https://www.xn--bcher-kva.example/"), true);
+	});
+	test("exclusion covers both forms; other urls are unchanged", () => {
+		assert.equal(hit("-u:日本語"), false);
+		assert.equal(hit("-xn--wgv71a119e"), false);
+		assert.equal(hit("u:中文"), false);
+		assert.deepEqual(searchable("A", "https://example.com/"), { title: "a", url: "https://example.com/" });
+	});
+});

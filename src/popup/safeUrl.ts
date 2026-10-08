@@ -1,5 +1,7 @@
 "use strict";
 
+import { urlToUnicode } from "./punycode.ts";
+
 // Urls as the popup shows them. Chrome keeps a "user:password@" part in
 // tab.url (http://user:secret@host/), so the header, the tab card and the
 // debug export (a file users attach to bug reports) would show the password.
@@ -15,6 +17,12 @@ const USERINFO = /^((?:https?|ftp):\/\/)[^/?#\\]*@/i;
 export function stripUserinfo(url : string | null | undefined) : string {
 	if (typeof url !== "string") return "";
 	return url.replace(USERINFO, "$1");
+}
+
+// a url as the header and the tab card show it: no userinfo, the host in
+// Unicode (./punycode.ts)
+export function shownUrl(url : string | null | undefined) : string {
+	return urlToUnicode(stripUserinfo(url));
 }
 
 // a copy of any JSON-like value with the userinfo taken out of every string

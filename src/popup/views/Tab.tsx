@@ -8,7 +8,7 @@ import {ManagerContext, ITabManagerActions} from '../context';
 import {faviconTone} from '@helpers/favicon';
 import {tabFreshness} from "../freshness";
 import {titleHits} from "../search";
-import {stripUserinfo} from "../safeUrl";
+import {stripUserinfo, shownUrl} from "../safeUrl";
 import {sendAndWait} from "../messaging";
 import {isSavedWindowDrag} from "../sessionOrder";
 import {SAVED_TAB_DRAG, isSavedTabDrag} from "../savedDrag";
@@ -148,8 +148,8 @@ export class Tab extends React.Component<ITab, ITabState> {
 			id: this.props.id,
 			onClick: this.click,
 			onMouseDown: this.onMouseDown,
-			// the header shows both lines: no "user:password@" (../safeUrl.ts)
-			"data-hover": stripUserinfo(this.props.tab.title) + "\n" + stripUserinfo(this.props.tab.url || this.props.tab.pendingUrl),
+			// the header shows both lines: no "user:password@", the host in Unicode (../safeUrl.ts)
+			"data-hover": stripUserinfo(this.props.tab.title) + "\n" + shownUrl(this.props.tab.url || this.props.tab.pendingUrl),
 			onMouseEnter: this.onHover,
 			onMouseLeave: this.onHoverOut
 		};

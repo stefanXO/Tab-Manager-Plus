@@ -59,6 +59,7 @@ Windows
 - A tab dropped on its own right half, or on the left half of the tab to its right, stays where it is. Every other drop lands exactly where the marker shows, even when you move several tabs inside their window, where they used to land one place off
 - The window order no longer resets on its own, so windows stay where you expect them. The current window is always listed first and marked, even when Tab Manager Plus opens as a popup window
 - When Tab Manager Plus is already open in a tab, clicking its icon in the toolbar takes you to that tab. You no longer get a second copy
+- Sites with names in other scripts, like 日本語.jp or bücher.de, are named and shown in their own letters, and search finds them that way too
 
 Saved Windows
 ![Save selected tabs, recolor the new saved window, drag saved tabs out, s: search, delete and Ctrl+Z](features/7.0.0/saved.webm)

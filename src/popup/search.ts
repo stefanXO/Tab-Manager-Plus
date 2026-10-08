@@ -23,6 +23,8 @@
 //                  an invalid pattern falls back to a plain substring
 // Nothing else on purpose: every extra token is something to explain.
 
+import { urlToUnicode } from "./punycode.ts";
+
 export interface SearchTerm {
 	field : "any" | "title" | "url";
 	// "saved": the term sits behind s:, only a tab of a saved window can match
@@ -52,12 +54,17 @@ export interface SearchQuery {
 export interface Searchable {
 	title : string;
 	url : string;
+	// the url with its host in Unicode, when that differs (an international
+	// host is stored as "xn--..."): url terms match either form
+	urlUnicode? : string;
 	// a tab of a saved window (what s: looks for); absent for an open tab
 	saved? : boolean;
 }
 
 export function searchable(title : string | undefined, url : string | undefined, saved = false) : Searchable {
 	const out : Searchable = { title: (title || "").toLowerCase(), url: (url || "").toLowerCase() };
+	const unicode = urlToUnicode(url || "").toLowerCase();
+	if (unicode !== out.url) out.urlUnicode = unicode;
 	if (saved) out.saved = true;
 	return out;
 }
@@ -170,8 +177,8 @@ export function matchTab(tab : Searchable, query : SearchQuery) : boolean {
 		if (t.scope === "saved" && !tab.saved) found = false;
 		else if (t.scope === "open" && tab.saved) found = false;
 		else if (t.field === "title") found = t.test(tab.title);
-		else if (t.field === "url") found = t.test(tab.url);
-		else found = t.test(tab.title) || t.test(tab.url);
+		else if (t.field === "url") found = t.test(tab.url) || (tab.urlUnicode !== undefined && t.test(tab.urlUnicode));
+		else found = t.test(tab.title) || t.test(tab.url) || (tab.urlUnicode !== undefined && t.test(tab.urlUnicode));
 		return t.negate ? !found : found;
 	};
 	return query.mode === "or" ? query.terms.some(hit) : query.terms.every(hit);

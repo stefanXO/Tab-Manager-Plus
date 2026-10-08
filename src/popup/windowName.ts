@@ -4,6 +4,7 @@
 // Pure (no browser APIs), so it is unit tested in tests/windowName.test.ts.
 
 import { ICANN, PRIVATE } from "./psl.ts";
+import { hostToUnicode } from "./punycode.ts";
 
 export interface NameTab {
 	url?: string;
@@ -739,13 +740,16 @@ export function siteOf(tab: NameTab): { key: string; name: string } | null {
 	const hit = known(host, reg.label, url.pathname);
 	if (hit) return { key: "known:" + hit, name: hit };
 
+	// an international label is named in Unicode ("xn--bcher-kva" is
+	// "bücher"); the key stays the ASCII form
+	const label = hostToUnicode(reg.label);
 	// the title spells the site (for a tenant: the tenant) the way its owner does
 	const segments = titleSegments(tab.title);
 	const candidates = segments.length ? [segments[segments.length - 1], segments[0]] : [];
 	for (const c of candidates) {
-		if (matchesLabel(c, reg.label)) return { key: reg.key, name: spell(c) };
+		if (matchesLabel(c, label)) return { key: reg.key, name: spell(c) };
 	}
-	return { key: reg.key, name: /^\p{L}{1,3}$/u.test(reg.label) ? reg.label.toUpperCase() : words(reg.label) };
+	return { key: reg.key, name: /^\p{L}{1,3}$/u.test(label) ? label.toUpperCase() : words(label) };
 }
 
 interface Site {

@@ -399,3 +399,20 @@ describe("compactName: the title in compact mode", () => {
 		assert.match(compactName(windowName(five)), / \+ 2$/);
 	});
 });
+
+describe("international hosts are named in Unicode", () => {
+	test("three CJK hosts", () => {
+		const tabs = [t("https://xn--wgv71a119e.jp/", "タブ タイトル"), t("https://www.xn--fiq228c.com/a", "中文 标签"), t("https://xn--3e0b707e.kr/", "탭")];
+		assert.equal(windowName(tabs), "日本語, 中文, 한국");
+		assert.equal(windowName([...tabs, t("https://xn--o3crh0a8bb0k.th/"), t("https://xn--r8jz45g.xn--zckzah/")]), "日本語, 中文, 한국 & 2 more");
+	});
+
+	test("a Latin label with accents, and the key stays the ASCII host", () => {
+		assert.deepEqual(siteOf(t("https://www.xn--bcher-kva.example/")), { key: "xn--bcher-kva.example", name: "Bücher" });
+		assert.equal(siteOf(t("https://xn--mnchen-3ya.de/", "München - Offizielles Stadtportal"))?.name, "München");
+	});
+
+	test("a label that does not decode keeps its old name", () => {
+		assert.equal(siteOf(t("https://xn--zz.com/"))?.name, "Xn Zz");
+	});
+});
