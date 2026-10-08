@@ -2,12 +2,13 @@
 
 import * as React from "react";
 import {ControlLabel, DescribedOption, Description, LEFT_LABEL_STYLE, OptionTitle} from "./shared";
-import {typedNumber, settledNumber, boundsOf} from "../../numberField";
+import {typedInBounds, settledNumber, boundsOf} from "../../numberField";
 
 // A number field. `labelFirst`: the title label goes before the field (the
 // popup size fields) instead of after it. No description when none is given.
-// The field keeps what is typed as a draft and hands `onChange` only a real
-// number (../../numberField.ts); when it is left, the draft settles on a
+// The field keeps what is typed as a draft and, while typing, hands `onChange`
+// only a whole number inside min / max (../../numberField.ts), so the 6 on the
+// way to 600 is not applied; when the field is left, the draft settles on a
 // number in bounds or goes back to the value.
 export function NumberOption({ id, help, label, description, notes, icon, value, onChange, min, max, step, className = "", labelFirst = false } : DescribedOption & {
 	value : number,
@@ -24,7 +25,7 @@ export function NumberOption({ id, help, label, description, notes, icon, value,
 	const change = (e : React.ChangeEvent<HTMLInputElement>) => {
 		const typed = e.target.value;
 		setDraft(typed);
-		const n = typedNumber(typed);
+		const n = typedInBounds(typed, boundsOf(min, max));
 		if (n !== null && n !== value) onChange(n);
 	};
 	const leave = () => {

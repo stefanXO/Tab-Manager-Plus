@@ -118,7 +118,7 @@ Options
 - The switches are easy to read in the dark theme, and they grow and shrink with the browser's zoom, so they stay usable at any size (#69)
 - When you hover anywhere over an option, its help text shows in the header for as long as the mouse is there. Popup size, Incognito, Shortcut and What's new now have help texts too
 - Enter no longer opens a new window while the options or the window color screen are open. Pressing it there now does nothing that you didn't expect
-- Limit Tabs Per Window and the popup width and height no longer break when you clear them to type a new number. The field used to show "NaN" and the popup lost its size, and now a number outside the limits is fixed when you leave the field
+- Limit Tabs Per Window and the popup width and height no longer break when you clear them to type a new number. The field used to show "NaN" and the popup lost its size, and now a number outside the limits is fixed when you leave the field. A width or height outside the limits is not applied while you type; it is corrected when you leave the field
 - The changelog page now follows the dark theme, and the tip in the header no longer changes while the popup is loading
 - Export tabs for debugging, in the options, saves a file with your windows, tabs and settings, so that you can attach it to a bug report
 - The new "Settings backup" lets you keep a copy of your settings, because Export Settings saves them to `tab-manager-plus-settings-YYYY-MM-DD-HH-MM-SS.json`. The file doesn't hold your saved windows, and it doesn't hold window names or colors either

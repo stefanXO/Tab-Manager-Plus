@@ -6,7 +6,7 @@
 
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { typedNumber, settledNumber, finiteOr, boundsOf } from "../src/popup/numberField.ts";
+import { typedInBounds, typedNumber, settledNumber, finiteOr, boundsOf } from "../src/popup/numberField.ts";
 
 describe("typedNumber: only a whole number reaches the setting", () => {
 	test("numbers, with spaces around, negative too", () => {
@@ -52,5 +52,35 @@ describe("finiteOr and boundsOf", () => {
 		assert.deepEqual(boundsOf("450", "800"), { min: 450, max: 800 });
 		assert.deepEqual(boundsOf("0", undefined), { min: 0 });
 		assert.deepEqual(boundsOf(undefined, ""), {});
+	});
+});
+
+describe("typedInBounds: only a number inside the limits is applied while typing", () => {
+	const b = boundsOf("300", "800");
+	test("inside the bounds", () => {
+		assert.equal(typedInBounds("600", b), 600);
+		assert.equal(typedInBounds("300", b), 300);
+		assert.equal(typedInBounds("800", b), 800);
+	});
+	test("below min (the 6 on the way to 600)", () => {
+		assert.equal(typedInBounds("6", b), null);
+		assert.equal(typedInBounds("60", b), null);
+	});
+	test("above max", () => {
+		assert.equal(typedInBounds("801", b), null);
+	});
+	test("empty, minus sign, not a whole number", () => {
+		assert.equal(typedInBounds("", b), null);
+		assert.equal(typedInBounds("-", b), null);
+		assert.equal(typedInBounds("4.5", b), null);
+	});
+	test("no bounds: any whole number", () => {
+		assert.equal(typedInBounds("6"), 6);
+		assert.equal(typedInBounds("-3", {}), -3);
+		assert.equal(typedInBounds("", {}), null);
+	});
+	test("only a min", () => {
+		assert.equal(typedInBounds("0", boundsOf("1")), null);
+		assert.equal(typedInBounds("99999", boundsOf("1")), 99999);
 	});
 });
