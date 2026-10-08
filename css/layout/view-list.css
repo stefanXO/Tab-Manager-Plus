@@ -152,6 +152,11 @@
 .window.vertical .tab.full > .limiter {
 	display: none;
 }
+/* the drop marker while a tab is dragged over the row (css/components/tab.css) */
+.window.vertical .tab.full.top > .limiter,
+.window.vertical .tab.full.bottom > .limiter {
+	display: block;
+}
 /* hairline between rows, no ring on the active row: the accent and tint mark it */
 .window.vertical .tab.full + .tab.full {
 	border-top: 1px solid var(--row-divider);

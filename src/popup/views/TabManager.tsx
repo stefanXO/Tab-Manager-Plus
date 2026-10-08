@@ -23,6 +23,7 @@ import {PendingDeletes, PendingItem, withoutItems, visibleSessions, noticeText} 
 import {savedDeleteItems} from "../savedDelete";
 import {editSession, SessionEdit} from "../sessionEdit";
 import {searchSaved, searchSummary, SavedSearch} from "../searchSaved";
+import {draggedSaved, savedTabsToOpen, openedText} from "../savedDrag";
 
 // the focus is in a text box that holds text: Delete edits that text
 function editingText() : boolean {
@@ -58,6 +59,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	private readonly flushPendingHidden = () => { if (document.visibilityState === "hidden") this.pending.flush(true); };
 
 	private readonly runUpdate = () => this.setState({ dirty: true });
+	// the saved tabs being dragged (../savedDrag.ts), from dragstart until the
+	// drop or the drag's end; null while open tabs (or nothing) are dragged
+	private draggingSaved : number[] | null = null;
 	private readonly runSlowUpdate = debounce(this.runUpdate, 250);
 	private readonly onRuntimeMessage = (message : unknown) => {
 		const request = message as ICommand;
@@ -176,6 +180,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			drop: (id, before) => { this.drop(id, before); },
 			dropWindow: (windowId) => { this.dropWindow(windowId); },
 			dragFavicon: (icon) => this.dragFavicon(icon),
+			dragEnd: () => { this.draggingSaved = null; },
 			hoverIcon: (text) => this.hoverIcon(text),
 			openWindowOptions: (windowId, autoName) => this.setState({ colorsActive: windowId, colorsAutoName: autoName }),
 			openSessionOptions: (id, autoName) => this.setState({ colorsSession: id, colorsAutoName: autoName }),
@@ -1761,6 +1766,13 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		this.setState({ ...this.selectionText(), dirty: true });
 	}
 	drag(e : React.DragEvent<HTMLDivElement>, id : number) {
+		// a saved tab: it and, when it is selected, the other selected saved
+		// tabs; it is opened, not moved, so the selection stays as it is
+		if (isSavedTabKey(id)) {
+			this.draggingSaved = draggedSaved(id, this.state.selection);
+			return;
+		}
+		this.draggingSaved = null;
 		if (!this.state.selection.has(id)) {
 			keepKind(this.state.selection, tabKind(id));
 			this.state.selection.add(id);
@@ -1772,6 +1784,10 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	async drop(id : number, before : boolean) {
 		var tab : browser.Tabs.Tab = this.state.tabsbyid.get(id);
 		if (!tab) return;
+		if (this.draggingSaved) {
+			await this.openSaved(tab.windowId, tab.index + (before ? 0 : 1));
+			return;
+		}
 		var tabs = this.selectedTabs();
 		var index = tab.index + (before ? 0 : 1);
 
@@ -1784,11 +1800,37 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		this.update();
 	}
 	async dropWindow(windowId : number) {
+		if (this.draggingSaved) {
+			// no tab to go next to: at the end
+			await this.openSaved(windowId, undefined);
+			return;
+		}
 		var tabs = this.selectedTabs();
 
 		browser.runtime.sendMessage<ICommand>({command: S.move_tabs_to_window, window_id: windowId, tabs: tabs});
 
 		this.state.selection.clear();
+	}
+	// Opens the dragged saved tabs in the open window `windowId` at `index`
+	// (undefined: at the end), through the worker (../../helpers/openTabs.ts),
+	// and waits for it. The saved window is not changed. When the dragged tabs
+	// were the selection, the selection is done with.
+	async openSaved(windowId : number, index : number | undefined) {
+		const keys = this.draggingSaved;
+		this.draggingSaved = null;
+		if (!keys || keys.length === 0) return;
+		const tabs = savedTabsToOpen(keys, this.visibleSessions());
+		if (tabs.length === 0) return;
+		let opened : number | undefined;
+		try {
+			opened = await browser.runtime.sendMessage<ICommand, number>({command: S.open_saved_tabs, window_id: windowId, index: index, saved_tabs: tabs});
+		} catch (e) {
+			console.error(e);
+			opened = 0;
+		}
+		if (keys.some((key) => this.state.selection.has(key))) this.clearSelection();
+		const name = this.state.windowrefs.get(windowId)?.current?.shownName() || "";
+		this.setState({ ...openedText(typeof opened === "number" ? opened : tabs.length, name), dirty: true });
 	}
 	toggleFilterMismatchedTabs = async () => {
 		var _filter_tabs = !this.state.filterTabs;

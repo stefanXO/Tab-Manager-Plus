@@ -6,7 +6,7 @@ import { focusOnWindow, focusOnWindowDelayed, createWindowWithTabs, createWindow
 import { hashcode } from "@helpers/windows";
 import { getLocalStorageMap, setLocalStorageMap, serialized } from "@helpers/storage";
 import { setupPopup } from "@ui/open";
-import { updateTabCount, discardTabs, moveTabsToWindow, closeTabs, focusOnTabAndWindow, focusOnTabAndWindowDelayed } from "@background/tabs";
+import { updateTabCount, discardTabs, moveTabsToWindow, closeTabs, focusOnTabAndWindow, focusOnTabAndWindowDelayed, openSavedTabs } from "@background/tabs";
 import * as browser from 'webextension-polyfill';
 import { ICommand } from '@types';
 
@@ -69,6 +69,8 @@ function dispatch(request : ICommand) : Promise<unknown> | void {
 			return createWindowWithSessionTabs(request.session, request.tab_id, request.screen);
 		case S.close_tabs:
 			return closeTabs(request.tabs);
+		case S.open_saved_tabs:
+			return openSavedTabs(request.window_id, request.index, request.saved_tabs);
 	}
 }
 

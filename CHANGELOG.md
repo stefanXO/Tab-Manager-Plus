@@ -47,6 +47,7 @@ Windows And Sessions
 - Ctrl+click or right-click on a tab of a saved window selects it, instead of an unrelated open tab that Delete would then close; saved windows are no longer marked as the active window
 - Tabs of saved windows can be deleted: select them, then use the trash button or the Delete key; a saved window with no tab left is deleted, and the same Undo notice applies (#180)
 - Selected tabs can be saved as a new saved window, named from their sites: the new button next to "Move tabs to new window" in the bottom bar (#201)
+- Tabs of saved windows can be dragged into an open window: dropped on a window or next to one of its tabs, the tab opens there (all selected saved tabs, when the dragged one is selected), and the saved window keeps it
 - Saved windows look different from open windows: a dashed edge, a saved icon before the name, and faded favicons that regain their color under the mouse; they are no longer dimmed as a whole, so their tabs stay readable
 - Resting the mouse on a tab of a saved window shows a card like an open tab's: when it was saved, its place in the saved window, and the windows it is open in right now; an open tab's card lists the saved windows that also hold it
 - Resting the mouse on a saved window shows a card like an open window's: its tabs and sites, when it was saved, the size and state it was saved with, and a map of the monitors showing where it would land if restored now

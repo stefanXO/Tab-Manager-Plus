@@ -20,6 +20,8 @@ export interface ITabManagerActions {
 	drop(id : number, before : boolean) : void;
 	dropWindow(windowId : number) : void;
 	dragFavicon(icon? : string) : string;
+	// a drag ended, dropped or not
+	dragEnd() : void;
 	hoverIcon(text : string) : void;
 	openWindowOptions(windowId : number, autoName : string) : void;
 	// the same screen on a saved window

@@ -238,6 +238,20 @@ const STATES = [
 		scrollEnd: true}},
 	// nothing selected: the button is dimmed
 	{name: 'save-sel-none', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {}},
+	// dragging a saved tab into an open window (src/helpers/openTabs.ts): the
+	// second tab of "Conference reading" held over the third tab of "Research",
+	// its right / bottom half, so the drop indicator shows there. dpr 1, blocks +
+	// List, 800x600 and 380x900
+	{name: 'saved-drag-over', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {
+		clicks: [{drag: '#sessiontab_s1_1', over: '#tab-20'}], scrollInto: '#window-103'}},
+	// the same, dropped: the saved tab opens after "Information overload" (the
+	// fake worker opens it; every shot closes the copy the shot before opened)
+	{name: 'saved-drag-drop', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {
+		clicks: [{drag: '#sessiontab_s1_1', over: '#tab-20', drop: true}], scrollInto: '#window-103'}},
+	// two saved tabs selected (Ctrl+click), the second one dragged in front of
+	// "Browser extension": both open there, in their saved order
+	{name: 'saved-drag-sel', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {
+		clicks: [{sel: '#sessiontab_s1_1', ctrl: true}, {sel: '#sessiontab_s1_3', ctrl: true}, {drag: '#sessiontab_s1_3', over: '#tab-22', side: 'before', drop: true}]}},
 	// a saved window that was the focused window when it was saved (its stored
 	// windowsInfo says focused, with the id of the focused open window "Work"):
 	// it must not look like the active window. dpr 1, blocks + List, 800x600
@@ -441,6 +455,35 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 				// a key press on the list, as the root's onKeyDown sees it
 				q('#root').dispatchEvent(new KeyboardEvent('keydown', {bubbles: true, cancelable: true, keyCode: c.key, which: c.key}))
 				await frame()
+				continue
+			}
+			if (c.drag) {
+				// a drag from `drag` onto `over`, as the html5 events arrive: dragstart
+				// on the source, dragenter + dragover on the target at its left / top
+				// quarter (`side: 'before'`) or right / bottom quarter (else), then,
+				// with `drop`, drop on the target and dragend on the source
+				const src = q(c.drag), dst = q(c.over)
+				if ((!src || !dst) && c.optional) continue
+				if (!src || !dst) throw new Error('nothing to drag at ' + c.drag + ' / ' + c.over)
+				const dt = new DataTransfer()
+				const ev = (type, xy = {}) => new DragEvent(type, {bubbles: true, cancelable: true, dataTransfer: dt, ...xy})
+				src.dispatchEvent(ev('dragstart'))
+				await frame()
+				// measured after dragstart: its re-render may move things
+				dst.scrollIntoView({block: 'nearest', inline: 'nearest'})
+				const r = dst.getBoundingClientRect()
+				const f = c.side === 'before' ? 0.25 : 0.75
+				const at = {clientX: r.left + r.width * f, clientY: r.top + r.height * f}
+				dst.dispatchEvent(ev('dragenter', at))
+				dst.dispatchEvent(ev('dragover', at))
+				await frame()
+				if (c.drop) {
+					dst.dispatchEvent(ev('drop', at))
+					src.dispatchEvent(ev('dragend'))
+					// the popup waits for the (fake) worker, then reads the tabs again
+					await new Promise((r) => setTimeout(r, 300))
+					await frame()
+				}
 				continue
 			}
 			const el = q(c.sel)

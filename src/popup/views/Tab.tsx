@@ -152,6 +152,12 @@ export class Tab extends React.Component<ITab, ITabState> {
 			tabDom.onDragLeave = this.dragOut;
 			tabDom.onDrop = this.drop;
 			tabDom.draggable = "true";
+		} else if (!!this.props.onOpen) {
+			// a saved tab: dropped on an open window or tab it opens there
+			// (TabManager.drop); not a drop target itself
+			tabDom.onDragStart = this.dragStart;
+			tabDom.onDragEnd = this.dragEnd;
+			tabDom.draggable = "true";
 		}
 
 		return (
@@ -232,15 +238,26 @@ export class Tab extends React.Component<ITab, ITabState> {
 		return false;
 	}
 	dragStart = (e : React.DragEvent<HTMLDivElement>) => {
-		if (!this.props.draggable) return false;
+		const saved = !this.props.draggable && !!this.props.onOpen;
+		if (!this.props.draggable && !saved) return false;
 
 		this.setState({
 			dragFavIcon: ""
 		});
 		this.context.dragFavicon(this.state.favIcon);
-		e.dataTransfer.setData("Text", this.props.tab.id.toString());
+		if (saved) {
+			// a saved tab's key means nothing outside the popup: its address, and
+			// it is copied (opened), never moved out of the saved window
+			e.dataTransfer.setData("Text", this.props.tab.url || "");
+			e.dataTransfer.effectAllowed = "copyLink";
+		} else {
+			e.dataTransfer.setData("Text", this.props.tab.id.toString());
+		}
 		e.dataTransfer.setData("text/uri-list", this.props.tab.url || "");
 		this.context.drag(e, this.props.tab.id);
+	}
+	dragEnd = () => {
+		this.context.dragEnd();
 	}
 	dragOver = (e : React.DragEvent<HTMLDivElement>) => {
 		if (!this.props.draggable) return false;

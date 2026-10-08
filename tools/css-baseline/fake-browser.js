@@ -6,6 +6,8 @@
 // CSS needs to exercise: pinned, discarded, audible, muted, duplicate urls, and
 // a couple of saved sessions.
 
+import {openTabsAt} from "../../src/helpers/openTabs.ts";
+
 const F = (d) => "/fav/" + d + ".png";
 let nextId = 1;
 function tab(windowId, title, url, fav, extra = {}) {
@@ -175,10 +177,37 @@ export const tabs = {
 	onAttached: event(), onDetached: event(), onReplaced: event(),
 };
 
+// The worker's side of dragging saved tabs into a window (open_saved_tabs),
+// with the worker's own openTabsAt over a tabs.create that inserts into the
+// fake tabs (clamped, renumbered; title and icon from the saved tab with that
+// url). Layouts and themes are shot on one page and the drop is made again for
+// each shot, so the tabs the shot before opened are closed first (the popup
+// still counts them in the drop index: it is moved left past them).
+let droppedIds = [];
+function fakeCreate(data) {
+	const inWin = all.filter((t) => t.windowId === data.windowId);
+	const index = Math.max(0, Math.min(data.index ?? inWin.length, inWin.length));
+	const from = Object.values(store.sessions || {}).flatMap((s) => s.tabs).find((t) => t.url === data.url) || {};
+	const t = tab(data.windowId, from.title || data.url || "New Tab", data.url || "", from.favIconUrl || "", { pinned: !!data.pinned, lastAccessed: now });
+	const after = inWin[index - 1];
+	all.splice(after ? all.indexOf(after) + 1 : (inWin[0] ? all.indexOf(inWin[0]) : all.length), 0, t);
+	all.filter((x) => x.windowId === data.windowId).forEach((x, i) => (x.index = i));
+	return Promise.resolve({ id: t.id, index: t.index });
+}
+async function fakeWorker(msg) {
+	if (!msg || msg.command !== "open_saved_tabs") return undefined;
+	let index = msg.index;
+	if (index !== undefined) index -= all.filter((t) => droppedIds.includes(t.id) && t.windowId === msg.window_id && t.index < msg.index).length;
+	for (const id of droppedIds) { const i = all.findIndex((t) => t.id === id); if (i >= 0) all.splice(i, 1); }
+	for (const w of [W1, W2, W3]) all.filter((t) => t.windowId === w).forEach((t, i) => (t.index = i));
+	droppedIds = await openTabsAt(fakeCreate, msg.window_id, index, msg.saved_tabs || [], false);
+	return droppedIds.length;
+}
+
 export const runtime = {
 	id: "demo",
 	getURL: (p) => location.origin + "/" + p,
-	async sendMessage() { return undefined; },
+	async sendMessage(msg) { return fakeWorker(msg); },
 	onMessage: event(),
 	openOptionsPage() {},
 };

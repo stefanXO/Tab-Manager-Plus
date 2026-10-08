@@ -186,6 +186,15 @@ currently on disk — there is no stale copy to forget about.
   (`src/helpers/sessions.ts`): Ctrl+click three tabs of "Work" and one of "Life", so the
   bottom bar's save-tabs button is lit; `-done` also clicks it (`optional: true`), so the new
   saved window is at the end of the list; `-none` has nothing selected (the button is dimmed)
+- `saved-drag-over` (+ `saved-drag-drop`, `saved-drag-sel`): dragging saved tabs into an open
+  window (`src/popup/savedDrag.ts`, `src/helpers/openTabs.ts`), through a
+  `{drag: <source>, over: <target>, side?: 'before', drop?: true}` entry in `apply.clicks`
+  (synthetic html5 drag events with a `DataTransfer`). `-over` holds the second tab of
+  "Conference reading" over the third tab of "Research" (the drop marker); `-drop` drops it
+  there; `-sel` Ctrl+clicks two saved tabs and drops the second in front of "Browser
+  extension". The fake `runtime.sendMessage` answers `open_saved_tabs` with the worker's
+  own `openTabsAt` over a fake `tabs.create`; since layouts and themes share one page, each
+  drop first closes the tabs the shot before opened
 - `fresh` / `fresh-compact`: the List view's freshness bars (`src/popup/freshness.ts`, drawn at the end of every List row from the fixture's `lastAccessed`, 0 min .. 14 days: all five levels) — `fresh` as `plain`, `fresh-compact` with the `compact` setting on. `vertical` × 2 themes × `800x600`, dpr 1 only
 - `page-options-na-<theme>-<width>`: `options.html` standalone, 2 × 3 = 6
 - `page-changelog-na-<theme>-<width>`: `changelog.html` standalone, 2 × 3 = 6.

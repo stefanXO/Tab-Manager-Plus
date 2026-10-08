@@ -7,6 +7,7 @@ import {debounce} from "@helpers/utils";
 import {checkWindow, createWindowWithTabs} from '@background/windows';
 import * as browser from 'webextension-polyfill';
 import {getSetting} from "@helpers/settings";
+import {openTabsAt, ISavedTabOpen} from "@helpers/openTabs";
 
 // must stay synchronous: it runs during the service worker's first event loop
 // turn so that the events that woke the worker are not missed
@@ -68,6 +69,14 @@ export async function moveTabsToWindow(windowId, tabs) {
 		await browser.tabs.move(tab.id, {windowId: windowId, index: -1});
 		await browser.tabs.update(tab.id, {pinned: tab.pinned});
 	}
+}
+
+// saved tabs dragged from a saved window into an open window (the popup waits
+// for this): opened in the background at the drop position, the saved window
+// is not changed. Resolves with how many tabs opened.
+export async function openSavedTabs(windowId : number, index : number | undefined, tabs : ISavedTabOpen[] = []) : Promise<number> {
+	const opened = await openTabsAt((data) => browser.tabs.create(data), windowId, index, tabs, IS_FIREFOX);
+	return opened.length;
 }
 
 export function focusOnTabAndWindowDelayed(tabId: number, windowId: number) {
