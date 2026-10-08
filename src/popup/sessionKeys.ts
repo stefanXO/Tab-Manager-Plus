@@ -76,7 +76,7 @@ export function keepKind(selection : Set<number>, kind : TabKind) : boolean {
 
 // Something is selected and all of it is saved tabs. The open-tab actions
 // (close, discard, pin, move to a new window) have nothing to act on then.
-export function onlySavedSelected(selection : Set<number>) : boolean {
+export function onlySavedSelected(selection : ReadonlySet<number>) : boolean {
 	if (selection.size === 0) return false;
 	for (const id of selection) if (!isSavedTabKey(id)) return false;
 	return true;

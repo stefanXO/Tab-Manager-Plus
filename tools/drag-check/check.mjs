@@ -462,6 +462,102 @@ try {
 		}, false)
 	}
 
+	// The keys (Delete, Backspace, Enter with a selection), pressed with the
+	// browser's own key events on the focus a click left behind. Own tab only.
+	// Delete / Backspace are checked on what the popup shows (a saved tab is
+	// hidden at once, written when the Undo countdown ends) and on the open tabs.
+	for (const layout of ['blocks', 'vertical']) {
+		const key = (name, fn) => checks.push({name: 'keys ' + layout + ': ' + name, fn, mode: 'tab'})
+		const windowsNow = () => api(async () => (await chrome.windows.getAll()).map((w) => w.id))
+		// the tab titles of the windows that were not there before
+		const newWindow = (before, want) => settle(() => api(async (known) => {
+			const out = []
+			for (const w of await chrome.windows.getAll({populate: true})) {
+				if (known.includes(w.id)) continue
+				out.push(w.tabs.sort((a, b) => a.index - b.index).map((t) => t.title || t.pendingUrl || t.url))
+			}
+			return out.length === 1 ? out[0] : out
+		}, before), want)
+		key('Delete, saved tabs selected: they go from their saved windows', async () => {
+			await fixture(layout)
+			const p = await openPopup()
+			await ctrlClick(p, savedSel('Juliett'))
+			await ctrlClick(p, savedSel('Mike'))
+			await p.keyboard.press('Delete')
+			const want = [['Hotel', 'India', 'Kilo'], ['Lima', 'November']]
+			return {got: await settle(async () => [await shownIn(p, '#session-s1'), await shownIn(p, '#session-s2')], want), want}
+		})
+		key('Backspace, open tabs selected: they close', async () => {
+			const [w1] = await fixture(layout)
+			const p = await openPopup()
+			await ctrlClick(p, tabSel('Alpha'))
+			await ctrlClick(p, tabSel('Bravo'))
+			await p.keyboard.press('Backspace')
+			const want = ['Charlie']
+			return {got: await settle(() => titlesOf(w1), want), want}
+		})
+		key('Delete in the focused search box edits it: nothing closes', async () => {
+			const [w1] = await fixture(layout)
+			const p = await openPopup()
+			await ctrlClick(p, tabSel('Alpha'))
+			await ctrlClick(p, savedSel('Kilo'))
+			await ctrlClick(p, tabSel('Bravo'))
+			await p.focus('.searchBoxInput')
+			await p.keyboard.press('Delete')
+			await p.keyboard.press('Backspace')
+			await new Promise((r) => setTimeout(r, 600))
+			const want = [['Alpha', 'Bravo', 'Charlie'], ['Hotel', 'India', 'Juliett', 'Kilo']]
+			return {got: [await titlesOf(w1), await shownIn(p, '#session-s1')], want}
+		})
+		key('Enter, saved tabs selected: one new window, in the order shown', async () => {
+			await fixture(layout)
+			const p = await openPopup()
+			const before = await windowsNow()
+			// clicked in the opposite order, from two saved windows
+			await ctrlClick(p, savedSel('Mike'))
+			await ctrlClick(p, savedSel('Kilo'))
+			await ctrlClick(p, savedSel('India'))
+			await p.keyboard.press('Enter')
+			const want = ['India', 'Kilo', 'Mike']
+			const got = await newWindow(before, want)
+			return {got: [got, await savedTitles()], want: [want, {s1: ['Hotel', 'India', 'Juliett', 'Kilo'], s2: ['Lima', 'Mike', 'November']}]}
+		})
+		// a second Enter before the worker answers (quick double press, held key)
+		// must not open the same saved tabs in a second window
+		for (const how of ['two quick presses', 'a held key']) {
+			key('Enter, saved tabs selected, ' + how + ': still one window', async () => {
+				await fixture(layout)
+				const p = await openPopup()
+				const before = await windowsNow()
+				await ctrlClick(p, savedSel('India'))
+				await ctrlClick(p, savedSel('Kilo'))
+				if (how === 'a held key') {
+					// down twice without up: the second keydown has repeat set
+					await p.keyboard.down('Enter')
+					await p.keyboard.down('Enter')
+					await p.keyboard.up('Enter')
+				} else {
+					await Promise.all([p.keyboard.press('Enter'), p.keyboard.press('Enter')])
+				}
+				const want = ['India', 'Kilo']
+				await newWindow(before, want)
+				// a duplicate would show up a moment later
+				await new Promise((r) => setTimeout(r, 800))
+				return {got: await newWindow(before, want), want}
+			})
+		}
+		key('Enter, open tabs selected: the old move to a new window', async () => {
+			await fixture(layout)
+			const p = await openPopup()
+			const before = await windowsNow()
+			await ctrlClick(p, tabSel('Bravo'))
+			await ctrlClick(p, tabSel('Charlie'))
+			await p.keyboard.press('Enter')
+			const want = ['Bravo', 'Charlie']
+			return {got: await newWindow(before, want), want}
+		})
+	}
+
 	for (const c of checks) {
 		if (only && !c.name.includes(only)) continue
 		mode = c.mode

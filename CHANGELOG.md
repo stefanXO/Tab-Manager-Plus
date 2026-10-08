@@ -48,6 +48,7 @@ Windows And Sessions
 - Saved windows are switched on by default (no longer called beta or experimental in the settings); the switch in the options still turns them off
 - Ctrl+click or right-click on a tab of a saved window selects it, instead of an unrelated open tab that Delete would then close; saved windows are no longer marked as the active window
 - Tabs of saved windows can be deleted: select them, then use the trash button or the Delete key; a saved window with no tab left is deleted, and the same Undo notice applies (#180)
+- Delete and Backspace close the selected tabs, as the trash button does (the selected tabs of saved windows are removed from them, with Undo), unless the search box is focused or holds text, where they edit the search; Enter with saved tabs selected opens them in one new window, in the order shown
 - Selected tabs can be saved as a new saved window, named from their sites: the new button next to "Move tabs to new window" in the bottom bar (#201)
 - Tabs of saved windows can be dragged into an open window: dropped on a window or next to one of its tabs, the tab opens there (all selected saved tabs, when the dragged one is selected), and the saved window keeps it, also when dropped in a Tab Manager tab or sidebar other than the one the drag started in
 - Dragging several tabs (open or saved) shows them as a small stack of tabs with their number under the mouse

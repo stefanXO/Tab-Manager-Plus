@@ -6,6 +6,8 @@ import {parseQuery, matchTab, searchable} from "../search";
 import {duplicatesTitle, findDuplicates} from "../duplicates";
 import {recentTabs, recentText, recentTitle, RecentTabs, RECENT_LEVELS} from "../recent";
 import {onMainScreen} from "../screen";
+import {selectionKeyAction} from "../selectionKeys";
+import {savedWindowFor} from "../savedRestore";
 import {isSavedTabKey, tabKind, keepKind, onlySavedSelected, dropMissingSaved, savedTabKeys} from "../sessionKeys";
 import {debounce, maybePluralize} from "@helpers/utils";
 import {Window, Session, TabOptions, Tab, WindowOptions} from "@views";
@@ -15,7 +17,7 @@ import * as browser from 'webextension-polyfill';
 import {ICommand, ITabManager, ITabManagerState, ISavedSession} from "@types";
 import {ManagerContext, ITabManagerActions, ISettings} from "../context";
 import {attachMasonry, Masonry} from "../masonry";
-import {sizePopup} from "@helpers/popup_size";
+import {sizePopup, popupScreen} from "@helpers/popup_size";
 import {applyTheme} from "@helpers/theme";
 import {StatsLayer, StatsSource} from "./StatsLayer";
 import {UndoNotice} from "./UndoNotice";
@@ -42,12 +44,6 @@ function refsOf(keys : readonly number[]) : SavedTabRef[] {
 // the ids of these open tabs
 function tabIds(tabs : readonly browser.Tabs.Tab[]) : number[] {
 	return tabs.map((tab) => tab.id).filter((id) : id is number => typeof id === "number");
-}
-
-// the focus is in a text box that holds text: Delete edits that text
-function editingText() : boolean {
-	const el = document.activeElement as HTMLInputElement | null;
-	return !!el && el.tagName === "INPUT" && el.type === "text" && el.value !== "";
 }
 
 // the settings the manager holds in its state and applies
@@ -917,6 +913,47 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		const s = Object.values(stored).find((x) => x && x.id === id);
 		return s ? this.savedName(s) : "";
 	}
+	// Opens the selected saved tabs in one new window, in the order shown
+	// (../savedRestore.ts), through the worker command a click on a saved tab
+	// uses. The popup waits for the worker before it closes (Chrome drops the
+	// message of a popup that is gone before the worker is awake).
+	// A second Enter while the worker is still answering (double press, held
+	// key, cold worker) must not open a second window: `restoring` holds it off.
+	private restoring = false;
+	async openSelectedSaved() {
+		if (this.restoring) return;
+		const session = savedWindowFor(this.state.selection, this.visibleSessions());
+		if (!session) return;
+		this.restoring = true;
+		let windowId : number | undefined;
+		try {
+			windowId = await browser.runtime.sendMessage<ICommand, number | undefined>({
+				command: S.create_window_with_session_tabs,
+				session: session,
+				tab_id: null,
+				// the worker has no screen; this is the display the popup is on
+				screen: popupScreen()
+			});
+		} catch (e) {
+			console.error(e);
+		} finally {
+			// before the failure branch: a refused restore can be retried
+			this.restoring = false;
+		}
+		if (typeof windowId !== "number") {
+			// the browser refused the window: stay open, the selection stays
+			this.setState({ ...openedText(0, ""), dirty: true });
+			return;
+		}
+		this.clearSelection();
+		if (!!window.inPopup) {
+			window.close();
+		} else {
+			this.setState(this.selectionText());
+			// give the popup a moment to pick up the new window and render it
+			setTimeout(() => this.scrollTo("window", String(windowId)), 500);
+		}
+	}
 	// Renames / recolours a saved window (./sessionEdit.ts). The card changes
 	// at once; storage.onChanged then brings every other popup along.
 	async editSession(id : string, edit : SessionEdit) {
@@ -1514,6 +1551,40 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	checkKey = async (e) => {
 		// enter: only on the window list. On the options screen or the window
 		// name / colour overlay it must not open or move to a window.
+		// Delete / Backspace / Enter with a selection (../selectionKeys.ts)
+		const search = this.searchBoxRef.current;
+		const action = selectionKeyAction({
+			keyCode: e.keyCode,
+			modified: e.ctrlKey || e.altKey || e.metaKey,
+			mainScreen: onMainScreen(this.state),
+			searchFocused: !!search && document.activeElement === search,
+			searchEmpty: !search || search.value === "",
+			selection: this.state.selection
+		});
+		// a held key (auto-repeat) acts once: only the first press counts
+		if (action === "open-saved") {
+			e.preventDefault();
+			if (e.repeat) return;
+			await this.openSelectedSaved();
+			return;
+		}
+		if (action === "delete-saved") {
+			e.preventDefault();
+			if (e.repeat) return;
+			this.deleteSavedTabs();
+			return;
+		}
+		if (action === "close-open") {
+			e.preventDefault();
+			if (e.repeat) return;
+			// straight to the worker: a key never falls back to closing the
+			// current tab the way the trash button does (deleteTabs)
+			const tabs = this.selectedTabs();
+			if (tabs.length) {
+				browser.runtime.sendMessage<ICommand>({command: S.close_tabs, tabs: tabs});
+			}
+			return;
+		}
 		if (e.keyCode === 13) {
 			if (!onMainScreen(this.state)) return;
 			await this.addWindow();
@@ -1549,13 +1620,6 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			}
 			this.clearSelection();
 			this.clearHiddenTabs();
-			return;
-		}
-		// Delete with saved tabs selected removes them from their saved windows,
-		// unless it is editing the search text
-		if (e.keyCode === 46 && onlySavedSelected(this.state.selection) && onMainScreen(this.state) && !editingText()) {
-			e.preventDefault();
-			this.deleteSavedTabs();
 			return;
 		}
 		// any typed keys
@@ -1880,7 +1944,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		const selected = this.state.selection.size;
 		if (selected === 0) return { topText: "No tabs selected", bottomText: " " };
 		// saved tabs (all of one kind, see select): Delete removes them, Enter has nothing to do yet
-		if (onlySavedSelected(this.state.selection)) return { topText: "Selected " + maybePluralize(selected, "saved tab"), bottomText: "Press delete to remove " + (selected === 1 ? "it" : "them") + " from the saved window" };
+		if (onlySavedSelected(this.state.selection)) return { topText: "Selected " + maybePluralize(selected, "saved tab"), bottomText: "Press enter to open " + (selected === 1 ? "it" : "them") + " in a new window, delete to remove " + (selected === 1 ? "it" : "them") };
 		if (selected === 1) return { topText: "Selected " + selected + " tab", bottomText: "Press enter to switch to it" };
 		return { topText: "Selected " + selected + " tabs", bottomText: "Press enter to move them to a new window" };
 	}
