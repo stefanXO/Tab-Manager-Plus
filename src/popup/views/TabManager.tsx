@@ -761,11 +761,12 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 						type="text"
 						disabled={true}
 						className="tabtitle"
+						dir="auto"
 						ref={this.topBoxRef}
 						placeholder={maybePluralize(tabCount, 'tab') + " in " + maybePluralize(this.state.windows.length, 'window')}
 						value={this.state.topText}
 					/>
-					<input type="text" disabled={true} className="taburl" ref={this.topBoxUrlRef} placeholder={this.getTip()} value={this.state.bottomText} />
+					<input type="text" disabled={true} className="taburl" dir="auto" ref={this.topBoxUrlRef} placeholder={this.getTip()} value={this.state.bottomText} />
 				</div>
 				{onMainScreen(this.state) && <div className={"window searchbox"}>
 					<table>

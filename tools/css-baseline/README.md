@@ -190,6 +190,10 @@ currently on disk — there is no stale copy to forget about.
   (`apply.savedLong`), every layout at 800x600 and 380x900: the title shows as much of the name as fits, with an
   ellipsis of its own, never a bare "..."; `-hover`: the mouse on it; `-opts`: the name screen a click on it opens.
   The real clicks on these titles are `tools/drag-check` `--only title`
+- `rtl` (+ `-saved`, `-hover`, `-opts`): long Arabic and Hebrew tab titles and window names (`dir="auto"`),
+  light only, 800x600. The titles and the open windows' names come in before load through the state's
+  `fake` (`window.__fakeTitles`, read by `fake-browser.js`, and `window.__fakeSeed`); the saved names
+  through `apply.rtl`
 - `saved-tabs-delete` (+ `-key`, `-all`, `-two`, `-undo`): deleting selected saved tabs
   (`src/popup/savedDelete.ts`): Ctrl+click tabs of a saved window, then the trash button
   (`-key`: Ctrl+Delete, via a `{key: 46, ctrl: true}` entry in `apply.clicks`); `-all` selects every

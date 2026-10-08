@@ -94,7 +94,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 				/>
 			);
 			children.push(
-				<div key={"tab-title-" + this.props.tab.id} className="tabtitle">
+				<div key={"tab-title-" + this.props.tab.id} className="tabtitle" dir="auto">
 					{this.title()}
 				</div>
 			);

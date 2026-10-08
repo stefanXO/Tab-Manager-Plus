@@ -254,6 +254,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 					>
 						<span
 							className="editName windowName"
+							dir="auto"
 							onClick={this.openOptions}
 							data-hover="Change the name of this window"
 						>

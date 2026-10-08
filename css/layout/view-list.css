@@ -86,6 +86,9 @@
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+	/* dir="auto": an Arabic or Hebrew title is cut at its end, the ellipsis on
+	   the left; a short one still starts next to the icon, as in Chrome's tabs */
+	text-align: left;
 }
 .window.vertical .tab.full > .tab-pinned,
 .window.vertical .tab.full > .tab-highlighted,

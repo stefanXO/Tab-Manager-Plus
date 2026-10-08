@@ -136,6 +136,7 @@ export class Session extends React.Component<ISession, ISessionState> {
 							    not the span: a click on it went to the card and restored the window). */}
 							<span
 								className="editName windowName"
+								dir="auto"
 								onClick={this.openOptions}
 								data-hover="Change the name of this saved window"
 							>

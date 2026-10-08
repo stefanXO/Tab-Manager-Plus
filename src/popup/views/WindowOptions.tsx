@@ -50,6 +50,7 @@ export class WindowOptions extends React.Component<IWindowOptions, IWindowOption
 				<input
 					className="window-name-input"
 					type="text"
+					dir="auto"
 					onChange={this.changeName}
 					value={this.state.name}
 					placeholder={this.props.autoName || "Name window..."}

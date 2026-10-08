@@ -70,6 +70,8 @@ html, body {
 	background: var(--header-field-bg);
 	border-radius: 0;
 	color: var(--text);
+	/* dir="auto" on both lines: right-to-left text reads right, still left-aligned */
+	text-align: left;
 }
 /* Donate and Rate turned off in the options: only the theme and options buttons */
 .no-supportLinks .window.top input {

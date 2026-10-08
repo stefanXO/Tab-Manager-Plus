@@ -98,6 +98,17 @@ const RESET_IMPORTED = {compact: false, tabLimit: 0, windowTitles: true, hideWin
  * A popup state. `layouts` limits which layouts it is shot in at dpr 1,
  * `scaleLayouts` which layouts it is shot in on the scale axis.
  */
+// what the rtl states load with (newPage `fake`): tab id -> title
+// (fake-browser.js reads window.__fakeTitles) and the open windows' names
+const RTL = {
+	titles: {
+		2: 'مستودع المشروع الجديد مع وصف طويل جدا لا يتسع في سطر واحد أبدا مهما كانت النافذة عريضة، ونهايته هنا – GitHub',
+		3: 'כותרת ארוכה מאוד בעברית של לשונית שלא נכנסת בשורה אחת גם בחלון רחב מאוד, והסוף שלה נמצא כאן – ויקיפדיה',
+		11: 'שלום',
+	},
+	seed: {windowNames: {101: 'نافذة العمل مع اسم طويل جدا لا يتسع في عنوان النافذة أبدا مهما كانت عريضة، ونهايته هنا', 102: 'חלון', 103: 'Research'}},
+}
+
 const STATES = [
 	{name: 'plain', layouts: LAYOUTS, scaleLayouts: LAYOUTS, apply: {}},
 	{name: 'search', layouts: LAYOUTS, scaleLayouts: ['blocks'], apply: {search: 'github'}},
@@ -209,6 +220,13 @@ const STATES = [
 	{name: 'saved-long-title', layouts: LAYOUTS, scaleLayouts: [], widths: ['800x600', '380x900'], apply: {savedLong: true, scrollInto: '#session-s1'}},
 	{name: 'saved-long-title-hover', layouts: LAYOUTS, scaleLayouts: [], widths: ['800x600', '380x900'], apply: {savedLong: true, scrollInto: '#session-s1'}, stats: '#session-s1 .windowName'},
 	{name: 'saved-long-title-opts', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {savedLong: true, overlay: 'session-title'}},
+	// right-to-left text (dir="auto"): long Arabic and Hebrew tab titles, open and
+	// saved window names; cut at their end, the ellipsis on the left. `-opts`: the
+	// saved window's name screen. Light, Blocks and List, 800x600
+	{name: 'rtl', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], themes: ['light'], fake: RTL, apply: {rtl: true}},
+	{name: 'rtl-saved', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], themes: ['light'], fake: RTL, apply: {rtl: true, scrollInto: '#session-s1'}},
+	{name: 'rtl-hover', layouts: ['vertical'], scaleLayouts: [], widths: ['800x600'], themes: ['light'], fake: RTL, apply: {rtl: true}, stats: '#tab-2'},
+	{name: 'rtl-opts', layouts: ['vertical'], scaleLayouts: [], widths: ['800x600'], themes: ['light'], fake: RTL, apply: {rtl: true, overlay: 'session-title'}},
 	// the "Window style" box with the real mouse on it: over the Compact mode
 	// switch (which shows its help text in the header), then onto that option's
 	// description text. The only state that moves the mouse, so :hover applies.
@@ -686,7 +704,7 @@ async function settle(page) {
 }
 
 /** Applies a popup state absolutely: the result never depends on what came before. */
-async function apply(page, {layout, dark, search = '', dup = false, recent = 0, overlay = null, scrollTo = null, store = {}, granted = true, savedFocused = null, clicks = [], scrollInto = null, importFile = null, importInput = '#session_import', freezeClock = false, scrollEnd = false, typeName = null, pickColor = null, savedInfo = null, freshSessions = false, savedAuto = null, savedLong = false, afterWait = 0, quota = false, keepNotices = false, barAt = 0, noticeHover = false, savedUpdated = null, incognito = [], savedPrivate = null, themeSetting = null, escape = false}) {
+async function apply(page, {layout, dark, search = '', dup = false, recent = 0, overlay = null, scrollTo = null, store = {}, granted = true, savedFocused = null, clicks = [], scrollInto = null, importFile = null, importInput = '#session_import', freezeClock = false, scrollEnd = false, typeName = null, pickColor = null, savedInfo = null, freshSessions = false, savedAuto = null, savedLong = false, rtl = false, afterWait = 0, quota = false, keepNotices = false, barAt = 0, noticeHover = false, savedUpdated = null, incognito = [], savedPrivate = null, themeSetting = null, escape = false}) {
 	await page.evaluate(async (s) => {
 		const q = (sel) => document.querySelector(sel)
 		const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
@@ -737,6 +755,16 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 		// older builds: an on/off button without data-level
 		const level = () => +(q('.icon.windowaction.recent')?.dataset.level ?? (q('.icon.windowaction.recent.enabled') ? 1 : 0))
 		for (let i = 0; recentBtn && level() !== s.recent && i < 4; i++) { q('.icon.windowaction.recent').click(); await frame() }
+
+		// 4a. right-to-left names of both saved windows (the open windows' come
+		// with the state's `fake` seed)
+		if (s.rtl) {
+			const {sessions} = await window.__fake.storage.local.get(['sessions'])
+			Object.assign(sessions.s1, {customName: true, name: 'חלון שמור עם שם ארוך מאוד שלא נכנס בכותרת של החלון גם כשהוא רחב, והסוף שלו כאן'})
+			Object.assign(sessions.s2, {customName: true, name: 'مس'})
+			await window.__fake.storage.local.set({sessions})
+			await frame()
+		}
 
 		// 4b. long names of their own (a sentence; a long run with no spaces), so the
 		// title is wider than the card in every layout; set before the overlay opens
@@ -958,7 +986,7 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 		if (s.afterWait) await new Promise((r) => setTimeout(r, s.afterWait))
 		// the list scrolled to its very end: the padding the notice makes room with shows
 		if (s.scrollEnd) { const c = q('.window-container'); if (c) c.scrollTop = c.scrollHeight }
-	}, {layout, dark, search, dup, recent, overlay, store, granted, savedFocused, clicks, scrollInto, importFile, importInput, freezeClock, scrollEnd, typeName, pickColor, savedInfo, freshSessions, savedAuto, savedLong, afterWait, quota, keepNotices, barAt, noticeHover, savedUpdated, incognito, savedPrivate, themeSetting, escape})
+	}, {layout, dark, search, dup, recent, overlay, store, granted, savedFocused, clicks, scrollInto, importFile, importInput, freezeClock, scrollEnd, typeName, pickColor, savedInfo, freshSessions, savedAuto, savedLong, rtl, afterWait, quota, keepNotices, barAt, noticeHover, savedUpdated, incognito, savedPrivate, themeSetting, escape})
 	await settle(page)
 	// 7. scroll the options box headed `scrollTo` to the top of its scroller
 	if (scrollTo) {
@@ -1091,7 +1119,7 @@ let shot = 0, skipped = []
 const want = (name) => !only || name.includes(only)
 
 /** A fresh page in its own browser context; dispose of it with closePage(). */
-async function newPage(size, scale = DPR1, seed = null, staleWorker = false, mac = false) {
+async function newPage(size, scale = DPR1, seed = null, staleWorker = false, mac = false, fake = null) {
 	const context = await browser.createBrowserContext()
 	const page = await context.newPage()
 	page.on('pageerror', (e) => console.log('  pageerror:', e.message))
@@ -1120,6 +1148,11 @@ async function newPage(size, scale = DPR1, seed = null, staleWorker = false, mac
 		Object.defineProperty(Navigator.prototype, 'platform', {get: () => 'MacIntel'})
 		Object.defineProperty(Navigator.prototype, 'userAgentData', {get: () => ({platform: 'macOS'})})
 	})
+	// a state's own tab titles and stored values, read by fake-browser.js on load
+	if (fake) await page.evaluateOnNewDocument((f) => {
+		window.__fakeTitles = f.titles || null
+		window.__fakeSeed = {...(window.__fakeSeed || {}), ...(f.seed || {})}
+	}, fake)
 	if (seed) await page.evaluateOnNewDocument((s) => {
 		window.__fakeSeed = s
 		try { localStorage.setItem('tmpBootCache', JSON.stringify(s)) } catch {}
@@ -1166,13 +1199,13 @@ function shootPopup(scale, sizes, layoutsOf) {
 			if (state.widths && !state.widths.includes(size.name)) continue
 			if (state.chromeOnly && !chrome) continue
 			const names = []
-			for (const theme of THEMES) for (const layout of layoutsOf(state)) names.push([theme, layout, `${state.name}-${layout}-${theme}-${size.name}${suffix}`])
+			for (const theme of state.themes || THEMES) for (const layout of layoutsOf(state)) names.push([theme, layout, `${state.name}-${layout}-${theme}-${size.name}${suffix}`])
 			if (!names.some(([, , n]) => want(n))) continue
 
 			// a state that needs its notice from a fresh load (staleWorker) gets one page per shot
 			const groups = (state.staleWorker ? names.map((n) => [n]) : [names]).filter((g) => g.some(([, , n]) => want(n)))
 			for (const group of groups) tasks.push(async () => {
-				const page = await newPage(size, scale, null, !!state.staleWorker, !!state.mac)
+				const page = await newPage(size, scale, null, !!state.staleWorker, !!state.mac, state.fake || null)
 				try {
 					await page.goto(origin + '/popup.html', {waitUntil: 'load'})
 					await page.waitForFunction(() => document.querySelector('.searchBoxInput') && document.querySelectorAll('.window').length >= 3, {timeout: 20000})

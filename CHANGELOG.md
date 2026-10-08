@@ -149,6 +149,7 @@ Smaller fixes
 - The header icons (Donate, Rate, theme and options) now stay visible in a narrow popup and in the sidebar. At 450 px wide or less they used to be hidden, which left no way into the options
 - On the changelog page, a section whose lines are only for the other browser no longer shows as an empty heading
 - A user name and password in a web address (user:password@) no longer show in the popup or in the debug export file
+- Long Arabic and Hebrew titles and window names now show their start and are cut at their end, and the name box types right to left
 
 6.0.0 (2024-10-01)
 =====

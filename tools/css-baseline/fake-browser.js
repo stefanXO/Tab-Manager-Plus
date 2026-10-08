@@ -45,6 +45,8 @@ const all = [
 	tab(W3, "Ask HN: How many tabs do you keep open?", "https://news.ycombinator.com/item?id=41234567", F("news.ycombinator.com")),
 ];
 for (const w of [W1, W2, W3]) all.filter((t) => t.windowId === w).forEach((t, i) => (t.index = i));
+// a state's own titles, set before load (shoot.mjs `titles`: tab id -> title)
+for (const t of all) if (globalThis.__fakeTitles && globalThis.__fakeTitles[t.id] != null) t.title = globalThis.__fakeTitles[t.id];
 
 // positions for the window card's monitor map: Work and Life on the primary
 // monitor, Research on the second one (see `displays` below)
