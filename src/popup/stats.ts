@@ -41,7 +41,7 @@ export interface StatsWindow {
 // toolbar images (position, opener, copies), and line drawings (active: a
 // clock, zoom, tabs, sites, used, window, monitor, hint)
 export type StatsIcon = "active" | "asleep" | "muted" | "playing" | "pinned" | "position" | "opener" | "copies"
-	| "zoom" | "tabs" | "sites" | "used" | "window" | "monitor" | "hint";
+	| "zoom" | "tabs" | "sites" | "used" | "window" | "monitor" | "hint" | "saved";
 
 // one word group of a line, drawn with its own icon ("· "-separated)
 export interface StatsItem {
@@ -75,6 +75,28 @@ export interface TabStatsContext {
 	windowName? : (windowId : number) => string | undefined;
 	// tabs.getZoom(), when it has answered
 	zoom? : number;
+	// the names of the saved windows that hold this tab's url (savedWindowsWith)
+	savedIn? : string[];
+}
+
+// the card of a tab of a saved window
+export interface SavedTabStatsContext {
+	now : number;
+	// when the saved window was saved
+	savedAt : number;
+	// the saved window's display name and how many tabs it holds
+	windowName : string;
+	windowTabCount : number;
+	// every open tab, for "open now in"
+	allTabs : Iterable<StatsTab>;
+	// an open window's display name ("" / undefined: leave it out)
+	openWindowName? : (windowId : number) => string | undefined;
+}
+
+// a saved window, as far as the url lookup needs it
+export interface SavedWindowNames {
+	name : string;
+	tabs : { url? : string }[];
 }
 
 export interface WindowStatsContext {
@@ -153,9 +175,59 @@ export function tabStats(tab : StatsTab, ctx : TabStatsContext) : StatsCard {
 		}
 	}
 
+	if (ctx.savedIn && ctx.savedIn.length) add("savedIn", "also saved in " + ctx.savedIn.join(", "), "saved");
+
 	if (typeof ctx.zoom === "number" && Math.round(ctx.zoom * 100) !== 100) {
 		add("zoom", "zoom " + Math.round(ctx.zoom * 100) + " %", "zoom");
 	}
+
+	return { title: tab.title || tab.url || "Untitled tab", lines };
+}
+
+// The names of the saved windows that hold a tab with this url, each once, in
+// the order given (a saved window with no name is left out). Compared as
+// open tabs are (dupKey); no url: none.
+export function savedWindowsWith(url : string | undefined, sessions : Iterable<SavedWindowNames>) : string[] {
+	const key = dupKey({ url });
+	const names : string[] = [];
+	if (!key) return names;
+	for (const s of sessions) {
+		if (s.name && !names.includes(s.name) && s.tabs.some((t) => dupKey(t) === key)) names.push(s.name);
+	}
+	return names;
+}
+
+// How many open tabs have this url, and the names of their windows, each once
+// (a window with no name is left out).
+export function openTabsWith(url : string | undefined, tabs : Iterable<StatsTab>, windowName? : (windowId : number) => string | undefined) : { count : number; names : string[] } {
+	const key = dupKey({ url });
+	const names : string[] = [];
+	let count = 0;
+	if (!key) return { count, names };
+	for (const t of tabs) {
+		if (dupKey(t) !== key) continue;
+		count++;
+		const name = windowName && t.windowId !== undefined ? windowName(t.windowId) : "";
+		if (name && !names.includes(name)) names.push(name);
+	}
+	return { count, names };
+}
+
+// The card for a tab of a saved window: when it was saved, whether it is
+// pinned, where it sits in its saved window, and where it is open now.
+export function savedTabStats(tab : StatsTab, ctx : SavedTabStatsContext) : StatsCard {
+	const lines : StatsLine[] = [];
+	const add = (key : string, text : string, icon : StatsIcon) => lines.push({ key, text, icon });
+
+	add("saved", "saved " + timeAgo(ctx.savedAt, ctx.now), "saved");
+	if (tab.pinned) lines.push(itemsLine("state", [{ icon: "pinned", text: "pinned" }]));
+
+	if (typeof tab.index === "number" && ctx.windowTabCount > 0) {
+		add("position", "tab " + (tab.index + 1) + " of " + ctx.windowTabCount + (ctx.windowName ? " in " + ctx.windowName : ""), "position");
+	}
+
+	const open = openTabsWith(tab.url, ctx.allTabs, ctx.openWindowName);
+	if (open.count) add("open", "open now" + (open.names.length ? " in " + open.names.join(", ") : ""), "window");
 
 	return { title: tab.title || tab.url || "Untitled tab", lines };
 }

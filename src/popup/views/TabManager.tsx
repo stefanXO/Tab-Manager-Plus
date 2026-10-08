@@ -280,7 +280,11 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	// through this when a card opens; it listens on #root (its parent) itself
 	private readonly statsSource : StatsSource = {
 		state: () => this.state,
-		searchBox: () => this.searchBoxRef.current
+		searchBox: () => this.searchBoxRef.current,
+		sessions: () => {
+			const hidden = this.pending.hidden();
+			return this.state.sessions.filter((s) => !hidden.has(s.id));
+		}
 	};
 	hoverIcon = (text : string, hold = false) => {
 		let bottom = " ";

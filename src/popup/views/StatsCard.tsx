@@ -54,6 +54,8 @@ const DRAWN : Partial<Record<StatsIcon | "url", React.ReactElement>> = {
 	used: <svg {...svgProps}><path d="M4 1.8h8M4 14.2h8M5 1.8C5 5.6 11 6 11 8s-6 2.4-6 6.2M11 1.8C11 5.6 5 6 5 8s6 2.4 6 6.2" /></svg>,
 	window: <svg {...svgProps}>{WINDOW_PATHS}</svg>,
 	monitor: <svg {...svgProps}><rect x="1.5" y="2.3" width="13" height="8.7" rx="1.3" /><path d="M8 11v2.7M5.2 13.7h5.6" /></svg>,
+	// a bookmark ribbon: saved
+	saved: <svg {...svgProps}><path d="M4 1.8h8v12.4l-4-3.1-4 3.1z" /></svg>,
 	hint: <svg {...svgProps}><circle cx="8" cy="8" r="6.2" /><path d="M8 7.4v3.6M8 4.9v.1" /></svg>,
 };
 // the window card's title icon, in the favicon's 16px spot

@@ -41,20 +41,36 @@ export interface HoverNode {
 	closest(selector : string) : HoverNode | null;
 }
 
-// The card target under the pointer: "t<tab id>", "w<window id>", or "" for
-// none. A tab tile wins; else the window card around the pointer, except over
-// its action buttons (the card would sit over the row about to be clicked).
+// The card target under the pointer: "t<tab id>", "s<saved window id>_<index>"
+// (a tab of a saved window; its element id is "sessiontab_<that>"),
+// "w<window id>", or "" for none. A tab tile wins; else the window card
+// around the pointer, except over its action buttons (the card would sit over
+// the row about to be clicked). A saved window itself has no card yet.
 export function hoverKey(target : HoverNode, windowAnywhere = STATS_WINDOW_ANYWHERE) : string {
 	const tab = target.closest(".window-container .tab[id^='tab-']");
 	if (tab) return "t" + tab.id.slice(4);
+	const saved = target.closest(".window-container .tab[id^='sessiontab_']");
+	if (saved) return "s" + saved.id.slice(11);
 	if (target.closest(".window-actions")) return "";
 	if (!windowAnywhere && !target.closest(".window-container .window-age")) return "";
 	const win = target.closest(".window-container .window[id^='window-']");
 	return win ? "w" + win.id.slice(7) : "";
 }
 
-export function parseKey(key : string) : { kind : "tab" | "window", id : number } | null {
-	if (key.length < 2 || (key[0] !== "t" && key[0] !== "w")) return null;
+export type ParsedKey =
+	| { kind : "tab" | "window", id : number }
+	| { kind : "saved", sessionId : string, index : number };
+
+export function parseKey(key : string) : ParsedKey | null {
+	if (key.length < 2) return null;
+	if (key[0] === "s") {
+		// the index is what follows the last "_" (a saved window's id may hold one)
+		const cut = key.lastIndexOf("_");
+		const tail = key.slice(cut + 1);
+		if (cut < 2 || !/^\d+$/.test(tail)) return null;
+		return { kind: "saved", sessionId: key.slice(1, cut), index: Number(tail) };
+	}
+	if (key[0] !== "t" && key[0] !== "w") return null;
 	return { kind: key[0] === "t" ? "tab" : "window", id: Number(key.slice(1)) };
 }
 

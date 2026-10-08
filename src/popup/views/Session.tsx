@@ -10,6 +10,7 @@ import * as S from "@strings";
 import {popupScreen} from "@helpers/popup_size";
 import {ManagerContext, ITabManagerActions} from '../context';
 import {savedTabKeys} from '../sessionKeys';
+import {savedTileRef} from '../savedTiles';
 import {windowName} from '../windowName';
 import {Icon} from "@icons/Icon";
 import {ICON_FAMILY} from "../icons";
@@ -40,6 +41,7 @@ export class Session extends React.Component<ISession> {
 			if (!isHidden) hideWindow = false;
 			return (
 				<Tab
+					ref={savedTileRef(tab.id) as React.RefObject<Tab>}
 					id={"sessiontab_" + this.props.session.id + "_" + tab.index}
 					key={"sessiontab_" + this.props.session.id + "_" + tab.index}
 					onOpen={this.openTab}

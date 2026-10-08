@@ -1,11 +1,14 @@
 "use strict";
 
 import * as browser from 'webextension-polyfill';
-import {ITabManagerState} from "@types";
+import {ITabManagerState, ISavedSession} from "@types";
 import {LAYOUT, currentShowMonitors} from "@helpers/settings";
 import {popupScreen} from "@helpers/popup_size";
 import {onMainScreen} from "./screen";
-import {tabStats, windowStats, topSites, monitorMap, Bounds, MonitorMap, Rect} from "./stats";
+import {tabStats, savedTabStats, savedWindowsWith, windowStats, topSites, monitorMap, Bounds, MonitorMap, Rect} from "./stats";
+import {savedTabKeys} from "./sessionKeys";
+import {savedTile} from "./savedTiles";
+import {windowName as autoWindowName} from "./windowName";
 import {hoverKey, hoverAction, isWarm, parseKey, arrowsMoveCard, STATS_KEYBOARD_DELAY} from "./statsHoverLogic";
 import type {IStatsFavicon, IStatsCardContent} from "./views/StatsCard";
 
@@ -19,7 +22,8 @@ const STATS_MAP_HEIGHT = 90;
 // what the open card is for, and where it opened: at the pointer (it then
 // follows it) or next to an element (the keyboard's selected row)
 export interface IStatsTarget {
-	kind : "tab" | "window";
+	// "saved": a tab of a saved window, id is its selection key (sessionKeys.ts)
+	kind : "tab" | "window" | "saved";
 	id : number;
 	pointer? : { x : number, y : number };
 	anchor? : Rect;
@@ -32,6 +36,8 @@ export type StatsState = Pick<ITabManagerState,
 export interface StatsSource {
 	state() : StatsState;
 	searchBox() : HTMLInputElement | null;
+	// the saved windows on show (one waiting for its Undo countdown is not)
+	sessions() : ISavedSession[];
 }
 
 // the card (StatsLayer): what the controller drives
@@ -125,10 +131,13 @@ export class StatsHover {
 			return;
 		}
 		this.key = key;
-		const target = parseKey(key);
-		if (!target) return;
-		if (action.delay === 0) this.show(target.kind, target.id);
-		else this.timer = window.setTimeout(() => this.show(target.kind, target.id), action.delay);
+		const parsed = parseKey(key);
+		if (!parsed) return;
+		// a saved tab goes by the selection key its tile was given
+		const kind = parsed.kind;
+		const id = parsed.kind === "saved" ? savedTabKeys.key(parsed.sessionId, parsed.index) : parsed.id;
+		if (action.delay === 0) this.show(kind, id);
+		else this.timer = window.setTimeout(() => this.show(kind, id), action.delay);
 	}
 
 	// the card follows the pointer right away, in the same event, straight
@@ -198,10 +207,10 @@ export class StatsHover {
 		return el.getBoundingClientRect();
 	}
 
-	private show(kind : "tab" | "window", id : number, keyboard = false) {
+	private show(kind : "tab" | "window" | "saved", id : number, keyboard = false) {
 		const st = this.source.state();
 		if (!onMainScreen(st)) return;
-		if (kind === "tab" ? !st.tabsbyid.has(id) : !st.windowsbyid.has(id)) return;
+		if (kind === "saved" ? !this.savedTab(id) : kind === "tab" ? !st.tabsbyid.has(id) : !st.windowsbyid.has(id)) return;
 		let target : IStatsTarget;
 		if (keyboard) {
 			const anchor = this.anchor(id);
@@ -232,9 +241,29 @@ export class StatsHover {
 	// the favicon the tile resolved (Tab.resolveFavIconUrl), with the tone the
 	// tile measured; none (src null): the card draws the tile's page icon
 	private favicon(tab : browser.Tabs.Tab) : IStatsFavicon {
-		const tile = this.source.state().windowrefs.get(tab.windowId)?.current?.state.tabrefs.get(tab.id)?.current;
+		return this.tileFavicon(this.source.state().windowrefs.get(tab.windowId)?.current?.state.tabrefs.get(tab.id)?.current);
+	}
+
+	private tileFavicon(tile : { state : { favIcon : string, iconTone : IStatsFavicon["tone"] } } | null | undefined) : IStatsFavicon {
 		if (!tile || !tile.state.favIcon) return { src: null, tone: "normal" };
 		return { src: tile.state.favIcon, tone: tile.state.iconTone };
+	}
+
+	// ---- saved windows ----
+
+	// a saved window's name as its title shows it: the stored name, else the
+	// automatic one from its sites
+	private savedName(s : ISavedSession) : string {
+		return s.name || autoWindowName(s.tabs) || "Saved window";
+	}
+
+	// the saved tab a selection key was handed out for, with its saved window
+	private savedTab(key : number) : { session : ISavedSession, tab : browser.Tabs.Tab } | null {
+		const ref = savedTabKeys.ref(key);
+		if (!ref) return null;
+		const session = this.source.sessions().find((s) => s.id === ref.sessionId);
+		const tab = session && session.tabs.find((t) => t.index === ref.index);
+		return session && tab ? { session, tab } : null;
 	}
 
 	// The monitors for the window card's map: fetched once, right after the
@@ -299,9 +328,23 @@ export class StatsHover {
 				windowTabs: win && win.tabs ? win.tabs : [tab],
 				allTabs: st.tabsbyid.values(),
 				windowName: (id) => this.windowName(id),
-				zoom
+				zoom,
+				savedIn: savedWindowsWith(tab.url || tab.pendingUrl, this.source.sessions().map((s) => ({ name: this.savedName(s), tabs: s.tabs })))
 			});
 			return { card, icon: this.favicon(tab), url: tab.url || tab.pendingUrl || "" };
+		}
+		if (t.kind === "saved") {
+			const saved = this.savedTab(t.id);
+			if (!saved) return null;
+			const card = savedTabStats(saved.tab, {
+				now,
+				savedAt: saved.session.date,
+				windowName: this.savedName(saved.session),
+				windowTabCount: saved.session.tabs.length,
+				allTabs: st.tabsbyid.values(),
+				openWindowName: (id) => this.windowName(id)
+			});
+			return { card, icon: this.tileFavicon(savedTile(t.id)), url: saved.tab.url || saved.tab.pendingUrl || "" };
 		}
 		const win = st.windowsbyid.get(t.id);
 		if (!win) return null;

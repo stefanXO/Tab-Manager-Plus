@@ -161,6 +161,14 @@ const STATES = [
 	// window card opens anywhere on a window that is not a tab, under the
 	// pointer) until the card is open. dpr 1, 800x600 and 380x900 only
 	{name: 'tab-stats', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {}, stats: '#tab-15'},
+	// the same card for a tab of a saved window (src/popup/stats.ts savedTabStats):
+	// the pinned Hacker News tab of "Conference reading" (open twice in Research),
+	// its Wikipedia tab (open once), the unopened react tab, and an open tab that
+	// is also saved ("Also saved in"). dpr 1, 800x600 and 380x900 only
+	{name: 'saved-tab-stats', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {}, stats: '#sessiontab_s1_0'},
+	{name: 'saved-tab-stats-wiki', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {}, stats: '#sessiontab_s1_1'},
+	{name: 'saved-tab-stats-s2', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {}, stats: '#sessiontab_s2_2'},
+	{name: 'tab-stats-saved', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {}, stats: '#tab-19'},
 	{name: 'window-stats', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {}, stats: '#window-101 .windowTitle'},
 	// the List view's freshness bars (src/popup/freshness.ts; every List view
 	// shot has them, the fixture's lastAccessed spans 0 min .. 14 days), here
@@ -444,7 +452,8 @@ async function hoverStats(page, selector) {
 	await page.waitForFunction(() => !document.querySelector('.stats-card.shown'), {timeout: 5000})
 	await page.mouse.move(at.x, at.y, {steps: 4})
 	await page.waitForSelector('.stats-card.shown', {timeout: 5000})
-	if (selector.startsWith('#tab-')) await page.waitForSelector('.stats-card .stats-line-zoom', {timeout: 5000})
+	// the async zoom line: only some tabs have one
+	if (selector.startsWith('#tab-')) await page.waitForSelector('.stats-card .stats-line-zoom', {timeout: 1500}).catch(() => {})
 	await settle(page)
 	await page.evaluate(() => { if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur() })
 	return true
