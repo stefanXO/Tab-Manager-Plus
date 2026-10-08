@@ -7,7 +7,7 @@
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { splitByKind, planMove, planAdd, whyUnsavable, leftClause, leftTotal, dropErrorText } from "../src/popup/dropReasons.ts";
+import { splitByKind, planMove, planAdd, whyUnsavable, leftClause, leftTotal, dropErrorText, openMoveVerdict, openSavedVerdict, refusalNotice, REFUSAL_FRESH_MS } from "../src/popup/dropReasons.ts";
 import type { Left } from "../src/popup/dropReasons.ts";
 import { moveSavedTabs } from "../src/popup/savedMove.ts";
 import { addOpenTabs } from "../src/popup/savedAdd.ts";
@@ -213,5 +213,97 @@ describe("dropErrorText: the words of the notice", () => {
 	test("leftTotal", () => {
 		assert.equal(leftTotal([]), 0);
 		assert.equal(leftTotal([{ reason: "no-address", n: 2 }, { reason: "about-page", n: 3 }]), 5);
+	});
+});
+
+describe("openMoveVerdict: open tabs over an open window or tab", () => {
+	const tab = (id : number, extra : { windowId? : number, index? : number, incognito? : boolean } = {}) => ({ id, windowId: 1, index: id, ...extra });
+	const normal = { windowId: 1, incognito: false, last: 4 };
+	const priv = { windowId: 2, incognito: true, last: 2 };
+
+	test("a normal tab over a normal window moves", () => {
+		assert.equal(openMoveVerdict([tab(0, { windowId: 3, index: 0 })], { ...normal, index: 2 }).verdict, "moves");
+	});
+
+	test("a normal tab over a private window, and a private tab over a normal one, are refused, with the reason", () => {
+		const a = openMoveVerdict([tab(1)], { ...priv, index: 1 });
+		assert.equal(a.verdict, "refused");
+		assert.deepEqual(a.left, [{ reason: "normal-to-private-window", n: 1 }]);
+		const b = openMoveVerdict([tab(1, { incognito: true }), tab(2, { incognito: true })], { ...normal, index: 1 });
+		assert.equal(b.verdict, "refused");
+		assert.deepEqual(b.left, [{ reason: "private-to-normal-window", n: 2 }]);
+		assert.equal(dropErrorText("moved", "tab", 2, 0, b.left), "Nothing moved: 2 private tabs can't move to a normal window");
+	});
+
+	test("a drop that takes only part is still taken (the notice names the rest)", () => {
+		const v = openMoveVerdict([tab(1, { windowId: 3 }), tab(2, { windowId: 3, incognito: true })], { ...normal, index: 0 });
+		assert.equal(v.verdict, "moves");
+	});
+
+	test("one tab where it already is changes nothing, nothing to say", () => {
+		// its own place
+		assert.deepEqual(openMoveVerdict([tab(2)], { ...normal, index: 2 }), { verdict: "none", left: [] });
+		// the end of the window it already ends
+		assert.deepEqual(openMoveVerdict([tab(4)], { ...normal, index: undefined }), { verdict: "none", left: [] });
+	});
+
+	test("one tab anywhere else moves", () => {
+		assert.equal(openMoveVerdict([tab(2)], { ...normal, index: 3 }).verdict, "moves");
+		assert.equal(openMoveVerdict([tab(2)], { ...normal, index: undefined }).verdict, "moves");
+		// the same index in another window is a move
+		assert.equal(openMoveVerdict([tab(2, { windowId: 3 })], { ...normal, index: 2 }).verdict, "moves");
+	});
+
+	test("several tabs are never judged as staying", () => {
+		assert.equal(openMoveVerdict([tab(2), tab(3)], { ...normal, index: 2 }).verdict, "moves");
+	});
+
+	test("nothing dragged: nothing to do", () => {
+		assert.deepEqual(openMoveVerdict([], normal), { verdict: "none", left: [] });
+	});
+});
+
+describe("openSavedVerdict: saved tabs over an open window or tab", () => {
+	test("any tab that can open makes it a drop", () => {
+		assert.deepEqual(openSavedVerdict(2, 0, 0), { verdict: "moves", left: [] });
+		assert.deepEqual(openSavedVerdict(1, 3, 1), { verdict: "moves", left: [] });
+	});
+
+	test("every dragged saved tab deleted or without an address is refused", () => {
+		const gone = openSavedVerdict(0, 2, 0);
+		assert.equal(gone.verdict, "refused");
+		assert.equal(dropErrorText("opened", "saved tab", 2, 0, gone.left), "Nothing opened: 2 dragged saved tabs are gone");
+		const both = openSavedVerdict(0, 1, 1);
+		assert.deepEqual(both.left, [{ reason: "dragged-saved-gone", n: 1 }, { reason: "no-address", n: 1 }]);
+	});
+
+	test("nothing dragged is none", () => {
+		assert.deepEqual(openSavedVerdict(0, 0, 0), { verdict: "none", left: [] });
+	});
+});
+
+describe("refusalNotice: the notice when a drag ends over a refusing target", () => {
+	const refusal = { text: "Nothing moved: 1 private tab can't move to a normal window", at: 10000 };
+
+	test("a drag that ended nowhere, right after a refusing dragover, shows the reason", () => {
+		assert.equal(refusalNotice(refusal, 10040, "none", false), refusal.text);
+		assert.equal(refusalNotice(refusal, 10000 + REFUSAL_FRESH_MS, "none", false), refusal.text);
+	});
+
+	test("no refusing target, or one with no reason, says nothing", () => {
+		assert.equal(refusalNotice(null, 10040, "none", false), "");
+		assert.equal(refusalNotice({ text: "", at: 10000 }, 10040, "none", false), "");
+	});
+
+	test("a drag that was dropped says nothing (the drop's own notices speak)", () => {
+		assert.equal(refusalNotice(refusal, 10040, "move", false), "");
+		assert.equal(refusalNotice(refusal, 10040, "copy", false), "");
+		assert.equal(refusalNotice(refusal, 10040, "none", true), "");
+		assert.equal(refusalNotice(refusal, 10040, undefined, false), "");
+	});
+
+	test("an old dragover is a drag that left the popup: no notice", () => {
+		assert.equal(refusalNotice(refusal, 10000 + REFUSAL_FRESH_MS + 1, "none", false), "");
+		assert.equal(refusalNotice(refusal, 9000, "none", false), "");
 	});
 });

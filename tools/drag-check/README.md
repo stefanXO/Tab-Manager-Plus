@@ -7,7 +7,7 @@ runs the drags through Chrome itself instead, against the built extension.
 
 ```sh
 node build.mjs                          # build/chrome
-node tools/drag-check/check.mjs         # every check (143), ~6 min
+node tools/drag-check/check.mjs         # every check (185), ~7 min
 node tools/drag-check/check.mjs --only "saved tab -> open"
 ```
 
@@ -42,8 +42,24 @@ matches is dragged out and opened with them by a drag and by Enter, and alone by
 a normal saved tab or a normal open tab dropped on a saved window that is private (seeded, the headless browser has no
 private windows), private and normal saved tabs selected together and dropped on a normal saved window (the normal one moves,
 the notice says "1 of 2 saved tabs left out: ..."), and a saved tab deleted from storage after the drag started, dropped on a
-saved window and on an open tab. A drop that is refused for a reason shows no marker but must still be taken by the page:
-without that the drop event never comes and there is nothing to show the notice with.
+saved window and on an open tab. Before Round 4 a drop that is refused for a reason was still taken by the page (to have a drop event to show the notice
+with); it is no longer: the notice comes when the drag ends there (see the `notallowed` checks below), and these checks read it after
+the release.
+
+Forty-two more checks (`--only notallowed`, own tab, Blocks and List) are the not-allowed cursor of Round 4 (patch notallowed).
+Over a target that refuses a drag (a normal tab or saved tab over a private saved window, a private saved tab over a normal one,
+a normal open tab over a private open window and the other way round, seeded or, for open windows, told to the popup in
+`makePrivate`, as the headless browser has no private windows the extension may see) the page's answer to the last dragover,
+read in the page after its handlers have run (`watchDrag`), is a cancelled dragover whose dropEffect is none, no drop marker
+or outline anywhere, no drop event at all (the browser delivers none), and a dragend with dropEffect none; the red notice with
+the reason comes once, after the release (and not before), and nothing moved. A drag that is not allowed but has no reason to
+give (an open tab over its own place, a saved tab over its own place, the last saved tab over the title of its own saved window,
+a saved window card over itself) is refused the same way and shows no notice. A refusing target the pointer left again before the
+release (onto nothing; onto an allowed target, where it is then dropped) gives no notice. Allowed targets are unchanged: saved
+tab over an open tab, open tab over an open tab, open tab over a saved window, saved tab over a saved window, card over card:
+allowed, marker, a drop event, the result, no notice; a private tab over its own private window; a drop that is only partly
+possible (private and normal saved tabs together over a normal saved window) is allowed and keeps its partial notice.
+`drag()` takes `opts.moveOn` (the pointer moves on to another target before the release).
 
 Sixteen more checks (`--only "drag image"`, own tab) cover the drag image of a several-tab drag in every layout
 (blocks, blocks-big, horizontal, vertical), light and dark, for three saved and three open tabs: the stack is

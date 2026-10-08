@@ -33,14 +33,17 @@ export interface ITabManagerActions {
 	sessionDropMoves(target : string, before : boolean) : boolean;
 	// the dragged card dropped before / after this saved window: the new order is stored
 	dropSession(target : string, before : boolean) : void;
-	// whether dropping the dragged saved tabs before / after the saved tab with
-	// this stored index (undefined: on the card, at its end) changes anything;
-	// for dragged open tabs, whether copies of them can go there
-	savedDropMoves(sessionId : string, index : number | undefined, before : boolean) : boolean;
-	// whether a drop there is refused for a reason (private and normal mixed,
-	// nothing to save): no marker, but the drop is taken and the error notice
-	// says why
-	savedDropRefused(sessionId : string, index : number | undefined, before : boolean) : boolean;
+	// A drag is over a saved tab (the one with this stored index; undefined: the
+	// card, its end), before or after it: whether the drop is taken, which is when
+	// the dragged saved tabs would move there or copies of the dragged open tabs
+	// could go there, at least in part. When it is not (nothing would change, or
+	// every dragged tab is left out: private and normal mixed, nothing to save),
+	// the target shows the not-allowed cursor and no marker; a drag that ends
+	// there says why. Asked on every dragover.
+	savedDropOver(sessionId : string, index : number | undefined, before : boolean) : boolean;
+	// The same over an open window (tabId undefined: no tab next to the pointer)
+	// or one of its tabs, before or after it: saved tabs open there, open tabs move
+	openDropOver(windowId : number, tabId : number | undefined, before : boolean) : boolean;
 	// the dragged saved tabs dropped there: moved, in one write; dragged open
 	// tabs: copied there, and they stay open
 	dropSaved(sessionId : string, index : number | undefined, before : boolean, dragged : TabDrag | null) : void;

@@ -487,6 +487,27 @@ const STATES = [
 	// switched off the s: rows are not listed
 	{name: 'search-help', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {}, searchHelp: true},
 	{name: 'search-help-off', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {store: {sessionsFeature: false}}, searchHelp: true},
+	// refused drops show the browser's not-allowed cursor and no drop marker
+	// (the cursor is the browser's own and cannot be shot; the marker can). The
+	// window "Research" is made private (`incognito`), and "Information overload"
+	// of it, a private tab, held over "(12) Home / X" of "Life": a normal
+	// window takes no private tab, so no marker shows on the tab. Released
+	// there, the browser delivers no drop, and the red notice says why. A
+	// private saved window ("Tax 2029", `savedPrivate`) likewise takes no
+	// normal tab: nothing is outlined or marked, the notice follows the
+	// release. The notice's bar is held still. dpr 1, blocks + List, 800x600
+	// and 380x900. These last in the list: the private saved window and the
+	// private open window stay until a state sets them again
+	{name: 'refused-open-over', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {incognito: [103],
+		clicks: [{key: 27}, {drag: '#tab-20', over: '#tab-12'}], scrollInto: '#window-102'}},
+	{name: 'refused-open-release', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {incognito: [103],
+		clicks: [{key: 27}, {drag: '#tab-20', over: '#tab-12', drop: true}], freezeClock: true, barAt: 0.4, scrollInto: '#window-102'}},
+	{name: 'refused-saved-over', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {savedPrivate: 's2',
+		clicks: [{key: 27}, {drag: '#tab-14', over: '#session-s2 .tab[data-hover^="Inbox"]'}], scrollEnd: true}},
+	{name: 'refused-saved-card-over', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {savedPrivate: 's2',
+		clicks: [{key: 27}, {drag: '#tab-14', over: '#session-s2 h3.windowTitle'}], scrollEnd: true}},
+	{name: 'refused-saved-release', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {savedPrivate: 's2',
+		clicks: [{key: 27}, {drag: '#tab-14', over: '#session-s2 .tab[data-hover^="Inbox"]', drop: true}], freezeClock: true, barAt: 0.4, scrollEnd: true}},
 ]
 
 /**
@@ -583,7 +604,7 @@ async function settle(page) {
 }
 
 /** Applies a popup state absolutely: the result never depends on what came before. */
-async function apply(page, {layout, dark, search = '', dup = false, recent = 0, overlay = null, scrollTo = null, store = {}, granted = true, savedFocused = null, clicks = [], scrollInto = null, importFile = null, freezeClock = false, scrollEnd = false, typeName = null, pickColor = null, savedInfo = null, freshSessions = false, savedAuto = null, savedLong = false, afterWait = 0, quota = false, barAt = 0, noticeHover = false, savedUpdated = null}) {
+async function apply(page, {layout, dark, search = '', dup = false, recent = 0, overlay = null, scrollTo = null, store = {}, granted = true, savedFocused = null, clicks = [], scrollInto = null, importFile = null, freezeClock = false, scrollEnd = false, typeName = null, pickColor = null, savedInfo = null, freshSessions = false, savedAuto = null, savedLong = false, afterWait = 0, quota = false, barAt = 0, noticeHover = false, savedUpdated = null, incognito = [], savedPrivate = null}) {
 	await page.evaluate(async (s) => {
 		const q = (sel) => document.querySelector(sel)
 		const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
@@ -695,6 +716,27 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 			await frame()
 		}
 
+		// 7b3. a saved window that is private (its tabs too), and the open
+		// windows `incognito` lists made private (the popup reads them again when
+		// the window order is written); none after a state that had some
+		if (s.savedPrivate) {
+			// (from the saved windows as the page started, as `freshSessions` does)
+			await window.__fake.storage.local.set({sessions: window.__fake.sessions})
+			const {sessions} = await window.__fake.storage.local.get(['sessions'])
+			const one = sessions[s.savedPrivate]
+			one.incognito = true
+			one.windowsInfo.incognito = true
+			for (const t of one.tabs) t.incognito = true
+			await window.__fake.storage.local.set({sessions})
+			await frame()
+		}
+		if (JSON.stringify(window.__fakeIncognito || []) !== JSON.stringify(s.incognito)) {
+			window.__fakeIncognito = s.incognito
+			const {windowAge} = await window.__fake.storage.local.get(['windowAge'])
+			await window.__fake.storage.local.set({windowAge})
+			for (let i = 0; i < 3; i++) await frame()
+		}
+
 		// 7c. the saved windows as the page started (states that add to them)
 		if (s.freshSessions) {
 			await window.__fake.storage.local.set({sessions: window.__fake.sessions})
@@ -725,6 +767,11 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 				if ((!src || !dst) && c.optional) continue
 				if (!src || !dst) throw new Error('nothing to drag at ' + c.drag + ' / ' + c.over)
 				const dt = new DataTransfer()
+				// a DataTransfer made by a script ignores dropEffect; this one keeps what
+				// the page sets, as the browser's does (it starts each event at a
+				// default effect, here move)
+				let effect = 'move'
+				Object.defineProperty(dt, 'dropEffect', {get: () => effect, set: (v) => { effect = v }, configurable: true})
 				const ev = (type, xy = {}) => new DragEvent(type, {bubbles: true, cancelable: true, dataTransfer: dt, ...xy})
 				// `image`: the drag image the page hands setDragImage (it lives off
 				// screen for a moment, the browser draws it under the pointer) is
@@ -741,8 +788,15 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 				const r = dst.getBoundingClientRect()
 				const f = c.side === 'before' ? 0.25 : 0.75
 				const at = {clientX: r.left + r.width * f, clientY: r.top + r.height * f}
+				effect = 'move'
 				dst.dispatchEvent(ev('dragenter', at))
-				dst.dispatchEvent(ev('dragover', at))
+				effect = 'move'
+				// the browser delivers a drop only where the last dragover was
+				// accepted (preventDefault) with an effect other than none; the
+				// page's dropEffect lands on the one DataTransfer
+				const over = ev('dragover', at)
+				dst.dispatchEvent(over)
+				const accepted = over.defaultPrevented && effect !== 'none'
 				if (c.image) {
 					if (!image) throw new Error('no drag image set for ' + c.drag)
 					image.el.classList.add('harness-drag-image')
@@ -752,7 +806,7 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 				}
 				await frame()
 				if (c.drop) {
-					dst.dispatchEvent(ev('drop', at))
+					if (accepted) dst.dispatchEvent(ev('drop', at))
 					src.dispatchEvent(ev('dragend'))
 					// the popup waits for the (fake) worker, then reads the tabs again
 					await new Promise((r) => setTimeout(r, 300))
@@ -801,7 +855,7 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 		if (s.afterWait) await new Promise((r) => setTimeout(r, s.afterWait))
 		// the list scrolled to its very end: the padding the notice makes room with shows
 		if (s.scrollEnd) { const c = q('.window-container'); if (c) c.scrollTop = c.scrollHeight }
-	}, {layout, dark, search, dup, recent, overlay, store, granted, savedFocused, clicks, scrollInto, importFile, freezeClock, scrollEnd, typeName, pickColor, savedInfo, freshSessions, savedAuto, savedLong, afterWait, quota, barAt, noticeHover, savedUpdated})
+	}, {layout, dark, search, dup, recent, overlay, store, granted, savedFocused, clicks, scrollInto, importFile, freezeClock, scrollEnd, typeName, pickColor, savedInfo, freshSessions, savedAuto, savedLong, afterWait, quota, barAt, noticeHover, savedUpdated, incognito, savedPrivate})
 	await settle(page)
 	// 7. scroll the options box headed `scrollTo` to the top of its scroller
 	if (scrollTo) {

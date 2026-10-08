@@ -18,6 +18,7 @@ import {isSavedTabDrag} from '../savedDrag';
 import {isOpenTabDrag} from '../savedAdd';
 import {readTabDrag} from '../dragPayload';
 import {tabShow, isHiddenTab, hidesWholeWindow} from '../selectedShown';
+import {tabDropBefore} from '../tabDropSide';
 
 export class Window extends React.Component<IWindow, IWindowState> {
 	static contextType = ManagerContext;
@@ -326,6 +327,19 @@ export class Window extends React.Component<IWindow, IWindowState> {
 	dragOver = (e) => {
 		// a saved window card being reordered: no drop here
 		if (isSavedWindowDrag(e.dataTransfer?.types)) return;
+		// Tabs dragged here that would be refused (private and normal never mix,
+		// the dragged saved tabs are gone) or change nothing (one tab on its own
+		// place): the browser's not-allowed cursor, no marker (Tab.dragOver) and
+		// no outline. A drag that ends here shows the reason (TabManager.dragDone).
+		if (isSavedTabDrag(e.dataTransfer?.types) || isOpenTabDrag(e.dataTransfer?.types)) {
+			const place = this.dropPlace(e);
+			if (!this.context.openDropOver(this.props.window.id, place.tabId, place.before)) {
+				this.stopProp(e);
+				e.dataTransfer.dropEffect = "none";
+				if (this.state.hover) this.setState({hover: false});
+				return;
+			}
+		}
 		this.setState({hover: true});
 		this.stopProp(e);
 		// what the drop does, said outright (as the saved windows do) instead
@@ -338,7 +352,26 @@ export class Window extends React.Component<IWindow, IWindowState> {
 		this.setState({hover: false});
 		this.stopProp(e);
 	}
-	drop = (e) => {
+	// Where a drag at the pointer goes in this window: next to the open tab
+	// under it (before it in its first half), else next to the tab closest to
+	// it (see drop), else (no tab on screen) at the window's end. The same for
+	// the verdict on the drag and for the drop.
+	dropPlace(e) : { tabId? : number, before : boolean } {
+		const over = (e.target as Element)?.closest?.(".tab") as HTMLElement | null;
+		if (over && over.id.startsWith("tab-")) {
+			const id = Number(over.id.slice(4));
+			if (Number.isFinite(id)) {
+				const list = this.props.layout === LAYOUT.list;
+				return { tabId: id, before: tabDropBefore(list, e.nativeEvent.offsetX, e.nativeEvent.offsetY, over.clientWidth, over.clientHeight) };
+			}
+		}
+		const closest = this.closestTab(e.nativeEvent.clientX, e.nativeEvent.clientY);
+		if (!closest) return { before: false };
+		const rect = closest.ref.getBoundingClientRect();
+		return { tabId: closest.id, before: this.props.layout === LAYOUT.list ? e.nativeEvent.clientY < rect.top : e.nativeEvent.clientX < rect.left };
+	}
+	// the open tab on screen whose corner is closest to the point
+	closestTab(x : number, y : number) : { id : number, ref : HTMLElement } | null {
 		let distance = 1000000;
 		let closestTab = null;
 		let closestRef = null;
@@ -352,8 +385,6 @@ export class Window extends React.Component<IWindow, IWindowState> {
 			// hidden by the search filter: mounted but display none, no position
 			if (currentRef.offsetParent === null) continue;
 			let tabRect = currentRef.getBoundingClientRect();
-			let x = e.nativeEvent.clientX;
-			let y = e.nativeEvent.clientY;
 			let dx = tabRect.x - x;
 			let dy = tabRect.y - y;
 			let d = Math.sqrt(dx * dx + dy * dy);
@@ -363,19 +394,22 @@ export class Window extends React.Component<IWindow, IWindowState> {
 				closestRef = currentRef;
 			}
 		}
-
+		return closestTab != null ? { id: closestTab, ref: closestRef } : null;
+	}
+	drop = (e) => {
 		this.stopProp(e);
 		const dragged = readTabDrag(e.dataTransfer);
 
-		if (closestTab != null) {
+		const closest = this.closestTab(e.nativeEvent.clientX, e.nativeEvent.clientY);
+		if (closest) {
 			let before : boolean;
-			let boundingRect = closestRef.getBoundingClientRect();
+			let boundingRect = closest.ref.getBoundingClientRect();
 			if (this.props.layout === LAYOUT.list) {
 				before = e.nativeEvent.clientY < boundingRect.top;
 			} else {
 				before = e.nativeEvent.clientX < boundingRect.left;
 			}
-			this.context.drop(closestTab, before, dragged);
+			this.context.drop(closest.id, before, dragged);
 		} else {
 			this.context.dropWindow(this.props.window.id, dragged);
 		}

@@ -62,7 +62,11 @@ const displays = [
 for (const [k, v] of Object.entries({ availLeft: 0, availTop: 0, availWidth: 1920, availHeight: 1040 })) {
 	Object.defineProperty(screen, k, { get: () => v, configurable: true });
 }
-const withTabs = (w) => ({ ...w, tabs: all.filter((t) => t.windowId === w.id) });
+// open windows a shot makes private (shoot.mjs `incognito`, a list of window ids):
+// the window and its tabs say so
+const priv = (id) => (globalThis.__fakeIncognito || []).includes(id);
+const asPrivate = (t) => (priv(t.windowId) ? { ...t, incognito: true } : t);
+const withTabs = (w) => ({ ...w, incognito: priv(w.id), tabs: all.filter((t) => t.windowId === w.id).map(asPrivate) });
 
 // One frozen clock. It is an absolute constant, not `Date.now()` at load time,
 // so every "x ago" label — including the <time> elements changelog.js fills in
@@ -171,7 +175,7 @@ export const windows = {
 
 export const tabs = {
 	async query(q = {}) {
-		return all.filter((t) => (q.windowId == null || t.windowId === q.windowId) && (q.active == null || t.active === q.active));
+		return all.filter((t) => (q.windowId == null || t.windowId === q.windowId) && (q.active == null || t.active === q.active)).map(asPrivate);
 	},
 	async update() {}, async remove() {}, async move() {}, async discard() {}, async create() {}, async captureTab() { return ""; },
 	async getZoom(id) { return zoom[id] || 1; },

@@ -141,6 +141,18 @@ try {
 		return windows
 	}
 
+	// runs in the popup before its scripts: windows.getAll says the window with
+	// this id, and its tabs, are private
+	function makePrivate(id) {
+		const orig = chrome.windows.getAll
+		chrome.windows.getAll = function (...args) {
+			const cb = typeof args[args.length - 1] === 'function' ? args.pop() : null
+			const fix = (ws) => ws.map((w) => w.id === id ? {...w, incognito: true, tabs: (w.tabs || []).map((t) => ({...t, incognito: true}))} : w)
+			if (!cb) return orig.apply(chrome.windows, args).then(fix)
+			return orig.call(chrome.windows, ...args, (ws) => cb(fix(ws)))
+		}
+	}
+
 	// the page's own drag events, logged (DRAG_DEBUG=1)
 	function debugDrags() {
 		for (const type of ['dragstart', 'dragenter', 'dragover', 'dragleave', 'drop', 'dragend']) {
@@ -152,7 +164,9 @@ try {
 			}, true)
 		}
 	}
-	async function openPopup() {
+	// `opts.privateWindow`: the id of an open window the popup is told is private
+	// (the headless browser has no private windows the extension may see)
+	async function openPopup(opts = {}) {
 		let p
 		if (mode === 'action') {
 			// the toolbar button's popup itself (popup.html?popup=true, sized by
@@ -176,6 +190,7 @@ try {
 			}
 		} else {
 			p = await browser.newPage()
+			if (opts.privateWindow) await p.evaluateOnNewDocument(makePrivate, opts.privateWindow)
 			await p.setViewport(mode === 'small' ? {width: 800, height: 600} : {width: 1100, height: 1400})
 			if (process.env.DRAG_DEBUG) {
 				p.on('console', (m) => console.log('      [popup] ' + m.text()))
@@ -221,6 +236,8 @@ try {
 	// that takes the drop never saw it start.
 	// `opts.afterStart` runs once the drag has started and before it moves on: a
 	// change made behind the drag's back (a saved tab deleted by another popup).
+	// `opts.moveOn` (a selector, or {selector, fx, fy}): after a few dragovers on
+	// `to`, the pointer moves on there, and the drop / the release happens there.
 	async function drag(p, from, to, into = p, opts = {}) {
 		const cdp = await p.createCDPSession()
 		const target = into === p ? cdp : await into.createCDPSession()
@@ -256,10 +273,24 @@ try {
 				await dragEvent('dragOver', dst)
 				await new Promise((r) => setTimeout(r, 30))
 			}
-			await dragEvent('drop', dst)
+			let end = dst
+			if (opts.moveOn) {
+				const on = opts.moveOn
+				end = await point(into, on.selector || on, on.fx, on.fy)
+				const n = Math.max(1, Math.round(Math.hypot(end.x - dst.x, end.y - dst.y) / 24))
+				for (let i = 1; i <= n; i++) {
+					await dragEvent('dragOver', {x: dst.x + (end.x - dst.x) * i / n, y: dst.y + (end.y - dst.y) * i / n})
+					await new Promise((r) => setTimeout(r, 8))
+				}
+				for (let i = 0; i < 3; i++) {
+					await dragEvent('dragOver', end)
+					await new Promise((r) => setTimeout(r, 30))
+				}
+			}
+			await dragEvent('drop', end)
 			// the page it left: the drag ends there, dropped elsewhere
 			if (into !== p) await cdp.send('Input.dispatchDragEvent', {type: 'dragCancel', x: 0, y: 0, data})
-			await mouse('mouseReleased', into === p ? dst : src, {buttons: 0, clickCount: 1})
+			await mouse('mouseReleased', into === p ? end : src, {buttons: 0, clickCount: 1})
 			return data
 		} finally {
 			await cdp.send('Input.setInterceptDrags', {enabled: false}).catch(() => {})
@@ -324,6 +355,32 @@ try {
 	const KIND = {blocks: 'icons', 'blocks-big': 'icons-big', horizontal: 'icons', vertical: 'titled'}
 	const stackWant = (layout, titles) => ({kind: KIND[layout], tiles: titles.map((t) => KIND[layout] === 'titled' ? t : ''),
 		label: titles.length + ' tabs', favicons: true, sized: true, colours: true})
+	// Records what the page answers to a drag, as the browser decides it: the
+	// last dragover's operation (none unless the page cancelled it with a
+	// dropEffect other than none), the drop markers on screen after it, how many
+	// drop events came, and the dropEffect of every dragend. Chrome delivers a
+	// drop only where the last dragover allowed one, so `drops` 0 with an
+	// operation none is what a refused drop does. Resolves to a reader.
+	async function watchDrag(p) {
+		await p.evaluate(() => {
+			const markers = () => document.querySelectorAll('.tab.left, .tab.right, .tab.top, .tab.bottom, .window.session[class*="drop-"]').length
+			const seen = window.__seen = {last: null, drops: 0, ends: []}
+			document.addEventListener('dragover', (e) => {
+				const rec = seen.last = {operation: 'none', markers: 0}
+				// after the page's handlers (and React's render) have run
+				setTimeout(() => { rec.operation = e.defaultPrevented ? e.dataTransfer.dropEffect : 'none'; rec.markers = markers() }, 0)
+			}, true)
+			document.addEventListener('drop', () => { seen.drops++ }, true)
+			document.addEventListener('dragend', (e) => { seen.ends.push(e.dataTransfer.dropEffect) }, true)
+		})
+		// [operation, marker?, drop events, dragend effects], each reduced to
+		// allowed / none
+		return () => p.evaluate(() => {
+			const s = window.__seen
+			const op = s.last ? s.last.operation : 'no dragover'
+			return [op === 'none' || op === 'no dragover' ? op : 'allowed', s.last && s.last.markers > 0 ? 'marker' : 'no marker', s.drops, s.ends.map((e) => e === 'none' ? 'none' : 'allowed')]
+		})
+	}
 	async function ctrlClick(p, selector) {
 		const at = await point(p, selector)
 		const cdp = await p.createCDPSession()
@@ -1086,6 +1143,256 @@ try {
 			}})
 			const want = [['Nothing opened: the dragged saved tab is gone'], ['Delta', 'Echo', 'Foxtrot']]
 			return {got: [await settle(() => noticesOf(p), want[0]), await titlesOf(w2)], want}
+		})
+	}
+
+	// Round 4, notallowed: a drag over a target that refuses it (private and
+	// normal never mix, nothing to add, a tab dropped where it already is) shows
+	// the browser's not-allowed cursor (dropEffect none) and no drop marker, and
+	// delivers no drop; the reason comes as the red notice once, when the drag
+	// ends there. Allowed targets keep their cursor, marker and drop. The
+	// private windows are seeded (saved) or told to the popup (open).
+	for (const layout of ['blocks', 'vertical']) {
+		const na = (name, fn) => checks.push({name: 'notallowed ' + layout + ': ' + name, fn, mode: 'tab'})
+		const noticesOf = (p) => p.evaluate(() => [...document.querySelectorAll('.notice.error .notice-text')].map((e) => e.textContent))
+		const seedSaved = (patch = {}, add = {}) => api(async (patch, add) => {
+			const {sessions} = await chrome.storage.local.get('sessions')
+			for (const [id, fields] of Object.entries(patch)) Object.assign(sessions[id], fields)
+			Object.assign(sessions, add)
+			await chrome.storage.local.set({sessions})
+		}, patch, add)
+		const SAVED = {s1: ['Hotel', 'India', 'Juliett', 'Kilo'], s2: ['Lima', 'Mike', 'November']}
+		// a saved window, as the fixture makes them
+		const savedWindowOf = (id, name, titles, extra = {}) => {
+			const now = Date.now()
+			return {id, name, color: 'color9', customName: true, incognito: false, date: now - 864e5, sessionStartTime: now - 864e5, order: 5,
+				tabs: titles.map((t, i) => ({id: 9100 + i, index: i, windowId: 900, title: t, url: page(t), active: i === 0, pinned: false, audible: false,
+					discarded: false, highlighted: i === 0, incognito: !!extra.incognito, status: 'complete'})),
+				windowsInfo: {id: 900, focused: false, incognito: !!extra.incognito, type: 'normal', state: 'normal', left: 0, top: 0, width: 900, height: 700}, ...extra}
+		}
+		const REFUSED = ['none', 'no marker', 0, ['none']]
+		// what a refused drag leaves: the pointer is held a moment after the
+		// release for a notice that would come late
+		const quiet = (ms = 500) => new Promise((r) => setTimeout(r, ms))
+		const first = {fx: 0.1, fy: 0.1}
+
+		na('a normal saved tab over a private saved window (title): not allowed, no marker, no drop, the notice once at the end', async () => {
+			await fixture(layout)
+			await seedSaved({s2: {incognito: true}})
+			const p = await openPopup()
+			const seen = await watchDrag(p)
+			await drag(p, savedSel('Hotel'), '#session-s2 h3.windowTitle')
+			const want = [REFUSED, ["Nothing moved: 1 normal saved tab can't move into a private saved window"], SAVED]
+			const got = [await settle(seen, REFUSED), await settle(() => noticesOf(p), want[1]), await savedTitles()]
+			await quiet()
+			got[1] = await noticesOf(p)
+			return {got, want}
+		})
+		na('a normal saved tab over a tab of a private saved window: not allowed, no marker, the notice at the end', async () => {
+			await fixture(layout)
+			await seedSaved({s2: {incognito: true}})
+			const p = await openPopup()
+			const seen = await watchDrag(p)
+			await drag(p, savedSel('Hotel'), {selector: savedSel('Mike'), ...first})
+			const want = [REFUSED, ["Nothing moved: 1 normal saved tab can't move into a private saved window"], SAVED]
+			const got = [await settle(seen, REFUSED), await settle(() => noticesOf(p), want[1]), await savedTitles()]
+			await quiet()
+			got[1] = await noticesOf(p)
+			return {got, want}
+		})
+		na('a normal open tab over a private saved window (title): not allowed, no marker, the notice at the end', async () => {
+			const [w1] = await fixture(layout)
+			await seedSaved({s2: {incognito: true}})
+			const p = await openPopup()
+			const seen = await watchDrag(p)
+			await drag(p, tabSel('Bravo'), '#session-s2 h3.windowTitle')
+			const want = [REFUSED, ["Nothing added: 1 normal tab can't be added to a private saved window"], SAVED, ['Alpha', 'Bravo', 'Charlie']]
+			const got = [await settle(seen, REFUSED), await settle(() => noticesOf(p), want[1]), await savedTitles(), await titlesOf(w1)]
+			await quiet()
+			got[1] = await noticesOf(p)
+			return {got, want}
+		})
+		na('a normal open tab over a tab of a private saved window: not allowed, no marker, the notice at the end', async () => {
+			await fixture(layout)
+			await seedSaved({s2: {incognito: true}})
+			const p = await openPopup()
+			const seen = await watchDrag(p)
+			await drag(p, tabSel('Bravo'), {selector: savedSel('Mike'), ...first})
+			const want = [REFUSED, ["Nothing added: 1 normal tab can't be added to a private saved window"], SAVED]
+			return {got: [await settle(seen, REFUSED), await settle(() => noticesOf(p), want[1]), await savedTitles()], want}
+		})
+		na('a private saved tab over a normal saved window: not allowed, no marker, the notice at the end', async () => {
+			await fixture(layout)
+			await seedSaved({}, {s3: savedWindowOf('s3', 'Private', ['Oscar', 'Papa'], {incognito: true})})
+			const p = await openPopup()
+			const seen = await watchDrag(p)
+			await drag(p, savedSel('Oscar'), {selector: savedSel('Mike'), ...first})
+			const want = [REFUSED, ["Nothing moved: 1 private saved tab can't move into a normal saved window"], {...SAVED, s3: ['Oscar', 'Papa']}]
+			return {got: [await settle(seen, REFUSED), await settle(() => noticesOf(p), want[1]), await savedTitles()], want}
+		})
+		// open windows: the popup is told that the second window is private
+		na('a normal open tab over a tab of a private open window: not allowed, no marker, no move, the notice at the end', async () => {
+			const [w1, w2] = await fixture(layout)
+			const p = await openPopup({privateWindow: w2})
+			const seen = await watchDrag(p)
+			await drag(p, tabSel('Alpha'), {selector: tabSel('Echo'), ...first})
+			const want = [REFUSED, ["Nothing moved: 1 normal tab can't move to a private window"], ['Alpha', 'Bravo', 'Charlie'], ['Delta', 'Echo', 'Foxtrot']]
+			const got = [await settle(seen, REFUSED), await settle(() => noticesOf(p), want[1]), await titlesOf(w1), await titlesOf(w2)]
+			await quiet()
+			got[1] = await noticesOf(p)
+			return {got, want}
+		})
+		na('a normal open tab over the private window itself, away from its tabs: not allowed, no outline, the notice at the end', async () => {
+			const [w1, w2] = await fixture(layout)
+			const p = await openPopup({privateWindow: w2})
+			const seen = await watchDrag(p)
+			await drag(p, tabSel('Alpha'), {selector: '#window-' + w2, fx: 0.97, fy: 0.97})
+			const want = [REFUSED, ["Nothing moved: 1 normal tab can't move to a private window"], ['Alpha', 'Bravo', 'Charlie'], ['Delta', 'Echo', 'Foxtrot']]
+			return {got: [await settle(seen, REFUSED), await settle(() => noticesOf(p), want[1]), await titlesOf(w1), await titlesOf(w2)], want}
+		})
+		na('a private open tab over a tab of a normal open window: not allowed, no marker, the notice at the end', async () => {
+			const [w1, w2] = await fixture(layout)
+			const p = await openPopup({privateWindow: w2})
+			const seen = await watchDrag(p)
+			await drag(p, tabSel('Echo'), {selector: tabSel('Alpha'), ...first})
+			const want = [REFUSED, ["Nothing moved: 1 private tab can't move to a normal window"], ['Alpha', 'Bravo', 'Charlie'], ['Delta', 'Echo', 'Foxtrot']]
+			return {got: [await settle(seen, REFUSED), await settle(() => noticesOf(p), want[1]), await titlesOf(w1), await titlesOf(w2)], want}
+		})
+		na('a private open tab over a tab of its private window: allowed, with its marker, the drop comes, no notice', async () => {
+			const [, w2] = await fixture(layout)
+			const p = await openPopup({privateWindow: w2})
+			const seen = await watchDrag(p)
+			await drag(p, tabSel('Delta'), {selector: tabSel('Foxtrot'), fx: 0.9, fy: 0.9})
+			const want = [['allowed', 'marker', 1, ['allowed']], ['Echo', 'Foxtrot', 'Delta'], []]
+			const got = [await settle(seen, want[0]), await settle(() => titlesOf(w2), want[1])]
+			await quiet()
+			got.push(await noticesOf(p))
+			return {got, want}
+		})
+		// a drop on itself that changes nothing: not allowed, but nothing to say
+		na('an open tab over its own place (before itself): not allowed, no marker, nothing moves, no notice', async () => {
+			const [, w2] = await fixture(layout)
+			const p = await openPopup()
+			const seen = await watchDrag(p)
+			await drag(p, tabSel('Echo'), {selector: tabSel('Echo'), ...first})
+			await quiet()
+			return {got: [await seen(), await titlesOf(w2), await noticesOf(p)], want: [REFUSED, ['Delta', 'Echo', 'Foxtrot'], []]}
+		})
+		na('a saved tab over its own place (before itself, and at the end of the window it ends): not allowed, no marker, no notice', async () => {
+			await fixture(layout)
+			const p = await openPopup()
+			const seen = await watchDrag(p)
+			await drag(p, savedSel('India'), {selector: savedSel('India'), ...first})
+			await quiet()
+			const got = [await seen(), await noticesOf(p), await savedTitles()]
+			return {got, want: [REFUSED, [], SAVED]}
+		})
+		na('the last saved tab over the title of its own saved window: not allowed, no marker, no notice', async () => {
+			await fixture(layout)
+			const p = await openPopup()
+			const seen = await watchDrag(p)
+			await drag(p, savedSel('Kilo'), '#session-s1 h3.windowTitle')
+			await quiet()
+			return {got: [await seen(), await noticesOf(p), await savedTitles()], want: [REFUSED, [], SAVED]}
+		})
+		na('a saved window card over itself: not allowed, no marker, no notice', async () => {
+			await fixture(layout)
+			const p = await openPopup()
+			const seen = await watchDrag(p)
+			await drag(p, '#session-s1 h3.windowTitle', '#session-s1 h3.windowTitle')
+			await quiet()
+			return {got: [await seen(), await noticesOf(p), await savedOrder()], want: [REFUSED, [], ['s1', 's2']]}
+		})
+		// the reason belongs to the target the pointer was last on
+		na('over a refusing target, then off it into nothing, released there: no notice', async () => {
+			await fixture(layout)
+			await seedSaved({s2: {incognito: true}})
+			const p = await openPopup()
+			const seen = await watchDrag(p)
+			await drag(p, tabSel('Bravo'), '#session-s2 h3.windowTitle', p, {moveOn: {selector: '.window-container', fx: 0.5, fy: 0.97}})
+			await quiet(900)
+			return {got: [await seen(), await noticesOf(p), await savedTitles()], want: [['none', 'no marker', 0, ['none']], [], SAVED]}
+		})
+		na('over a refusing target, then on an allowed one, dropped there: it drops, no notice', async () => {
+			const [w1] = await fixture(layout)
+			await seedSaved({s2: {incognito: true}})
+			const p = await openPopup()
+			const seen = await watchDrag(p)
+			await drag(p, tabSel('Bravo'), '#session-s2 h3.windowTitle', p, {moveOn: '#session-s1 h3.windowTitle'})
+			const want = [['allowed', 'marker', 1, ['allowed']], {s1: [...SAVED.s1, 'Bravo'], s2: SAVED.s2}, []]
+			const got = [await settle(seen, want[0]), await settle(savedTitles, want[1])]
+			await quiet()
+			got.push(await noticesOf(p))
+			return {got, want}
+		})
+		// what was allowed stays allowed
+		na('a saved tab over an open tab: allowed (copy), with its marker, the drop comes, it opens', async () => {
+			const [, w2] = await fixture(layout)
+			const p = await openPopup()
+			const seen = await watchDrag(p)
+			await drag(p, savedSel('India'), {selector: tabSel('Echo'), ...first})
+			const want = [['allowed', 'marker', 1, ['allowed']], ['Delta', 'India', 'Echo', 'Foxtrot'], []]
+			const got = [await settle(seen, want[0]), await settle(() => titlesOf(w2), want[1])]
+			await quiet()
+			got.push(await noticesOf(p))
+			return {got, want}
+		})
+		na('an open tab over a tab of another open window: allowed (move), with its marker, the drop comes, it moves', async () => {
+			const [, w2] = await fixture(layout)
+			const p = await openPopup()
+			const seen = await watchDrag(p)
+			await drag(p, tabSel('Alpha'), {selector: tabSel('Echo'), ...first})
+			const want = [['allowed', 'marker', 1, ['allowed']], ['Delta', 'Alpha', 'Echo', 'Foxtrot'], []]
+			const got = [await settle(seen, want[0]), await settle(() => titlesOf(w2), want[1])]
+			await quiet()
+			got.push(await noticesOf(p))
+			return {got, want}
+		})
+		na('an open tab over a normal saved window: allowed, outlined, the drop comes, a copy goes in', async () => {
+			await fixture(layout)
+			const p = await openPopup()
+			const seen = await watchDrag(p)
+			await drag(p, tabSel('Bravo'), '#session-s2 h3.windowTitle')
+			const want = [['allowed', 'marker', 1, ['allowed']], {s1: SAVED.s1, s2: [...SAVED.s2, 'Bravo']}, []]
+			const got = [await settle(seen, want[0]), await settle(savedTitles, want[1])]
+			await quiet()
+			got.push(await noticesOf(p))
+			return {got, want}
+		})
+		na('a saved tab over another saved window: allowed, outlined, the drop comes, it moves', async () => {
+			await fixture(layout)
+			const p = await openPopup()
+			const seen = await watchDrag(p)
+			await drag(p, savedSel('Hotel'), '#session-s2 h3.windowTitle')
+			const want = [['allowed', 'marker', 1, ['allowed']], {s1: ['India', 'Juliett', 'Kilo'], s2: [...SAVED.s2, 'Hotel']}, []]
+			const got = [await settle(seen, want[0]), await settle(savedTitles, want[1])]
+			await quiet()
+			got.push(await noticesOf(p))
+			return {got, want}
+		})
+		na('a saved card over the other card: allowed, with its marker, the drop comes, the order changes', async () => {
+			await fixture(layout)
+			const p = await openPopup()
+			const seen = await watchDrag(p)
+			await drag(p, '#session-s2 h3.windowTitle', {selector: '#session-s1', ...first})
+			const want = [['allowed', 'marker', 1, ['allowed']], ['s2', 's1']]
+			return {got: [await settle(seen, want[0]), await settle(savedOrder, want[1])], want}
+		})
+		// part of it possible: still allowed, 37's partial notice at the drop
+		na('private and normal saved tabs over a normal saved window: allowed, the drop comes, the normal one moves, the partial notice', async () => {
+			await fixture(layout)
+			await seedSaved({}, {s3: savedWindowOf('s3', 'Private', ['Oscar', 'Papa'], {incognito: true})})
+			const p = await openPopup()
+			await ctrlClick(p, savedSel('Hotel'))
+			await ctrlClick(p, savedSel('Oscar'))
+			const seen = await watchDrag(p)
+			await drag(p, savedSel('Hotel'), '#session-s2 h3.windowTitle')
+			const want = [['allowed', 'marker', 1, ['allowed']], ["1 of 2 saved tabs left out: 1 private saved tab can't move into a normal saved window"],
+				{s1: ['India', 'Juliett', 'Kilo'], s2: ['Lima', 'Mike', 'November', 'Hotel'], s3: ['Oscar', 'Papa']}]
+			const got = [await settle(seen, want[0]), await settle(() => noticesOf(p), want[1]), await settle(savedTitles, want[2])]
+			await quiet()
+			got[1] = await noticesOf(p)
+			return {got, want}
 		})
 	}
 

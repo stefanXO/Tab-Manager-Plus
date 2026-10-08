@@ -231,6 +231,10 @@ export class Session extends React.Component<ISession, ISessionState> {
 		const before = side === "before";
 		if (!this.context.sessionDropMoves(this.props.session.id, before)) {
 			if (this.state.dropMarker) this.setState({ dropMarker: "" });
+			// dropped on itself, or where it already is: not allowed
+			e.preventDefault();
+			e.stopPropagation();
+			e.dataTransfer.dropEffect = "none";
 			return;
 		}
 		e.preventDefault();
@@ -242,18 +246,21 @@ export class Session extends React.Component<ISession, ISessionState> {
 	// Saved tabs (../savedMove.ts) held over the card but not over one of its
 	// tabs (its title, its edge, the gaps): they would go at its end; open tabs
 	// (../savedAdd.ts) too, as copies. Over a tab, the tab shows where they go
-	// (Tab.savedDragOver) and the card shows nothing.
+	// (Tab.savedDragOver) and the card shows nothing. Where nothing would go
+	// (nothing changes, or every tab is refused for a reason) the drop is not
+	// allowed: the browser's not-allowed cursor, no marker; a drag that ends
+	// there shows the reason (TabManager.dragDone).
 	savedTabOver(e : React.DragEvent<HTMLDivElement>) {
 		const onTab = !!(e.target as Element).closest?.(".tab");
-		if (onTab || !this.context.savedDropMoves(this.props.session.id, undefined, false)) {
+		if (onTab) {
 			if (this.state.dropMarker) this.setState({ dropMarker: "" });
-			// refused for a reason: no marker, but the drop is taken and the
-			// error notice says why (TabManager.dropSaved)
-			if (!onTab && this.context.savedDropRefused(this.props.session.id, undefined, false)) {
-				e.preventDefault();
-				e.stopPropagation();
-				e.dataTransfer.dropEffect = isOpenTabDrag(e.dataTransfer.types) ? "copy" : "move";
-			}
+			return;
+		}
+		if (!this.context.savedDropOver(this.props.session.id, undefined, false)) {
+			if (this.state.dropMarker) this.setState({ dropMarker: "" });
+			e.preventDefault();
+			e.stopPropagation();
+			e.dataTransfer.dropEffect = "none";
 			return;
 		}
 		e.preventDefault();
@@ -270,9 +277,8 @@ export class Session extends React.Component<ISession, ISessionState> {
 		if (isSavedTabDrag(e.dataTransfer?.types) || isOpenTabDrag(e.dataTransfer?.types)) {
 			const into = this.state.dropMarker === "into";
 			this.setState({ dropMarker: "" });
-			// no marker: a drop refused for a reason (not on a tab, which takes its own)
-			// is taken, to say why
-			if (!into && ((e.target as Element).closest?.(".tab") || !this.context.savedDropRefused(this.props.session.id, undefined, false))) return;
+			// no marker: nothing was allowed here (or it was dropped on a tab, which takes its own)
+			if (!into) return;
 			e.preventDefault();
 			e.stopPropagation();
 			this.context.dropSaved(this.props.session.id, undefined, false, readTabDrag(e.dataTransfer));

@@ -34,7 +34,7 @@ import {moveSession, reorderShown} from "../sessionOrder";
 import {tidyStored, listSessions, addSessions, importSessions} from "../sessionStore";
 import {moveSavedTabs, remapSavedKeys, movedText, SavedTabMove, SavedDropTarget} from "../savedMove";
 import {addOpenTabs, addedText, SavedAddResult} from "../savedAdd";
-import {splitByKind, planMove, planAdd, whyUnsavable, dropErrorText, Left, MovePlan, AddPlan} from "../dropReasons";
+import {splitByKind, planMove, planAdd, whyUnsavable, dropErrorText, openMoveVerdict, openSavedVerdict, refusalNotice, Left, MovePlan, AddPlan, Refusal, DropVerdict} from "../dropReasons";
 import {SavedWrites, SavedChange} from "../savedWrites";
 import {stampUpdated} from "../savedUpdated";
 import {moveUndoRecord, undoMove, emptiedText, undoneText, UndoOffers, MoveUndo} from "../moveUndo";
@@ -55,7 +55,7 @@ function tabIds(tabs : readonly browser.Tabs.Tab[]) : number[] {
 
 // what a drop on a saved tab or card does: moves (or adds) something, is
 // refused for a reason that gets an error notice, or changes nothing
-type DropAnswer = "moves" | "refused" | "none";
+type DropAnswer = DropVerdict;
 
 // the settings the manager holds in its state and applies
 type ManagerSettings = Omit<Settings, "showMonitors">;
@@ -142,6 +142,15 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	// the saved window whose card is being dragged (../sessionOrder.ts), from
 	// dragstart until the drop or the drag's end
 	private draggingSession : string | null = null;
+	// The last target a dragover was over that refuses the drag for a reason,
+	// with the notice that reason gives (cleared at the start of every
+	// dragover, so it is only ever the target the pointer is on now): a drag
+	// that ends there, dropped nowhere, shows the notice (dragDone)
+	private refusal : Refusal | null = null;
+	// a drop event came in this drag: whatever dragend then says, it was dropped
+	private dropped = false;
+	// the dragend event dragDone handled last
+	private lastEnd : Event | null = null;
 	// saved tabs that a move (../savedMove.ts) just numbered anew, from the
 	// change until the write shows it (showSessions carries the selection over)
 	private renumbered : SavedTabMove[] | null = null;
@@ -264,11 +273,11 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			dropWindow: (windowId, dragged) => { this.dropWindow(windowId, dragged); },
 			dragFavicon: (icon) => this.dragFavicon(icon),
 			dragEnd: () => { this.draggingSaved = null; this.draggingOpen = null; },
-			dragSession: (id) => { this.draggingSession = id; if (id) this.draggingOpen = null; },
+			dragSession: (id) => { this.draggingSession = id; if (id) { this.draggingOpen = null; this.refusal = null; this.dropped = false; } },
 			sessionDropMoves: (target, before) => this.sessionDropMoves(target, before),
 			dropSession: (target, before) => { void this.dropSession(target, before); },
-			savedDropMoves: (sessionId, index, before) => this.savedDropMoves(sessionId, index, before),
-			savedDropRefused: (sessionId, index, before) => this.savedDropRefused(sessionId, index, before),
+			savedDropOver: (sessionId, index, before) => this.savedDropOver(sessionId, index, before),
+			openDropOver: (windowId, tabId, before) => this.openDropOver(windowId, tabId, before),
 			dropSaved: (sessionId, index, before, dragged) => { void this.dropSaved(sessionId, index, before, dragged); },
 			hoverIcon: (text) => this.hoverIcon(text),
 			openWindowOptions: (windowId, autoName) => this.setState({ colorsActive: windowId, colorsAutoName: autoName }),
@@ -331,6 +340,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		document.removeEventListener("keydown", this.onUndoKey, true);
 		document.removeEventListener("dragend", this.dragDone);
 		document.removeEventListener("drop", this.dragDone);
+		document.removeEventListener("dragover", this.dragOverBegin, true);
 		// written from the copy; the component is going, its state stays
 		this.unmounted = true;
 		this.pending.flush(true);
@@ -871,6 +881,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		// after the cards' and tabs' own handlers (bubbling, on the document)
 		document.addEventListener("dragend", this.dragDone);
 		document.addEventListener("drop", this.dragDone);
+		// before the cards' and tabs' own dragover handlers, which say what they refuse
+		document.addEventListener("dragover", this.dragOverBegin, true);
 
 		await this.sessionSync();
 
@@ -1123,26 +1135,65 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	private openTabsById(ids : readonly number[]) : browser.Tabs.Tab[] {
 		return ids.map((id) => this.state.tabsbyid.get(id)).filter((tab) : tab is browser.Tabs.Tab => !!tab);
 	}
-	// Whether the dragged saved tabs would move if dropped before / after the
-	// saved tab `index` of `sessionId` (undefined: at its end), among what is
-	// on screen; for dragged open tabs, whether copies of them can go there.
-	savedDropMoves(sessionId : string, index : number | undefined, before : boolean) : boolean {
-		return this.dropAnswer(sessionId, index, before) === "moves";
+	// A drag is over a saved tab (`index` of saved window `sessionId`, `before`
+	// or after it; undefined: its card, the tabs would go at its end): whether
+	// the drop is taken. True when the dragged saved tabs would move there
+	// among what is on screen (../savedMove.ts), or copies of the dragged open
+	// tabs could go there (../savedAdd.ts), at least in part. False when
+	// nothing would change or every dragged tab is left out (all private
+	// where the saved window is normal or the other way round, no open tab
+	// has anything to save): the target then shows the browser's not-allowed
+	// cursor and no marker, and a drag that ends there says why (dragDone).
+	savedDropOver(sessionId : string, index : number | undefined, before : boolean) : boolean {
+		const answer = this.dropAnswer(sessionId, index, before);
+		if (answer.verdict === "moves") return true;
+		this.noteRefusal(answer.text);
+		return false;
 	}
-	// Whether a drop there is refused for a reason (all the dragged tabs are
-	// private and the saved window normal, or the other way round; no open tab
-	// has anything to save): it shows no marker but is taken, so the error
-	// notice can say why (dropSaved) instead of the drag just snapping back.
-	savedDropRefused(sessionId : string, index : number | undefined, before : boolean) : boolean {
-		return this.dropAnswer(sessionId, index, before) === "refused";
+	// The same for a drag over an open window (`tabId` undefined) or one of
+	// its tabs, `before` it or after: saved tabs open there as copies, open
+	// tabs move there. Refused when none can (private and normal never mix; the
+	// saved tabs are gone), nothing when one tab is dropped where it is.
+	openDropOver(windowId : number, tabId : number | undefined, before : boolean) : boolean {
+		const answer = this.openDropAnswer(windowId, tabId, before);
+		if (answer.verdict === "moves") return true;
+		this.noteRefusal(answer.text);
+		return false;
+	}
+	private openDropAnswer(windowId : number, tabId : number | undefined, before : boolean) : { verdict : DropVerdict, text : string } {
+		// a drag started in another Tab Manager page is not known here: taken, the drop reads its data
+		const saved = this.draggingSaved;
+		if (saved && saved.length > 0) {
+			const found = openableSaved(saved, this.visibleSessions());
+			const v = openSavedVerdict(found.tabs.length, found.gone, found.blank);
+			return { verdict: v.verdict, text: dropErrorText("opened", "saved tab", found.tabs.length + found.gone + found.blank, 0, v.left) };
+		}
+		const open = this.draggingOpen;
+		const target = this.state.windowsbyid.get(windowId);
+		if (open && open.length > 0 && target) {
+			const next = tabId === undefined ? undefined : this.state.tabsbyid.get(tabId);
+			const v = openMoveVerdict(open.map((tab) => ({ id: tab.id!, windowId: tab.windowId!, index: tab.index, incognito: tab.incognito })), {
+				windowId,
+				incognito: !!target.incognito,
+				index: next ? next.index + (before ? 0 : 1) : undefined,
+				last: (target.tabs?.length || 0) - 1
+			});
+			return { verdict: v.verdict, text: dropErrorText("moved", "tab", open.length, 0, v.left) };
+		}
+		return { verdict: "moves", text: "" };
+	}
+	// this dragover is over a target that refuses the drag; `text` is the
+	// notice if it ends there ("" when there is nothing to say)
+	private noteRefusal(text : string) {
+		this.refusal = text ? { text, at: Date.now() } : null;
 	}
 	// Asked on every dragover of every saved tab and card: the answers are
 	// kept for as long as the drag, what is shown and the search stay the same.
-	private dropMovesMemo : { dragged : readonly unknown[], shown : ISavedSession[], search : SavedSearch, filter : boolean, store : Record<string, ISavedSession>, refs : SavedTabRef[], answers : Map<string, DropAnswer> } | null = null;
-	private dropAnswer(sessionId : string, index : number | undefined, before : boolean) : DropAnswer {
+	private dropMovesMemo : { dragged : readonly unknown[], shown : ISavedSession[], search : SavedSearch, filter : boolean, store : Record<string, ISavedSession>, refs : SavedTabRef[], answers : Map<string, { verdict : DropAnswer, text : string }> } | null = null;
+	private dropAnswer(sessionId : string, index : number | undefined, before : boolean) : { verdict : DropAnswer, text : string } {
 		const open = this.draggingOpen;
 		const dragged = this.draggingSaved || open;
-		if (!dragged) return "none";
+		if (!dragged) return { verdict: "none", text: "" };
 		const shown = this.visibleSessions();
 		const search = this.savedSearch(shown);
 		const filter = this.state.filterTabs;
@@ -1157,16 +1208,19 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			const target = { sessionId, index, before };
 			let changes : boolean;
 			let left : Left[];
+			let text : string;
 			if (open) {
 				const plan = planAdd(m.store, open, target, IS_FIREFOX);
 				changes = this.addOpen(m.store, plan.go, target) !== null;
 				left = plan.left;
+				text = dropErrorText("added", "tab", open.length, 0, left);
 			} else {
 				const plan = planMove(m.store, m.refs, target);
 				changes = moveSavedTabs(m.store, plan.go, target) !== null;
 				left = plan.left;
+				text = dropErrorText("moved", "saved tab", m.refs.length, 0, left);
 			}
-			answer = changes ? "moves" : left.length > 0 ? "refused" : "none";
+			answer = changes ? { verdict: "moves", text: "" } : left.length > 0 ? { verdict: "refused", text } : { verdict: "none", text: "" };
 			m.answers.set(key, answer);
 		}
 		return answer;
@@ -2376,10 +2430,30 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	// went meanwhile (its own dragend never comes then; a saved tab goes when
 	// a move numbers it anew). The drops taken in the page stop there and read
 	// what they need first.
-	private readonly dragDone = () => {
+	private readonly dragDone = (e? : Event) => {
+		// A drag that ended over a target that refuses it, dropped nowhere (the
+		// browser delivered no drop: dropEffect none), says why, once: the
+		// cursor showed it was not allowed, this tells the reason. The dragged
+		// tab's own listener (drag) and the document's both get the event, and a
+		// tab that went meanwhile only reaches its own.
+		if (e && e.type === "dragend") {
+			if (e === this.lastEnd) return;
+			this.lastEnd = e;
+			const text = refusalNotice(this.refusal, Date.now(), (e as DragEvent).dataTransfer?.dropEffect, this.dropped);
+			if (text) this.board.error(text);
+			this.refusal = null;
+			this.dropped = false;
+		} else if (e && e.type === "drop") {
+			this.dropped = true;
+		}
 		this.draggingSession = null;
 		this.draggingSaved = null;
 		this.draggingOpen = null;
+	}
+	// every dragover starts without a refusing target: the handlers of the
+	// target under the pointer set it again (noteRefusal)
+	private readonly dragOverBegin = () => {
+		this.refusal = null;
 	}
 	// A tab drag starts: what it takes is remembered for the drop markers, and
 	// returned as the drag data (../dragPayload.ts): the saved tabs by saved
@@ -2388,6 +2462,13 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	drag(e : React.DragEvent<HTMLDivElement>, id : number) : string {
 		// a tab drag: no saved window card is being dragged
 		this.draggingSession = null;
+		this.refusal = null;
+		this.dropped = false;
+		// A tab that is deleted or moved meanwhile (a saved tab another popup
+		// deletes) is no longer in the page, and its dragend never reaches the
+		// document: listen on the tab itself too.
+		const source = e.currentTarget;
+		if (source instanceof Element) source.addEventListener("dragend", this.dragDone, { once: true });
 		// a saved tab: it and, when it is selected, the other selected saved
 		// tabs; it is opened, not moved, so the selection stays as it is
 		if (isSavedTabKey(id)) {

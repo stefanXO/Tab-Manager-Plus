@@ -13,6 +13,7 @@ import {isSavedWindowDrag} from "../sessionOrder";
 import {SAVED_TAB_DRAG, isSavedTabDrag} from "../savedDrag";
 import {OPEN_TAB_DRAG, isOpenTabDrag} from "../savedAdd";
 import {readTabDrag} from "../dragPayload";
+import {tabDropBefore} from "../tabDropSide";
 
 export class Tab extends React.Component<ITab, ITabState> {
 	static contextType = ManagerContext;
@@ -287,10 +288,25 @@ export class Tab extends React.Component<ITab, ITabState> {
 		let draggingover;
 
 		var before = this.state.draggingOver;
-		if (this.props.layout === LAYOUT.list) {
-			draggingover = e.nativeEvent.offsetY > this.tabRef.current.clientHeight / 2 ? "bottom" : "top";
+		const list = this.props.layout === LAYOUT.list;
+		const first = tabDropBefore(list, e.nativeEvent.offsetX, e.nativeEvent.offsetY, this.tabRef.current.clientWidth, this.tabRef.current.clientHeight);
+		if (list) {
+			draggingover = first ? "top" : "bottom";
 		} else {
-			draggingover = e.nativeEvent.offsetX > this.tabRef.current.clientWidth / 2 ? "right" : "left";
+			draggingover = first ? "left" : "right";
+		}
+
+		// A drop here that would be refused (private and normal never mix, the
+		// dragged saved tabs are gone) or change nothing (the tab on its own
+		// place): no marker. The window around says the not-allowed cursor
+		// (Window.dragOver, which asks the same).
+		if ((isSavedTabDrag(e.dataTransfer?.types) || isOpenTabDrag(e.dataTransfer?.types)) && !this.context.openDropOver(this.props.window.id, this.props.tab.id, first)) {
+			if (before || this.state.dragFavIcon) {
+				this.setState({ draggingOver: "", dragFavIcon: "" });
+				this.forceUpdate();
+				this.props.onDragChange?.();
+			}
+			return;
 		}
 
 		this.setState({
@@ -330,7 +346,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 		this.props.onDragChange?.();
 	}
 	// A saved tab dragged over this saved tab: the drop marker on the side it
-	// would go, when a drop there moves anything (TabManager.savedDropMoves);
+	// would go, when a drop there moves anything (TabManager.savedDropOver);
 	// an open tab: where its copy would go. Not stopped here: the saved window
 	// card sees the event too, and clears its own marker while the pointer is
 	// over a tab.
@@ -340,14 +356,13 @@ export class Tab extends React.Component<ITab, ITabState> {
 		const rect = e.currentTarget.getBoundingClientRect();
 		const list = this.props.layout === LAYOUT.list;
 		const before = list ? e.clientY < rect.top + rect.height / 2 : e.clientX < rect.left + rect.width / 2;
-		if (!this.context.savedDropMoves(this.props.session.id, this.props.tab.index, before)) {
+		if (!this.context.savedDropOver(this.props.session.id, this.props.tab.index, before)) {
 			if (this.state.draggingOver) this.setState({ draggingOver: "" });
-			// refused for a reason: no marker, but the drop is taken and the
-			// error notice says why (TabManager.dropSaved)
-			if (this.context.savedDropRefused(this.props.session.id, this.props.tab.index, before)) {
-				e.preventDefault();
-				e.dataTransfer.dropEffect = open ? "copy" : "move";
-			}
+			// nothing would go (nothing changes, or every tab is refused for a
+			// reason): the browser's not-allowed cursor and no marker; a drag
+			// that ends here shows the reason (TabManager.dragDone)
+			e.preventDefault();
+			e.dataTransfer.dropEffect = "none";
 			return;
 		}
 		e.preventDefault();
@@ -364,14 +379,9 @@ export class Tab extends React.Component<ITab, ITabState> {
 		if ((!isSavedTabDrag(e.dataTransfer?.types) && !isOpenTabDrag(e.dataTransfer?.types)) || !this.props.session) return;
 		const side = this.state.draggingOver;
 		this.setState({ draggingOver: "" });
-		const list = this.props.layout === LAYOUT.list;
-		let before = side === "left" || side === "top";
-		if (!side) {
-			// no marker: a drop that is refused for a reason is taken, to say why
-			const rect = e.currentTarget.getBoundingClientRect();
-			before = list ? e.clientY < rect.top + rect.height / 2 : e.clientX < rect.left + rect.width / 2;
-			if (!this.context.savedDropRefused(this.props.session.id, this.props.tab.index, before)) return;
-		}
+		// no marker: nothing was allowed here
+		if (!side) return;
+		const before = side === "left" || side === "top";
 		// the card under it takes no drop of its own then
 		e.preventDefault();
 		e.stopPropagation();

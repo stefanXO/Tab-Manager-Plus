@@ -265,6 +265,20 @@ currently on disk — there is no stale copy to forget about.
   size of that layout's tab tiles. The real
   browser draws the picture a little translucent; real drags are checked by
   `tools/drag-check/`
+- `refused-open-over` / `-release`, `refused-saved-over` / `-release`, `refused-saved-card-over`:
+  a drag over a target that refuses it (the browser's not-allowed cursor, which a shot cannot
+  show; the missing marker it can). `apply.incognito: [103]` makes the open window "Research"
+  private (`fake-browser.js` `__fakeIncognito`; the popup reads the windows again when the window
+  order is written) and `apply.savedPrivate: 's2'` makes "Tax 2029" private (the saved windows go
+  back to the fixture's first). `-over`: "Calendar" of "Life", a normal tab, held over "Browser
+  extension" of the private window (no marker on the tab; the shot before this step shows it), or
+  over "Inbox (3)" / the title of the private saved window (no marker, no outline). `-release`:
+  the same, let go there: the red notice with the reason ("Nothing moved: 1 normal tab can't move
+  to a private window"; clock frozen). The harness delivers a `drop` only where the last
+  `dragover` was cancelled with a dropEffect other than none, as the browser does (a script's
+  `DataTransfer` ignores `dropEffect`, so the harness keeps what the page sets), and sends
+  `dragend` after every `drop: true` drag. They come last in the list and leave the private
+  windows set until a state sets them again. blocks + List, 800x600 and 380x900
 - `fresh` / `fresh-compact`: the List view's freshness bars (`src/popup/freshness.ts`, drawn at the end of every List row from the fixture's `lastAccessed`, 0 min .. 14 days: all five levels) — `fresh` as `plain`, `fresh-compact` with the `compact` setting on. `vertical` × 2 themes × `800x600`, dpr 1 only
 - `page-options-na-<theme>-<width>`: `options.html` standalone, 2 × 3 = 6
 - `page-changelog-na-<theme>-<width>`: `changelog.html` standalone, 2 × 3 = 6.

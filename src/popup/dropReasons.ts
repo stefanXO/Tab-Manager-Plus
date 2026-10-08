@@ -196,3 +196,80 @@ export function dropErrorText(verb : string, noun : string, asked : number, done
 	if (done <= 0) return "Nothing " + verb + ": " + why;
 	return leftTotal(left) + " of " + asked + " " + noun + "s left out: " + why;
 }
+
+// ---- refused drops: the not-allowed cursor ----
+
+// What a drag over a target says to the browser: `moves` (the drop is taken
+// and does something, at least in part: the cursor shows the drop and the
+// drop marker the place), `refused` (every dragged tab is left out for a
+// reason: the cursor is the not-allowed one, no marker), `none` (a drop that
+// changes nothing on purpose, or nothing is dragged: the cursor is the
+// not-allowed one too, and there is nothing to say)
+export type DropVerdict = "moves" | "refused" | "none";
+
+// the part of an open tab this reads
+export interface OpenMoveTab extends KindTab {
+	id : number;
+	windowId : number;
+	index : number;
+}
+
+// Open tabs dragged over an open window: `incognito` is that of the window,
+// `index` where they would go (undefined: at its end), `last` the index of
+// the window's last tab
+export interface OpenMoveTarget {
+	windowId : number;
+	incognito : boolean;
+	index? : number;
+	last : number;
+}
+
+// Whether dropping the open tabs `tabs` on the open window / tab `target`
+// moves any of them: private tabs go only to a private window and normal
+// tabs to a normal one. A drop that takes only part of them is still taken
+// (the notice names the rest, dropErrorText); one that takes none is
+// refused, with its reasons. A single tab dropped where it already is (its
+// own place, or the end of a window it already ends) changes nothing.
+export function openMoveVerdict(tabs : readonly OpenMoveTab[], target : OpenMoveTarget) : { verdict : DropVerdict, left : Left[] } {
+	if (tabs.length === 0) return { verdict: "none", left: [] };
+	const kinds = splitByKind(tabs, target.incognito, "window");
+	if (kinds.go.length === 0) return { verdict: "refused", left: kinds.left };
+	if (kinds.left.length === 0 && kinds.go.length === 1) {
+		const tab = kinds.go[0];
+		const stays = tab.windowId === target.windowId && (target.index === undefined ? tab.index === target.last : tab.index === target.index);
+		if (stays) return { verdict: "none", left: [] };
+	}
+	return { verdict: "moves", left: [] };
+}
+
+// Whether saved tabs dragged over an open window / tab open anything:
+// `openable` of the dragged ones can be opened, `gone` are deleted meanwhile,
+// `blank` have no address (./savedDrag.ts openableSaved)
+export function openSavedVerdict(openable : number, gone : number, blank : number) : { verdict : DropVerdict, left : Left[] } {
+	if (openable > 0) return { verdict: "moves", left: [] };
+	const left : Left[] = [];
+	if (gone) left.push({ reason: "dragged-saved-gone", n: gone });
+	if (blank) left.push({ reason: "no-address", n: blank });
+	return { verdict: left.length > 0 ? "refused" : "none", left };
+}
+
+// How long after the last dragover over a refusing target a drag still
+// ended there: the browser repeats dragover every 50 to 350 ms while the
+// pointer is over a target, so an older one is a drag that left the popup
+export const REFUSAL_FRESH_MS = 1500;
+
+// The last refusing target of a drag: the notice its reason gives, and when
+export interface Refusal {
+	text : string;
+	at : number;
+}
+
+// The error notice for a drag that ended (dragend) over a refusing target,
+// "" when there is none: the drag was dropped nowhere (`dropEffect` "none"
+// and no drop event came), and the last dragover was over a target that
+// refused it for a reason, not long ago
+export function refusalNotice(refusal : Refusal | null, now : number, dropEffect : string | undefined, dropped : boolean) : string {
+	if (!refusal || !refusal.text || dropped || dropEffect !== "none") return "";
+	if (now - refusal.at > REFUSAL_FRESH_MS || now < refusal.at) return "";
+	return refusal.text;
+}
