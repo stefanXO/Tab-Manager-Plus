@@ -9,12 +9,12 @@ import { buildSessionsFile, everythingFileName, isForeignFormat, readSessionsFil
 import { planImport } from "../src/popup/importCount.ts";
 
 describe("file names", () => {
-	test("sessions-YYYY-MM-DD-HH-MM-SS.json in local time, zero padded", () => {
-		assert.equal(sessionsFileName(new Date(2030, 0, 2, 3, 4, 5)), "sessions-2030-01-02-03-04-05.json");
-		assert.equal(sessionsFileName(new Date(2030, 11, 31, 23, 59, 59)), "sessions-2030-12-31-23-59-59.json");
+	test("tab-manager-plus-sessions-YYYY-MM-DD-HH-MM-SS.json in local time, zero padded", () => {
+		assert.equal(sessionsFileName(new Date(2030, 0, 2, 3, 4, 5)), "tab-manager-plus-sessions-2030-01-02-03-04-05.json");
+		assert.equal(sessionsFileName(new Date(2030, 11, 31, 23, 59, 59)), "tab-manager-plus-sessions-2030-12-31-23-59-59.json");
 	});
-	test("everything-YYYY-MM-DD-HH-MM-SS.json", () => {
-		assert.equal(everythingFileName(new Date(2030, 0, 2, 3, 4, 5)), "everything-2030-01-02-03-04-05.json");
+	test("tab-manager-plus-everything-YYYY-MM-DD-HH-MM-SS.json", () => {
+		assert.equal(everythingFileName(new Date(2030, 0, 2, 3, 4, 5)), "tab-manager-plus-everything-2030-01-02-03-04-05.json");
 	});
 });
 
