@@ -6,7 +6,7 @@
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { SearchPicks, searchSelects, searchSelectsSaved, searchTab, keptByHand } from "../src/popup/searchPicks.ts";
+import { SearchPicks, searchSelects, searchSelectsSaved, searchTab, keptByHand, movedLeaving } from "../src/popup/searchPicks.ts";
 import { SavedTabKeys } from "../src/popup/sessionKeys.ts";
 
 // one search pass over the open tabs `ids`, `matches` being the ones it matches
@@ -205,5 +205,25 @@ describe("saved tabs are selected when no open tab matches", () => {
 		searchBoth(selection, picks, [], [a, b], true);
 		assert.equal(selection.size, 0);
 		assert.equal(searchSelectsSaved(new Set(), 0, true), false);
+	});
+});
+
+describe("movedLeaving", () => {
+	test("no search: every moved tab leaves", () => {
+		assert.deepEqual(movedLeaving([1, 2, 3], new Set()), [1, 2, 3]);
+	});
+	test("a moved tab the search does not match stays selected, the matches leave", () => {
+		assert.deepEqual(movedLeaving(new Set([1, 2, 3]), new Set([2, 9])), [1, 3]);
+	});
+	test("all moved tabs non-matching: none leaves; nothing moved: none", () => {
+		assert.deepEqual(movedLeaving([4, 5], new Set([4, 5])), []);
+		assert.deepEqual(movedLeaving([], new Set([4])), []);
+	});
+	test("the kept tab is the user's and survives the next search pass (until it matches nothing selected by a search)", () => {
+		const selection = new Set<number>([2]);
+		const picks = new SearchPicks();
+		picks.touch(2);
+		search(selection, picks, TABS, [1, 3]);
+		assert.deepEqual(sorted(selection), [1, 2, 3]);
 	});
 });

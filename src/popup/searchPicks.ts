@@ -76,6 +76,19 @@ export function searchTab(selection : Set<number>, picks : SearchPicks, id : num
 	else picks.unpick(selection, id);
 }
 
+// Which of the open tabs a drop moved leave the selection. A moved tab that
+// does not match the search (`hidden`: the set the search fills) stays
+// selected: it moved out of sight of its old place, and unselected it would
+// hide in its new window (with "Hide non-matching tabs" on) the moment it
+// landed. Selected, it stays on screen (./selectedShown.ts) until the next
+// search or Escape. Matching tabs, and every tab when no search is active
+// (`hidden` empty), leave as ever.
+export function movedLeaving(moved : Iterable<number>, hidden : ReadonlySet<number>) : number[] {
+	const out : number[] = [];
+	for (const id of moved) if (!hidden.has(id)) out.push(id);
+	return out;
+}
+
 // Whether the selection holds a tab the search did not select (a hand-picked
 // one, matching or not, or a saved tab): the header then speaks of the
 // selection, not of the matches alone.

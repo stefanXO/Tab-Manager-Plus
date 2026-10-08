@@ -133,6 +133,13 @@
 	z-index: 90000;
 	background-color: var(--selection);
 }
+/* a selected tab that does not match the search stays on screen (it is never
+   hidden): between the two, still yellow so it reads as selected, but dimmed
+   so it does not read as a match. The extra .icon outranks the discarded
+   tile rule further down, which sets an opacity of its own. */
+.icon.tab.selected.search-faded {
+	opacity: 0.6;
+}
 /* the active tab's tile: dark edge and a hairline ring */
 .tab.highlighted {
 	border-color: var(--active-border);

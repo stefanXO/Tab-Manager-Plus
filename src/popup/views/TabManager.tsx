@@ -31,7 +31,7 @@ import {savedDeleteItems} from "../savedDelete";
 import {editSession, shownSavedName, SessionEdit} from "../sessionEdit";
 import {searchSaved, searchSummary, SavedSearch, SummaryKind} from "../searchSaved";
 import {isHiddenTab, savedSelectionSignature, shownWithSelection} from "../selectedShown";
-import {SearchPicks, searchSelects, searchSelectsSaved, searchTab, keptByHand} from "../searchPicks";
+import {SearchPicks, searchSelects, searchSelectsSaved, searchTab, keptByHand, movedLeaving} from "../searchPicks";
 import {draggedSaved, openableSaved, openedText} from "../savedDrag";
 import {moveSession, reorderShown} from "../sessionOrder";
 import {tidyStored, listSessions, addSessions, importSessions} from "../sessionStore";
@@ -2714,8 +2714,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	// tabs go only to a private window and normal tabs to a normal one: the
 	// others stay where they are, as does every tab the browser refuses, and the
 	// error notice says how many and why (../dropReasons.ts). The tabs that
-	// moved leave the selection; selected tabs that did not move (left out)
-	// stay selected.
+	// moved leave the selection, except the ones the search does not match;
+	// selected tabs that did not move (left out) stay selected.
 	private async moveOpen(tabs : browser.Tabs.Tab[], asked : number, windowId : number, index : number | undefined) {
 		const target = this.state.windowsbyid.get(windowId);
 		if (!target) {
@@ -2754,7 +2754,10 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			}
 		}
 		if (moved.size < kinds.go.length) left.push({ reason: "move-refused", n: kinds.go.length - moved.size });
-		this.leaveSelection(moved);
+		// a moved tab the search does not match stays selected, and so on
+		// screen (../searchPicks.ts movedLeaving); it is the user's now
+		this.leaveSelection(movedLeaving(moved, this.state.hiddenTabs));
+		for (const id of moved) if (this.state.hiddenTabs.has(id)) this.searchPicks.touch(id);
 		this.leftOut("moved", "tab", asked, moved.size, left);
 		this.update();
 	}

@@ -258,12 +258,14 @@
 							<li>Selected tabs are always shown: Hide non-matching tabs (and the hide mode of
 								Highlight Duplicates and Highlight recently active tabs) never hides a selected
 								tab, open or saved. A selected tab that does not match stays on screen,
-								selected, as if the hiding were off, and its window or saved window stays with
-								it, so every selected tab takes part in every move and close, and the drag stack
-								counts them all. A new search keeps the tabs you selected yourself (Ctrl+click,
-								right-click, a range with Shift+right-click, a drag, the arrow keys) and only
-								replaces the ones an earlier search selected; a range takes only the tabs on
-								screen, and the arrow keys also stop on a selected tab that does not match</li>
+								selected, as if the hiding were off (a little paler than a match, not as pale as
+								the other non-matches), also after you moved it to another window, until the
+								next search or Escape, and its window or saved window stays with it, so every
+								selected tab takes part in every move and close, and the drag stack counts them
+								all. A new search keeps the tabs you selected yourself (Ctrl+click, right-click,
+								a range with Shift+right-click, a drag, the arrow keys) and only replaces the
+								ones an earlier search selected; a range takes only the tabs on screen, and the
+								arrow keys also stop on a selected tab that does not match</li>
 							<li><code>s:</code> and <code>-s:</code> in the search box pick where to look. <code>s:tax</code> (title or url),
 								<code>s:u:github</code> (url only), <code>s:t:tax</code> (title only), <code>s:"pull request"</code> and <code>s:/\.pdf$/</code>
 								match saved tabs only, never open ones; <code>-s:</code> is the mirror and matches open tabs
