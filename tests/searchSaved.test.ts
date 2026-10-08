@@ -162,6 +162,28 @@ describe("searchSaved with s:", () => {
 		assert.equal(q("s:nothinglikethis").tabs, 0);
 	});
 
+	test("s:u: and s:t: look at one field of the saved tabs", () => {
+		const q = (text : string) => searchSaved(SESSIONS, parseQuery(text), false, new SavedTabKeys());
+		assert.equal(q("s:u:google").tabs, 2);
+		assert.equal(q("s:u:inbox").tabs, 1);
+		assert.equal(q("s:t:inbox").tabs, 1);
+		assert.equal(q("s:t:google").tabs, 1);
+		assert.equal(q("s:u:planning").tabs, 0);
+		assert.equal(q("s:t:q3 s:u:docs").tabs, 1);
+		assert.equal(q("s: u:google t:gmail").tabs, 1);
+		assert.equal(q("s:u:google").windows, 1);
+	});
+
+	test("-s:u:x and -s:t:x hide only the matching saved tabs", () => {
+		const r = searchSaved(SESSIONS, parseQuery("-s:u:google"), false, new SavedTabKeys());
+		assert.equal(r.tabs, 3);
+		assert.equal(r.hidden.size, 2);
+		assert.equal(r.windows, 1);
+		const t = searchSaved(SESSIONS, parseQuery("-s:t:inbox"), false, new SavedTabKeys());
+		assert.equal(t.tabs, 4);
+		assert.equal(t.hidden.size, 1);
+	});
+
 	test("-s: leaves out every saved tab: all of them hide", () => {
 		const r = searchSaved(SESSIONS, parseQuery("-s:"), false, new SavedTabKeys());
 		assert.equal(r.tabs, 0);

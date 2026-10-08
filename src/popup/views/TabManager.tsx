@@ -3,6 +3,7 @@ import {readSettings, writeBootCache, SETTING_DEFAULTS, Settings, Layout, LAYOUT
 import {sortWindows} from "@helpers/windows";
 import {groupSelection, buildSavedWindow, newSessionId, savedText} from "@helpers/sessions";
 import {parseQuery, matchTab, searchable} from "../search";
+import {SAVED_SEARCH_TIP, searchHelpIntro, searchHelpRows, searchTips} from "../searchHelp";
 import {duplicatesTitle, findDuplicates} from "../duplicates";
 import {recentTabs, recentText, recentTitle, RecentTabs, RECENT_LEVELS} from "../recent";
 import {onMainScreen} from "../screen";
@@ -652,7 +653,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 						placeholder={maybePluralize(tabCount, 'tab') + " in " + maybePluralize(this.state.windows.length, 'window')}
 						value={this.state.topText}
 					/>
-					<input type="text" disabled={true} className="taburl" ref={this.topBoxUrlRef} placeholder={this.tip} value={this.state.bottomText} />
+					<input type="text" disabled={true} className="taburl" ref={this.topBoxUrlRef} placeholder={this.getTip()} value={this.state.bottomText} />
 				</div>
 				{onMainScreen(this.state) && <div className={"window searchbox"}>
 					<table>
@@ -661,23 +662,10 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 								<td className="one">
 									<input className="searchBoxInput" type="text" placeholder="Start typing to search tabs..." aria-describedby="search-help" tabIndex={1} onChange={this.search} ref={this.searchBoxRef} />
 									<div className="search-help" role="tooltip" id="search-help">
-										<p className="search-help-intro">Type to search titles and urls, in saved windows too. Every word must match.</p>
+										<p className="search-help-intro">{searchHelpIntro(this.state.sessionsFeature)}</p>
 										<table className="search-help-table">
 											<tbody>
-												<tr><td><code>github issue</code></td><td>both words, anywhere</td></tr>
-												<tr><td><code>github OR reddit</code></td><td>either word matches</td></tr>
-												<tr><td><code>t:release</code></td><td>title only</td></tr>
-												<tr><td><code>u:youtube</code></td><td>url only</td></tr>
-												<tr><td><code>s:tax</code></td><td>saved windows only</td></tr>
-												<tr><td><code>s:</code></td><td>show only saved windows</td></tr>
-												<tr><td><code>-reddit</code></td><td>leave out matching tabs</td></tr>
-												<tr><td><code>-u:old.reddit</code></td><td>leave out by url</td></tr>
-												<tr><td><code>"pull request"</code></td><td>exact phrase</td></tr>
-												<tr><td><code>/\(\d+\)/</code></td><td>unread count, like "Inbox (3)"</td></tr>
-												<tr><td><code>/localhost:\d+/</code></td><td>local dev servers, any port</td></tr>
-												<tr><td><code>/\.pdf$/</code></td><td>urls ending in .pdf</td></tr>
-												<tr><td><code>Enter</code></td><td>move matches to new window</td></tr>
-												<tr><td><code>Esc</code></td><td>clear the search</td></tr>
+												{searchHelpRows(this.state.sessionsFeature).map((r) => <tr key={r.code}><td><code>{r.code}</code></td><td>{r.text}</td></tr>)}
 											</tbody>
 										</table>
 									</div>
@@ -2400,7 +2388,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			"You can type to search right away",
 			"Search for either of two things: google OR yahoo",
 			"Search titles only with t:news, urls only with u:github",
-			"Search saved windows only with s:tax, or type s: to see just those",
+			SAVED_SEARCH_TIP,
 			"Exclude with a minus: reddit -u:old.reddit",
 			"Put a phrase in quotes: \"pull request\"",
 			"Find tabs with an unread count, like \"Inbox (3)\": /\\(\\d+\\)/",
@@ -2411,12 +2399,15 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			"Search while duplicates are highlighted to narrow them down"
 		];
 
-		return "Tip: " + tips[Math.floor(Math.random() * tips.length)];
+		// the list follows the saved windows setting, which can be switched
+		// while the popup is open
+		const fit = searchTips(tips, this.state.sessionsFeature);
+		return "Tip: " + fit[Math.floor(this.tipPick * fit.length)];
 	}
-	// one tip per popup open: picked in render, every startup re-render (settings,
-	// windows, favicons...) showed a different one, several in the first second.
-	// A field initialiser, so it must stay below getTip.
-	private readonly tip : string = this.getTip();
+	// one tip per popup open: the pick is made once, every startup re-render
+	// (settings, windows, favicons...) showed a different one, several in the
+	// first second. The list is worked out in render, from the settings.
+	private readonly tipPick = Math.random();
 	elVisible(elem : HTMLElement) {
 		if (!(elem instanceof Element)) throw Error("DomUtil: elem is not an element.");
 		var style = getComputedStyle(elem);

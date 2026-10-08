@@ -6,17 +6,22 @@
 //   foo OR bar     any term matches
 //   t:foo          title only            u:foo   url only
 //   -foo           must not match        -u:foo  url must not contain
-//   s:foo          saved windows only: matches only tabs of saved windows
-//                  (title or url), open tabs never match it; a bare s: is
-//                  every saved tab, so it shows the saved windows alone;
-//                  -s:foo leaves out saved tabs that match, -s: all saved tabs
+//   s:foo          s: is a scope: what follows applies to tabs of saved
+//                  windows only, open tabs never match it. It wraps any term:
+//                  s:foo (title or url), s:u:github, s:t:tax, s:"a b", s:/re/
+//                  A bare s: is every saved tab, so with other terms behind it
+//                  (s: u:github t:tax) the whole search is saved windows only;
+//                  -s:foo / -s:u:x / -s:t:x leave out saved tabs that match,
+//                  a bare -s: leaves out every saved tab (open tabs only)
 //   "foo bar"      one term with a space
 //   /\(\d+\)/      a term is a regular expression (t:/\(\d+\)/ works too);
 //                  an invalid pattern falls back to a plain substring
 // Nothing else on purpose: every extra token is something to explain.
 
 export interface SearchTerm {
-	field : "any" | "title" | "url" | "saved";
+	field : "any" | "title" | "url";
+	// the term sits behind s:, so only a tab of a saved window can match it
+	saved : boolean;
 	negate : boolean;
 	test : (s : string) => boolean;
 	// where the term matches in `s` (original case), as [start, end) pairs
@@ -48,7 +53,7 @@ export function searchable(title : string | undefined, url : string | undefined,
 // splits on whitespace, keeps "quoted phrases" and /regex bodies/ together
 function tokens(query : string) : string[] {
 	const out : string[] = [];
-	const re = /(-?(?:[tusTUS]:)?)(?:"([^"]*)"|\/((?:\\\/|[^\/])+)\/(i?)|(\S+))/g;
+	const re = /(-?(?:[sS]:)?(?:[tuTU]:)?)(?:"([^"]*)"|\/((?:\\\/|[^\/])+)\/(i?)|(\S+))/g;
 	let m : RegExpExecArray | null;
 	while ((m = re.exec(query)) !== null) {
 		if (m[2] !== undefined) out.push(m[1] + '"' + m[2] + '"');
@@ -63,14 +68,16 @@ function term(token : string) : SearchTerm | null {
 	let field : SearchTerm["field"] = "any";
 	let rest = token;
 	if (rest.startsWith("-")) { negate = true; rest = rest.slice(1); }
-	// prefixes are case-insensitive, T: is as good as t:
+	// prefixes are case-insensitive, T: is as good as t:. s: comes first and
+	// wraps the rest: s:u:github is a saved-tabs-only url term
+	let saved = false;
+	if (rest.slice(0, 2).toLowerCase() === "s:") { saved = true; rest = rest.slice(2); }
 	const prefix = rest.slice(0, 2).toLowerCase();
 	if (prefix === "t:") { field = "title"; rest = rest.slice(2); }
 	else if (prefix === "u:") { field = "url"; rest = rest.slice(2); }
-	else if (prefix === "s:") { field = "saved"; rest = rest.slice(2); }
-	// a bare s: is every saved tab (and -s: every open one); the other
-	// prefixes need something to look for
-	if (rest.length === 0) return field === "saved" ? { field, negate, test: () => true, hits: () => [] } : null;
+	// a bare s: (or s:u: with nothing behind it) is every saved tab, and -s:
+	// every open one; the other prefixes need something to look for
+	if (rest.length === 0) return saved ? { field: "any", saved, negate, test: () => true, hits: () => [] } : null;
 
 	let test : SearchTerm["test"];
 	let hits : SearchTerm["hits"];
@@ -87,7 +94,7 @@ function term(token : string) : SearchTerm | null {
 				for (const m of s.matchAll(all)) if (m[0].length > 0) out.push([m.index, m.index + m[0].length]);
 				return out;
 			};
-			return { field, negate, test, hits };
+			return { field, saved, negate, test, hits };
 		} catch (e) {
 			// not a valid pattern: search for its text as it is
 			lit = rx[1].toLowerCase();
@@ -106,7 +113,7 @@ function term(token : string) : SearchTerm | null {
 		for (let i = lower.indexOf(lit); i >= 0; i = lower.indexOf(lit, i + lit.length)) out.push([i, i + lit.length]);
 		return out;
 	};
-	return { field, negate, test, hits };
+	return { field, saved, negate, test, hits };
 }
 
 export function parseQuery(query : string) : SearchQuery {
@@ -126,10 +133,10 @@ export function matchTab(tab : Searchable, query : SearchQuery) : boolean {
 	if (query.empty) return true;
 	const hit = (t : SearchTerm) : boolean => {
 		let found : boolean;
-		if (t.field === "title") found = t.test(tab.title);
+		// open tabs never match behind s:, whatever the word
+		if (t.saved && !tab.saved) found = false;
+		else if (t.field === "title") found = t.test(tab.title);
 		else if (t.field === "url") found = t.test(tab.url);
-		// open tabs never match s:, whatever the word
-		else if (t.field === "saved") found = !!tab.saved && (t.test(tab.title) || t.test(tab.url));
 		else found = t.test(tab.title) || t.test(tab.url);
 		return t.negate ? !found : found;
 	};
@@ -138,11 +145,12 @@ export function matchTab(tab : Searchable, query : SearchQuery) : boolean {
 
 // The parts of a title the search matched, to show in bold: every term that
 // looks at the title (not url-only, not excluded), sorted, overlaps merged.
-export function titleHits(title : string, query : SearchQuery | null) : [number, number][] {
+// `saved`: the tab belongs to a saved window, the only kind an s: term matches.
+export function titleHits(title : string, query : SearchQuery | null, saved = false) : [number, number][] {
 	if (!query || query.empty || !title) return [];
 	const all : [number, number][] = [];
 	for (const t of query.terms) {
-		if (t.negate || t.field === "url") continue;
+		if (t.negate || t.field === "url" || (t.saved && !saved)) continue;
 		all.push(...t.hits(title));
 	}
 	all.sort((a, b) => a[0] - b[0] || a[1] - b[1]);

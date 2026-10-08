@@ -180,7 +180,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 	// the title, with the parts the search matched in bold
 	title() : React.ReactNode {
 		const title = this.props.tab.title || "";
-		const hits = titleHits(title, this.props.query);
+		const hits = titleHits(title, this.props.query, !this.props.draggable && !!this.props.onOpen);
 		if (hits.length === 0) return title;
 		const parts : React.ReactNode[] = [];
 		let at = 0;

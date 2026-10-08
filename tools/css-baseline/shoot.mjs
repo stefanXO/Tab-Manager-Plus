@@ -434,8 +434,16 @@ const STATES = [
 	{name: 'ssearch-bare', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {search: 's:', store: {'filter-tabs': true}, scrollEnd: true}},
 	// combined with a minus: every saved tab without "google"
 	{name: 'ssearch-combo', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {search: 's: -google', store: {'filter-tabs': true}, scrollEnd: true}},
-	// the search syntax help (hover the search box) with its s: rows
+	// s: is a scope prefix: s:u:google looks at saved urls only, s:t:inbox at saved titles only
+	{name: 'ssearch-nested', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {search: 's:u:google', scrollEnd: true}},
+	{name: 'ssearch-nested-title', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {search: 's:t:inbox', store: {'filter-tabs': true}, scrollEnd: true}},
+	// -s: leaves the saved windows out (open tabs only); -s:u:google only the saved tabs with google in the url
+	{name: 'ssearch-excl', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {search: '-s:', store: {'filter-tabs': true}, scrollEnd: true}},
+	{name: 'ssearch-excl-url', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {search: '-s:u:google', store: {'filter-tabs': true}, scrollEnd: true}},
+	// the search syntax help (hover the search box) with its s: rows; with saved windows
+	// switched off the s: rows are not listed
 	{name: 'search-help', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {}, searchHelp: true},
+	{name: 'search-help-off', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {store: {sessionsFeature: false}}, searchHelp: true},
 ]
 
 /**
