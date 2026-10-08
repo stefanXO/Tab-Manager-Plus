@@ -8,8 +8,10 @@
 export interface ScreenState {
 	optionsActive : boolean;
 	colorsActive : number;
+	// the same overlay opened on a saved window (its id, "" when closed)
+	colorsSession? : string;
 }
 
 export function onMainScreen(s : ScreenState) : boolean {
-	return !s.optionsActive && !s.colorsActive;
+	return !s.optionsActive && !s.colorsActive && !s.colorsSession;
 }

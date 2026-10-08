@@ -5,28 +5,24 @@ import {isBlockLayout} from "@helpers/settings";
 import * as React from "react";
 import {maybePluralize, timeAgo} from "@helpers/utils";
 import * as browser from 'webextension-polyfill';
-import {ICommand, ISession, ISessionState} from '@types';
+import {ICommand, ISession} from '@types';
 import * as S from "@strings";
 import {popupScreen} from "@helpers/popup_size";
 import {ManagerContext, ITabManagerActions} from '../context';
 import {savedTabKeys} from '../sessionKeys';
+import {windowName} from '../windowName';
 
-export class Session extends React.Component<ISession, ISessionState> {
+export class Session extends React.Component<ISession> {
 	static contextType = ManagerContext;
 	declare context : ITabManagerActions;
 	constructor(props : ISession) {
 		super(props);
 
-		let name = this.props.session.name;
-		let color = this.props.session.color || "default";
-
-		this.state = {
-			name: name,
-			color: color
-		};
-
 	}
 	render() {
+		// straight from the stored window, so a rename or recolour shows at once
+		const name = this.props.session.name;
+		const color = this.props.session.color || "default";
 		let hideWindow = true;
 		let titleAdded = false;
 		// A saved tab's stored id belonged to an open tab when the window was
@@ -76,6 +72,11 @@ export class Session extends React.Component<ISession, ISessionState> {
 							onClick={this.windowClick}
 						/>
 						<div
+							className={"icon tabaction colors " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
+							title="Change the name or color of this saved window"
+							onClick={this.openOptions}
+						/>
+						<div
 							className={"icon tabaction delete " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
 							title={"Delete this saved window\nWill delete " + maybePluralize(this.props.tabs.length, "tab") + " permanently"}
 							onClick={this.close}
@@ -85,10 +86,10 @@ export class Session extends React.Component<ISession, ISessionState> {
 			}
 
 			if (this.props.windowTitles) {
-				if (this.state.name) {
+				if (name) {
 					tabs.unshift(
 						<h3 key={"session-" + this.props.session.id + "-windowTitle"} className="center windowTitle">
-							{this.state.name}
+							{name}
 						</h3>
 					);
 					titleAdded = true;
@@ -113,7 +114,7 @@ export class Session extends React.Component<ISession, ISessionState> {
 						" " +
 						this.props.layout +
 						" " +
-						this.state.color +
+						color +
 						" " +
 						(this.props.session.windowsInfo.incognito ? " incognito" : "")
 					}
@@ -162,6 +163,10 @@ export class Session extends React.Component<ISession, ISessionState> {
 				this.context.scrollTo("window", windowId.toString());
 			}, 500);
 		}
+	}
+	openOptions = (e : React.MouseEvent) => {
+		e.stopPropagation();
+		this.context.openSessionOptions(this.props.session.id, windowName(this.props.tabs));
 	}
 	close = (e) => {
 		e.stopPropagation();

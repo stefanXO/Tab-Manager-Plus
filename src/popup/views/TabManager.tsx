@@ -19,6 +19,7 @@ import {applyTheme} from "@helpers/theme";
 import {StatsLayer, StatsSource} from "./StatsLayer";
 import {UndoNotice} from "./UndoNotice";
 import {PendingDeletes, withoutSessions, noticeText} from "../pendingDelete";
+import {editSession, SessionEdit} from "../sessionEdit";
 
 // the settings the manager holds in its state and applies
 type ManagerSettings = Omit<Settings, "showMonitors">;
@@ -141,6 +142,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			recentLevel: 0,
 			dragFavicon: "",
 			colorsActive: 0,
+			colorsSession: "",
 			colorsAutoName: "",
 
 			tabCount: 0,
@@ -167,7 +169,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			dragFavicon: (icon) => this.dragFavicon(icon),
 			hoverIcon: (text) => this.hoverIcon(text),
 			openWindowOptions: (windowId, autoName) => this.setState({ colorsActive: windowId, colorsAutoName: autoName }),
-			closeWindowOptions: () => this.setState({ colorsActive: 0, colorsAutoName: "", dirty: true }),
+			openSessionOptions: (id, autoName) => this.setState({ colorsSession: id, colorsAutoName: autoName }),
+			editSession: (id, edit) => this.editSession(id, edit),
+			closeWindowOptions: () => this.setState({ colorsActive: 0, colorsSession: "", colorsAutoName: "", dirty: true }),
 			scrollTo: (what, id) => this.scrollTo(what, id),
 			setSetting: (key, value) => this.setSetting(key, value),
 			setBottomText: (text) => this.setState({ bottomText: text }),
@@ -347,6 +351,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		// a deleted saved window is hidden while its Undo countdown runs
 		const hiddenSessions = this.pending.hidden();
 		const sessions = this.state.sessions.filter((s) => !hiddenSessions.has(s.id));
+		// the saved window the name / colour screen is open on
+		const namedSession = this.state.colorsSession ? this.state.sessions.find((s) => s.id === this.state.colorsSession) : undefined;
 		if (this.state.sessionsFeature) {
 			if (sessions.length > 0) haveSess = true;
 			// disable session window if we have filtering enabled
@@ -381,9 +387,16 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 					layout={this.state.layout}
 					autoName={this.state.colorsAutoName}
 				/>}
+				{!!namedSession && <WindowOptions
+					key={"session-options-" + namedSession.id}
+					windowId={0}
+					session={namedSession}
+					layout={this.state.layout}
+					autoName={this.state.colorsAutoName}
+				/>}
 				{/* keyed by layout: switching layouts remounts every card and tile, so the
 				    entrance animation plays again for the new arrangement */}
-				{this.cachedContainer(() => !this.state.optionsActive && !this.state.colorsActive && <div key={"container-" + this.state.layout} className={"window-container " + this.state.layout} ref={this.windowContainerRef} tabIndex={2}>
+				{this.cachedContainer(() => onMainScreen(this.state) && <div key={"container-" + this.state.layout} className={"window-container " + this.state.layout} ref={this.windowContainerRef} tabIndex={2}>
 					{this.state.windows.map((window : browser.Windows.Window, order : number) => {
 						if (window.state === "minimized") return;
 
@@ -518,7 +531,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 					/>
 					<input type="text" disabled={true} className="taburl" ref={this.topBoxUrlRef} placeholder={this.tip} value={this.state.bottomText} />
 				</div>
-				{!this.state.optionsActive && !this.state.colorsActive && <div className={"window searchbox"}>
+				{onMainScreen(this.state) && <div className={"window searchbox"}>
 					<table>
 						<tbody>
 							<tr>
@@ -726,7 +739,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		dropMissingSaved(this.state.selection, sessions);
 		this.storedSessions = values;
 		this.setState({
-			sessions: sessions
+			sessions: sessions,
+			// the saved window being named was deleted (or imported over) meanwhile
+			colorsSession: sessions.some((s) => s.id === this.state.colorsSession) ? this.state.colorsSession : ""
 		});
 		await this.update();
 	}
@@ -739,6 +754,17 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		dropMissingSaved(this.state.selection, this.state.sessions.filter((s) => !hidden.has(s.id)));
 		this.setState(this.selectionText());
 	}
+	// Renames / recolours a saved window (./sessionEdit.ts). Written from the
+	// copy sessionSync keeps when there is one, so it needs no read and the
+	// card changes at once; storage.onChanged then brings every other popup along.
+	async editSession(id : string, edit : SessionEdit) {
+		const base : Record<string, ISavedSession> = this.storedSessions || await getLocalStorage(S.sessions, {});
+		const next = editSession(base, id, edit);
+		if (!next) return;
+		this.storedSessions = next;
+		this.setState({sessions: this.state.sessions.map((s) => s.id === id ? next[id] : s)});
+		await setLocalStorage(S.sessions, next);
+	}
 	undoDelete = () => {
 		this.pending.undo();
 	}
@@ -747,10 +773,15 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	// itself completes even as the page goes.
 	async commitDeletes(ids : string[], sync : boolean) {
 		if (sync && this.storedSessions) {
-			void setLocalStorage(S.sessions, withoutSessions(this.storedSessions, ids));
+			// later edits (a name flushed right after) build on the copy without them
+			const next = withoutSessions(this.storedSessions, ids) as Record<string, ISavedSession>;
+			this.storedSessions = next;
+			void setLocalStorage(S.sessions, next);
 			return;
 		}
-		const sessions = await getLocalStorage(S.sessions, {});
+		// from the copy when there is one: an edit written during a read here
+		// would be lost otherwise
+		const sessions = this.storedSessions || await getLocalStorage(S.sessions, {});
 		const next = withoutSessions(sessions, ids) as Record<string, ISavedSession>;
 		await setLocalStorage(S.sessions, next);
 		// Bring the state up to date before the promise resolves: the ids stop
@@ -1143,7 +1174,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		// escape key
 		// (with a stats card open, StatsLayer takes Escape before this sees it)
 		if (e.keyCode === 27) {
-			if (!!this.state.colorsActive) {
+			if (!!this.state.colorsActive || !!this.state.colorsSession) {
 				// the window name / color overlay is open: close that, not the popup
 				e.nativeEvent.preventDefault();
 				e.nativeEvent.stopPropagation();

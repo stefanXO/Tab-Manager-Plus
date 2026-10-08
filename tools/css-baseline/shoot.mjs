@@ -145,6 +145,12 @@ const STATES = [
 	{name: 'options-debug', layouts: ['blocks'], scaleLayouts: [], apply: {overlay: 'options', scrollTo: 'Export tabs for debugging'}},
 	// the window colour/name screen does take the layout as a prop
 	{name: 'windowopts', layouts: ['blocks', 'vertical'], scaleLayouts: ['blocks'], apply: {overlay: 'colors'}},
+	// the same screen opened on the saved window "Conference reading" (its
+	// colour action), empty and with a name typed; then the card after the
+	// name was typed and a colour picked (src/popup/sessionEdit.ts)
+	{name: 'saved-opts', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {overlay: 'session-colors'}},
+	{name: 'saved-opts-typed', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {overlay: 'session-colors', typeName: 'Q3 conference notes'}},
+	{name: 'saved-renamed', layouts: ['blocks', 'vertical', 'horizontal', 'blocks-big'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {overlay: 'session-colors', typeName: 'Q3 conference notes', pickColor: 'color9', scrollInto: '#session-s1'}},
 	// the "Window style" box with the real mouse on it: over the Compact mode
 	// switch (which shows its help text in the header), then onto that option's
 	// description text. The only state that moves the mouse, so :hover applies.
@@ -278,7 +284,7 @@ async function settle(page) {
 }
 
 /** Applies a popup state absolutely: the result never depends on what came before. */
-async function apply(page, {layout, dark, search = '', dup = false, recent = 0, overlay = null, scrollTo = null, store = {}, granted = true, savedFocused = null, clicks = [], scrollInto = null, importFile = null, freezeClock = false, scrollEnd = false}) {
+async function apply(page, {layout, dark, search = '', dup = false, recent = 0, overlay = null, scrollTo = null, store = {}, granted = true, savedFocused = null, clicks = [], scrollInto = null, importFile = null, freezeClock = false, scrollEnd = false, typeName = null, pickColor = null}) {
 	await page.evaluate(async (s) => {
 		const q = (sel) => document.querySelector(sel)
 		const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
@@ -317,6 +323,23 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 		// 5. open the requested overlay
 		if (s.overlay === 'options') { q('.icon.windowaction.options')?.click(); await frame() }
 		if (s.overlay === 'colors') { q('.icon.tabaction.colors')?.click(); await frame() }
+		// the same screen on the saved window "Conference reading"
+		if (s.overlay === 'session-colors') { q('#session-s1 .icon.tabaction.colors')?.click(); await frame() }
+		// a name typed into it, a colour picked (which writes and closes it)
+		if (s.typeName !== null) {
+			const input = q('.window-name-input')
+			if (!input) throw new Error('no .window-name-input')
+			Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(input, s.typeName)
+			input.dispatchEvent(new Event('input', {bubbles: true}))
+			await new Promise((r) => setTimeout(r, 450))
+			await frame()
+		}
+		if (s.pickColor) {
+			const sw = q('.colors-box .icon.' + s.pickColor)
+			if (!sw) throw new Error('no colour ' + s.pickColor)
+			sw.click()
+			await frame()
+		}
 
 		// 6. no scroll offset, no focus ring, no caret
 		document.querySelectorAll('.window-container, #root').forEach((e) => { e.scrollTop = 0; e.scrollLeft = 0 })
@@ -363,7 +386,7 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 		if (s.scrollInto) q(s.scrollInto)?.scrollIntoView({block: 'nearest', inline: 'nearest'})
 		// the list scrolled to its very end: the padding the notice makes room with shows
 		if (s.scrollEnd) { const c = q('.window-container'); if (c) c.scrollTop = c.scrollHeight }
-	}, {layout, dark, search, dup, recent, overlay, store, granted, savedFocused, clicks, scrollInto, importFile, freezeClock, scrollEnd})
+	}, {layout, dark, search, dup, recent, overlay, store, granted, savedFocused, clicks, scrollInto, importFile, freezeClock, scrollEnd, typeName, pickColor})
 	await settle(page)
 	// 7. scroll the options box headed `scrollTo` to the top of its scroller
 	if (scrollTo) {
@@ -523,6 +546,8 @@ function shootPopup(scale, sizes, layoutsOf) {
 						await apply(page, {layout, dark: theme === 'dark', ...state.apply})
 						// sanity: the overlay states must really be open, else skip
 						if (state.apply.overlay === 'options' && !(await page.$('.options-window'))) { skipped.push(name + ' (options screen did not open)'); continue }
+						if (state.apply.overlay === 'session-colors' && state.apply.pickColor && await page.$('.window-colors')) { skipped.push(name + ' (window colour screen did not close)'); continue }
+						if (state.apply.overlay === 'session-colors' && !state.apply.pickColor && !(await page.$('.window-colors'))) { skipped.push(name + ' (saved window colour screen did not open)'); continue }
 						if (state.apply.overlay === 'colors' && !(await page.$('.window-colors'))) { skipped.push(name + ' (window colour screen did not open)'); continue }
 						if (state.hover) await hoverOption(page, state.hover)
 						if (state.stats && !(await hoverStats(page, state.stats))) { skipped.push(name + ' (' + state.stats + ' not shown)'); continue }

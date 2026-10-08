@@ -51,6 +51,8 @@ export interface ITabManagerState {
 	recentLevel: number,
 	dragFavicon: string,
 	colorsActive: number,
+	// id of the saved window the same overlay is open on ("" when closed)
+	colorsSession: string,
 	colorsAutoName: string,
 
 

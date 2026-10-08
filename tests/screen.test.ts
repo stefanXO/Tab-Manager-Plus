@@ -24,3 +24,12 @@ describe("onMainScreen", () => {
 		assert.equal(onMainScreen({ optionsActive: true, colorsActive: 42 }), false);
 	});
 });
+
+describe("onMainScreen with the saved window overlay", () => {
+	test("the overlay on a saved window is not the main screen", () => {
+		assert.equal(onMainScreen({ optionsActive: false, colorsActive: 0, colorsSession: "s1" }), false);
+	});
+	test("closed it is", () => {
+		assert.equal(onMainScreen({ optionsActive: false, colorsActive: 0, colorsSession: "" }), true);
+	});
+});

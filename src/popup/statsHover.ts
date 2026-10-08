@@ -28,7 +28,7 @@ export interface IStatsTarget {
 // the manager's data the cards are built from, read when a card opens
 export type StatsState = Pick<ITabManagerState,
 	"tabsbyid" | "windowsbyid" | "windows" | "windowrefs" | "lastActive" | "lastOpenWindow" |
-	"selection" | "layout" | "optionsActive" | "colorsActive">;
+	"selection" | "layout" | "optionsActive" | "colorsActive" | "colorsSession">;
 export interface StatsSource {
 	state() : StatsState;
 	searchBox() : HTMLInputElement | null;

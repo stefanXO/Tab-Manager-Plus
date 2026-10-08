@@ -43,6 +43,7 @@ Windows And Sessions
 - Enabling the sessions feature shows your saved windows right away
 - Importing a backup says how many saved windows it restored and how many it skipped, and why (#39)
 - Deleting a saved window can be undone: it disappears at once and a notice with an 8 second countdown offers Undo; it is only removed for good when the countdown ends or the popup closes
+- Saved windows can be renamed and recolored with the same name and color screen as open windows, from the color button on the saved window's card (#172)
 - Ctrl+click or right-click on a tab of a saved window selects it, instead of an unrelated open tab that Delete would then close; saved windows are no longer marked as the active window
 - The window order no longer resets on its own; the current window is always listed first and marked, also as a popup
 - Clicking the icon while Tab Manager Plus is already open in a tab switches to that tab

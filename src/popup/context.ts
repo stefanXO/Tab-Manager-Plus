@@ -1,6 +1,7 @@
 import * as React from "react";
 import * as browser from "webextension-polyfill";
 import {ITabManagerState, ISavedSession} from "@types";
+import {SessionEdit} from "./sessionEdit";
 
 // Settings that live in TabManager state and can be changed from the options screen
 export type ISettings = Pick<ITabManagerState,
@@ -21,6 +22,10 @@ export interface ITabManagerActions {
 	dragFavicon(icon? : string) : string;
 	hoverIcon(text : string) : void;
 	openWindowOptions(windowId : number, autoName : string) : void;
+	// the same screen on a saved window
+	openSessionOptions(id : string, autoName : string) : void;
+	// rename / recolour a saved window (written to storage at once)
+	editSession(id : string, edit : SessionEdit) : Promise<void>;
 	closeWindowOptions() : void;
 	scrollTo(what : string, id : string) : void;
 	setSetting<K extends keyof ISettings>(key : K, value : ISettings[K]) : void;
