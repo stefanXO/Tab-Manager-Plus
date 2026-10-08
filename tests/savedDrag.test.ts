@@ -103,6 +103,7 @@ describe("openableSaved: what cannot open", () => {
 		const keys = new SavedTabKeys();
 		const r = openableSaved([keys.key("s1", 0), keys.key("s2", 1)], sessions, keys);
 		assert.equal(r.tabs.length, 2);
+		assert.deepEqual(r.keys, [keys.key("s1", 0), keys.key("s2", 1)]);
 		assert.equal(r.gone, 0);
 		assert.equal(r.blank, 0);
 	});
@@ -112,6 +113,8 @@ describe("openableSaved: what cannot open", () => {
 		const picked = [keys.key("s9", 0), keys.key("s1", 7), keys.key("s2", 0)];
 		const r = openableSaved(picked, sessions, keys);
 		assert.deepEqual(r.tabs.map((t) => t.url), ["https://e.test/"]);
+		// only the key of the tab that opens: the gone ones stay selected
+		assert.deepEqual(r.keys, [keys.key("s2", 0)]);
 		assert.equal(r.gone, 2);
 		assert.equal(r.blank, 0);
 	});
@@ -120,17 +123,23 @@ describe("openableSaved: what cannot open", () => {
 		const keys = new SavedTabKeys();
 		const odd = [{ id: "x", tabs: [{ index: 0 }, { index: 1, url: "https://ok.test/" }] }];
 		const r = openableSaved([keys.key("x", 0), keys.key("x", 1)], odd, keys);
-		assert.deepEqual(r, { tabs: [{ url: "https://ok.test/", pinned: false }], gone: 0, blank: 1 });
+		assert.deepEqual(r, { tabs: [{ url: "https://ok.test/", pinned: false }], keys: [keys.key("x", 1)], gone: 0, blank: 1 });
 	});
 
 	test("the same key twice counts once; open ids are no saved tabs", () => {
 		const keys = new SavedTabKeys();
 		const a = keys.key("s9", 0);
-		assert.deepEqual(openableSaved([a, a, 3, -1], sessions, keys), { tabs: [], gone: 1, blank: 0 });
+		assert.deepEqual(openableSaved([a, a, 3, -1], sessions, keys), { tabs: [], keys: [], gone: 1, blank: 0 });
+	});
+
+	test("the keys follow the shown order, whatever order they were asked in", () => {
+		const keys = new SavedTabKeys();
+		const r = openableSaved([keys.key("s2", 0), keys.key("s1", 1)], sessions, keys);
+		assert.deepEqual(r.keys, [keys.key("s1", 1), keys.key("s2", 0)]);
 	});
 
 	test("nothing asked: nothing", () => {
-		assert.deepEqual(openableSaved([], sessions, new SavedTabKeys()), { tabs: [], gone: 0, blank: 0 });
+		assert.deepEqual(openableSaved([], sessions, new SavedTabKeys()), { tabs: [], keys: [], gone: 0, blank: 0 });
 	});
 });
 

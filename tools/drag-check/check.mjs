@@ -808,6 +808,30 @@ try {
 			]
 			return {got: [both, first, second, await settle(savedTitles, want[3])], want}
 		})
+		// a held Ctrl+Z (auto-repeat) takes back one notice, not the whole stack
+		key('undo: Ctrl+Z held down takes back only the newest notice', async () => {
+			await fixture(layout)
+			const p = await openPopup()
+			await ctrlClick(p, savedSel('Lima'))
+			await ctrlClick(p, savedSel('Mike'))
+			await ctrlClick(p, savedSel('November'))
+			await drag(p, savedSel('November'), '#session-s1 h3.windowTitle')
+			const all = ['Hotel', 'India', 'Juliett', 'Kilo', 'Lima', 'Mike', 'November']
+			await settle(savedTitles, {s1: all})
+			await click(p, '#session-s1 .icon.tabaction.delete')
+			await settle(() => undoNotices(p), ['Removed “Taxes” (left empty)', 'Deleted “Reading” (7 tabs)'])
+			// the second and third keydowns carry repeat: true
+			await p.keyboard.down(MOD)
+			for (let i = 0; i < 4; i++) {
+				await p.keyboard.down('KeyZ')
+				await new Promise((r) => setTimeout(r, 60))
+			}
+			await p.keyboard.up('KeyZ')
+			await p.keyboard.up(MOD)
+			await new Promise((r) => setTimeout(r, 600))
+			const want = [all, ['Removed “Taxes” (left empty)'], {s1: all}]
+			return {got: [await settle(() => shownIn(p, '#session-s1'), want[0]), await undoNotices(p), await savedTitles()], want}
+		})
 		key('undo: a delete and then a move each keep their notice; the older Undo button still works', async () => {
 			await fixture(layout)
 			const p = await openPopup()
@@ -969,6 +993,36 @@ try {
 			got.push(await savedTitles())
 			got.push(await stackOf(stacks))
 			got.splice(1, 0, await revealed(p, '.session'))
+			return {got, want}
+		})
+		// Enter on saved tabs follows the same rule: the hidden one stays
+		drops('hidden selected saved tab: Enter opens only the two on screen, the hidden one stays selected', async () => {
+			await fixture(layout)
+			const p = await openPopup()
+			const known = await windowsNow()
+			await hiddenSelected(p, 'Hotel OR India OR Delta', [savedSel('Hotel'), savedSel('India'), savedSel('Kilo')])
+			await p.waitForFunction((sel) => [...document.querySelectorAll(sel)].every((t) => !t.offsetParent), {timeout: 3000}, savedSel('Kilo'))
+			await p.focus('.searchBoxInput')
+			await p.keyboard.press('Enter')
+			const want = [[['Hotel', 'India']], SAVED, ['Kilo']]
+			const got = [await newWindows(known, want[0])]
+			got.push(await savedTitles())
+			got.push(await revealed(p, '.session'))
+			return {got, want}
+		})
+		drops('only hidden saved tabs selected: Enter opens nothing, the notice says why', async () => {
+			await fixture(layout)
+			const p = await openPopup()
+			const known = await windowsNow()
+			await hiddenSelected(p, 'Hotel OR India OR Delta', [savedSel('Kilo')])
+			await p.waitForFunction((sel) => [...document.querySelectorAll(sel)].every((t) => !t.offsetParent), {timeout: 3000}, savedSel('Kilo'))
+			await p.focus('.searchBoxInput')
+			await p.keyboard.press('Enter')
+			const want = [['Nothing moved: the selected tabs are hidden by the search'], [], ['Kilo']]
+			const got = [await settle(() => noticesOf(p), want[0])]
+			await new Promise((r) => setTimeout(r, 600))
+			got.push(await newWindows(known, []))
+			got.push(await revealed(p, '.session'))
 			return {got, want}
 		})
 

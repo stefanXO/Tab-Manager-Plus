@@ -28,14 +28,17 @@ export function draggedSaved(key : number, selection : ReadonlySet<number>, hidd
 // are shown (`sessions`), whatever order they were selected in, and how many
 // of them cannot be opened: `gone`, saved tabs that are not in `sessions`
 // (deleted meanwhile, or pending delete), and `blank`, tabs without an address.
+// `keys`: the keys of `tabs` (the ones a successful open is done with).
 export interface Openable {
 	tabs : ISavedTabOpen[];
+	keys : number[];
 	gone : number;
 	blank : number;
 }
 
 export function openableSaved(keys : readonly number[], sessions : readonly SavedWindowOpen[], registry : SavedTabKeys = savedTabKeys) : Openable {
-	const picked = new Map<string, Set<number>>();
+	// saved window id -> stored index -> the key asked for it
+	const picked = new Map<string, Map<number, number>>();
 	// each saved tab once, however often it was asked
 	const asked = new Set<number>();
 	for (const key of keys) {
@@ -44,23 +47,25 @@ export function openableSaved(keys : readonly number[], sessions : readonly Save
 		const ref = registry.ref(key);
 		if (!ref) continue;
 		let indexes = picked.get(ref.sessionId);
-		if (!indexes) picked.set(ref.sessionId, indexes = new Set());
-		indexes.add(ref.index);
+		if (!indexes) picked.set(ref.sessionId, indexes = new Map());
+		indexes.set(ref.index, key);
 	}
 	const tabs : ISavedTabOpen[] = [];
-	let found = 0;
+	const found : number[] = [];
+	let seen = 0;
 	for (const session of sessions) {
 		const indexes = picked.get(session.id);
 		if (!indexes) continue;
 		for (const tab of session.tabs) {
 			if (tab.index === undefined || !indexes.has(tab.index)) continue;
-			found++;
+			seen++;
 			const url = tab.url || tab.pendingUrl || "";
 			if (!url) continue;
 			tabs.push({ url, pinned: !!tab.pinned });
+			found.push(indexes.get(tab.index)!);
 		}
 	}
-	return { tabs, gone: Math.max(0, asked.size - found), blank: found - tabs.length };
+	return { tabs, keys: found, gone: Math.max(0, asked.size - seen), blank: seen - tabs.length };
 }
 
 // What to open for these keys: the tabs of openableSaved

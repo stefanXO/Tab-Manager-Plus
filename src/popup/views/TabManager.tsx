@@ -96,10 +96,11 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		onError: (err) => this.board.error(refusedText("delete the saved windows", err))
 	});
 	// the error and info notices (the Undo notices are `pending`'s and
-	// `moveOffers`')
+	// `moveOffers`'). They keep to their own cap (MAX_NOTICES) and stay out
+	// of `order`: an error never makes an Undo notice go, so the stack Ctrl+Z
+	// takes back stays whole.
 	private readonly board = new NoticeBoard({
-		onChange: () => { if (!this.unmounted) this.forceUpdate(); },
-		onShown: (id) => this.noticeShown({ source: "board", key: id })
+		onChange: () => { if (!this.unmounted) this.forceUpdate(); }
 	});
 	// moves that left a saved window without a tab, offered to be taken
 	// back for a while (an Undo notice each; ../moveUndo.ts)
@@ -107,8 +108,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		delay: UNDO_MS,
 		onChange: () => { if (!this.unmounted) this.forceUpdate(); }
 	});
-	// the order all those notices came up in: the Undo notices stack, Ctrl+Z
-	// takes back the newest first, and a fourth notice makes the oldest go
+	// the order the Undo notices came up in: they stack, Ctrl+Z takes back
+	// the newest first, and a fourth Undo notice makes the oldest go
 	// (../notices.ts)
 	private readonly order = new NoticeOrder((ref) => this.noticeAlive(ref));
 	// Ctrl+Z (Cmd+Z on a Mac) while an Undo notice is up: the newest one.
@@ -123,6 +124,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		if (!undoKeyForField(el && { tag: el.tagName, type: (el as HTMLInputElement).type, value: (el as HTMLInputElement).value, contentEditable: el.isContentEditable, search: el === this.searchBoxRef.current })) return;
 		e.preventDefault();
 		e.stopPropagation();
+		// a held key (auto-repeat) takes back one notice, not the whole
+		// stack; the repeats still stay away from the text's own undo
+		if (e.repeat) return;
 		this.undoNotice(newest);
 	};
 	// leaving the popup writes the deletes that are still counting down
@@ -1011,7 +1015,16 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	private restoring = false;
 	async openSelectedSaved() {
 		if (this.restoring) return;
-		const session = savedWindowFor(this.state.selection, this.visibleSessions());
+		// Selected saved tabs the search hides stay in their saved windows and
+		// stay selected, as for a drag: "if we can't see them, we can't move them"
+		const sessions = this.visibleSessions();
+		const hidden = this.state.filterTabs ? this.savedSearch(sessions).hidden : null;
+		const keys = [...this.state.selection].filter((key) => isSavedTabKey(key) && !(hidden && hidden.has(key)));
+		if (keys.length === 0) {
+			if (this.state.selection.size > 0) this.board.error(HIDDEN_STAY_TEXT);
+			return;
+		}
+		const session = savedWindowFor(keys, sessions);
 		if (!session) return;
 		this.restoring = true;
 		let windowId : number | undefined;
@@ -1039,7 +1052,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			this.board.error(failure ? refusedText("open the saved tabs", failure) : openFailedText(session.tabs.length, 0));
 			return;
 		}
-		this.clearSelection();
+		// the opened ones are done with; hidden selected ones stay selected
+		this.leaveSelection(keys);
 		if (!!window.inPopup) {
 			window.close();
 		} else {
@@ -2567,12 +2581,13 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	}
 	// Opens the dragged saved tabs in the open window `windowId` at `index`
 	// (undefined: at the end), through the worker (../../helpers/openTabs.ts),
-	// and waits for it. The saved window is not changed. When the dragged tabs
-	// were the selection, the selection is done with.
+	// and waits for it. The saved window is not changed. The selected ones
+	// that opened are done with and leave the selection; the ones left out
+	// (gone, no address, or none opened) stay selected.
 	async openSaved(windowId : number, index : number | undefined, keys : number[]) {
 		this.draggingSaved = null;
 		if (keys.length === 0) return;
-		const { tabs, gone, blank } = openableSaved(keys, this.visibleSessions());
+		const { tabs, keys: openable, gone, blank } = openableSaved(keys, this.visibleSessions());
 		const asked = tabs.length + gone + blank;
 		if (asked === 0) return;
 		// what cannot open, and why (../dropReasons.ts)
@@ -2594,9 +2609,11 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			console.error(e);
 			opened = 0;
 		}
-		this.leaveSelection(keys);
 		const name = this.state.windowrefs.get(windowId)?.current?.shownName() || "";
 		const count = typeof opened === "number" ? opened : tabs.length;
+		// the worker says only how many opened: with some, the openable ones
+		// leave the selection (which of them failed is not known)
+		if (count > 0) this.leaveSelection(openable);
 		if (count < tabs.length) left.push({ reason: "open-failed", n: tabs.length - count });
 		// none opened, or only some: an error notice says so and why, not the header
 		this.leftOut("opened", "saved tab", asked, count, left);

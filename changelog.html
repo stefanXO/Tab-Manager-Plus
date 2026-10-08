@@ -149,11 +149,12 @@
 								Undo while a bar drains smoothly over 8 seconds; the countdown waits while the
 								mouse is over the notice, its close button removes the window for good at once,
 								and it is also removed when the countdown ends or the popup closes. Undo notices
-								stack (a delete's, a move's), at most three notices at a time (a fourth makes
-								the oldest go, and its change stands); Ctrl+Z (Cmd+Z on a Mac, shown as key caps
-								on the newest) undoes the newest first, then the next, also while the search box
-								has the focus and holds text, and each Undo puts back only what its own change
-								did</li>
+								stack (a delete's, a move's), at most three Undo notices at a time (a fourth
+								makes the oldest go, and its change stands; error notices never push one out);
+								Ctrl+Z (Cmd+Z on a Mac, shown as key caps on the newest) undoes the newest
+								first, then the next, one per press (holding the keys undoes one), also while
+								the search box has the focus and holds text, and each Undo puts back only what
+								its own change did</li>
 							<li>Errors show in the same kind of notice, with a red edge, for 8 seconds
 								(information notes such as an import summary for 5): a save or rename the
 								browser refused (full browser storage), a sessions file that could not be read
@@ -200,8 +201,9 @@
 								their number under the mouse: with titles in the List view, icons only in the
 								views that show tabs as icons, as big as that view's tabs. Tabs that Hide
 								non-matching tabs hides never move, whichever way tabs are moved (dropped on
-								another window or a saved window, Enter or the new window button): they stay
-								selected and where they are, and the stack counts only the tabs that move</li>
+								another window or a saved window, Enter on open or saved tabs, or the new window
+								button): they stay selected and where they are, and the stack counts only the
+								tabs that move</li>
 							<li>Tabs of saved windows can be reordered: drag one before or after another tab of
 								the same saved window, onto a tab of another saved window to move it there, or
 								onto another saved window's title or edge to add it at the end; selected saved

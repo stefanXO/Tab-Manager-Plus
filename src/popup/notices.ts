@@ -5,8 +5,9 @@
 // countdowns live in ./pendingDelete.ts; after a move that emptied a saved
 // window, ./moveUndo.ts), and the two kept here, which have no Undo: an error
 // (red edge and tint) and an info (what an import did). Each has a countdown
-// that a mouse over it holds (./countdown.ts) and a close button. Which one
-// is the newest, and which one makes room for a newcomer, is NoticeOrder's.
+// that a mouse over it holds (./countdown.ts) and a close button. Which Undo
+// notice is the newest, and which one makes room for a newcomer, is
+// NoticeOrder's; the errors and infos make room among themselves (NoticeBoard).
 
 import { Countdown, realTimers } from "./countdown.ts";
 import type { Timers } from "./countdown.ts";
@@ -17,8 +18,8 @@ export type NoticeKind = "undo" | "error" | "info";
 // Undo notice stays UNDO_MS, ./pendingDelete.ts)
 export const ERROR_MS = 8000;
 export const INFO_MS = 5000;
-// at most this many notices at once, of all kinds (NoticeOrder); the
-// board's own errors and infos keep to it too
+// at most this many Undo notices at once (NoticeOrder), and at most this
+// many errors and infos (NoticeBoard): an error never makes an Undo go
 export const MAX_NOTICES = 3;
 
 export interface Notice {
@@ -143,11 +144,12 @@ function sameRef(a : NoticeRef, b : NoticeRef) : boolean {
 	return a.source === b.source && a.key === b.key;
 }
 
-// The order the notices came up in, all kinds together. The owners keep the
-// notices themselves; this keeps when each came. The Undo notices are
-// stacked: Ctrl+Z takes back the newest first (sort, last). A newcomer
-// beyond `max` makes the oldest go (push): an Undo notice then commits (a
-// delete is written, a move's offer ends), an error or info closes.
+// The order the notices handed to it came up in (the popup hands it only the
+// Undo notices, so an error never makes one go). The owners keep the notices
+// themselves; this keeps when each came. The Undo notices are stacked: Ctrl+Z
+// takes back the newest first (sort, last). A newcomer beyond `max` makes the
+// oldest go (push): an Undo notice then commits (a delete is written, a
+// move's offer ends); a board notice, if one is handed in, closes.
 export class NoticeOrder {
 	private list : NoticeRef[] = [];
 	private readonly alive : (ref : NoticeRef) => boolean;

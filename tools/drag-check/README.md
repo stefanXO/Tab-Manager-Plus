@@ -24,19 +24,21 @@ Ctrl or Cmd alone leaves the focus where it is. Ctrl+Delete also closes the sele
 a right-click select (text in the box, focus moved out by the popup) and after an arrow-key select
 started in the empty, focused search box. Enter opens the selected saved tabs in one new window in the
 shown order, Enter with open tabs still moves them; a double press and a held Enter still open one
-window; Enter after an `s:` search (which selects no open tab) opens no window. Eight of them
+window; Enter after an `s:` search (which selects no open tab) opens no window. Ten of them
 (`--only undo`) press Ctrl+Z (Cmd+Z on a Mac): with an Undo notice up and text in the focused search box
 it takes back the delete and leaves the text; with no Undo notice it is the text's own undo; with two
 stacked Undo notices (a move that empties "Taxes", then "Reading" deleted) it takes back the delete
-first, then the move, and storage is as before; a delete followed by an emptying move keeps both
+first, then the move, and storage is as before; Ctrl+Z held down (auto-repeat) takes back only the newest of
+the two; a delete followed by an emptying move keeps both
 notices, and the older notice's Undo button still takes back its delete.
 
-Twenty more checks (`--only "drops "`, own tab, Blocks and List) are the drops of Round 3 (patch drops3). Hidden tabs never
+Twenty-four more checks (`--only "drops "`, own tab, Blocks and List) are the drops of Round 3 (patch drops3). Hidden tabs never
 move: a search, a Ctrl+click on a tab it fades (Bravo) and "Hide non-matching tabs" leave a selected tab out of sight, and a
 real drag of the three selected tabs on screen onto an open tab, onto a saved window, and Enter, move or copy only those three
 (the drag image says "3 tabs", not 4), and Bravo stays in its window, selected (read back by turning the hiding off again, as
 hidden tabs are not on the page); Enter with only hidden tabs selected opens no window and shows the red notice; the same for
-a hidden selected saved tab dragged out into an open window. Drops that do nothing or only part say why in the red notice:
+a hidden selected saved tab dragged out into an open window, and for Enter on selected saved tabs (only the two on
+screen open; with only the hidden one selected, no window and the red notice). Drops that do nothing or only part say why in the red notice:
 a normal saved tab or a normal open tab dropped on a saved window that is private (seeded, the headless browser has no
 private windows), private and normal saved tabs selected together and dropped on a normal saved window (the normal one moves,
 the notice says "1 of 2 saved tabs left out: ..."), and a saved tab deleted from storage after the drag started, dropped on a

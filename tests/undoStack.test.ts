@@ -279,6 +279,9 @@ class Popup {
 	readonly pending : PendingDeletes;
 	readonly offers : UndoOffers<MoveUndo<W>>;
 	readonly order : NoticeOrder;
+	// the errors and infos: their own cap of MAX_NOTICES, outside the order,
+	// so they never make an Undo notice go (as in TabManager)
+	readonly board = new NoticeBoard({ onChange: () => {}, timers: this.t });
 
 	constructor(stored : Record<string, W>) {
 		this.stored = stored;
@@ -415,6 +418,24 @@ describe("stacked Undo notices", () => {
 		u.deleteTabs("A", ["a3"]);
 		assert.deepEqual(u.notices(), ["delete A:1", "move", "delete A:2"], "the first move's offer made room");
 		assert.equal(u.offers.items.length, 1);
+	});
+
+	test("errors and infos never make an Undo notice go: Ctrl+Z still has the whole stack", () => {
+		const u = new Popup(start());
+		u.deleteTabs("A", ["a1"]);
+		u.move("B", ["b1", "b2"], { sessionId: "C", before: false });
+		u.deleteTabs("A", ["a2"]);
+		u.board.error("Nothing moved: the saved window is gone");
+		u.board.error("Nothing added: the saved window is gone");
+		u.board.info("Imported 2 saved windows");
+		u.board.error("Could not open the saved tab");
+		assert.deepEqual(u.commits, [], "no delete is written");
+		assert.deepEqual(u.notices(), ["delete A:0", "move", "delete A:1"]);
+		assert.equal(u.board.items.length, MAX_NOTICES, "the board keeps to its own cap");
+		u.undo();
+		u.undo();
+		u.undo();
+		assert.deepEqual(u.stored, start(), "all three taken back");
 	});
 
 	test("each countdown ends on its own: a delete is written, a move's offer goes, nothing else", () => {
