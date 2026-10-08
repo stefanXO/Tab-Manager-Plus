@@ -37,6 +37,7 @@ import {moveSession, reorderShown} from "../sessionOrder";
 import {tidyStored, listSessions, addSessions, importSessions} from "../sessionStore";
 import {moveSavedTabs, remapSavedKeys, movedText, SavedTabMove, SavedDropTarget} from "../savedMove";
 import {addOpenTabs, addedText, SavedAddResult} from "../savedAdd";
+import {openMoveIndices} from "../openMovePlan";
 import {splitByKind, planMove, planAdd, whyUnsavable, dropErrorText, openMoveVerdict, openSavedVerdict, refusalNotice, endedOutside, Left, MovePlan, AddPlan, Refusal, DropVerdict} from "../dropReasons";
 import {SavedWrites, SavedChange} from "../savedWrites";
 import {stampUpdated} from "../savedUpdated";
@@ -2728,9 +2729,14 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		left.push(...kinds.left);
 		const moved = new Set<number>();
 		if (index !== undefined) {
-			for (const t of kinds.go) {
+			// the index of the marker counts the dragged tabs still in the window:
+			// tabs.move wants the final one (../openMovePlan.ts)
+			const there = await browser.tabs.query({ windowId: windowId }).catch(() => [] as browser.Tabs.Tab[]);
+			const order = there.sort((a, b) => a.index - b.index).map((t) => t.id!);
+			const places = openMoveIndices(order, kinds.go.map((t) => ({ id: t.id! })), index);
+			for (const [i, t] of kinds.go.entries()) {
 				try {
-					await browser.tabs.move(t.id, { windowId: windowId, index: index });
+					await browser.tabs.move(t.id, { windowId: windowId, index: places[i].index });
 					moved.add(t.id);
 					await browser.tabs.update(t.id, { pinned: t.pinned });
 				} catch (e) {

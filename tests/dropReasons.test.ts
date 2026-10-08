@@ -241,14 +241,16 @@ describe("openMoveVerdict: open tabs over an open window or tab", () => {
 	});
 
 	test("one tab where it already is changes nothing, nothing to say", () => {
-		// its own place
+		// its own place, and the gap after it (its own right half, the left half of its right neighbour)
 		assert.deepEqual(openMoveVerdict([tab(2)], { ...normal, index: 2 }), { verdict: "none", left: [] });
+		assert.deepEqual(openMoveVerdict([tab(2)], { ...normal, index: 3 }), { verdict: "none", left: [] });
 		// the end of the window it already ends
 		assert.deepEqual(openMoveVerdict([tab(4)], { ...normal, index: undefined }), { verdict: "none", left: [] });
 	});
 
 	test("one tab anywhere else moves", () => {
-		assert.equal(openMoveVerdict([tab(2)], { ...normal, index: 3 }).verdict, "moves");
+		assert.equal(openMoveVerdict([tab(2)], { ...normal, index: 4 }).verdict, "moves");
+		assert.equal(openMoveVerdict([tab(2)], { ...normal, index: 1 }).verdict, "moves");
 		assert.equal(openMoveVerdict([tab(2)], { ...normal, index: undefined }).verdict, "moves");
 		// the same index in another window is a move
 		assert.equal(openMoveVerdict([tab(2, { windowId: 3 })], { ...normal, index: 2 }).verdict, "moves");

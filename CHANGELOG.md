@@ -40,6 +40,7 @@ Windows
 - Window names and colors survive a browser restart, even when the window's tabs changed since (#16, #50, #103, #159, #178, #195, #223, #232, #236, #244)
 - Names and colors of windows closed for more than a day are cleaned up, so a new window cannot inherit an old name (#103, #244)
 - Dragging several tabs (open or saved) shows them as a small stack of tabs with their number under the mouse: with titles in the List view, icons only in the views that show tabs as icons, as big as that view's tabs
+- A tab dropped on its own right half, or on the left half of its right neighbour, stays where it is; every other drop lands exactly where the marker shows, also for several tabs moved inside their window (the old move put them one place off)
 - The window order no longer resets on its own; the current window is always listed first and marked, also as a popup
 - Clicking the icon while Tab Manager Plus is already open in a tab switches to that tab
 - The "switch to previous tab" shortcut works again (#37, #108, #238)

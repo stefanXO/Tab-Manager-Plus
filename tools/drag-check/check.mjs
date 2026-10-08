@@ -1346,6 +1346,32 @@ try {
 			await quiet()
 			return {got: [await seen(), await titlesOf(w2), await noticesOf(p)], want: [REFUSED, ['Delta', 'Echo', 'Foxtrot'], []]}
 		})
+		// the marker's gap right after the tab is its own place too (tabs.move counts the tab itself)
+		na('an open tab over its own right half, and over the left half of its right neighbour: not allowed, no marker, nothing moves, no notice', async () => {
+			const [, w2] = await fixture(layout)
+			const p = await openPopup()
+			const seen = await watchDrag(p)
+			await drag(p, tabSel('Delta'), {selector: tabSel('Delta'), fx: 0.9, fy: 0.9})
+			await quiet()
+			const own = [await seen(), await titlesOf(w2), await noticesOf(p)]
+			const seen2 = await watchDrag(p)
+			await drag(p, tabSel('Delta'), {selector: tabSel('Echo'), ...first})
+			await quiet()
+			const next = [await seen2(), await titlesOf(w2), await noticesOf(p)]
+			const want = [REFUSED, ['Delta', 'Echo', 'Foxtrot'], []]
+			return {got: [own, next], want: [want, want]}
+		})
+		na('an open tab over the left half of the tab two places right: allowed, with its marker, it lands right before that tab', async () => {
+			const [, w2] = await fixture(layout)
+			const p = await openPopup()
+			const seen = await watchDrag(p)
+			await drag(p, tabSel('Delta'), {selector: tabSel('Foxtrot'), ...first})
+			const want = [['allowed', 'marker', 1, ['allowed']], ['Echo', 'Delta', 'Foxtrot'], []]
+			const got = [await settle(seen, want[0]), await settle(() => titlesOf(w2), want[1])]
+			await quiet()
+			got.push(await noticesOf(p))
+			return {got, want}
+		})
 		na('a saved tab over its own place (before itself, and at the end of the window it ends): not allowed, no marker, no notice', async () => {
 			await fixture(layout)
 			const p = await openPopup()

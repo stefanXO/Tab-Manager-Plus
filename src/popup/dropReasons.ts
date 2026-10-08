@@ -234,14 +234,16 @@ export interface OpenMoveTarget {
 // tabs to a normal one. A drop that takes only part of them is still taken
 // (the notice names the rest, dropErrorText); one that takes none is
 // refused, with its reasons. A single tab dropped where it already is (its
-// own place, or the end of a window it already ends) changes nothing.
+// own place, either side of itself, or the end of a window it already ends) changes nothing.
 export function openMoveVerdict(tabs : readonly OpenMoveTab[], target : OpenMoveTarget) : { verdict : DropVerdict, left : Left[] } {
 	if (tabs.length === 0) return { verdict: "none", left: [] };
 	const kinds = splitByKind(tabs, target.incognito, "window");
 	if (kinds.go.length === 0) return { verdict: "refused", left: kinds.left };
 	if (kinds.left.length === 0 && kinds.go.length === 1) {
 		const tab = kinds.go[0];
-		const stays = tab.windowId === target.windowId && (target.index === undefined ? tab.index === target.last : tab.index === target.index);
+		// the marker's index counts the tab itself: the gap right after it is
+		// its own place too (taking it out leaves the gap where it was)
+		const stays = tab.windowId === target.windowId && (target.index === undefined ? tab.index === target.last : tab.index === target.index || tab.index + 1 === target.index);
 		if (stays) return { verdict: "none", left: [] };
 	}
 	return { verdict: "moves", left: [] };
