@@ -35,7 +35,7 @@ const HELP = {
 	animations: "Enables/disables animations. Default : on",
 	windowTitles: "Enables/disables window titles. Default : on",
 	supportLinks: "Shows the Donate and Rate buttons at the top of the popup. Default : on",
-	sessions: "Allows you to save/restore windows into sessions. ( Tab History will be lost ) Default : off",
+	sessions: "Allows you to save/restore windows into sessions. ( Tab History will be lost ) Default : on",
 	exportSessions: "Allows you to export your saved windows to an external sessions file",
 	importSessions: "Allows you to restore your saved windows from an external sessions file",
 	badge: "Shows the number of open tabs on the Tab Manager icon. Default : on",
@@ -263,8 +263,8 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 						label="Save Windows for Later"
 						checked={p.sessionsFeature}
 						onChange={this.toggleSessions}
-						description="Allows you to save windows as sessions ( saved windows ). You can restore these saved windows later on. The restored windows won't have the history restored. This feature is currently in beta."
-						notes={["By default: disabled ( experimental feature )"]}
+						description="Allows you to save windows as sessions ( saved windows ). You can restore these saved windows later on. The restored windows won't have the history restored."
+						notes={["By default: enabled"]}
 					/>
 					{p.sessionsFeature && <OptionsRow>
 						<ActionOption

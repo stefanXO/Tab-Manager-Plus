@@ -3,7 +3,7 @@
 // Renaming and recolouring a saved window. Pure (no browser APIs), unit
 // tested in tests/sessionEdit.test.ts.
 
-import { windowName } from "./windowName.ts";
+import { windowName, compactName } from "./windowName.ts";
 
 export interface SessionEdit {
 	name : string;
@@ -22,6 +22,18 @@ interface EditableSession {
 // still carries its automatic one (shown as the placeholder instead).
 export function editableName(s : Pick<EditableSession, "name" | "customName">) : string {
 	return s.customName ? s.name || "" : "";
+}
+
+// The name a saved window shows (its title, hover card, notices): the name the
+// user gave, else the automatic one as the naming works now, made from its
+// tabs (shortened in compact mode, as an open window's title is), not the one
+// stored when it was saved. A window without custom name and without usable
+// tabs falls back to the stored name.
+export function shownSavedName(s : Pick<EditableSession, "name" | "customName" | "tabs">, compact : boolean) : string {
+	if (s.customName && s.name) return s.name;
+	const auto = windowName(s.tabs);
+	if (!auto) return s.name || "";
+	return compact ? compactName(auto) : auto;
 }
 
 // The stored sessions with one saved window renamed and recoloured, as a new

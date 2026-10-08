@@ -12,6 +12,7 @@ import {ManagerContext, ITabManagerActions} from '../context';
 import {savedTabKeys} from '../sessionKeys';
 import {savedTileRef} from '../savedTiles';
 import {windowName} from '../windowName';
+import {shownSavedName} from '../sessionEdit';
 import {Icon} from "@icons/Icon";
 import {ICON_FAMILY} from "../icons";
 import {dropSide, isSavedWindowDrag, SAVED_WINDOW_DRAG} from "../sessionOrder";
@@ -39,8 +40,9 @@ export class Session extends React.Component<ISession, ISessionState> {
 		this.state = { dragging: false, dropMarker: "" };
 	}
 	render() {
-		// straight from the stored window, so a rename or recolour shows at once
-		const name = this.props.session.name;
+		// straight from the stored window, so a rename or recolour shows at once;
+		// without a custom name, the automatic name as it is made now
+		const name = this.shownName();
 		const color = this.props.session.color || "default";
 		let hideWindow = true;
 		let titleAdded = false;
@@ -110,7 +112,14 @@ export class Session extends React.Component<ISession, ISessionState> {
 					tabs.unshift(
 						<h3 key={"session-" + this.props.session.id + "-windowTitle"} className="center windowTitle">
 							{savedMark()}
-							{name}
+							{/* the name opens the name / colour screen, as an open window's does */}
+							<span
+								className="editName windowName"
+								onClick={this.openOptions}
+								data-hover="Change the name of this saved window"
+							>
+								{name}
+							</span>
 						</h3>
 					);
 					titleAdded = true;
@@ -160,6 +169,10 @@ export class Session extends React.Component<ISession, ISessionState> {
 			return null;
 		}
 	}
+	// the name as the title shows it (./sessionEdit.ts shownSavedName)
+	shownName() : string {
+		return shownSavedName(this.props.session, !!this.props.compact);
+	}
 	shouldComponentUpdate(nextProps, nextState) {
 		//console.log("should update?", nextProps, nextState);
 		return true;
@@ -182,7 +195,7 @@ export class Session extends React.Component<ISession, ISessionState> {
 		e.stopPropagation();
 		e.dataTransfer.setData(SAVED_WINDOW_DRAG, this.props.session.id);
 		// some text too: Firefox starts no drag without data it knows
-		e.dataTransfer.setData("Text", this.props.session.name || "");
+		e.dataTransfer.setData("Text", this.shownName());
 		e.dataTransfer.effectAllowed = "move";
 		this.context.dragSession(this.props.session.id);
 		// faded after the browser took the drag image, so the image is not

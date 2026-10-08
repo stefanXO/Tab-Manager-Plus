@@ -151,6 +151,22 @@ const STATES = [
 	{name: 'saved-opts', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {overlay: 'session-colors'}},
 	{name: 'saved-opts-typed', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {overlay: 'session-colors', typeName: 'Q3 conference notes'}},
 	{name: 'saved-renamed', layouts: ['blocks', 'vertical', 'horizontal', 'blocks-big'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {overlay: 'session-colors', typeName: 'Q3 conference notes', pickColor: 'color9', scrollInto: '#session-s1'}},
+	// the saved window's title opens the name / colour screen like an open
+	// window's title does: the mouse on the title of "Conference reading" (the
+	// title's own hover mark, over the window card), the screen it opens, and a
+	// window saved without a name of its own ("Tax 2029" is stored as "Stale name
+	// from save time" with customName false: card title, placeholder and window
+	// card show the automatic name made from its tabs). dpr 1
+	{name: 'saved-title-hover', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {}, stats: '#session-s1 .windowName'},
+	{name: 'saved-title-opts', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {overlay: 'session-title'}},
+	{name: 'saved-auto-name', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {savedAuto: 's2', scrollInto: '#session-s2'}},
+	{name: 'saved-auto-name-opts', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {savedAuto: 's2', overlay: 'session-title-s2'}},
+	{name: 'saved-auto-name-compact', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {savedAuto: 's2', store: {compact: true}, scrollInto: '#session-s2'}},
+	{name: 'saved-auto-name-stats', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {savedAuto: 's2'}, stats: '#session-s2 .windowTitle'},
+	// editing a saved window far down the list through its title: name typed,
+	// colour picked, the screen closes and the popup scrolls back to the saved
+	// window by itself (the shot does not scroll; the page starts at the top)
+	{name: 'saved-edit-scroll', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {overlay: 'session-title-s2', typeName: 'Tax 2029 (filed)', pickColor: 'color9', afterWait: 500}},
 	// the "Window style" box with the real mouse on it: over the Compact mode
 	// switch (which shows its help text in the header), then onto that option's
 	// description text. The only state that moves the mouse, so :hover applies.
@@ -465,7 +481,7 @@ async function settle(page) {
 }
 
 /** Applies a popup state absolutely: the result never depends on what came before. */
-async function apply(page, {layout, dark, search = '', dup = false, recent = 0, overlay = null, scrollTo = null, store = {}, granted = true, savedFocused = null, clicks = [], scrollInto = null, importFile = null, freezeClock = false, scrollEnd = false, typeName = null, pickColor = null, savedInfo = null, freshSessions = false}) {
+async function apply(page, {layout, dark, search = '', dup = false, recent = 0, overlay = null, scrollTo = null, store = {}, granted = true, savedFocused = null, clicks = [], scrollInto = null, importFile = null, freezeClock = false, scrollEnd = false, typeName = null, pickColor = null, savedInfo = null, freshSessions = false, savedAuto = null, afterWait = 0}) {
 	await page.evaluate(async (s) => {
 		const q = (sel) => document.querySelector(sel)
 		const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
@@ -506,6 +522,9 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 		if (s.overlay === 'colors') { q('.icon.tabaction.colors')?.click(); await frame() }
 		// the same screen on the saved window "Conference reading"
 		if (s.overlay === 'session-colors') { q('#session-s1 .icon.tabaction.colors')?.click(); await frame() }
+		// ... opened from the saved window's title, as the open window's title does
+		if (s.overlay === 'session-title') { q('#session-s1 .windowName')?.click(); await frame() }
+		if (s.overlay === 'session-title-s2') { q('#session-s2 .windowName')?.click(); await frame() }
 		// a name typed into it, a colour picked (which writes and closes it)
 		if (s.typeName !== null) {
 			const input = q('.window-name-input')
@@ -540,6 +559,15 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 		if (s.savedInfo) {
 			const {sessions} = await window.__fake.storage.local.get(['sessions'])
 			Object.assign(sessions[s.savedInfo.id].windowsInfo, s.savedInfo.info)
+			await window.__fake.storage.local.set({sessions})
+			await frame()
+		}
+
+		// 7b2. a saved window without a name of its own: customName false and a
+		// name stored when it was saved, that the automatic naming no longer makes
+		if (s.savedAuto) {
+			const {sessions} = await window.__fake.storage.local.get(['sessions'])
+			Object.assign(sessions[s.savedAuto], {customName: false, name: 'Stale name from save time'})
 			await window.__fake.storage.local.set({sessions})
 			await frame()
 		}
@@ -629,9 +657,11 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 			await frame()
 		}
 		if (s.scrollInto) q(s.scrollInto)?.scrollIntoView({block: 'nearest', inline: 'nearest'})
+		// the app's own timers (the scroll back to an edited saved window)
+		if (s.afterWait) await new Promise((r) => setTimeout(r, s.afterWait))
 		// the list scrolled to its very end: the padding the notice makes room with shows
 		if (s.scrollEnd) { const c = q('.window-container'); if (c) c.scrollTop = c.scrollHeight }
-	}, {layout, dark, search, dup, recent, overlay, store, granted, savedFocused, clicks, scrollInto, importFile, freezeClock, scrollEnd, typeName, pickColor, savedInfo, freshSessions})
+	}, {layout, dark, search, dup, recent, overlay, store, granted, savedFocused, clicks, scrollInto, importFile, freezeClock, scrollEnd, typeName, pickColor, savedInfo, freshSessions, savedAuto, afterWait})
 	await settle(page)
 	// 7. scroll the options box headed `scrollTo` to the top of its scroller
 	if (scrollTo) {
@@ -806,8 +836,9 @@ function shootPopup(scale, sizes, layoutsOf) {
 						await apply(page, {layout, dark: theme === 'dark', ...state.apply})
 						// sanity: the overlay states must really be open, else skip
 						if (state.apply.overlay === 'options' && !(await page.$('.options-window'))) { skipped.push(name + ' (options screen did not open)'); continue }
-						if (state.apply.overlay === 'session-colors' && state.apply.pickColor && await page.$('.window-colors')) { skipped.push(name + ' (window colour screen did not close)'); continue }
-						if (state.apply.overlay === 'session-colors' && !state.apply.pickColor && !(await page.$('.window-colors'))) { skipped.push(name + ' (saved window colour screen did not open)'); continue }
+						const sessionOverlay = state.apply.overlay === 'session-colors' || (state.apply.overlay || '').startsWith('session-title')
+						if (sessionOverlay && state.apply.pickColor && await page.$('.window-colors')) { skipped.push(name + ' (window colour screen did not close)'); continue }
+						if (sessionOverlay && !state.apply.pickColor && !(await page.$('.window-colors'))) { skipped.push(name + ' (saved window colour screen did not open)'); continue }
 						if (state.apply.overlay === 'colors' && !(await page.$('.window-colors'))) { skipped.push(name + ' (window colour screen did not open)'); continue }
 						if (state.hover) await hoverOption(page, state.hover)
 						if (state.searchHelp) await hoverSearchHelp(page)

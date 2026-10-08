@@ -9,7 +9,7 @@ import {tabStats, savedTabStats, savedWindowStats, savedWindowsWith, windowStats
 import {predictLanding, knownDisplayList} from "@helpers/geometry";
 import {savedTabKeys} from "./sessionKeys";
 import {savedTile} from "./savedTiles";
-import {windowName as autoWindowName} from "./windowName";
+import {shownSavedName} from "./sessionEdit";
 import {hoverKey, hoverAction, isWarm, parseKey, arrowsMoveCard, STATS_KEYBOARD_DELAY} from "./statsHoverLogic";
 import type {IStatsFavicon, IStatsCardContent} from "./views/StatsCard";
 
@@ -38,7 +38,7 @@ export interface IStatsTarget {
 // the manager's data the cards are built from, read when a card opens
 export type StatsState = Pick<ITabManagerState,
 	"tabsbyid" | "windowsbyid" | "windows" | "windowrefs" | "lastActive" | "lastOpenWindow" |
-	"selection" | "layout" | "optionsActive" | "colorsActive" | "colorsSession">;
+	"selection" | "layout" | "optionsActive" | "colorsActive" | "colorsSession" | "compact">;
 export interface StatsSource {
 	state() : StatsState;
 	searchBox() : HTMLInputElement | null;
@@ -263,10 +263,10 @@ export class StatsHover {
 
 	// ---- saved windows ----
 
-	// a saved window's name as its title shows it: the stored name, else the
-	// automatic one from its sites
+	// a saved window's name as its title shows it (shownSavedName: its own
+	// name, else the automatic one from its sites as made now)
 	private savedName(s : ISavedSession) : string {
-		return s.name || autoWindowName(s.tabs) || "Saved window";
+		return shownSavedName(s, this.source.state().compact) || "Saved window";
 	}
 
 	// the saved tab a selection key was handed out for, with its saved window

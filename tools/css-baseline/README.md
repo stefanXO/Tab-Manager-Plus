@@ -179,6 +179,12 @@ currently on disk — there is no stale copy to forget about.
   `-max-monitor` ("Tax 2029" saved maximized on the second monitor: the card says it restores
   maximized on monitor 2 of 2, map and all) and `-max-gone` (saved maximized on a monitor that is not
   connected: maximized on the popup's monitor)
+- `saved-title-hover`, `saved-title-opts`: the saved window's title opens the name / colour screen as an open
+  window's does (`apply.overlay: 'session-title'`); the hover mark on the title. `saved-auto-name` (+ `-opts`,
+  `-compact`, `-stats`): "Tax 2029" stored without a custom name (`apply.savedAuto`: `customName` false and a
+  stale stored name) shows the automatic name from its tabs in the card, the screen's placeholder and the window
+  card. `saved-edit-scroll`: a title click on "Tax 2029", name typed, colour picked; the page starts at the top
+  and the popup scrolls back to the saved window by itself (`apply.afterWait` leaves its timer time to run)
 - `saved-tabs-delete` (+ `-key`, `-all`, `-two`, `-undo`): deleting selected saved tabs
   (`src/popup/savedDelete.ts`): Ctrl+click tabs of a saved window, then the trash button
   (`-key`: the Delete key, via a `{key: 46}` entry in `apply.clicks`); `-all` selects every

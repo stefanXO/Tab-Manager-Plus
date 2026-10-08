@@ -55,7 +55,7 @@ export const SETTING_DEFAULTS : Settings = {
 	openInOwnTab: false,
 	compact: false,
 	theme: "system",
-	sessionsFeature: false,
+	sessionsFeature: true,
 	hideWindows: false,
 	supportLinks: true,
 	showMonitors: "unset",

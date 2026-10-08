@@ -21,7 +21,7 @@ import {StatsLayer, StatsSource} from "./StatsLayer";
 import {UndoNotice} from "./UndoNotice";
 import {PendingDeletes, PendingItem, withoutItems, visibleSessions, noticeText, goneUrls} from "../pendingDelete";
 import {savedDeleteItems} from "../savedDelete";
-import {editSession, SessionEdit} from "../sessionEdit";
+import {editSession, shownSavedName, SessionEdit} from "../sessionEdit";
 import {searchSaved, searchSummary, SavedSearch} from "../searchSaved";
 import {draggedSaved, savedTabsToOpen, openedText} from "../savedDrag";
 import {moveSession, reorderShown} from "../sessionOrder";
@@ -230,7 +230,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			openWindowOptions: (windowId, autoName) => this.setState({ colorsActive: windowId, colorsAutoName: autoName }),
 			openSessionOptions: (id, autoName) => this.setState({ colorsSession: id, colorsAutoName: autoName }),
 			editSession: (id, edit) => this.editSession(id, edit),
-			closeWindowOptions: () => this.setState({ colorsActive: 0, colorsSession: "", colorsAutoName: "", dirty: true }),
+			closeWindowOptions: () => this.closeWindowOptions(),
 			scrollTo: (what, id) => this.scrollTo(what, id),
 			setSetting: (key, value) => this.setSetting(key, value),
 			setBottomText: (text) => this.setState({ bottomText: text }),
@@ -579,6 +579,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 										hiddenTabs={saved.hidden}
 										filterTabs={this.state.filterTabs}
 										windowTitles={this.state.windowTitles}
+										compact={this.state.compact}
 									/>
 								);
 							})
@@ -882,7 +883,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		// the write leaves it alone if it holds others by then (imported over,
 		// added to elsewhere)
 		const all = this.state.sessions.find((s) => s.id === session.id) || session;
-		this.pending.add({id: session.id, name: session.name, tabs: session.tabs.length, urls: goneUrls(all.tabs)});
+		this.pending.add({id: session.id, name: this.savedName(all), tabs: session.tabs.length, urls: goneUrls(all.tabs)});
 		// its selected tabs go with it
 		dropMissingSaved(this.state.selection, this.visibleSessions());
 		this.setState(this.selectionText());
@@ -891,12 +892,30 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	// removed from storage when the countdown ends, with the same Undo notice as
 	// a deleted window. A saved window left with no tab goes whole.
 	deleteSavedTabs() {
-		const items = savedDeleteItems(this.state.selection, this.visibleSessions());
+		const items = savedDeleteItems(this.state.selection, this.visibleSessions().map((s) => ({...s, name: this.savedName(s)})));
 		if (items.length === 0) return;
 		for (const item of items) this.pending.add(item);
 		// everything selected was just deleted
 		this.clearSelection();
 		this.setState(this.selectionText());
+	}
+	// Closes the name / colour screen. Back from one on a saved window, the
+	// popup scrolls to that window (as after saving a window): the screen
+	// covers the list, and the window may have been out of view behind it.
+	closeWindowOptions() {
+		const edited = this.state.colorsSession;
+		this.setState({ colorsActive: 0, colorsSession: "", colorsAutoName: "", dirty: true });
+		if (edited) setTimeout(() => this.scrollTo("session", edited), 150);
+	}
+	// A saved window's name as it shows: the name the user gave, else the
+	// automatic one as made now (./sessionEdit.ts)
+	savedName(s : { name : string, customName : boolean, tabs : browser.Tabs.Tab[] }) : string {
+		return shownSavedName(s, this.state.compact);
+	}
+	// the shown name of the saved window `id` in a stored list ("" when gone)
+	private storedName(stored : Record<string, ISavedSession>, id : string) : string {
+		const s = Object.values(stored).find((x) => x && x.id === id);
+		return s ? this.savedName(s) : "";
 	}
 	// Renames / recolours a saved window (./sessionEdit.ts). The card changes
 	// at once; storage.onChanged then brings every other popup along.
@@ -1003,7 +1022,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		if (refs.length === 0 || !moveSavedTabs(this.shownSavedStore(), refs, target)) return;
 		const moved = await this.renumberingChange((stored) => moveSavedTabs(stored, refs, target));
 		if (!moved) return;
-		const name = Object.values(moved.stored).find((s) => s && s.id === sessionId)?.name || "";
+		const name = this.storedName(moved.stored, sessionId);
 		this.setState({ ...movedText(moved.count, name, moved.emptied.length) });
 	}
 	// copies of the open tabs `tabs` added at `target` (../savedAdd.ts), in
@@ -1020,7 +1039,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		const added = await this.renumberingChange((stored) => this.addOpen(stored, tabs, target));
 		if (!added) return;
 		if (tabs.some((tab) => this.state.selection.has(tab.id))) this.clearSelection();
-		const name = Object.values(added.stored).find((s) => s && s.id === target.sessionId)?.name || "";
+		const name = this.storedName(added.stored, target.sessionId);
 		this.setState({ ...addedText(added.count, added.skipped, name), dirty: true });
 	}
 	// A change to the stored saved windows that numbers saved tabs anew (a
@@ -1262,7 +1281,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			return;
 		}
 		this.clearSelection();
-		this.setState({ topText: savedText(saved), bottomText: " ", dirty: true });
+		this.setState({ topText: savedText(saved.map((x) => ({ name: this.savedName(x), tabs: x.tabs }))), bottomText: " ", dirty: true });
 		setTimeout(() => this.scrollTo("session", saved[0].id), 150);
 	}
 	pinTabs = async () => {

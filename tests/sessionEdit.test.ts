@@ -5,7 +5,7 @@
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { editSession, editableName } from "../src/popup/sessionEdit.ts";
+import { editSession, editableName, shownSavedName } from "../src/popup/sessionEdit.ts";
 
 const tabs = [
 	{ url: "https://github.com/a/b", title: "a" },
@@ -74,5 +74,42 @@ describe("editableName", () => {
 	});
 	test("an automatic name stays a placeholder", () => {
 		assert.equal(editableName({ name: "GitHub", customName: false }), "");
+	});
+});
+
+describe("shownSavedName", () => {
+	const five = [
+		{ url: "https://github.com/a" }, { url: "https://github.com/b" }, { url: "https://github.com/c" },
+		{ url: "https://github.com/d" }, { url: "https://github.com/e" }
+	];
+	const mixed = [
+		{ url: "https://github.com/a" }, { url: "https://www.reddit.com/b" },
+		{ url: "https://www.wikipedia.org/c" }, { url: "https://news.ycombinator.com/d" }
+	];
+
+	test("a name the user gave is shown as stored, compact or not", () => {
+		const s = { name: "Taxes", customName: true, tabs: five };
+		assert.equal(shownSavedName(s, false), "Taxes");
+		assert.equal(shownSavedName(s, true), "Taxes");
+	});
+
+	test("without a custom name: the automatic name from the tabs, not the stored one", () => {
+		const s = { name: "Stale old name", customName: false, tabs: five };
+		assert.equal(shownSavedName(s, false), "GitHub");
+	});
+
+	test("compact mode shortens the automatic name as for an open window", () => {
+		const s = { name: "x", customName: false, tabs: mixed };
+		const full = shownSavedName(s, false);
+		assert.match(full, / & \d+ more$/);
+		assert.equal(shownSavedName(s, true), full.replace(/ & (\d+) more$/, " + $1"));
+	});
+
+	test("customName true but an empty name counts as no custom name", () => {
+		assert.equal(shownSavedName({ name: "", customName: true, tabs: five }, false), "GitHub");
+	});
+
+	test("no usable tabs: the stored name stays", () => {
+		assert.equal(shownSavedName({ name: "Kept", customName: false, tabs: [] }, false), "Kept");
 	});
 });
