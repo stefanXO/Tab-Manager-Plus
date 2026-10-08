@@ -35,7 +35,7 @@ import {SavedWrites, SavedChange} from "../savedWrites";
 import {stampUpdated} from "../savedUpdated";
 import {moveUndoRecord, undoMove, emptiedText, undoneText, UndoOffer, MoveUndo} from "../moveUndo";
 import type {SavedTabRef} from "../sessionKeys";
-import {stackTiles, encodeSaved, encodeIds, TabDrag} from "../dragPayload";
+import {stackTiles, stackKind, encodeSaved, encodeIds, TabDrag} from "../dragPayload";
 import {setStackImage, StackTile} from "../dragImage";
 
 // the saved window and stored index of each of these saved tab keys; keys
@@ -2280,7 +2280,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	}
 	// The drag image of a drag that takes several tabs: the tiles on screen
 	// of the dragged one and the next ones, as the popup draws them (favicon,
-	// title), and how many tabs go.
+	// title), and how many tabs go. In the layouts that show tabs as icons the
+	// tiles are icons only (stackKind).
 	private stackImage(e : React.DragEvent<HTMLDivElement>, dragged : number, ids : readonly number[]) {
 		const tiles : StackTile[] = [];
 		for (const id of stackTiles(dragged, ids)) {
@@ -2288,10 +2289,18 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			const el = document.getElementById(ref ? "sessiontab_" + ref.sessionId + "_" + ref.index : "tab-" + id);
 			if (!el) continue;
 			const icon = el.querySelector<HTMLElement>(".iconoverlay");
-			const fav = el.style.getPropertyValue("--fav") || icon?.style.getPropertyValue("--fav") || "";
-			tiles.push({ fav, title: (el.getAttribute("data-hover") || "").split("\n")[0] });
+			let fav = el.style.getPropertyValue("--fav") || icon?.style.getPropertyValue("--fav") || "";
+			// a tab without a favicon shows the icon set's page icon: the
+			// image its tile draws (on ::after, in List on .iconoverlay)
+			if (!fav) {
+				const image = (icon ? getComputedStyle(icon) : getComputedStyle(el, "::after")).backgroundImage;
+				if (image && image !== "none") fav = image;
+			}
+			// the favicon's tone class (a white or black icon needs its filter)
+			const tone = Array.from((icon || el).classList).find((c) => c.startsWith("icon-")) || "";
+			tiles.push({ fav, title: (el.getAttribute("data-hover") || "").split("\n")[0], tone });
 		}
-		if (tiles.length > 1) setStackImage(e.dataTransfer, tiles, ids.length);
+		if (tiles.length > 1) setStackImage(e.dataTransfer, tiles, ids.length, stackKind(this.state.layout));
 	}
 	// Dropped on the open tab `id`. `dragged`: what the drop event carries
 	// (../dragPayload.ts); without it, what the popup remembers of the drag.

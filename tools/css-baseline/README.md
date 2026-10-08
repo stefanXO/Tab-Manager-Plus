@@ -256,7 +256,9 @@ currently on disk — there is no stale copy to forget about.
   same point. `-saved`: Escape, Ctrl+click two saved tabs of "Conference reading", hold the
   second over a tab of "Work": two stacked tiles, "Lofi beats" in front, "2 tabs" under
   them; `-open`: Ctrl+click three open tabs (Work, Research), hold the last over the title
-  of "Tax 2029": three tiles, "3 tabs" (blocks + List, 800x600 and 380x900). The real
+  of "Tax 2029": three tiles, "3 tabs" (all four layouts, 800x600 and 380x900). In List
+  the tiles carry titles; in Blocks, Big blocks and Rows they are icon tiles only, the
+  size of that layout's tab tiles. The real
   browser draws the picture a little translucent; real drags are checked by
   `tools/drag-check/`
 - `fresh` / `fresh-compact`: the List view's freshness bars (`src/popup/freshness.ts`, drawn at the end of every List row from the fixture's `lastAccessed`, 0 min .. 14 days: all five levels) — `fresh` as `plain`, `fresh-compact` with the `compact` setting on. `vertical` × 2 themes × `800x600`, dpr 1 only

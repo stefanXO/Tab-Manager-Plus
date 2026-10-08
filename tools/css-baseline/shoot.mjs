@@ -307,12 +307,13 @@ const STATES = [
 	// the drag image of a several-tab drag (src/popup/dragImage.ts), shown
 	// where the pointer is (`image`): two saved tabs selected, the second held
 	// over the third tab of "Work": two stacked tiles, "Lofi beats" in front,
-	// and "2 tabs" under them. dpr 1, blocks + List, 800x600 and 380x900
-	{name: 'drag-stack-saved', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {
+	// and "2 tabs" under them (icon tiles only, sized as the layout's tabs,
+	// except in List). dpr 1, all four layouts, 800x600 and 380x900
+	{name: 'drag-stack-saved', layouts: LAYOUTS, scaleLayouts: [], widths: ['800x600', '380x900'], apply: {
 		clicks: [{key: 27}, {sel: '#sessiontab_s1_1', ctrl: true}, {sel: '#sessiontab_s1_3', ctrl: true}, {drag: '#sessiontab_s1_3', over: '#tab-4', side: 'before', image: true}]}},
 	// three open tabs selected (two windows), the last held over the title of
 	// "Tax 2029": three stacked tiles, "Browser extension" in front, "3 tabs"
-	{name: 'drag-stack-open', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {
+	{name: 'drag-stack-open', layouts: LAYOUTS, scaleLayouts: [], widths: ['800x600', '380x900'], apply: {
 		clicks: [{key: 27}, {sel: '#tab-2', ctrl: true}, {sel: '#tab-6', ctrl: true}, {sel: '#tab-22', ctrl: true}, {drag: '#tab-22', over: '#session-s2 h3.windowTitle', image: true}], scrollEnd: true}},
 	// reordering saved windows (src/popup/sessionOrder.ts): the card of "Tax 2029"
 	// dragged by its edge (not by a tab or an icon) and held over the left / top

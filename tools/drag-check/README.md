@@ -26,6 +26,12 @@ started in the empty, focused search box. Enter opens the selected saved tabs in
 shown order, Enter with open tabs still moves them; a double press and a held Enter still open one
 window; Enter after an `s:` search (which selects no open tab) opens no window.
 
+Sixteen more checks (`--only "drag image"`, own tab) cover the drag image of a several-tab drag in every layout
+(blocks, blocks-big, horizontal, vertical), light and dark, for three saved and three open tabs: the stack is
+titled rows in List and icon tiles only in the three icon layouts, three tiles with the dragged tab in front and
+the count "3 tabs", every tile has a favicon (the page icon for a tab without one), the icon tiles and their
+favicons are the size of that layout's own tab tiles, and the front tile has the theme's tile colours.
+
 ## What it does
 
 - Starts its **own headless** Chrome for Testing (the newest under `~/.cache/puppeteer/chrome`,
@@ -62,12 +68,12 @@ real popup (List), ** only in one of them:
 | saved tab -> open tab * | 11 | India opens before Echo; the popup shows it there |
 | saved by the save button -> open tab ** | 11 | a window saved with its save button; its Bravo dropped before Echo opens there |
 | saved tab -> open tab in another Tab Manager page | 11 | the drag leaves one popup tab and is dropped in another one, which never saw it start: India still opens before Echo |
-| selected saved tabs -> open tab * | 11 | Juliett and Mike (two saved windows) open after Charlie; the drag image shows two tiles, Mike in front, and "2 tabs" |
+| selected saved tabs -> open tab * | 11 | Juliett and Mike (two saved windows) open after Charlie; the drag image shows two tiles (titled in List, icons only in the icon layouts), Mike in front, and "2 tabs" |
 | saved tab -> open window (no tab) ** | 11 | dropped on the window card's corner, away from its tabs: Kilo opens at the end |
 | saved tab -> saved tab (reorder) * | 15 | Kilo moves before India |
 | saved tab -> saved card * | 15 | Hotel moves to the end of "Taxes" |
 | open tab -> saved tab * | 16 | a copy of Bravo goes before Mike |
-| selected open tabs -> saved card * | 16 | copies of Charlie and Delta (two windows) go to the end of "Reading", in the order the popup lists the windows; the drag image shows two tiles and "2 tabs" |
+| selected open tabs -> saved card * | 16 | copies of Charlie and Delta (two windows) go to the end of "Reading", in the order the popup lists the windows; the drag image shows two tiles (titled or icons only, by layout) and "2 tabs" |
 | saved card reorder * | 13 | "Taxes" is listed before "Reading" |
 | open tab -> open tab in another Tab Manager page | | the same across pages: Alpha moves before Echo (before this, the other page moved its own selection, here nothing) |
 | open tab -> open tab | 6.x | Alpha moves before Echo (a control) |

@@ -7,7 +7,8 @@
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { encodeSaved, decodeSaved, encodeIds, decodeIds, readTabDrag, stackTiles, stackLabel } from "../src/popup/dragPayload.ts";
+import { readFileSync } from "node:fs";
+import { encodeSaved, decodeSaved, encodeIds, decodeIds, readTabDrag, stackTiles, stackLabel, stackKind } from "../src/popup/dragPayload.ts";
 import { SAVED_TAB_DRAG } from "../src/popup/savedDrag.ts";
 import { OPEN_TAB_DRAG } from "../src/popup/savedAdd.ts";
 import { SAVED_WINDOW_DRAG } from "../src/popup/sessionOrder.ts";
@@ -123,4 +124,41 @@ describe("stackTiles", () => {
 test("stackLabel", () => {
 	assert.equal(stackLabel(2), "2 tabs");
 	assert.equal(stackLabel(14), "14 tabs");
+});
+
+// the layouts' storage values, read from the settings module (importing it
+// pulls in the browser polyfill)
+const layouts = () => {
+	const src = readFileSync(new URL("../src/helpers/settings.ts", import.meta.url), "utf8");
+	const body = /export const LAYOUT = \{([^}]*)\}/.exec(src)![1];
+	return Object.fromEntries([...body.matchAll(/(\w+):\s*"([^"]+)"/g)].map((m) => [m[1], m[2]]));
+};
+
+describe("stackKind", () => {
+	test("every layout has an answer: list titled, the icon layouts icons", () => {
+		const l = layouts();
+		assert.deepEqual(Object.keys(l).sort(), ["blocks", "blocksBig", "list", "rows"]);
+		assert.equal(stackKind(l.list), "titled");
+		assert.equal(stackKind(l.blocks), "icons");
+		assert.equal(stackKind(l.rows), "icons");
+		assert.equal(stackKind(l.blocksBig), "icons-big");
+	});
+
+	test("an unknown or missing layout gets the titled stack", () => {
+		assert.equal(stackKind("grid"), "titled");
+		assert.equal(stackKind(""), "titled");
+		assert.equal(stackKind(undefined), "titled");
+		assert.equal(stackKind(null), "titled");
+	});
+
+	test("the popup passes its layout and the css draws every kind", () => {
+		const root = new URL("../", import.meta.url);
+		const manager = readFileSync(new URL("src/popup/views/TabManager.tsx", root), "utf8");
+		assert.match(manager, /setStackImage\(e\.dataTransfer, tiles, ids\.length, stackKind\(this\.state\.layout\)\)/);
+		const css = readFileSync(new URL("css/components/drag.css", root), "utf8");
+		for (const kind of ["icons", "icons-big"]) assert.ok(css.includes(".drag-stack." + kind), kind);
+		// the icon tiles are the size the layouts' tab tiles have (tab.css)
+		assert.match(css, /\.drag-stack\.icons-big \{[^}]*--tile-w: 2\.5rem/);
+		assert.match(css, /--tile-w: 1\.4rem/);
+	});
 });

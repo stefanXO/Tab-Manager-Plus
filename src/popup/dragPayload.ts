@@ -100,6 +100,24 @@ export function stackTiles(dragged : number, ids : readonly number[], max = 3) :
 	return (ids.includes(dragged) ? [dragged, ...rest] : rest).slice(0, max);
 }
 
+// How the drag image draws its tiles, by the layout the popup is in: "titled"
+// (favicon and title, the List layout's rows) or icon tiles only, as the
+// layout draws its tabs: "icons" (Blocks and Rows, 1.4rem tiles) and
+// "icons-big" (Big blocks, 2.5rem tiles). Layout values as stored
+// (src/helpers/settings.ts LAYOUT); an unknown one gets the titled stack.
+export type StackKind = "titled" | "icons" | "icons-big";
+export function stackKind(layout : string | null | undefined) : StackKind {
+	switch (layout) {
+		case "blocks":
+		case "horizontal":
+			return "icons";
+		case "blocks-big":
+			return "icons-big";
+		default:
+			return "titled";
+	}
+}
+
 // the count under the stack
 export function stackLabel(count : number) : string {
 	return count + " tabs";

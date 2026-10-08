@@ -98,7 +98,7 @@ try {
 
 	// The fixture, made fresh before every check: two open windows with real
 	// pages, two saved windows, settings for the layout under test.
-	async function fixture(layout) {
+	async function fixture(layout, theme = 'light') {
 		// close every window but the control page's
 		await api(async () => {
 			const me = await chrome.tabs.getCurrent()
@@ -122,7 +122,7 @@ try {
 			await chrome.storage.local.clear()
 			await chrome.storage.local.set(values)
 		}, {
-			layout, animations: true, windowTitles: true, tabactions: true, sessionsFeature: true, theme: 'light',
+			layout, animations: true, windowTitles: true, tabactions: true, sessionsFeature: true, theme,
 			windowNames: {[windows[0]]: 'First', [windows[1]]: 'Second'},
 			sessions: {
 				s1: saved('s1', 'Reading', 'color4', 2 * 864e5, ['Hotel', 'India', 'Juliett', 'Kilo'], 0),
@@ -273,20 +273,53 @@ try {
 		await cdp.detach()
 	}
 	// Records every drag image of stacked tiles the page builds (the
-	// several-tab drag image, src/popup/dragImage.ts): its tile titles, front
-	// first, and its count. Resolves to the list once called.
+	// several-tab drag image, src/popup/dragImage.ts), as it looks while it
+	// is built: its kind (titled / icons / icons-big, the class on the
+	// stack), the tiles front first (their title, '' when the stack has
+	// none), the count, whether every tile has a favicon image, whether the
+	// tiles are the size of the popup's own tab tiles (icon stacks; and the
+	// favicon in them the size of the favicon in a tab tile), and whether the
+	// front tile has the theme's tile colours. Resolves to the list once called.
 	async function watchStacks(p) {
 		await p.evaluate(() => {
 			window.__stacks = []
 			new MutationObserver((records) => {
 				for (const r of records) for (const n of r.addedNodes) {
 					if (!(n instanceof HTMLElement) || !n.classList.contains('drag-stack')) continue
-					window.__stacks.push({tiles: [...n.querySelectorAll('.drag-title')].map((t) => t.textContent).reverse(), label: n.querySelector('.drag-count')?.textContent})
+					const tiles = [...n.querySelectorAll('.drag-tile')].reverse()
+					const kind = ['titled', 'icons', 'icons-big'].find((k) => n.classList.contains(k)) || '?'
+					const size = (el) => { const c = getComputedStyle(el); return c.width + 'x' + c.height }
+					// the real tab tile and its favicon, as the layout draws them
+					const real = document.querySelector('.window:not(.session) .tab')
+					const realIcon = getComputedStyle(real, '::after').backgroundSize
+					const probe = document.createElement('div')
+					probe.style.cssText = 'background-color: var(--tile-bg); border: 1px solid var(--tile-border)'
+					document.body.append(probe)
+					const want = getComputedStyle(probe)
+					const front = getComputedStyle(tiles[0])
+					const colours = front.backgroundColor === want.backgroundColor && front.borderTopColor === want.borderTopColor
+					probe.remove()
+					const sized = kind === 'titled' || tiles.every((t) => {
+						const fav = getComputedStyle(t.querySelector('.drag-fav'))
+						return size(t) === size(real) && fav.width + ' ' + fav.height === realIcon
+					})
+					window.__stacks.push({
+						kind,
+						tiles: tiles.map((t) => t.querySelector('.drag-title')?.textContent ?? ''),
+						label: n.querySelector('.drag-count')?.textContent,
+						favicons: tiles.every((t) => { const bg = getComputedStyle(t.querySelector('.drag-fav')).backgroundImage; return bg !== 'none' && bg !== '' }),
+						sized,
+						colours,
+					})
 				}
 			}).observe(document.body, {childList: true})
 		})
 		return () => p.evaluate(() => window.__stacks)
 	}
+	// What watchStacks records for a drag of `titles` (front first) in `layout`
+	const KIND = {blocks: 'icons', 'blocks-big': 'icons-big', horizontal: 'icons', vertical: 'titled'}
+	const stackWant = (layout, titles) => ({kind: KIND[layout], tiles: titles.map((t) => KIND[layout] === 'titled' ? t : ''),
+		label: titles.length + ' tabs', favicons: true, sized: true, colours: true})
 	async function ctrlClick(p, selector) {
 		const at = await point(p, selector)
 		const cdp = await p.createCDPSession()
@@ -392,8 +425,9 @@ try {
 			const stacks = await watchStacks(p)
 			await drag(p, savedSel('Mike'), {selector: tabSel('Charlie'), fx: 0.9, fy: 0.9})
 			const want = ['Alpha', 'Bravo', 'Charlie', 'Juliett', 'Mike']
-			// the drag image: two tiles, Mike (dragged) in front, and the count
-			return {got: [await settle(() => titlesOf(w1), want), await stacks()], want: [want, [{tiles: ['Mike', 'Juliett'], label: '2 tabs'}]]}
+			// the drag image: two tiles, Mike (dragged) in front, and the count (titled
+			// in List, icons only in the layouts that show tabs as icons)
+			return {got: [await settle(() => titlesOf(w1), want), await stacks()], want: [want, [stackWant(layout, ['Mike', 'Juliett'])]]}
 		})
 		// patch 11: dropped on the open window card away from its tabs (its
 		// bottom right corner): next to the nearest tab, the last one
@@ -439,7 +473,7 @@ try {
 			// copies go in the order the popup lists the windows (by last focus)
 			const listed = (await shownIn(p, '.window:not(.session)')).filter((t) => t === 'Charlie' || t === 'Delta')
 			const want = {s1: ['Hotel', 'India', 'Juliett', 'Kilo', ...listed], s2: ['Lima', 'Mike', 'November']}
-			return {got: [await settle(savedTitles, want), await stacks()], want: [want, [{tiles: ['Delta', 'Charlie'], label: '2 tabs'}]]}
+			return {got: [await settle(savedTitles, want), await stacks()], want: [want, [stackWant(layout, ['Delta', 'Charlie'])]]}
 		})
 		// patch 13: a saved card dragged by its title before the other one
 		check('saved card reorder', async () => {
@@ -469,6 +503,40 @@ try {
 			const want = ['Delta', 'Alpha', 'Echo', 'Foxtrot']
 			return {got: await settle(() => titlesOf(w2), want), want}
 		}, false)
+	}
+
+	// The drag image of a drag that takes several tabs follows the layout:
+	// titled rows in List, icon tiles only (the size of that layout's tab
+	// tiles) in Blocks, Big blocks and Rows. Three tabs, saved and open, light
+	// and dark, in the own tab; what the page builds for setDragImage is
+	// recorded (watchStacks), the drag runs as every other check's does.
+	for (const layout of ['blocks', 'blocks-big', 'horizontal', 'vertical']) {
+		for (const theme of ['light', 'dark']) {
+			const image = (name, fn) => checks.push({name: 'drag image ' + layout + ' ' + theme + ': ' + name, fn, mode: 'tab'})
+			image('three saved tabs', async () => {
+				await fixture(layout, theme)
+				const p = await openPopup()
+				await ctrlClick(p, savedSel('Hotel'))
+				await ctrlClick(p, savedSel('Juliett'))
+				await ctrlClick(p, savedSel('Mike'))
+				const stacks = await watchStacks(p)
+				await drag(p, savedSel('Mike'), {selector: tabSel('Charlie'), fx: 0.9, fy: 0.9})
+				// Mike is dragged: in front, the other two behind him in saved order
+				return {got: await stacks(), want: [stackWant(layout, ['Mike', 'Hotel', 'Juliett'])]}
+			})
+			image('three open tabs', async () => {
+				await fixture(layout, theme)
+				const p = await openPopup()
+				await ctrlClick(p, tabSel('Alpha'))
+				await ctrlClick(p, tabSel('Bravo'))
+				await ctrlClick(p, tabSel('Echo'))
+				const stacks = await watchStacks(p)
+				await drag(p, tabSel('Echo'), '#session-s1 h3.windowTitle')
+				// Echo in front; the two behind it are the other selected tabs
+				const got = (await stacks()).map((st) => ({...st, tiles: st.tiles[0] === 'Echo' || st.tiles[0] === '' ? [st.tiles[0], ...st.tiles.slice(1).sort()] : st.tiles}))
+				return {got, want: [stackWant(layout, ['Echo', 'Alpha', 'Bravo'])]}
+			})
+		}
 	}
 
 	// The keys (Ctrl+Delete, Ctrl+Backspace, Enter with a selection), pressed with the
