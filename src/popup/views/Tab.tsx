@@ -9,6 +9,7 @@ import {faviconTone} from '@helpers/favicon';
 import {tabFreshness} from "../freshness";
 import {titleHits} from "../search";
 import {sendAndWait} from "../messaging";
+import {isSavedWindowDrag} from "../sessionOrder";
 
 export class Tab extends React.Component<ITab, ITabState> {
 	static contextType = ManagerContext;
@@ -261,6 +262,8 @@ export class Tab extends React.Component<ITab, ITabState> {
 	}
 	dragOver = (e : React.DragEvent<HTMLDivElement>) => {
 		if (!this.props.draggable) return false;
+		// a saved window card being reordered: no drop marker on open tabs
+		if (isSavedWindowDrag(e.dataTransfer?.types)) return false;
 
 		let favicon = this.context.dragFavicon();
 		let draggingover;

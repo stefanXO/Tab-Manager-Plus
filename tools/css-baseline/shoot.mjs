@@ -232,10 +232,10 @@ const STATES = [
 	{name: 'save-sel', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {
 		clicks: [{sel: '#tab-2', ctrl: true}, {sel: '#tab-4', ctrl: true}, {sel: '#tab-6', ctrl: true}, {sel: '#tab-11', ctrl: true}]}},
 	// the same, then the button clicked: a new saved window named from its sites
-	// is in the saved windows (scrolled to the end), the selection is cleared
+	// is the first saved window (scrolled to it), the selection is cleared
 	{name: 'save-sel-done', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {
 		clicks: [{sel: '#tab-2', ctrl: true}, {sel: '#tab-4', ctrl: true}, {sel: '#tab-6', ctrl: true}, {sel: '#tab-11', ctrl: true}, {sel: '.icon.windowaction.save-tabs', optional: true}],
-		scrollEnd: true}},
+		scrollInto: '.window.session'}},
 	// nothing selected: the button is dimmed
 	{name: 'save-sel-none', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {}},
 	// dragging a saved tab into an open window (src/helpers/openTabs.ts): the
@@ -252,6 +252,21 @@ const STATES = [
 	// "Browser extension": both open there, in their saved order
 	{name: 'saved-drag-sel', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {
 		clicks: [{sel: '#sessiontab_s1_1', ctrl: true}, {sel: '#sessiontab_s1_3', ctrl: true}, {drag: '#sessiontab_s1_3', over: '#tab-22', side: 'before', drop: true}]}},
+	// reordering saved windows (src/popup/sessionOrder.ts): the card of "Tax 2029"
+	// dragged by its edge (not by a tab or an icon) and held over the left / top
+	// quarter of "Conference reading": the dragged card fades, the drop marker
+	// shows in the gap before the target (left of it while the grid has more
+	// than one column, above it otherwise). dpr 1, every layout, 800x600 and 380x900
+	{name: 'saved-order-over', layouts: LAYOUTS, scaleLayouts: [], widths: ['800x600', '380x900'], apply: {
+		clicks: [{drag: '#session-s2', over: '#session-s1', side: 'before'}], scrollEnd: true}},
+	// the same, dropped: "Tax 2029" is listed first (the order is stored; later
+	// shots on the page drop it where it already is)
+	{name: 'saved-order-drop', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {
+		clicks: [{drag: '#session-s2', over: '#session-s1', side: 'before', drop: true}], scrollEnd: true}},
+	// "Conference reading" held over the left / top quarter of "Tax 2029", where
+	// it already is (right before it): no marker, a drop would change nothing
+	{name: 'saved-order-noop', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {
+		clicks: [{drag: '#session-s1', over: '#session-s2', side: 'before'}], scrollEnd: true}},
 	// a saved window that was the focused window when it was saved (its stored
 	// windowsInfo says focused, with the id of the focused open window "Work"):
 	// it must not look like the active window. dpr 1, blocks + List, 800x600

@@ -12,6 +12,7 @@ import {ManagerContext, ITabManagerActions} from '../context';
 import {windowName, compactName, tabsKey} from '../windowName';
 import {sendAndWait} from '../messaging';
 import {buildSavedWindow, newSessionId} from '@helpers/sessions';
+import {firstOrders, isSavedWindowDrag} from '../sessionOrder';
 
 export class Window extends React.Component<IWindow, IWindowState> {
 	static contextType = ManagerContext;
@@ -317,6 +318,8 @@ export class Window extends React.Component<IWindow, IWindowState> {
 		browser.tabs.create({ windowId: this.props.window.id });
 	}
 	dragOver = (e) => {
+		// a saved window card being reordered: no drop here
+		if (isSavedWindowDrag(e.dataTransfer?.types)) return;
 		this.setState({hover: true});
 		this.stopProp(e);
 	}
@@ -420,6 +423,8 @@ export class Window extends React.Component<IWindow, IWindowState> {
 		console.log(session);
 
 		let sessions = await getLocalStorage(S.sessions, {});
+		// listed first among the saved windows (../sessionOrder.ts)
+		session.order = firstOrders(sessions, 1)[0];
 		sessions[session.id] = session;
 
 		let value = await setLocalStorage(S.sessions, sessions).catch(function(err) {

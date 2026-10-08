@@ -22,6 +22,12 @@ export interface ITabManagerActions {
 	dragFavicon(icon? : string) : string;
 	// a drag ended, dropped or not
 	dragEnd() : void;
+	// a saved window card is being dragged (its id), or no longer (null)
+	dragSession(id : string | null) : void;
+	// whether dropping the dragged card before / after this saved window moves it
+	sessionDropMoves(target : string, before : boolean) : boolean;
+	// the dragged card dropped before / after this saved window: the new order is stored
+	dropSession(target : string, before : boolean) : void;
 	hoverIcon(text : string) : void;
 	openWindowOptions(windowId : number, autoName : string) : void;
 	// the same screen on a saved window

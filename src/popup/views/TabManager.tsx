@@ -24,6 +24,7 @@ import {savedDeleteItems} from "../savedDelete";
 import {editSession, SessionEdit} from "../sessionEdit";
 import {searchSaved, searchSummary, SavedSearch} from "../searchSaved";
 import {draggedSaved, savedTabsToOpen, openedText} from "../savedDrag";
+import {sortSessions, moveSession, reorderSessions, firstOrders} from "../sessionOrder";
 
 // the focus is in a text box that holds text: Delete edits that text
 function editingText() : boolean {
@@ -62,6 +63,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	// the saved tabs being dragged (../savedDrag.ts), from dragstart until the
 	// drop or the drag's end; null while open tabs (or nothing) are dragged
 	private draggingSaved : number[] | null = null;
+	// the saved window whose card is being dragged (../sessionOrder.ts), from
+	// dragstart until the drop or the drag's end
+	private draggingSession : string | null = null;
 	private readonly runSlowUpdate = debounce(this.runUpdate, 250);
 	private readonly onRuntimeMessage = (message : unknown) => {
 		const request = message as ICommand;
@@ -181,6 +185,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			dropWindow: (windowId) => { this.dropWindow(windowId); },
 			dragFavicon: (icon) => this.dragFavicon(icon),
 			dragEnd: () => { this.draggingSaved = null; },
+			dragSession: (id) => { this.draggingSession = id; },
+			sessionDropMoves: (target, before) => this.sessionDropMoves(target, before),
+			dropSession: (target, before) => { void this.dropSession(target, before); },
 			hoverIcon: (text) => this.hoverIcon(text),
 			openWindowOptions: (windowId, autoName) => this.setState({ colorsActive: windowId, colorsAutoName: autoName }),
 			openSessionOptions: (id, autoName) => this.setState({ colorsSession: id, colorsAutoName: autoName }),
@@ -793,7 +800,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		dropMissingSaved(this.state.selection, sessions);
 		this.storedSessions = values;
 		this.setState({
-			sessions: sessions,
+			// in the order the user gave them (../sessionOrder.ts)
+			sessions: sortSessions(sessions),
 			// the saved window being named was deleted (or imported over) meanwhile
 			colorsSession: sessions.some((s) => s.id === this.state.colorsSession) ? this.state.colorsSession : ""
 		});
@@ -827,6 +835,27 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		if (!next) return;
 		this.storedSessions = next;
 		this.setState({sessions: this.state.sessions.map((s) => s.id === id ? next[id] : s)});
+		await setLocalStorage(S.sessions, next);
+	}
+	// Whether the dragged saved window card would move if dropped before /
+	// after `target` (no drop marker, no drop where it already is). Over every
+	// saved window, as the stored order is, also the ones hidden right now.
+	sessionDropMoves(target : string, before : boolean) : boolean {
+		if (!this.draggingSession) return false;
+		return moveSession(this.state.sessions.map((s) => s.id), this.draggingSession, target, before) !== null;
+	}
+	// The dragged card dropped before / after `target`: every saved window gets
+	// its new place as `order` (../sessionOrder.ts), written from the copy
+	// sessionSync keeps (as editSession does), shown at once.
+	async dropSession(target : string, before : boolean) {
+		const dragged = this.draggingSession;
+		this.draggingSession = null;
+		if (!dragged) return;
+		const base : Record<string, ISavedSession> = this.storedSessions || await getLocalStorage(S.sessions, {});
+		const next = reorderSessions(base, dragged, target, before);
+		if (!next) return;
+		this.storedSessions = next;
+		this.setState({sessions: sortSessions(this.state.sessions.map((s) => next[s.id] || s))});
 		await setLocalStorage(S.sessions, next);
 	}
 	undoDelete = () => {
@@ -1041,6 +1070,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		// then neither comes back nor loses the new windows.
 		const base : Record<string, ISavedSession> = this.storedSessions || await getLocalStorage(S.sessions, {});
 		const next : Record<string, ISavedSession> = {...base};
+		// new saved windows are listed first (../sessionOrder.ts)
+		const orders = firstOrders(base, saved.length);
+		saved.forEach((session, i) => { session.order = orders[i]; });
 		for (const session of saved) next[session.id] = session;
 		this.storedSessions = next;
 		await setLocalStorage(S.sessions, next);
@@ -1782,6 +1814,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		}
 	}
 	async drop(id : number, before : boolean) {
+		// a saved window card is no tab (open tabs and windows take no drop from it)
+		if (this.draggingSession) return;
 		var tab : browser.Tabs.Tab = this.state.tabsbyid.get(id);
 		if (!tab) return;
 		if (this.draggingSaved) {
@@ -1800,6 +1834,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		this.update();
 	}
 	async dropWindow(windowId : number) {
+		if (this.draggingSession) return;
 		if (this.draggingSaved) {
 			// no tab to go next to: at the end
 			await this.openSaved(windowId, undefined);

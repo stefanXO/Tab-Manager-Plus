@@ -14,13 +14,24 @@ import {savedTileRef} from '../savedTiles';
 import {windowName} from '../windowName';
 import {Icon} from "@icons/Icon";
 import {ICON_FAMILY} from "../icons";
+import {dropSide, isSavedWindowDrag, SAVED_WINDOW_DRAG} from "../sessionOrder";
 
-export class Session extends React.Component<ISession> {
+interface ISessionState {
+	// this card is being dragged (it fades)
+	dragging : boolean;
+	// another card held over this one: the side its drop marker shows on
+	dropMarker : "" | "left" | "right" | "top" | "bottom";
+}
+
+export class Session extends React.Component<ISession, ISessionState> {
 	static contextType = ManagerContext;
 	declare context : ITabManagerActions;
+	// the last mouse press on the card was on a tab or an action icon: a drag
+	// from there is not a drag of the card
+	private grabbedPart = false;
 	constructor(props : ISession) {
 		super(props);
-
+		this.state = { dragging: false, dropMarker: "" };
 	}
 	render() {
 		// straight from the stored window, so a rename or recolour shows at once
@@ -121,9 +132,19 @@ export class Session extends React.Component<ISession> {
 						" " +
 						color +
 						" " +
-						(this.props.session.windowsInfo.incognito ? " incognito" : "")
+						(this.props.session.windowsInfo.incognito ? " incognito" : "") +
+						(this.state.dragging ? " dragging" : "") +
+						(this.state.dropMarker ? " drop-" + this.state.dropMarker : "")
 					}
 					onClick={this.windowClick}
+					draggable={true}
+					onMouseDown={this.mouseDown}
+					onDragStart={this.dragStart}
+					onDragEnd={this.dragEnd}
+					onDragEnter={this.dragOver}
+					onDragOver={this.dragOver}
+					onDragLeave={this.dragLeave}
+					onDrop={this.drop}
 				>
 					{/* data-hover (the header's hover text), not title: a native tooltip
 					would cover the saved window's hover card (../statsHover.ts) */}
@@ -140,6 +161,65 @@ export class Session extends React.Component<ISession> {
 	}
 	stop = (e) => {
 		e.stopPropagation();
+	}
+	// Reordering (../sessionOrder.ts): the card is dragged by any part that is
+	// not a tab (a tab drags itself, into an open window) or an action icon.
+	mouseDown = (e : React.MouseEvent<HTMLDivElement>) => {
+		this.grabbedPart = !!(e.target as Element).closest?.(".tab, .icon, .window-actions");
+	}
+	dragStart = (e : React.DragEvent<HTMLDivElement>) => {
+		// a saved tab's own drag, on its way up
+		if ((e.target as Element).closest?.(".tab")) return;
+		if (this.grabbedPart || (e.target as Element).closest?.(".icon, .window-actions")) {
+			e.preventDefault();
+			return;
+		}
+		e.stopPropagation();
+		e.dataTransfer.setData(SAVED_WINDOW_DRAG, this.props.session.id);
+		// some text too: Firefox starts no drag without data it knows
+		e.dataTransfer.setData("Text", this.props.session.name || "");
+		e.dataTransfer.effectAllowed = "move";
+		this.context.dragSession(this.props.session.id);
+		// faded after the browser took the drag image, so the image is not
+		setTimeout(() => this.setState({ dragging: true }), 0);
+	}
+	dragEnd = () => {
+		this.grabbedPart = false;
+		this.context.dragSession(null);
+		this.setState({ dragging: false, dropMarker: "" });
+	}
+	dragOver = (e : React.DragEvent<HTMLDivElement>) => {
+		// a tab (open or saved) dragged over a saved window: not taken here
+		if (!isSavedWindowDrag(e.dataTransfer?.types)) return;
+		const card = e.currentTarget;
+		// the cards stand side by side while their grid has more than one column
+		const grid = card.parentElement ? getComputedStyle(card.parentElement).gridTemplateColumns : "none";
+		const across = !!grid && grid !== "none" && grid.trim().split(/\s+/).length > 1;
+		const side = dropSide(card.getBoundingClientRect(), e.clientX, e.clientY, across);
+		const before = side === "before";
+		if (!this.context.sessionDropMoves(this.props.session.id, before)) {
+			if (this.state.dropMarker) this.setState({ dropMarker: "" });
+			return;
+		}
+		e.preventDefault();
+		e.stopPropagation();
+		e.dataTransfer.dropEffect = "move";
+		const marker = across ? (before ? "left" : "right") : (before ? "top" : "bottom");
+		if (marker !== this.state.dropMarker) this.setState({ dropMarker: marker });
+	}
+	dragLeave = (e : React.DragEvent<HTMLDivElement>) => {
+		// moving onto a part of this card is no leaving
+		if (e.relatedTarget instanceof Node && e.currentTarget.contains(e.relatedTarget)) return;
+		if (this.state.dropMarker) this.setState({ dropMarker: "" });
+	}
+	drop = (e : React.DragEvent<HTMLDivElement>) => {
+		if (!isSavedWindowDrag(e.dataTransfer?.types)) return;
+		e.preventDefault();
+		e.stopPropagation();
+		const marker = this.state.dropMarker;
+		this.setState({ dropMarker: "" });
+		if (!marker) return;
+		this.context.dropSession(this.props.session.id, marker === "left" || marker === "top");
 	}
 	windowTabClick = async (e : React.MouseEvent<HTMLDivElement>) => {
 		e.stopPropagation();

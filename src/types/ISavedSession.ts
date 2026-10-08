@@ -9,5 +9,8 @@ export interface ISavedSession {
 	sessionStartTime: number,
 	id: string,
 	customName: boolean,
-	incognito: boolean
+	incognito: boolean,
+	// where it is listed among the saved windows, lowest first; saved windows
+	// without one come after (src/popup/sessionOrder.ts)
+	order?: number
 }

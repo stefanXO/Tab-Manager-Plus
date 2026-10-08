@@ -23,6 +23,55 @@
 	outline-color: var(--saved-edge-hover);
 }
 
+/* Reordering by drag (src/popup/sessionOrder.ts): the card being dragged
+   fades; the card it is held over shows the tab drop marker's bar in the gap
+   on the side the dragged card goes, left / right while the cards stand side
+   by side, above / below when they are stacked. */
+.window.session.dragging {
+	opacity: 0.4;
+}
+.window.session.drop-left::before,
+.window.session.drop-right::before,
+.window.session.drop-top::before,
+.window.session.drop-bottom::before {
+	content: "";
+	position: absolute;
+	border-radius: 2px;
+	background-color: var(--drop-marker);
+	pointer-events: none;
+}
+.window.session.drop-left::before,
+.window.session.drop-right::before {
+	top: 0;
+	bottom: 0;
+	width: 3px;
+}
+.window.session.drop-left::before {
+	left: -6px;
+}
+.window.session.drop-right::before {
+	right: -6px;
+}
+.window.session.drop-top::before,
+.window.session.drop-bottom::before {
+	left: 0;
+	right: 0;
+	height: 3px;
+}
+.window.session.drop-top::before {
+	top: -6px;
+}
+.window.session.drop-bottom::before {
+	bottom: -6px;
+}
+/* the Rows view in compact mode keeps only 0.2rem between its cards */
+.compact .window.session.horizontal.drop-top::before {
+	top: -3px;
+}
+.compact .window.session.horizontal.drop-bottom::before {
+	bottom: -3px;
+}
+
 .saved-mark {
 	display: inline-flex;
 	vertical-align: -2px;

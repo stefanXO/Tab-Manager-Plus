@@ -185,7 +185,8 @@ currently on disk — there is no stale copy to forget about.
 - `save-sel` (+ `-done`, `-none`): saving selected open tabs as a saved window
   (`src/helpers/sessions.ts`): Ctrl+click three tabs of "Work" and one of "Life", so the
   bottom bar's save-tabs button is lit; `-done` also clicks it (`optional: true`), so the new
-  saved window is at the end of the list; `-none` has nothing selected (the button is dimmed)
+  saved window is the first saved window (scrolled to it); `-none` has nothing selected (the
+  button is dimmed)
 - `saved-drag-over` (+ `saved-drag-drop`, `saved-drag-sel`): dragging saved tabs into an open
   window (`src/popup/savedDrag.ts`, `src/helpers/openTabs.ts`), through a
   `{drag: <source>, over: <target>, side?: 'before', drop?: true}` entry in `apply.clicks`
@@ -195,6 +196,14 @@ currently on disk — there is no stale copy to forget about.
   extension". The fake `runtime.sendMessage` answers `open_saved_tabs` with the worker's
   own `openTabsAt` over a fake `tabs.create`; since layouts and themes share one page, each
   drop first closes the tabs the shot before opened
+- `saved-order-over` (+ `-drop`, `-noop`): reordering saved windows
+  (`src/popup/sessionOrder.ts`) with the same `{drag, over, side, drop}` entry, the source
+  being the card `#session-s2` itself (as a grab on its edge, not on a tab or an icon).
+  `-over` holds "Tax 2029" over the left / top quarter of "Conference reading": the dragged
+  card fades and the drop marker shows in the gap before the target (every layout, 800x600
+  and 380x900); `-drop` drops it, so "Tax 2029" is listed first (the order is stored, so the
+  page's later shots drop it where it already is); `-noop` holds "Conference reading" right
+  before "Tax 2029", where it already is: no marker
 - `fresh` / `fresh-compact`: the List view's freshness bars (`src/popup/freshness.ts`, drawn at the end of every List row from the fixture's `lastAccessed`, 0 min .. 14 days: all five levels) — `fresh` as `plain`, `fresh-compact` with the `compact` setting on. `vertical` × 2 themes × `800x600`, dpr 1 only
 - `page-options-na-<theme>-<width>`: `options.html` standalone, 2 × 3 = 6
 - `page-changelog-na-<theme>-<width>`: `changelog.html` standalone, 2 × 3 = 6.
