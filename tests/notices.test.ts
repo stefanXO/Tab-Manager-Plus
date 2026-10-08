@@ -212,6 +212,13 @@ describe("Ctrl+Z", () => {
 		assert.equal(undoKeyForField({ tag: "BUTTON" }), true);
 		assert.equal(undoKeyForField({ tag: "DIV" }), true);
 	});
+
+	test("the search box gives Ctrl+Z to the Undo notice, text or not", () => {
+		assert.equal(undoKeyForField({ tag: "INPUT", type: "text", value: "react", search: true }), true);
+		assert.equal(undoKeyForField({ tag: "INPUT", type: "text", value: "", search: true }), true);
+		// another text field with text (the name screen) keeps its own undo
+		assert.equal(undoKeyForField({ tag: "INPUT", type: "text", value: "react", search: false }), false);
+	});
 });
 
 describe("notice texts", () => {

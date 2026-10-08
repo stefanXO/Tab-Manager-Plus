@@ -6,7 +6,7 @@
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { moveUndoRecord, undoMove, emptiedText, undoneText, UndoOffer } from "../src/popup/moveUndo.ts";
+import { moveUndoRecord, undoMove, emptiedText, undoneText, UndoOffers } from "../src/popup/moveUndo.ts";
 import type { MoveUndo } from "../src/popup/moveUndo.ts";
 import { moveSavedTabs, remapSavedKeys } from "../src/popup/savedMove.ts";
 import type { SavedDropTarget } from "../src/popup/savedMove.ts";
@@ -207,7 +207,7 @@ describe("texts", () => {
 	});
 });
 
-describe("UndoOffer", () => {
+describe("UndoOffers", () => {
 	function fakeTimers() {
 		let now = 1000;
 		const pending = new Map<number, { at : number, fn : () => void }>();
@@ -228,61 +228,82 @@ describe("UndoOffer", () => {
 	test("offered, then gone when the countdown ends", () => {
 		const f = fakeTimers();
 		let changes = 0;
-		const o = new UndoOffer<string>({ delay: 8000, timers: f.timers, onChange: () => changes++ });
+		const o = new UndoOffers<string>({ delay: 8000, timers: f.timers, onChange: () => changes++ });
 		assert.equal(o.current, null);
 		assert.equal(o.deadline, 0);
-		o.offer("x");
+		const key = o.offer("x");
 		assert.equal(o.current, "x");
+		assert.equal(o.has(key), true);
 		assert.equal(o.deadline, 9000);
 		assert.equal(o.countdown, 8000);
 		f.advance(7999);
 		assert.equal(o.current, "x");
 		f.advance(1);
 		assert.equal(o.current, null);
+		assert.equal(o.has(key), false);
 		assert.equal(changes, 2);
 	});
 	test("take ends it and hands it over once", () => {
 		const f = fakeTimers();
-		const o = new UndoOffer<string>({ delay: 8000, timers: f.timers, onChange: () => {} });
+		const o = new UndoOffers<string>({ delay: 8000, timers: f.timers, onChange: () => {} });
 		o.offer("x");
 		assert.equal(o.take(), "x");
 		assert.equal(o.take(), null);
 		assert.equal(f.count(), 0);
 	});
-	test("a new offer replaces the old one and restarts the countdown", () => {
+	test("a new offer stacks: each keeps its own countdown", () => {
 		const f = fakeTimers();
-		const o = new UndoOffer<string>({ delay: 8000, timers: f.timers, onChange: () => {} });
-		o.offer("x");
+		const o = new UndoOffers<string>({ delay: 8000, timers: f.timers, onChange: () => {} });
+		const x = o.offer("x");
 		f.advance(5000);
-		o.offer("y");
-		assert.equal(f.count(), 1);
-		f.advance(5000);
-		assert.equal(o.current, "y");
+		const y = o.offer("y");
+		assert.equal(f.count(), 2);
+		assert.deepEqual(o.items.map((i) => i.value), ["x", "y"]);
+		assert.equal(o.current, "y", "the newest");
 		f.advance(3000);
+		assert.deepEqual(o.items.map((i) => i.value), ["y"], "x ran out, y goes on");
+		assert.equal(o.has(x), false);
+		f.advance(5000);
+		assert.equal(o.has(y), false);
 		assert.equal(o.current, null);
 	});
-	test("held by the mouse over the notice: waits, then goes on with what was left", () => {
+	test("take and clear by key leave the others alone; take without a key takes the newest", () => {
 		const f = fakeTimers();
-		const o = new UndoOffer<string>({ delay: 8000, timers: f.timers, onChange: () => {} });
-		o.offer("x");
-		assert.equal(o.runs, 1);
-		f.advance(3000);
-		o.hold(true);
-		f.advance(60000);
-		assert.equal(o.current, "x");
-		assert.equal(o.deadline, f.timers.now() + 5000);
-		o.hold(false);
-		f.advance(4999);
-		assert.equal(o.current, "x");
-		f.advance(1);
-		assert.equal(o.current, null);
+		const o = new UndoOffers<string>({ delay: 8000, timers: f.timers, onChange: () => {} });
+		const x = o.offer("x");
 		o.offer("y");
-		assert.equal(o.runs, 2, "the bar runs again");
+		const z = o.offer("z");
+		assert.equal(o.take(x), "x");
+		assert.equal(o.take(), "z");
+		assert.equal(o.take(z), null);
+		assert.deepEqual(o.items.map((i) => i.value), ["y"]);
+		o.offer("w");
+		o.clear();
+		assert.equal(o.items.length, 0);
+		assert.equal(f.count(), 0);
+	});
+	test("held by the mouse over its notice: that one waits, then goes on with what was left", () => {
+		const f = fakeTimers();
+		const o = new UndoOffers<string>({ delay: 8000, timers: f.timers, onChange: () => {} });
+		const x = o.offer("x");
+		const y = o.offer("y");
+		assert.equal(o.items[0].runs, 1);
+		f.advance(3000);
+		o.hold(true, x);
+		f.advance(60000);
+		assert.deepEqual(o.items.map((i) => i.value), ["x"], "y ran out, x is held");
+		o.hold(false, x);
+		f.advance(4999);
+		assert.equal(o.has(x), true);
+		f.advance(1);
+		assert.equal(o.has(x), false);
+		assert.equal(o.has(y), false);
 	});
 	test("clear with nothing offered changes nothing", () => {
 		let changes = 0;
-		const o = new UndoOffer<MoveUndo<W>>({ delay: 1, timers: fakeTimers().timers, onChange: () => changes++ });
+		const o = new UndoOffers<MoveUndo<W>>({ delay: 1, timers: fakeTimers().timers, onChange: () => changes++ });
 		o.clear();
+		o.clear(5);
 		assert.equal(changes, 0);
 	});
 });

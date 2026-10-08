@@ -1,21 +1,24 @@
 "use strict";
 
 // The notices over the bottom bar. There are three kinds, drawn by one
-// component (./views/Notice.tsx): the Undo notice after a delete (its
-// countdown lives in ./pendingDelete.ts), and the two kept here, which have no
-// Undo: an error (red edge and tint) and an info (what an import did). Each
-// has a countdown that a mouse over it holds (./countdown.ts) and a close
-// button.
+// component (./views/Notice.tsx): the Undo notices (after a delete, their
+// countdowns live in ./pendingDelete.ts; after a move that emptied a saved
+// window, ./moveUndo.ts), and the two kept here, which have no Undo: an error
+// (red edge and tint) and an info (what an import did). Each has a countdown
+// that a mouse over it holds (./countdown.ts) and a close button. Which one
+// is the newest, and which one makes room for a newcomer, is NoticeOrder's.
 
 import { Countdown, realTimers } from "./countdown.ts";
 import type { Timers } from "./countdown.ts";
 
 export type NoticeKind = "undo" | "error" | "info";
 
-// An error stays long enough to be read twice; the rest of the page goes on
-export const ERROR_MS = 12000;
-export const INFO_MS = 8000;
-// older ones make room when more are open
+// An error stays long enough to be read twice, an info is a passing word (an
+// Undo notice stays UNDO_MS, ./pendingDelete.ts)
+export const ERROR_MS = 8000;
+export const INFO_MS = 5000;
+// at most this many notices at once, of all kinds (NoticeOrder); the
+// board's own errors and infos keep to it too
 export const MAX_NOTICES = 3;
 
 export interface Notice {
@@ -29,6 +32,8 @@ export interface Notice {
 export interface NoticeBoardOptions {
 	// the list changed (shown, closed, ended): render again
 	onChange() : void;
+	// notice `id` came up, or came up again (the same text): it is the newest
+	onShown?(id : number) : void;
 	timers? : Timers;
 }
 
@@ -59,6 +64,7 @@ export class NoticeBoard {
 			this.list = [...this.list.filter((n) => n !== again), { ...again, ms: length }];
 			this.clocks.get(again.id)?.start(length);
 			this.options.onChange();
+			this.options.onShown?.(again.id);
 			return again.id;
 		}
 		while (this.list.length >= MAX_NOTICES) this.drop(this.list[0].id);
@@ -68,6 +74,7 @@ export class NoticeBoard {
 		this.clocks.set(id, clock);
 		clock.start(length);
 		this.options.onChange();
+		this.options.onShown?.(id);
 		return id;
 	}
 
@@ -100,6 +107,11 @@ export class NoticeBoard {
 		return this.clocks.get(id)?.runs ?? 0;
 	}
 
+	// whether notice `id` is on screen
+	has(id : number) : boolean {
+		return this.clocks.has(id);
+	}
+
 	// ms left of the notice's countdown
 	left(id : number) : number {
 		return this.clocks.get(id)?.left ?? 0;
@@ -112,6 +124,71 @@ export class NoticeBoard {
 		this.clocks.get(id)?.stop();
 		this.clocks.delete(id);
 		return true;
+	}
+}
+
+// ---- the order of the notices ----
+
+// who owns a notice: the board's errors and infos (key: the notice's id), a
+// batch of deletes (./pendingDelete.ts, key: the batch's), a move's Undo
+// (./moveUndo.ts UndoOffers, key: the offer's)
+export type NoticeSource = "board" | "delete" | "move";
+
+export interface NoticeRef {
+	source : NoticeSource;
+	key : number;
+}
+
+function sameRef(a : NoticeRef, b : NoticeRef) : boolean {
+	return a.source === b.source && a.key === b.key;
+}
+
+// The order the notices came up in, all kinds together. The owners keep the
+// notices themselves; this keeps when each came. The Undo notices are
+// stacked: Ctrl+Z takes back the newest first (sort, last). A newcomer
+// beyond `max` makes the oldest go (push): an Undo notice then commits (a
+// delete is written, a move's offer ends), an error or info closes.
+export class NoticeOrder {
+	private list : NoticeRef[] = [];
+	private readonly alive : (ref : NoticeRef) => boolean;
+	private readonly max : number;
+
+	// `alive`: whether a notice is still on screen (its owner may have ended
+	// it on its own: undone, run out, closed)
+	constructor(alive : (ref : NoticeRef) => boolean, max = MAX_NOTICES) {
+		this.alive = alive;
+		this.max = max;
+	}
+
+	// the notices on screen, oldest first
+	get refs() : readonly NoticeRef[] {
+		this.prune();
+		return this.list;
+	}
+
+	// `ref` came up (or came up again, or its countdown started over): it is
+	// the newest now. Returns the ones that have to make room, oldest first;
+	// the caller ends them.
+	push(ref : NoticeRef) : NoticeRef[] {
+		this.prune();
+		this.list = this.list.filter((r) => !sameRef(r, ref));
+		this.list.push(ref);
+		const room : NoticeRef[] = [];
+		while (this.list.length > this.max) room.push(this.list.shift()!);
+		return room;
+	}
+
+	// `refs` oldest first (one this order never saw counts as the newest)
+	sort<T extends NoticeRef>(refs : readonly T[]) : T[] {
+		const rank = (ref : NoticeRef) => {
+			const at = this.list.findIndex((r) => sameRef(r, ref));
+			return at < 0 ? Infinity : at;
+		};
+		return [...refs].sort((a, b) => rank(a) - rank(b));
+	}
+
+	private prune() {
+		this.list = this.list.filter((r) => this.alive(r));
 	}
 }
 
@@ -147,11 +224,13 @@ export function undoKeyCaps(mac : boolean) : string[] {
 	return [mac ? "⌘" : "Ctrl", "Z"];
 }
 
-// Whether a Ctrl+Z typed into `field` is for the Undo notice: not when it is a
-// text field with something in it (that is the text's own undo). The search
-// box with nothing in it is not editing anything, and neither is a button.
-export function undoKeyForField(field : { tag : string, type? : string, value? : string, contentEditable? : boolean } | null) : boolean {
-	if (!field) return true;
+// Whether a Ctrl+Z typed into `field` is for the Undo notice (one is up): not
+// when it is a text field with something in it (that is the text's own
+// undo), except the search box (`search`): there the Undo notice wins, text
+// or not (with no Undo notice up, Ctrl+Z in it is the text's undo, as
+// always). A button is not editing anything.
+export function undoKeyForField(field : { tag : string, type? : string, value? : string, contentEditable? : boolean, search? : boolean } | null) : boolean {
+	if (!field || field.search) return true;
 	if (field.contentEditable) return false;
 	const tag = field.tag.toUpperCase();
 	if (tag === "TEXTAREA") return false;

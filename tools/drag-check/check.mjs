@@ -750,6 +750,79 @@ try {
 			const want = ['Bravo', 'Charlie']
 			return {got: await newWindow(before, want), want}
 		})
+		// Ctrl+Z (Cmd+Z on a Mac) and the Undo notices (patch notices3)
+		const undoNotices = (p) => p.evaluate(() => [...document.querySelectorAll('.notice.undo .notice-text')].map((n) => n.textContent))
+		const boxValue = (p) => p.$eval('.searchBoxInput', (i) => i.value)
+		const typeInBox = async (p, text) => {
+			await p.focus('.searchBoxInput')
+			await p.keyboard.type(text)
+			await p.waitForFunction((t) => document.querySelector('.searchBoxInput').value === t, {}, text)
+			await new Promise((r) => setTimeout(r, 300))
+		}
+		key('undo: Ctrl+Z with text in the focused search box takes back the delete, the text stays', async () => {
+			await fixture(layout)
+			const p = await openPopup()
+			await ctrlClick(p, savedSel('Juliett'))
+			await withMod(p, 'Delete')
+			await p.waitForSelector('.notice.undo')
+			await typeInBox(p, 'Bravo')
+			await withMod(p, 'KeyZ')
+			const want = [['Hotel', 'India', 'Juliett', 'Kilo'], 'Bravo', []]
+			return {got: [await settle(() => shownIn(p, '#session-s1'), want[0]), await boxValue(p), await undoNotices(p)], want}
+		})
+		key('undo: with no Undo notice, Ctrl+Z in the search box is the text\'s own undo', async () => {
+			await fixture(layout)
+			const p = await openPopup()
+			await typeInBox(p, 'Bravo')
+			await withMod(p, 'KeyZ')
+			await new Promise((r) => setTimeout(r, 300))
+			const want = [true, ['Hotel', 'India', 'Juliett', 'Kilo']]
+			return {got: [(await boxValue(p)) !== 'Bravo', await shownIn(p, '#session-s1')], want}
+		})
+		key('undo: two stacked Undo notices, Ctrl+Z takes back the newest first, then the next', async () => {
+			await fixture(layout)
+			const p = await openPopup()
+			// every tab of "Taxes" dragged into "Reading": "Taxes" is removed, Undo notice 1
+			await ctrlClick(p, savedSel('Lima'))
+			await ctrlClick(p, savedSel('Mike'))
+			await ctrlClick(p, savedSel('November'))
+			await drag(p, savedSel('November'), '#session-s1 h3.windowTitle')
+			const all = ['Hotel', 'India', 'Juliett', 'Kilo', 'Lima', 'Mike', 'November']
+			await settle(savedTitles, {s1: all})
+			// then "Reading" deleted: Undo notice 2, under the first
+			await click(p, '#session-s1 .icon.tabaction.delete')
+			const shown = () => Promise.all([shownIn(p, '#session-s1'), shownIn(p, '#session-s2'), undoNotices(p)])
+			const both = await settle(shown, [[], [], ['Removed “Taxes” (left empty)', 'Deleted “Reading” (7 tabs)']])
+			await withMod(p, 'KeyZ')
+			const first = await settle(shown, [all, [], ['Removed “Taxes” (left empty)']])
+			await withMod(p, 'KeyZ')
+			const second = await settle(shown, [['Hotel', 'India', 'Juliett', 'Kilo'], ['Lima', 'Mike', 'November'], []])
+			const want = [
+				[[], [], ['Removed “Taxes” (left empty)', 'Deleted “Reading” (7 tabs)']],
+				[all, [], ['Removed “Taxes” (left empty)']],
+				[['Hotel', 'India', 'Juliett', 'Kilo'], ['Lima', 'Mike', 'November'], []],
+				{s1: ['Hotel', 'India', 'Juliett', 'Kilo'], s2: ['Lima', 'Mike', 'November']},
+			]
+			return {got: [both, first, second, await settle(savedTitles, want[3])], want}
+		})
+		key('undo: a delete and then a move each keep their notice; the older Undo button still works', async () => {
+			await fixture(layout)
+			const p = await openPopup()
+			await ctrlClick(p, savedSel('Hotel'))
+			await withMod(p, 'Delete')
+			await p.waitForSelector('.notice.undo')
+			// every tab of "Taxes" into "Reading": the delete is not written, its notice stays
+			await ctrlClick(p, savedSel('Lima'))
+			await ctrlClick(p, savedSel('Mike'))
+			await ctrlClick(p, savedSel('November'))
+			await drag(p, savedSel('November'), '#session-s1 h3.windowTitle')
+			const notices = await settle(() => undoNotices(p), ['Deleted 1 tab from “Reading”', 'Removed “Taxes” (left empty)'])
+			// Undo on the older notice (the delete): Hotel is back, the move stays
+			await click(p, '.notice.undo .notice-undo')
+			const want = [['Deleted 1 tab from “Reading”', 'Removed “Taxes” (left empty)'],
+				['Hotel', 'India', 'Juliett', 'Kilo', 'Lima', 'Mike', 'November'], ['Removed “Taxes” (left empty)']]
+			return {got: [notices, await settle(() => shownIn(p, '#session-s1'), want[1]), await undoNotices(p)], want}
+		})
 	}
 
 	// Real clicks on a saved window's title (patch sesstitle, a fix to 22): the

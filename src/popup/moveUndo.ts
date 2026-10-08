@@ -12,9 +12,12 @@
 // may have changed the saved windows meanwhile. A moved tab is found again in
 // the window it went to, by its place and address, else by its address alone;
 // one that is no longer there stays gone (a delete is not undone), and a tab
-// whose old window was deleted meanwhile stays where it is. When nothing
-// changed in between, the windows are put back exactly as they were.
-// Pure, unit tested in tests/moveUndo.test.ts.
+// whose old window was deleted meanwhile (or is being deleted) stays where it
+// is. When nothing changed in between, the windows are put back exactly as
+// they were. A moved tab whose own delete is counting down goes back hidden:
+// that delete follows it (PendingDeletes.relocate), so each Undo takes back
+// only what it did, in either order.
+// Pure, unit tested in tests/moveUndo.test.ts and tests/undoStack.test.ts.
 
 import { maybePluralize } from "../helpers/utils.ts";
 import { sameTabUrls } from "./savedUpdated.ts";
@@ -78,7 +81,12 @@ export interface MoveUndoResult<T> {
 // the move (the same tabs in the same order) get the snapshot's tabs and
 // `updated` back (a removed window comes back as it was); the others get
 // their tabs numbered 0, 1, 2… and `updated: now`. Never changes `stored`.
-export function undoMove<T extends UndoableWindow>(stored : Readonly<Record<string, T>>, record : MoveUndo<T>, now : number) : MoveUndoResult<T> | null {
+// `closed`: saved windows that count as deleted although still stored (a
+// delete of the whole window is counting down, ./pendingDelete.ts): a tab
+// whose old window that is stays where it is, as for one deleted for good
+// (it would come back hidden, and that delete would then leave the window).
+export function undoMove<T extends UndoableWindow>(stored : Readonly<Record<string, T>>, record : MoveUndo<T>, now : number, closed : Iterable<string> = []) : MoveUndoResult<T> | null {
+	const shut = new Set(closed);
 	type Tab = T["tabs"][number];
 	const keys = Object.keys(stored).filter((key) => isWindow(stored[key]));
 	const keyOf = new Map(keys.map((key) => [stored[key].id, key]));
@@ -99,6 +107,7 @@ export function undoMove<T extends UndoableWindow>(stored : Readonly<Record<stri
 		if (at < 0) continue;
 		// its old window must be able to take it, or it stays where it is
 		if (!keyOf.has(move.from.sessionId) && !recreate(move.from.sessionId)) continue;
+		if (shut.has(move.from.sessionId)) continue;
 		backs.push({ move, url: old!.tabs[at].url || "", at });
 	}
 
@@ -206,71 +215,108 @@ export function undoneText(count : number, restored : readonly string[]) : { top
 export type OfferTimers = Timers;
 
 export interface UndoOfferOptions {
-	// the offer came or went: render again
+	// an offer came or went: render again
 	onChange() : void;
 	delay : number;
 	timers? : OfferTimers;
 }
 
-// An undo that is offered for a while (the Undo notice), then no more.
-// Nothing is written when it runs out: the change it would undo is already
-// stored. A new offer replaces the old one and restarts the countdown; the
-// mouse over the notice holds it (./countdown.ts), as for a delete.
-export class UndoOffer<V> {
-	private value : V | null = null;
+interface Offer<V> {
+	key : number;
+	value : V;
+	clock : Countdown;
+}
+
+// an offer as the notices draw it
+export interface UndoOfferItem<V> {
+	readonly key : number;
+	readonly value : V;
+	// how often its countdown (re)started: its bar runs again when this changes
+	readonly runs : number;
+}
+
+// Undos offered for a while (one Undo notice each), then no more. Nothing is
+// written when one runs out: the change it would undo is already stored.
+// Each offer has its own countdown, which the mouse over its notice holds
+// (./countdown.ts), as for a delete; a new offer leaves the others alone
+// (the notices stack, ./notices.ts NoticeOrder).
+export class UndoOffers<V> {
+	private list : Offer<V>[] = [];
+	private next = 1;
 	private readonly options : UndoOfferOptions;
 	private readonly timers : OfferTimers;
-	private readonly clock : Countdown;
 
 	constructor(options : UndoOfferOptions) {
 		this.options = options;
 		this.timers = options.timers ?? realTimers;
-		this.clock = new Countdown(this.timers, () => this.clear());
 	}
 
-	// what Undo would take back; null when nothing is offered
+	// the offers, oldest first
+	get items() : UndoOfferItem<V>[] {
+		return this.list.map((o) => ({ key: o.key, value: o.value, runs: o.clock.runs }));
+	}
+
+	// what the newest offer's Undo would take back; null when nothing is offered
 	get current() : V | null {
-		return this.value;
+		return this.offer_()?.value ?? null;
 	}
 
-	// when the offer ends if the countdown runs on (ms, the timers' clock); 0
-	// when nothing is offered. Moves on while the countdown is held.
+	// whether offer `key` still stands
+	has(key : number) : boolean {
+		return this.list.some((o) => o.key === key);
+	}
+
+	// When the newest offer ends if its countdown runs on (ms, the timers'
+	// clock); 0 when nothing is offered. Moves on while the countdown is held.
 	get deadline() : number {
-		return this.value === null ? 0 : this.timers.now() + this.clock.left;
+		const o = this.offer_();
+		return o ? this.timers.now() + o.clock.left : 0;
 	}
 
 	get countdown() : number {
 		return this.options.delay;
 	}
 
-	// how often the countdown was (re)started: the notice's bar runs again
+	// how often the newest offer's countdown was (re)started; 0 without one
 	get runs() : number {
-		return this.clock.runs;
+		return this.offer_()?.clock.runs ?? 0;
 	}
 
-	// the mouse is over the notice (or left it): the countdown waits
-	hold(held : boolean) : void {
-		if (this.value !== null) this.clock.hold(held);
+	// the mouse is over the notice of offer `key` (the newest when left out),
+	// or left it: its countdown waits
+	hold(held : boolean, key? : number) : void {
+		this.offer_(key)?.clock.hold(held);
 	}
 
-	offer(value : V) : void {
-		this.value = value;
-		this.clock.start(this.options.delay);
+	// offers `value`; returns its key
+	offer(value : V) : number {
+		const key = this.next++;
+		const clock = new Countdown(this.timers, () => this.clear(key));
+		this.list.push({ key, value, clock });
+		clock.start(this.options.delay);
+		this.options.onChange();
+		return key;
+	}
+
+	// offer `key` (the newest when left out), which ends now (Undo was clicked)
+	take(key? : number) : V | null {
+		const o = this.offer_(key);
+		if (!o) return null;
+		this.clear(o.key);
+		return o.value;
+	}
+
+	// offer `key` ends (all of them when left out)
+	clear(key? : number) : void {
+		const gone = this.list.filter((o) => key === undefined || o.key === key);
+		if (gone.length === 0) return;
+		for (const o of gone) o.clock.stop();
+		this.list = this.list.filter((o) => !gone.includes(o));
 		this.options.onChange();
 	}
 
-	// the offer, which ends now (Undo was clicked)
-	take() : V | null {
-		const value = this.value;
-		this.clear();
-		return value;
-	}
-
-	// no offer any more
-	clear() : void {
-		this.clock.stop();
-		if (this.value === null) return;
-		this.value = null;
-		this.options.onChange();
+	// offer `key`, or the newest
+	private offer_(key? : number) : Offer<V> | undefined {
+		return key === undefined ? this.list[this.list.length - 1] : this.list.find((o) => o.key === key);
 	}
 }

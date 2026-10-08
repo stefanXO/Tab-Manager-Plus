@@ -4,8 +4,12 @@
 // at once and only removed from storage when the countdown ends (or when the
 // popup is going away: flush). Until then Undo brings it back untouched.
 //
-// Several deletes in a row share one countdown: each new one restarts it, the
-// notice names all of them and Undo restores all of them.
+// Several deletes in a row share one countdown (a batch): each new one
+// restarts it, the notice names all of them and Undo restores all of them.
+// A delete made after another Undo notice came up (a move's, ./moveUndo.ts)
+// starts a batch of its own, with its own notice and countdown, so Ctrl+Z
+// can take the notices back newest first (TabManager). Each batch is
+// written when its own countdown ends.
 //
 // An item is a whole saved window, or (`indexes`) only some of its tabs: the
 // saved tabs that were selected and deleted. Those go by their stored `index`,
@@ -75,16 +79,81 @@ export interface PendingOptions {
 	timers? : Timers;
 }
 
+// The merge of `item` into a batch's list: tabs of a window that is already
+// in it join its item; the whole window wins over some of its tabs (and takes
+// their addresses along: they were in the window the user saw go).
+function join(list : PendingItem[], item : PendingItem) : void {
+	const at = list.findIndex((p) => p.id === item.id);
+	if (at < 0) {
+		list.push(item);
+	} else if (!partial(item)) {
+		const old = list[at];
+		const whole : PendingItem = { ...item };
+		if (partial(old) && item.urls) {
+			if (old.urls) whole.urls = [...item.urls, ...old.urls];
+			else delete whole.urls;
+		}
+		list[at] = whole;
+	} else if (partial(list[at])) {
+		const old = list[at];
+		const merged : PendingItem = { ...old };
+		setGone(merged, [...goneOf(old), ...goneOf(item)]);
+		merged.tabs = merged.indexes!.length;
+		list[at] = merged;
+	}
+}
+
+// Adds `gone` (tabs that came over from another saved window) to the partial
+// item for `id` in `list`, in place, or to a new one made by `make`, which it
+// returns (the caller adds it); nothing when the list holds that whole window
+// (its tabs are hidden with it).
+function joinGone(list : readonly PendingItem[], id : string, gone : Gone[], make : () => PendingItem) : PendingItem | null {
+	const there = list.find((p) => p.id === id);
+	if (there && !partial(there)) return null;
+	const item = there || make();
+	setGone(item, [...(there ? goneOf(there) : []), ...gone]);
+	item.tabs = item.indexes!.length;
+	return there ? null : item;
+}
+
+// One Undo notice's worth of deletes: what it hides and its countdown
+interface Batch {
+	key : number;
+	items : PendingItem[];
+	clock : Countdown;
+}
+
+// a batch as the notices draw it
+export interface PendingBatch {
+	readonly key : number;
+	readonly items : readonly PendingItem[];
+	// how often its countdown (re)started: its bar runs again when this changes
+	readonly runs : number;
+}
+
+// the part of a move of saved tabs (./savedMove.ts SavedTabMove) read here
+export interface TabRelocation {
+	from : { sessionId : string, index : number };
+	to : { sessionId : string, index : number };
+}
+
 export class PendingDeletes {
-	private pending : PendingItem[] = [];
+	// The batches still counting down, oldest first, each with its own Undo
+	// notice and countdown (it ends in a flush of that batch; the mouse over
+	// its notice holds it).
+	private batches : Batch[] = [];
+	private nextKey = 1;
 	// being written right now: still hidden, no longer undoable
 	private committing : PendingItem[] = [];
 	// the ones of `committing` whose write started (claim); until then their
 	// write may wait behind other changes
 	private started = new Set<PendingItem>();
+	// Items split off one whose write waits (a tab of it went to another
+	// saved window, relocate), keyed by the item handed to commit(): its write
+	// takes them along (claim). `rootOf` leads a split-off item to that key.
+	private offspring = new Map<PendingItem, PendingItem[]>();
+	private rootOf = new Map<PendingItem, PendingItem>();
 	private changes = 0;
-	// the countdown: it ends in a flush, and the mouse over the notice holds it
-	private readonly clock : Countdown;
 	private readonly delay : number;
 	private readonly timers : Timers;
 	private readonly options : PendingOptions;
@@ -93,29 +162,40 @@ export class PendingDeletes {
 		this.options = options;
 		this.delay = options.delay ?? UNDO_MS;
 		this.timers = options.timers ?? realTimers;
-		this.clock = new Countdown(this.timers, () => this.flush());
 	}
 
-	// the items Undo would bring back, oldest first
+	// the items Undo would bring back, every batch, oldest first
 	get items() : readonly PendingItem[] {
-		return this.pending;
+		return this.batches.flatMap((b) => b.items);
 	}
 
-	// when the countdown ends if it runs on (ms, the timers' clock); 0 when
-	// nothing is pending. Moves on while the countdown is held.
+	// the batches, oldest first: one Undo notice each
+	get groups() : PendingBatch[] {
+		return this.batches.map((b) => ({ key: b.key, items: b.items, runs: b.clock.runs }));
+	}
+
+	// whether batch `key` is still counting down
+	has(key : number) : boolean {
+		return this.batches.some((b) => b.key === key);
+	}
+
+	// When the newest batch's countdown ends if it runs on (ms, the timers'
+	// clock); 0 when nothing is pending. Moves on while the countdown is held.
 	get deadline() : number {
-		return this.pending.length ? this.timers.now() + this.clock.left : 0;
+		const b = this.batch();
+		return b ? this.timers.now() + b.clock.left : 0;
 	}
 
-	// How often the countdown was (re)started: the notice's bar runs again when
-	// this changes.
+	// How often the newest batch's countdown was (re)started (the notice's
+	// bar runs again when this changes); 0 when nothing is pending.
 	get runs() : number {
-		return this.clock.runs;
+		return this.batch()?.clock.runs ?? 0;
 	}
 
-	// The mouse is over the notice (or left it): the countdown waits.
-	hold(held : boolean) : void {
-		if (this.pending.length) this.clock.hold(held);
+	// The mouse is over the notice of batch `key` (the newest when left out),
+	// or left it: its countdown waits.
+	hold(held : boolean, key? : number) : void {
+		this.batch(key)?.clock.hold(held);
 	}
 
 	get countdown() : number {
@@ -130,43 +210,37 @@ export class PendingDeletes {
 	// everything that must not be shown, the tabs of a window that stays
 	// included: what visibleSessions() takes away
 	hiding() : PendingItem[] {
-		return [...this.pending, ...this.committing];
+		return [...this.items, ...this.committing];
 	}
 
-	// hides `item` and (re)starts the countdown for the whole batch. Tabs of a
-	// window that is already pending join its item; the whole window wins over
-	// some of its tabs (and takes their addresses along: they were in the
-	// window the user saw go).
-	add(item : PendingItem) : void {
-		const at = this.pending.findIndex((p) => p.id === item.id);
-		if (at < 0) {
-			this.pending.push(item);
-		} else if (!partial(item)) {
-			const old = this.pending[at];
-			const whole : PendingItem = { ...item };
-			if (partial(old) && item.urls) {
-				if (old.urls) whole.urls = [...item.urls, ...old.urls];
-				else delete whole.urls;
-			}
-			this.pending[at] = whole;
-		} else if (partial(this.pending[at])) {
-			const old = this.pending[at];
-			const merged : PendingItem = { ...old };
-			setGone(merged, [...goneOf(old), ...goneOf(item)]);
-			merged.tabs = merged.indexes!.length;
-			this.pending[at] = merged;
+	// Hides `item` and (re)starts its batch's countdown. `batch`: the key of
+	// the batch it joins (several deletes in a row share one notice); null: a
+	// batch of its own (a new notice); left out: the newest batch. A batch
+	// that is gone means a new one too. Returns the key of its batch.
+	// Tabs of a window already in that batch join its item; the whole window
+	// wins over some of its tabs (join).
+	add(item : PendingItem, batch? : number | null) : number {
+		let b = batch === null ? undefined : this.batch(batch);
+		if (!b) {
+			const key = this.nextKey++;
+			b = { key, items: [], clock: new Countdown(this.timers, () => this.flush(false, key)) };
+			this.batches.push(b);
 		}
-		this.restart();
+		join(b.items, item);
+		b.clock.start(this.delay);
 		this.changed();
+		return b.key;
 	}
 
-	// brings every pending item back; the ones already being written are gone
-	undo() : PendingItem[] {
-		const items = this.pending;
-		this.clock.stop();
-		this.pending = [];
-		if (items.length) this.changed();
-		return items;
+	// Brings back the items of batch `key` (the newest when left out); the
+	// ones already being written are gone.
+	undo(key? : number) : PendingItem[] {
+		const b = this.batch(key);
+		if (!b) return [];
+		b.clock.stop();
+		this.batches = this.batches.filter((x) => x !== b);
+		this.changed();
+		return b.items;
 	}
 
 	// The tabs of some saved windows were numbered anew (saved tabs moved,
@@ -179,7 +253,7 @@ export class PendingDeletes {
 	// landed is not touched: its tabs are gone, so no move names them.
 	renumber(to : (id : string, index : number) => number) : void {
 		let changed = false;
-		for (const item of [...this.pending, ...this.committing]) {
+		for (const item of this.hiding()) {
 			if (!partial(item)) continue;
 			const before = item.indexes!;
 			setGone(item, goneOf(item).map((g) => ({ ...g, index: to(item.id, g.index) })));
@@ -189,31 +263,96 @@ export class PendingDeletes {
 		if (changed) this.changed();
 	}
 
+	// Saved tabs moved (a move, ./savedMove.ts; the Undo of one,
+	// ./moveUndo.ts): the tabs these items hide follow them. To a new number
+	// in the same saved window, as renumber; into another saved window, to an
+	// item for that window in the same batch, under the same name (the notice
+	// still says what was deleted), so its Undo brings the tab back where it
+	// is now and its write removes it there. A whole window stays as it is: a
+	// tab that leaves it is no longer part of it. Items change in place (see
+	// renumber); a tab of one whose write waits goes to an item written with
+	// it (claim). One whose write started is not touched.
+	relocate(moves : readonly TabRelocation[]) : void {
+		if (moves.length === 0) return;
+		const dest = new Map(moves.map((m) => [JSON.stringify([m.from.sessionId, m.from.index]), m.to]));
+		// first every item's own tabs, by the numbers before the moves; the
+		// ones going to another window are handed on afterwards, so none is
+		// moved twice
+		const away : { item : PendingItem, id : string, gone : Gone[] }[] = [];
+		let changed = false;
+		for (const item of this.hiding()) {
+			if (!partial(item) || this.started.has(item)) continue;
+			const stay : Gone[] = [];
+			const leaving = new Map<string, Gone[]>();
+			for (const g of goneOf(item)) {
+				const to = dest.get(JSON.stringify([item.id, g.index]));
+				if (!to) stay.push(g);
+				else if (to.sessionId === item.id) stay.push({ ...g, index: to.index });
+				else leaving.set(to.sessionId, [...(leaving.get(to.sessionId) || []), { ...g, index: to.index }]);
+			}
+			const before = item.indexes!;
+			setGone(item, stay);
+			item.tabs = item.indexes!.length;
+			if (leaving.size || item.indexes!.length !== before.length || item.indexes!.some((index, i) => index !== before[i])) changed = true;
+			for (const [id, gone] of leaving) away.push({ item, id, gone });
+		}
+		for (const { item, id, gone } of away) {
+			const make = () : PendingItem => ({ id, name: item.name, tabs: 0, indexes: [] });
+			const b = this.batches.find((x) => x.items.includes(item));
+			if (b) {
+				const fresh = joinGone(b.items, id, gone, make);
+				if (fresh) b.items.push(fresh);
+				continue;
+			}
+			// being written, its write still waiting
+			const root = this.rootOf.get(item) || item;
+			const kin = this.offspring.get(root) || [];
+			const fresh = joinGone(kin, id, gone, make);
+			if (!fresh) continue;
+			this.offspring.set(root, [...kin, fresh]);
+			this.rootOf.set(fresh, root);
+			this.committing.push(fresh);
+		}
+		// an item of a batch left without a tab goes from it (one being
+		// written stays, empty: its write may still read it)
+		for (const b of this.batches) b.items = b.items.filter((item) => !partial(item) || item.indexes!.length > 0);
+		if (changed) this.changed();
+	}
+
 	// The write of `items` (as handed to commit()) starts: the ones it still
-	// has to remove, from now on marked as written. A write queued behind other
-	// changes calls this when it runs, so that what the closing flush already
-	// wrote is not removed twice (found again by address, a second removal
-	// could take another tab).
+	// has to remove (with the items split off them, relocate), from now on
+	// marked as written. A write queued behind other changes calls this when
+	// it runs, so that what the closing flush already wrote is not removed
+	// twice (found again by address, a second removal could take another tab).
 	claim(items : readonly PendingItem[]) : PendingItem[] {
-		const mine = items.filter((item) => this.committing.includes(item) && !this.started.has(item));
+		const all = items.flatMap((item) => [item, ...(this.offspring.get(item) || [])]);
+		const mine = all.filter((item) => this.committing.includes(item) && !this.started.has(item));
 		for (const item of mine) this.started.add(item);
 		return mine;
 	}
 
-	// Writes the pending deletes now (the countdown ran out, or the popup
-	// closes). Closing (`sync`), the ones whose queued write has not started
-	// yet go along: that write would never run.
-	flush(sync = false) : void {
-		const waiting = sync ? this.committing.filter((c) => !this.started.has(c)) : [];
-		if (!this.pending.length && !waiting.length) return;
-		const fresh = this.pending;
-		const items = [...waiting, ...fresh];
-		this.clock.stop();
-		this.pending = [];
+	// Writes the pending deletes now: batch `key` (its countdown ran out, its
+	// notice was closed, or it made room for a newer notice), or all of them
+	// (the popup closes, an import starts). Closing (`sync`), the ones whose
+	// queued write has not started yet go along: that write would never run.
+	flush(sync = false, key? : number) : void {
+		const chosen = key === undefined ? this.batches : this.batches.filter((b) => b.key === key);
+		// (a split-off item goes along with the one it came from: claim)
+		const waiting = sync ? this.committing.filter((c) => !this.started.has(c) && !this.rootOf.has(c)) : [];
+		const fresh = chosen.flatMap((b) => b.items);
+		if (!fresh.length && !waiting.length) return;
+		for (const b of chosen) b.clock.stop();
+		this.batches = this.batches.filter((b) => !chosen.includes(b));
 		this.committing.push(...fresh);
+		const items = [...waiting, ...fresh];
 		const done = () => {
-			this.committing = this.committing.filter((c) => !items.includes(c));
-			for (const item of items) this.started.delete(item);
+			const ours = new Set(items.flatMap((item) => [item, ...(this.offspring.get(item) || [])]));
+			this.committing = this.committing.filter((c) => !ours.has(c));
+			for (const item of ours) {
+				this.started.delete(item);
+				this.offspring.delete(item);
+				this.rootOf.delete(item);
+			}
 			this.changed();
 		};
 		let result : Promise<unknown> | void;
@@ -230,6 +369,11 @@ export class PendingDeletes {
 		this.changed();
 	}
 
+	// batch `key`, or the newest
+	private batch(key? : number) : Batch | undefined {
+		return key === undefined ? this.batches[this.batches.length - 1] : this.batches.find((b) => b.key === key);
+	}
+
 	private changed() {
 		this.changes++;
 		this.options.onChange();
@@ -242,10 +386,6 @@ export class PendingDeletes {
 		} catch (e) {
 			console.error(e);
 		}
-	}
-
-	private restart() {
-		this.clock.start(this.delay);
 	}
 }
 
@@ -310,7 +450,11 @@ function sameWindow(left : readonly SavedTabLike[], item : PendingItem) : boolea
 // What is stored once the items are removed: a whole window goes (sameWindow),
 // a partial one loses its tabs (resolveGone; and goes too when none is left).
 // The tabs that stay keep their `index`. Never changes `values`.
-export function withoutItems<T extends HasTabs>(values : Record<string, T>, items : readonly PendingItem[]) : Record<string, T> {
+// `keep`: other deletes still pending (another batch, written later). The
+// tabs their partial items take stay when a whole window of `items` goes:
+// the window keeps just those (hidden by them), so their own Undo can still
+// bring them back, and their own write removes them (the window with them).
+export function withoutItems<T extends HasTabs>(values : Record<string, T>, items : readonly PendingItem[], keep : readonly PendingItem[] = []) : Record<string, T> {
 	const out : Record<string, T> = {};
 	for (const key of Object.keys(values)) {
 		const mine = items.filter((item) => item.id === key);
@@ -320,7 +464,13 @@ export function withoutItems<T extends HasTabs>(values : Record<string, T>, item
 		}
 		const gone = resolveGone(values[key].tabs, mine);
 		const tabs = gone.size ? values[key].tabs.filter((tab) => !gone.has(tab)) : values[key].tabs;
-		if (mine.some((item) => !partial(item) && sameWindow(tabs, item))) continue;
+		const others = keep.filter((item) => item.id === key && partial(item) && !items.includes(item));
+		const kept = others.length ? resolveGone(tabs, others) : new Set<SavedTabLike>();
+		const left = kept.size ? tabs.filter((tab) => !kept.has(tab)) : tabs;
+		if (mine.some((item) => !partial(item) && sameWindow(left, item))) {
+			if (kept.size) out[key] = { ...values[key], tabs: tabs.filter((tab) => kept.has(tab)) };
+			continue;
+		}
 		if (gone.size === 0) out[key] = values[key];
 		else if (tabs.length > 0) out[key] = { ...values[key], tabs };
 	}

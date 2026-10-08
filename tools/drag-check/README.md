@@ -7,14 +7,14 @@ runs the drags through Chrome itself instead, against the built extension.
 
 ```sh
 node build.mjs                          # build/chrome
-node tools/drag-check/check.mjs         # every check (105), ~4 min
+node tools/drag-check/check.mjs         # every check (113), ~4 min
 node tools/drag-check/check.mjs --only "saved tab -> open"
 ```
 
 It exits 1 when any check fails (and 2 when `build/chrome` is missing). Run it in the gate
 of every step that touches drag code.
 
-Thirty-four more checks (`--only keys`, own tab, blocks and vertical) press keys with the browser's own
+Forty-two more checks (`--only keys`, own tab, blocks and vertical) press keys with the browser's own
 key events (`page.keyboard`) after a ctrl+click: Ctrl+Delete (Cmd on a Mac) deletes selected saved tabs
 from their saved windows, Ctrl+Backspace closes selected open tabs, plain Delete and Backspace close and
 delete nothing (the search box takes the key, as in 6.x), nothing closes while the search box is focused
@@ -24,7 +24,12 @@ Ctrl or Cmd alone leaves the focus where it is. Ctrl+Delete also closes the sele
 a right-click select (text in the box, focus moved out by the popup) and after an arrow-key select
 started in the empty, focused search box. Enter opens the selected saved tabs in one new window in the
 shown order, Enter with open tabs still moves them; a double press and a held Enter still open one
-window; Enter after an `s:` search (which selects no open tab) opens no window.
+window; Enter after an `s:` search (which selects no open tab) opens no window. Eight of them
+(`--only undo`) press Ctrl+Z (Cmd+Z on a Mac): with an Undo notice up and text in the focused search box
+it takes back the delete and leaves the text; with no Undo notice it is the text's own undo; with two
+stacked Undo notices (a move that empties "Taxes", then "Reading" deleted) it takes back the delete
+first, then the move, and storage is as before; a delete followed by an emptying move keeps both
+notices, and the older notice's Undo button still takes back its delete.
 
 Sixteen more checks (`--only "drag image"`, own tab) cover the drag image of a several-tab drag in every layout
 (blocks, blocks-big, horizontal, vertical), light and dark, for three saved and three open tabs: the stack is

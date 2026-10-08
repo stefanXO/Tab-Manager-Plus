@@ -285,6 +285,18 @@ const STATES = [
 	{name: 'notice-error-rename', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {quota: true, overlay: 'session-colors', typeName: 'Q3 conference notes', freezeClock: true, barAt: 0.1}},
 	{name: 'notice-undo-key', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {
 		clicks: [{sel: '#session-s1 .icon.tabaction.delete'}, {keydown: 'z', ctrl: true}], scrollEnd: true}},
+	// two Undo notices stacked: a move that empties "Tax 2029" (its tabs go to
+	// "Conference reading"), then one saved tab deleted. The newest (the
+	// delete) sits at the bottom with the key caps; Ctrl+Z (`-key`) undoes
+	// it and leaves the move's notice. Bars held at the start. dpr 1
+	{name: 'notice-stack', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {freshSessions: true,
+		clicks: [{key: 27}, {sel: '#sessiontab_s2_0', ctrl: true}, {sel: '#sessiontab_s2_2', shift: true, button: 2},
+			{drag: '#sessiontab_s2_2', over: '#session-s1 h3.windowTitle', drop: true}, {key: 27},
+			{sel: '#sessiontab_s1_0', ctrl: true}, {sel: '.icon.windowaction.trash'}], freezeClock: true, scrollEnd: true}},
+	{name: 'notice-stack-key', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {freshSessions: true,
+		clicks: [{key: 27}, {sel: '#sessiontab_s2_0', ctrl: true}, {sel: '#sessiontab_s2_2', shift: true, button: 2},
+			{drag: '#sessiontab_s2_2', over: '#session-s1 h3.windowTitle', drop: true}, {key: 27},
+			{sel: '#sessiontab_s1_0', ctrl: true}, {sel: '.icon.windowaction.trash'}, {keydown: 'z', ctrl: true}], freezeClock: true, scrollEnd: true}},
 	// saving selected open tabs as a saved window (src/helpers/sessions.ts):
 	// Ctrl+click three tabs of "Work" and one of "Life", so the bottom bar shows
 	// its "Save selected tabs" button lit. dpr 1, blocks + List, 800x600 and 380x900

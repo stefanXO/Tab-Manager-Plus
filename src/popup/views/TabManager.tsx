@@ -23,7 +23,7 @@ import {restoreDisplays} from "../restoreDisplays";
 import {applyTheme} from "@helpers/theme";
 import {StatsLayer, StatsSource} from "./StatsLayer";
 import {Notice} from "./Notice";
-import {NoticeBoard, isMacPlatform, isUndoKey, undoKeyCaps, undoKeyForField, refusedText, openFailedText} from "../notices";
+import {NoticeBoard, NoticeOrder, NoticeRef, isMacPlatform, isUndoKey, undoKeyCaps, undoKeyForField, refusedText, openFailedText} from "../notices";
 import {PendingDeletes, PendingItem, withoutItems, visibleSessions, noticeText, goneUrls, UNDO_MS} from "../pendingDelete";
 import {savedDeleteItems} from "../savedDelete";
 import {editSession, shownSavedName, SessionEdit} from "../sessionEdit";
@@ -31,11 +31,11 @@ import {searchSaved, searchSummary, SavedSearch, SummaryKind} from "../searchSav
 import {draggedSaved, savedTabsToOpen, openedText} from "../savedDrag";
 import {moveSession, reorderShown} from "../sessionOrder";
 import {tidyStored, listSessions, addSessions, importSessions} from "../sessionStore";
-import {moveSavedTabs, remapSavedKeys, renumberedIndex, movedText, SavedTabMove, SavedDropTarget} from "../savedMove";
+import {moveSavedTabs, remapSavedKeys, movedText, SavedTabMove, SavedDropTarget} from "../savedMove";
 import {addOpenTabs, addedText, draggedOpen, SavedAddResult} from "../savedAdd";
 import {SavedWrites, SavedChange} from "../savedWrites";
 import {stampUpdated} from "../savedUpdated";
-import {moveUndoRecord, undoMove, emptiedText, undoneText, UndoOffer, MoveUndo} from "../moveUndo";
+import {moveUndoRecord, undoMove, emptiedText, undoneText, UndoOffers, MoveUndo} from "../moveUndo";
 import type {SavedTabRef} from "../sessionKeys";
 import {stackTiles, stackKind, encodeSaved, encodeIds, TabDrag} from "../dragPayload";
 import {setStackImage, StackTile} from "../dragImage";
@@ -80,34 +80,43 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	});
 	// componentWillUnmount ran: the deletes it writes change no state
 	private unmounted = false;
-	// saved windows deleted and not yet removed from storage (the Undo notice)
+	// saved windows deleted and not yet removed from storage (an Undo notice
+	// per batch)
 	private readonly pending = new PendingDeletes({
 		commit: (items, sync) => this.commitDeletes(items, sync),
 		onChange: () => { if (!this.unmounted) this.forceUpdate(); },
 		onError: (err) => this.board.error(refusedText("delete the saved windows", err))
 	});
-	// the error and info notices (the Undo notice is `pending`'s)
+	// the error and info notices (the Undo notices are `pending`'s and
+	// `moveOffers`')
 	private readonly board = new NoticeBoard({
-		onChange: () => { if (!this.unmounted) this.forceUpdate(); }
+		onChange: () => { if (!this.unmounted) this.forceUpdate(); },
+		onShown: (id) => this.noticeShown({ source: "board", key: id })
 	});
-	// Ctrl+Z (Cmd+Z on a Mac) while an Undo notice is up
-	private readonly mac = isMacPlatform((navigator as any).userAgentData?.platform || navigator.platform);
-	private readonly onUndoKey = (e : KeyboardEvent) => {
-		if (!(this.pending.items.length || this.moveUndo.current) || !isUndoKey(e, this.mac)) return;
-		const el = e.target instanceof HTMLElement ? e.target : null;
-		if (!undoKeyForField(el && { tag: el.tagName, type: (el as HTMLInputElement).type, value: (el as HTMLInputElement).value, contentEditable: el.isContentEditable })) return;
-		e.preventDefault();
-		e.stopPropagation();
-		// the notice shown: a delete's Undo, else a move's (one at a time)
-		if (this.pending.items.length) this.undoDelete();
-		else this.undoMove();
-	};
-	// a move that left a saved window without a tab, offered to be taken
-	// back for a while (the Undo notice; ../moveUndo.ts)
-	private readonly moveUndo = new UndoOffer<{ record : MoveUndo<ISavedSession>, text : string }>({
+	// moves that left a saved window without a tab, offered to be taken
+	// back for a while (an Undo notice each; ../moveUndo.ts)
+	private readonly moveOffers = new UndoOffers<{ record : MoveUndo<ISavedSession>, text : string }>({
 		delay: UNDO_MS,
 		onChange: () => { if (!this.unmounted) this.forceUpdate(); }
 	});
+	// the order all those notices came up in: the Undo notices stack, Ctrl+Z
+	// takes back the newest first, and a fourth notice makes the oldest go
+	// (../notices.ts)
+	private readonly order = new NoticeOrder((ref) => this.noticeAlive(ref));
+	// Ctrl+Z (Cmd+Z on a Mac) while an Undo notice is up: the newest one.
+	// Also in the search box with text in it (the notice wins there); in any
+	// other text field with text it stays the field's own undo.
+	private readonly mac = isMacPlatform((navigator as any).userAgentData?.platform || navigator.platform);
+	private readonly onUndoKey = (e : KeyboardEvent) => {
+		if (!isUndoKey(e, this.mac)) return;
+		const newest = this.undoNotices().pop();
+		if (!newest) return;
+		const el = e.target instanceof HTMLElement ? e.target : null;
+		if (!undoKeyForField(el && { tag: el.tagName, type: (el as HTMLInputElement).type, value: (el as HTMLInputElement).value, contentEditable: el.isContentEditable, search: el === this.searchBoxRef.current })) return;
+		e.preventDefault();
+		e.stopPropagation();
+		this.undoNotice(newest);
+	};
 	// leaving the popup writes the deletes that are still counting down
 	private readonly flushPending = () => this.pending.flush(true);
 	private readonly flushPendingHidden = () => { if (document.visibilityState === "hidden") this.pending.flush(true); };
@@ -315,7 +324,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		this.unmounted = true;
 		this.pending.flush(true);
 		this.board.closeAll();
-		this.moveUndo.clear();
+		this.moveOffers.clear();
 	}
 
 	syncMasonry() {
@@ -779,28 +788,19 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 						onClose={() => this.board.close(n.id)}
 						onHold={(held) => this.board.hold(n.id, held)}
 					/>)}
-					{this.pending.items.length > 0 && <Notice
-						key="undo"
+					{/* oldest first, the newest at the bottom: Ctrl+Z is its
+					   Undo, so only it shows the key caps */}
+					{this.undoNotices().map((u, at, all) => <Notice
+						key={"undo-" + u.source + "-" + u.key}
 						kind="undo"
-						text={noticeText(this.pending.items)}
-						countdown={this.pending.countdown}
-						run={this.pending.runs}
-						onUndo={this.undoDelete}
-						keys={undoKeyCaps(this.mac)}
-						onClose={this.commitNow}
-						onHold={(held) => this.pending.hold(held)}
-					/>}
-					{this.pending.items.length === 0 && this.moveUndo.current && <Notice
-						key="undo-move"
-						kind="undo"
-						text={this.moveUndo.current.text}
-						countdown={this.moveUndo.countdown}
-						run={this.moveUndo.runs}
-						onUndo={this.undoMove}
-						keys={undoKeyCaps(this.mac)}
-						onClose={this.dropMoveUndo}
-						onHold={(held) => this.moveUndo.hold(held)}
-					/>}
+						text={u.text}
+						countdown={UNDO_MS}
+						run={u.runs}
+						onUndo={() => this.undoNotice(u)}
+						keys={at === all.length - 1 ? undoKeyCaps(this.mac) : undefined}
+						onClose={() => this.endNotice(u)}
+						onHold={(held) => this.holdNotice(u, held)}
+					/>)}
 				</div>}
 				<StatsLayer source={this.statsSource} version={this.listVersion} />
 			</div>
@@ -952,9 +952,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		// the write leaves it alone if it holds others by then (imported over,
 		// added to elsewhere)
 		const all = this.state.sessions.find((s) => s.id === session.id) || session;
-		this.pending.add({id: session.id, name: this.savedName(all), tabs: session.tabs.length, urls: goneUrls(all.tabs)});
-		// one notice: the delete's Undo replaces a move's
-		this.moveUndo.clear();
+		const batch = this.pending.add({id: session.id, name: this.savedName(all), tabs: session.tabs.length, urls: goneUrls(all.tabs)}, this.joinableBatch());
+		this.noticeShown({ source: "delete", key: batch });
 		// its selected tabs go with it
 		dropMissingSaved(this.state.selection, this.visibleSessions());
 		this.setState(this.selectionText());
@@ -965,8 +964,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	deleteSavedTabs() {
 		const items = savedDeleteItems(this.state.selection, this.visibleSessions().map((s) => ({...s, name: this.savedName(s)})));
 		if (items.length === 0) return;
-		for (const item of items) this.pending.add(item);
-		this.moveUndo.clear();
+		let batch = this.joinableBatch();
+		for (const item of items) batch = this.pending.add(item, batch);
+		this.noticeShown({ source: "delete", key: batch! });
 		// everything selected was just deleted
 		this.clearSelection();
 		this.setState(this.selectionText());
@@ -1162,23 +1162,33 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		if (undo) this.offerMoveUndo(undo);
 	}
 	// Offers to take back a move that removed saved windows (left without a
-	// tab), with the Undo notice. One notice at a time: the deletes still
-	// counting down are written now, as their Undo goes.
+	// tab), with an Undo notice of its own: the deletes still counting down
+	// keep theirs (the notices stack).
 	private offerMoveUndo(record : MoveUndo<ISavedSession>) {
-		this.pending.flush();
 		const names = record.emptied.map((id) => {
 			const s = record.before.find((x) => x.id === id);
 			return s ? this.savedName(s) : "";
 		});
-		this.moveUndo.offer({ record, text: emptiedText(names) });
+		const key = this.moveOffers.offer({ record, text: emptiedText(names) });
+		this.noticeShown({ source: "move", key });
 	}
-	// Undo on that notice: the moved tabs go back and the removed saved
-	// windows come back, from the snapshot, on what is stored by now
-	// (../moveUndo.ts); written like any other change.
-	undoMove = async () => {
-		const offer = this.moveUndo.take();
+	// Undo on that notice (`key`, the newest when left out): the moved tabs
+	// go back and the removed saved windows come back, from the snapshot, on
+	// what is stored by then (../moveUndo.ts); written like any other change.
+	// A moved tab whose delete counts down goes back with it hidden (the
+	// delete follows it, renumberingChange); one whose old window is being
+	// deleted whole stays where it is.
+	async undoMove(key? : number) {
+		const offer = this.moveOffers.take(key);
 		if (!offer) return;
-		const done = await this.renumberingChange("undo the move", (stored) => undoMove(stored, offer.record, Date.now()));
+		let nothing = false;
+		const done = await this.renumberingChange("undo the move", (stored) => {
+			const closed = this.pending.hiding().filter((item) => item.indexes === undefined).map((item) => item.id);
+			const result = undoMove(stored, offer.record, Date.now(), closed);
+			nothing = !result;
+			return result;
+		});
+		if (nothing) this.board.info("Nothing to move back: the moved tabs were deleted or moved again since");
 		if (!done) return;
 		const names = done.restored.map((id) => this.storedName(done.stored, id));
 		this.setState({ ...undoneText(done.count, names) });
@@ -1216,7 +1226,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				if (!result) return null;
 				done = result;
 				this.renumbered = result.moves;
-				this.pending.renumber(renumberedIndex(result.moves));
+				// (an Undo of a move takes hidden tabs to another window too)
+				this.pending.relocate(result.moves);
 				return result.stored;
 			}, () => {
 				// Refused: the old numbers are shown again. The selection and
@@ -1225,7 +1236,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				// delete the tabs that hold those numbers then.
 				const back = done ? done.moves.map((m) => ({ from: m.to, to: m.from })) : [];
 				this.renumbered = back;
-				this.pending.renumber(renumberedIndex(back));
+				this.pending.relocate(back);
 			});
 		} catch (e) {
 			console.error(e);
@@ -1234,26 +1245,62 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		}
 		return done;
 	}
-	undoDelete = () => {
-		this.pending.undo();
+	// Undo of the delete batch `key` (the newest when left out)
+	undoDelete(key? : number) {
+		this.pending.undo(key);
 	}
-	// the close button of the Undo notice: the delete stands, written now
-	private readonly commitNow = () => {
-		this.pending.flush();
+	// The Undo notices on screen, oldest first: a batch of deletes each, a
+	// move's offer each, in the order they came up (../notices.ts NoticeOrder)
+	private undoNotices() : (NoticeRef & { text : string, runs : number })[] {
+		return this.order.sort([
+			...this.pending.groups.map((g) => ({ source: "delete" as const, key: g.key, text: noticeText(g.items), runs: g.runs })),
+			...this.moveOffers.items.map((o) => ({ source: "move" as const, key: o.key, text: o.value.text, runs: o.runs })),
+		]);
+	}
+	// The newest Undo notice, when it is a batch of deletes: a delete made
+	// now joins it (one notice, one Undo for both); otherwise null, a batch
+	// of its own, so that Ctrl+Z still takes back the newest first.
+	private joinableBatch() : number | null {
+		const newest = this.undoNotices().pop();
+		return newest && newest.source === "delete" ? newest.key : null;
+	}
+	private noticeAlive(ref : NoticeRef) : boolean {
+		if (ref.source === "delete") return this.pending.has(ref.key);
+		if (ref.source === "move") return this.moveOffers.has(ref.key);
+		return this.board.has(ref.key);
+	}
+	// A notice came up (or started over): it is the newest; a fourth one
+	// makes the oldest go, as its close button would
+	private noticeShown(ref : NoticeRef) {
+		for (const old of this.order.push(ref)) this.endNotice(old);
+	}
+	// The Undo of an Undo notice (its button, or Ctrl+Z on the newest)
+	private undoNotice(ref : NoticeRef) {
+		if (ref.source === "delete") this.undoDelete(ref.key);
+		else if (ref.source === "move") void this.undoMove(ref.key);
+	}
+	// A notice's close button, or it made room for a newer one: a delete
+	// stands and is written now, a move stands (it is stored), an error or
+	// info goes
+	private endNotice(ref : NoticeRef) {
+		if (ref.source === "delete") this.pending.flush(false, ref.key);
+		else if (ref.source === "move") this.moveOffers.clear(ref.key);
+		else this.board.close(ref.key);
+	}
+	private holdNotice(ref : NoticeRef, held : boolean) {
+		if (ref.source === "delete") this.pending.hold(held, ref.key);
+		else if (ref.source === "move") this.moveOffers.hold(held, ref.key);
+		else this.board.hold(ref.key, held);
 	}
 	private noticeCount() : number {
-		return this.board.items.length + (this.pending.items.length || this.moveUndo.current ? 1 : 0);
-	}
-	// the close button of a move's Undo notice: the move stands (it is stored)
-	private readonly dropMoveUndo = () => {
-		this.moveUndo.clear();
+		return this.board.items.length + this.pending.groups.length + this.moveOffers.items.length;
 	}
 	// Starting an import: the notices go, what is pending is written first (the
 	// import's own write is queued after it, savedWrites.ts)
 	closeNotices() {
 		this.pending.flush();
 		this.board.closeAll();
-		this.moveUndo.clear();
+		this.moveOffers.clear();
 	}
 	// Removes saved windows (or some of their tabs) from storage. The state
 	// changes before the promise resolves (the ids stop being hidden right
@@ -1263,8 +1310,11 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	async commitDeletes(items : PendingItem[], sync : boolean) {
 		const change = (stored : Record<string, ISavedSession>) => {
 			const mine = this.pending.claim(items);
+			// the tabs another batch still hides stay for its own Undo, also
+			// when this one takes their whole window (../pendingDelete.ts)
+			const others = this.pending.hiding().filter((item) => !mine.includes(item));
 			// saved windows that lose some tabs were last saved now
-			return mine.length ? stampUpdated(stored, withoutItems(stored, mine), Date.now()) : null;
+			return mine.length ? stampUpdated(stored, withoutItems(stored, mine, others), Date.now()) : null;
 		};
 		// The popup is closing: the write starts now, from the copy, not after
 		// the changes queued before it (one on its way already went from the
