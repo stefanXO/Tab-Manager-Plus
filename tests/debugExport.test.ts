@@ -81,3 +81,16 @@ test("buildEverythingExport adds the saved windows and stays readable as a sessi
 	assert.equal(out.windows.length, 2);
 	assert.deepEqual(readSessionsFile(out), sessions);
 });
+
+test("no user:password@ in the export, open or saved, and the inputs keep theirs", () => {
+	const open = [{ id: 1, tabs: [{ id: 2, title: "Login", url: "http://user:secret-pass@cred.example.com/login", pendingUrl: "https://u:pw2@cred.example.com/next" }] }];
+	const sessions = [{ id: "s", tabs: [{ url: "https://me:saved-pass@cred.example.com/", title: "https://me:saved-pass@cred.example.com/", favIconUrl: "https://me:saved-pass@cred.example.com/f.ico" }] }];
+	const out = buildEverythingExport(open, settings, meta, sessions);
+	const json = JSON.stringify(out);
+	for (const leak of ["secret-pass", "pw2", "saved-pass", "user:", "me:"]) assert.ok(!json.includes(leak), leak);
+	assert.equal(out.windows[0].tabs[0].url, "http://cred.example.com/login");
+	assert.equal(out.windows[0].tabs[0].pendingUrl, "https://cred.example.com/next");
+	assert.deepEqual(readSessionsFile(out), [{ id: "s", tabs: [{ url: "https://cred.example.com/", title: "https://cred.example.com/", favIconUrl: "https://cred.example.com/f.ico" }] }]);
+	assert.equal(sessions[0].tabs[0].url, "https://me:saved-pass@cred.example.com/");
+	assert.equal(open[0].tabs[0].url, "http://user:secret-pass@cred.example.com/login");
+});

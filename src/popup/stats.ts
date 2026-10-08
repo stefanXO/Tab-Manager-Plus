@@ -9,6 +9,7 @@
 import { timeAgo, maybePluralize } from "../helpers/utils.ts";
 import { dupKey } from "./duplicates.ts";
 import { savedTimes } from "./savedUpdated.ts";
+import { stripUserinfo } from "./safeUrl.ts";
 
 // the tabs.Tab fields the card reads
 export interface StatsTab {
@@ -183,7 +184,7 @@ export function tabStats(tab : StatsTab, ctx : TabStatsContext) : StatsCard {
 	const all = [...ctx.allTabs];
 	if (tab.openerTabId !== undefined && tab.openerTabId !== tab.id) {
 		const opener = all.find((t) => t.id === tab.openerTabId);
-		if (opener) add("opener", "opened from " + (opener.title || opener.url || "another tab"), "opener");
+		if (opener) add("opener", "opened from " + (stripUserinfo(opener.title || opener.url) || "another tab"), "opener");
 	}
 
 	const key = dupKey(tab);
@@ -206,7 +207,7 @@ export function tabStats(tab : StatsTab, ctx : TabStatsContext) : StatsCard {
 		add("zoom", "zoom " + Math.round(ctx.zoom * 100) + " %", "zoom");
 	}
 
-	return { title: tab.title || tab.url || "Untitled tab", lines };
+	return { title: stripUserinfo(tab.title || tab.url) || "Untitled tab", lines };
 }
 
 // The names of the saved windows that hold a tab with this url, each once, in
@@ -256,7 +257,7 @@ export function savedTabStats(tab : StatsTab, ctx : SavedTabStatsContext) : Stat
 	const open = openTabsWith(tab.url, ctx.allTabs, ctx.openWindowName);
 	if (open.count) add("open", "open now" + (open.names.length ? " in " + open.names.join(", ") : ""), "window");
 
-	return { title: tab.title || tab.url || "Untitled tab", lines };
+	return { title: stripUserinfo(tab.title || tab.url) || "Untitled tab", lines };
 }
 
 function hostOf(url : string | undefined) : string {

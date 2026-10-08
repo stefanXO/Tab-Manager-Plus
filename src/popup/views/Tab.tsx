@@ -8,6 +8,7 @@ import {ManagerContext, ITabManagerActions} from '../context';
 import {faviconTone} from '@helpers/favicon';
 import {tabFreshness} from "../freshness";
 import {titleHits} from "../search";
+import {stripUserinfo} from "../safeUrl";
 import {sendAndWait} from "../messaging";
 import {isSavedWindowDrag} from "../sessionOrder";
 import {SAVED_TAB_DRAG, isSavedTabDrag} from "../savedDrag";
@@ -109,7 +110,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 						className={"tab-fresh fresh-" + fresh.level}
 						role="img"
 						aria-label={fresh.label}
-						data-hover={fresh.label + "\n" + (this.props.tab.title || "")}
+						data-hover={fresh.label + "\n" + stripUserinfo(this.props.tab.title)}
 					>
 						<rect /><rect /><rect /><rect />
 					</svg>
@@ -147,7 +148,8 @@ export class Tab extends React.Component<ITab, ITabState> {
 			id: this.props.id,
 			onClick: this.click,
 			onMouseDown: this.onMouseDown,
-			"data-hover": (this.props.tab.title || "") + "\n" + (this.props.tab.url || this.props.tab.pendingUrl || ""),
+			// the header shows both lines: no "user:password@" (../safeUrl.ts)
+			"data-hover": stripUserinfo(this.props.tab.title) + "\n" + stripUserinfo(this.props.tab.url || this.props.tab.pendingUrl),
 			onMouseEnter: this.onHover,
 			onMouseLeave: this.onHoverOut
 		};
@@ -181,7 +183,8 @@ export class Tab extends React.Component<ITab, ITabState> {
 	}
 	// the title, with the parts the search matched in bold
 	title() : React.ReactNode {
-		const title = this.props.tab.title || "";
+		// a saved tab with no title of its own keeps its url as the title
+		const title = stripUserinfo(this.props.tab.title);
 		const hits = titleHits(title, this.props.query, !this.props.draggable && !!this.props.onOpen);
 		if (hits.length === 0) return title;
 		const parts : React.ReactNode[] = [];

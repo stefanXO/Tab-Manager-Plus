@@ -147,6 +147,7 @@ Smaller fixes
 - The popup warns once, with a red notice, when the extension was rebuilt but not reloaded, and tells you where to reload it (chrome://extensions, or about:debugging in Firefox). It only warns when the extension's background code really changed
 - The header icons (Donate, Rate, theme and options) now stay visible in a narrow popup and in the sidebar. At 450 px wide or less they used to be hidden, which left no way into the options
 - On the changelog page, a section whose lines are only for the other browser no longer shows as an empty heading
+- A user name and password in a web address (user:password@) no longer show in the popup or in the debug export file
 
 6.0.0 (2024-10-01)
 =====

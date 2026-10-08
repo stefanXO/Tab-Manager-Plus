@@ -3,9 +3,12 @@
 // The debug export ("everything"): a JSON snapshot of the windows, tabs, saved
 // windows and settings, to
 // attach to a bug report. Pure (no browser APIs), so it is unit tested in
-// tests/debugExport.test.ts. Only the fields listed here are copied.
+// tests/debugExport.test.ts. Only the fields listed here are copied. Urls
+// lose their "user:password@" part (./safeUrl.ts): the file goes to bug
+// reports.
 
 import { windowName } from "./windowName.ts";
+import { stripUserinfo, stripUserinfoDeep } from "./safeUrl.ts";
 
 interface ExportTabSource {
 	id?: number;
@@ -92,9 +95,9 @@ export function buildDebugExport(windows: ExportWindowSource[], settings: Record
 			const tabs = (w.tabs || []).map((t, i): DebugTab => ({
 				id: t.id ?? -1,
 				index: t.index ?? i,
-				title: t.title || "",
-				url: t.url || "",
-				pendingUrl: t.pendingUrl || "",
+				title: stripUserinfo(t.title),
+				url: stripUserinfo(t.url),
+				pendingUrl: stripUserinfo(t.pendingUrl),
 				active: !!t.active,
 				pinned: !!t.pinned,
 				audible: !!t.audible,
@@ -117,7 +120,8 @@ export function buildDebugExport(windows: ExportWindowSource[], settings: Record
 }
 
 // The debug export is the session export plus the debug keys: the sessions
-// file reader finds `sessions` in it.
+// file reader finds `sessions` in it. Their urls lose the userinfo too, so a
+// restore from this file opens them without it.
 export function buildEverythingExport(windows: ExportWindowSource[], settings: Record<string, unknown>, meta: DebugMeta, sessions: unknown[]): DebugExport {
-	return { ...buildDebugExport(windows, settings, meta), version: 1, sessions };
+	return { ...buildDebugExport(windows, settings, meta), version: 1, sessions: stripUserinfoDeep(sessions) };
 }
