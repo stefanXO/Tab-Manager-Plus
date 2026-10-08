@@ -9,6 +9,8 @@
 //   * baked into the popup/options bundles (REQUIRED_WORKER_VERSION), which ask
 //     the worker for it a moment after they have rendered (src/popup/workerCheck.ts)
 //     and tell the user to reload the extension when the two differ.
+// The package version (process.env.VERSION) is only read by the popup, so a
+// version bump alone leaves the worker's hash as it was (tests/workerVersion.test.ts).
 // The hash is taken before the version line is appended, so the line does not
 // feed back into it.
 

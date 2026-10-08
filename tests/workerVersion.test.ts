@@ -66,6 +66,14 @@ describe("the worker's version is a hash of its bundle", () => {
 		}
 	});
 
+	test("a package version bump does not change it", async () => {
+		// process.env.VERSION is only read by the popup; if worker code ever reads
+		// it, every release would make the popup ask for a reload
+		const a = await workerHash([], { ...base, version: "7.0.0" });
+		const b = await workerHash([], { ...base, version: "7.0.1" });
+		assert.equal(a, b);
+	});
+
 	test("the version the popup requires is not in the worker bundle", async () => {
 		const result = await buildWorker();
 		assert.ok(!result.outputFiles[0].text.includes("REQUIRED_WORKER_VERSION"));
