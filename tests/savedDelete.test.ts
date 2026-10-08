@@ -15,7 +15,8 @@ import type { PendingItem } from "../src/popup/pendingDelete.ts";
 // the saved windows hidden whole (pending or being written)
 const hiddenWindows = (p : PendingDeletes) => p.hiding().filter((i) => i.indexes === undefined).map((i) => i.id);
 
-const win = (id : string, indexes : number[]) => ({ id, name: "Window " + id, tabs: indexes.map((index) => ({ index })) });
+const win = (id : string, indexes : number[]) => ({ id, name: "Window " + id, tabs: indexes.map((index) => ({ index, url: "https://" + id + "/" + index })) });
+const u = (id : string, indexes : number[]) => indexes.map((index) => "https://" + id + "/" + index);
 const some = (id : string, indexes : number[]) : PendingItem => ({ id, name: "Window " + id, tabs: indexes.length, indexes });
 const whole = (id : string, tabs = 3) : PendingItem => ({ id, name: "Window " + id, tabs });
 
@@ -25,21 +26,21 @@ describe("savedDeleteItems", () => {
 	test("some tabs of a window: an item with their indexes", () => {
 		const keys = new SavedTabKeys();
 		const sel = new Set([keys.key("s1", 3), keys.key("s1", 1)]);
-		assert.deepEqual(savedDeleteItems(sel, sessions, keys), [{ id: "s1", name: "Window s1", tabs: 2, indexes: [1, 3] }]);
+		assert.deepEqual(savedDeleteItems(sel, sessions, keys), [{ id: "s1", name: "Window s1", tabs: 2, indexes: [1, 3], urls: u("s1", [1, 3]) }]);
 	});
 
 	test("every tab of a window: the window goes whole", () => {
 		const keys = new SavedTabKeys();
 		const sel = new Set([0, 1, 2].map((i) => keys.key("s2", i)));
-		assert.deepEqual(savedDeleteItems(sel, sessions, keys), [{ id: "s2", name: "Window s2", tabs: 3 }]);
+		assert.deepEqual(savedDeleteItems(sel, sessions, keys), [{ id: "s2", name: "Window s2", tabs: 3, urls: u("s2", [0, 1, 2]) }]);
 	});
 
 	test("tabs of several windows: one item each, in the order of the windows", () => {
 		const keys = new SavedTabKeys();
 		const sel = new Set([keys.key("s2", 0), keys.key("s2", 1), keys.key("s2", 2), keys.key("s1", 0)]);
 		assert.deepEqual(savedDeleteItems(sel, sessions, keys), [
-			{ id: "s1", name: "Window s1", tabs: 1, indexes: [0] },
-			{ id: "s2", name: "Window s2", tabs: 3 }
+			{ id: "s1", name: "Window s1", tabs: 1, indexes: [0], urls: u("s1", [0]) },
+			{ id: "s2", name: "Window s2", tabs: 3, urls: u("s2", [0, 1, 2]) }
 		]);
 	});
 
@@ -58,14 +59,14 @@ describe("savedDeleteItems", () => {
 		// tab 1 of s1 is pending, so the shown window has 0, 2, 3
 		const shown = [win("s1", [0, 2, 3])];
 		const sel = new Set([0, 2, 3].map((i) => keys.key("s1", i)));
-		assert.deepEqual(savedDeleteItems(sel, shown, keys), [{ id: "s1", name: "Window s1", tabs: 3 }]);
+		assert.deepEqual(savedDeleteItems(sel, shown, keys), [{ id: "s1", name: "Window s1", tabs: 3, urls: u("s1", [0, 2, 3]) }]);
 	});
 
 	test("two stored tabs with one index go together, listed once", () => {
 		const keys = new SavedTabKeys();
 		const dup = [win("s1", [0, 1, 1, 2])];
 		const sel = new Set([keys.key("s1", 1)]);
-		assert.deepEqual(savedDeleteItems(sel, dup, keys), [{ id: "s1", name: "Window s1", tabs: 2, indexes: [1] }]);
+		assert.deepEqual(savedDeleteItems(sel, dup, keys), [{ id: "s1", name: "Window s1", tabs: 2, indexes: [1], urls: u("s1", [1]) }]);
 	});
 
 	test("never changes the selection or the windows", () => {

@@ -22,6 +22,15 @@ export function isOpenTabDrag(types : ArrayLike<string> | null | undefined) : bo
 	return !!types && Array.from(types).includes(OPEN_TAB_DRAG);
 }
 
+// The open tabs a drag onto a saved window copies: the selected ones (`tabs`,
+// the dragged one among them), without the ones the search hides when "Hide
+// non-matching tabs" is on (`hidden`: their ids). The dragged one always
+// goes: it is on screen.
+export function draggedOpen<T extends { id? : number }>(tabs : readonly T[], dragged : number, hidden? : ReadonlySet<number>) : T[] {
+	if (!hidden) return tabs.slice();
+	return tabs.filter((tab) => tab.id === dragged || tab.id === undefined || !hidden.has(tab.id));
+}
+
 // the part of an open tab a copy is made from (browser.Tabs.Tab has more)
 export interface AddableTab {
 	index : number;

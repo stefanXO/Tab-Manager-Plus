@@ -38,6 +38,16 @@ describe("draggedSaved", () => {
 		assert.deepEqual(draggedSaved(a, new Set([5, a, 0])), [a]);
 	});
 
+	test("with \"Hide non-matching tabs\" on, selected tabs the search hides stay out", () => {
+		const keys = new SavedTabKeys();
+		const a = keys.key("s1", 0), b = keys.key("s1", 2), c = keys.key("s2", 1);
+		assert.deepEqual(draggedSaved(b, new Set([a, b, c]), new Set([a])), [b, c]);
+		// the dragged one is on screen: it goes even if the set names it
+		assert.deepEqual(draggedSaved(b, new Set([a, b]), new Set([a, b])), [b]);
+		// not selected: only it, as before
+		assert.deepEqual(draggedSaved(a, new Set([b, c]), new Set([b])), [a]);
+	});
+
 	test("an open tab gives nothing", () => {
 		assert.deepEqual(draggedSaved(4, new Set([4])), []);
 		assert.deepEqual(draggedSaved(-1, new Set()), []);

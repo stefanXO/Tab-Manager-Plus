@@ -19,7 +19,7 @@ import {sizePopup} from "@helpers/popup_size";
 import {applyTheme} from "@helpers/theme";
 import {StatsLayer, StatsSource} from "./StatsLayer";
 import {UndoNotice} from "./UndoNotice";
-import {PendingDeletes, PendingItem, withoutItems, visibleSessions, noticeText} from "../pendingDelete";
+import {PendingDeletes, PendingItem, withoutItems, visibleSessions, noticeText, goneUrls} from "../pendingDelete";
 import {savedDeleteItems} from "../savedDelete";
 import {editSession, SessionEdit} from "../sessionEdit";
 import {searchSaved, searchSummary, SavedSearch} from "../searchSaved";
@@ -27,7 +27,8 @@ import {draggedSaved, savedTabsToOpen, openedText} from "../savedDrag";
 import {moveSession, reorderShown} from "../sessionOrder";
 import {tidyStored, listSessions, addSessions} from "../sessionStore";
 import {moveSavedTabs, remapSavedKeys, renumberedIndex, movedText, SavedTabMove, SavedDropTarget} from "../savedMove";
-import {addOpenTabs, addedText, SavedAddResult} from "../savedAdd";
+import {addOpenTabs, addedText, draggedOpen, SavedAddResult} from "../savedAdd";
+import {SavedWrites, SavedChange} from "../savedWrites";
 import type {SavedTabRef} from "../sessionKeys";
 
 // the focus is in a text box that holds text: Delete edits that text
@@ -51,23 +52,24 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	// row-span packing for the block layouts, attached to whatever container is mounted
 	private masonry : Masonry | null = null;
 	private masonryTarget : HTMLElement | null = null;
-	// The whole `sessions` object as storage has it once the writes started
-	// here are done (../sessionStore.ts tidied it). Every change is made to
-	// this copy and written from it, one after the other (mutateSessions): a
-	// change never reads storage while another is on its way, and the write of
-	// a delete that has to start as the popup closes needs no read.
-	private storedSessions : Record<string, ISavedSession> | null = null;
-	// the changes to `sessions`, one after the other
-	private sessionQueue : Promise<unknown> = Promise.resolve();
-	// bumps with every write of `sessions` started here; how many are on their way
-	private sessionWrites = 0;
-	private sessionWritesBusy = 0;
-	// bumps with every sessionSync read: only the newest one counts
-	private sessionReads = 0;
+	// The whole `sessions` object as storage has it (../sessionStore.ts tidied
+	// it), and every change to it, one after the other (../savedWrites.ts)
+	private readonly savedWrites = new SavedWrites<ISavedSession>({
+		read: async () => tidyStored<ISavedSession>(await getLocalStorage(S.sessions, {})),
+		write: (next) => setLocalStorage(S.sessions, next),
+		show: (stored) => this.showSessions(stored),
+		loaded: async (stored) => {
+			if (this.unmounted) return;
+			this.showSessions(stored);
+			await this.update();
+		}
+	});
+	// componentWillUnmount ran: the deletes it writes change no state
+	private unmounted = false;
 	// saved windows deleted and not yet removed from storage (the Undo notice)
 	private readonly pending = new PendingDeletes({
 		commit: (items, sync) => this.commitDeletes(items, sync),
-		onChange: () => this.forceUpdate()
+		onChange: () => { if (!this.unmounted) this.forceUpdate(); }
 	});
 	// leaving the popup writes the deletes that are still counting down
 	private readonly flushPending = () => this.pending.flush(true);
@@ -260,6 +262,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		document.removeEventListener("visibilitychange", this.flushPendingHidden);
 		document.removeEventListener("dragend", this.dragDone);
 		document.removeEventListener("drop", this.dragDone);
+		// written from the copy; the component is going, its state stays
+		this.unmounted = true;
 		this.pending.flush(true);
 	}
 
@@ -817,20 +821,12 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	// Reads the saved windows from storage (on opening, and on every change
 	// there: another popup, the options page, the writes started here). A read
 	// that a newer read, or a write started here, may have overtaken is
-	// dropped: the newer read, or the storage.onChanged of that write, brings
-	// the latest.
-	sessionSync = async () => {
-		const read = ++this.sessionReads;
-		const writes = this.sessionWrites;
-		const quiet = this.sessionWritesBusy === 0;
-		const values = tidyStored<ISavedSession>(await getLocalStorage(S.sessions, {}));
-		if (read !== this.sessionReads || !quiet || writes !== this.sessionWrites) return;
-		this.storedSessions = values;
-		this.showSessions(values);
-		await this.update();
-	}
+	// dropped and made again once no write is on its way (../savedWrites.ts).
+	sessionSync = () => this.savedWrites.sync();
 	// Shows `stored`, with the selection kept in step with it
 	private showSessions(stored : Record<string, ISavedSession>) {
+		// unmounting (its deletes are written from the copy): no state to change
+		if (this.unmounted) return;
 		// in the order the user gave them (../sessionOrder.ts)
 		const sessions = listSessions(stored);
 		// saved tabs moved here: the selected ones stay selected at their new
@@ -853,30 +849,10 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	// the other: `change` gets the stored object (never changes it) and returns
 	// the new one, or null for no change. The copy and the state change at
 	// once, then the write; resolves with what was written (null: nothing),
-	// rejects when the browser refused it (storage is read again then).
-	mutateSessions(change : (stored : Record<string, ISavedSession>) => Record<string, ISavedSession> | null) : Promise<Record<string, ISavedSession> | null> {
-		const run = async () => {
-			const base = this.storedSessions || tidyStored<ISavedSession>(await getLocalStorage(S.sessions, {}));
-			const next = change(base);
-			if (!next) return null;
-			await this.writeSessions(next);
-			return next;
-		};
-		const result = this.sessionQueue.then(run);
-		this.sessionQueue = result.catch(() => undefined);
-		return result;
-	}
-	// Writes `next` as the stored saved windows, from the copy, at once: the
-	// set starts before this returns (a write as the popup closes still lands).
-	private writeSessions(next : Record<string, ISavedSession>) : Promise<void> {
-		this.storedSessions = next;
-		this.sessionWrites++;
-		this.sessionWritesBusy++;
-		this.showSessions(next);
-		const written = setLocalStorage(S.sessions, next).finally(() => { this.sessionWritesBusy--; });
-		// a refused write: show what storage has
-		written.catch(() => { void this.sessionSync(); });
-		return written;
+	// rejects when the browser refused it: then the copy and the state go back
+	// to what they were (`undo` runs first) and storage is read again.
+	mutateSessions(change : SavedChange<ISavedSession>, undo? : () => void) : Promise<Record<string, ISavedSession> | null> {
+		return this.savedWrites.mutate(change, undo);
 	}
 	// Adds saved windows (a window's save button, an import), listed first
 	// (../sessionStore.ts); rejects when the browser refused the write.
@@ -887,7 +863,11 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	// Deletes a saved window: hidden now, removed from storage when the
 	// countdown ends (./pendingDelete.ts)
 	deleteSession(session : ISavedSession) {
-		this.pending.add({id: session.id, name: session.name, tabs: session.tabs.length});
+		// the addresses of all its tabs, the ones a pending delete hides too:
+		// the write leaves it alone if it holds others by then (imported over,
+		// added to elsewhere)
+		const all = this.state.sessions.find((s) => s.id === session.id) || session;
+		this.pending.add({id: session.id, name: session.name, tabs: session.tabs.length, urls: goneUrls(all.tabs)});
 		// its selected tabs go with it
 		dropMissingSaved(this.state.selection, this.visibleSessions());
 		this.setState(this.selectionText());
@@ -1036,16 +1016,17 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				this.renumbered = result.moves;
 				this.pending.renumber(renumberedIndex(result.moves));
 				return result.stored;
+			}, () => {
+				// Refused: the old numbers are shown again. The selection and
+				// the pending deletes go back to them (each tab from its new
+				// place to its old one), or they would name, hide and later
+				// delete the tabs that hold those numbers then.
+				const back = done ? done.moves.map((m) => ({ from: m.to, to: m.from })) : [];
+				this.renumbered = back;
+				this.pending.renumber(renumberedIndex(back));
 			});
 		} catch (e) {
-			// refused: storage is read again, with the old numbers. The pending
-			// deletes go back to them (each tab from its new place to its old
-			// one, inside the same saved window), or they would hide and later
-			// delete the tabs that now hold those numbers.
 			console.error(e);
-			this.renumbered = null;
-			const failed : R | null = done;
-			if (failed) this.pending.renumber(renumberedIndex(failed.moves.map((m) => ({ from: m.to, to: m.from }))));
 			return null;
 		}
 		return done;
@@ -1055,16 +1036,19 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	}
 	// Removes saved windows (or some of their tabs) from storage. The state
 	// changes before the promise resolves (the ids stop being hidden right
-	// after); a refused write rejects and storage is read again: they show again.
+	// after); a refused write rejects and storage is read again: they show
+	// again. Each item is written once (PendingDeletes.claim): the closing
+	// flush may have written one whose queued write had not started.
 	async commitDeletes(items : PendingItem[], sync : boolean) {
+		const change = (stored : Record<string, ISavedSession>) => {
+			const mine = this.pending.claim(items);
+			return mine.length ? withoutItems(stored, mine) : null;
+		};
 		// The popup is closing: the write starts now, from the copy, not after
 		// the changes queued before it (one on its way already went from the
 		// copy, so this one includes it). The ones queued build on it.
-		if (sync && this.storedSessions) {
-			await this.writeSessions(withoutItems(this.storedSessions, items));
-			return;
-		}
-		await this.mutateSessions((stored) => withoutItems(stored, items));
+		if (sync) await this.savedWrites.writeNow(change);
+		else await this.mutateSessions(change);
 	}
 	focusRoot() {
 		this.setState({
@@ -1247,8 +1231,14 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		}
 		if (saved.length === 0) return;
 		// listed first, in one write queued after the other changes (a delete
-		// or an edit meanwhile neither comes back nor loses the new windows)
-		await this.addSavedWindows(saved);
+		// or an edit meanwhile neither comes back nor loses the new windows).
+		// Refused (as for a window's save): nothing saved, the selection stays.
+		try {
+			await this.addSavedWindows(saved);
+		} catch (err) {
+			console.error("could not save the window", err);
+			return;
+		}
 		this.clearSelection();
 		this.setState({ topText: savedText(saved), bottomText: " ", dirty: true });
 		setTimeout(() => this.scrollTo("session", saved[0].id), 150);
@@ -1982,10 +1972,15 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	drag(e : React.DragEvent<HTMLDivElement>, id : number) {
 		// a tab drag: no saved window card is being dragged
 		this.draggingSession = null;
+		// With "Hide non-matching tabs" on, selected tabs the search hides stay
+		// where they are when dropped on a saved window or (saved tabs) an open
+		// one: the drag takes what is on screen, as the drop marker's check
+		// does, and the header after the drop counts that.
+		const filter = this.state.filterTabs;
 		// a saved tab: it and, when it is selected, the other selected saved
 		// tabs; it is opened, not moved, so the selection stays as it is
 		if (isSavedTabKey(id)) {
-			this.draggingSaved = draggedSaved(id, this.state.selection);
+			this.draggingSaved = draggedSaved(id, this.state.selection, filter ? this.savedSearch(this.visibleSessions()).hidden : undefined);
 			this.draggingOpen = null;
 			return;
 		}
@@ -1998,7 +1993,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			});
 		}
 		// what a drop on a saved window copies (../savedAdd.ts)
-		this.draggingOpen = this.selectedTabs();
+		this.draggingOpen = draggedOpen(this.selectedTabs(), id, filter ? this.state.hiddenTabs : undefined);
 	}
 	async drop(id : number, before : boolean) {
 		// a saved window card is no tab (open tabs and windows take no drop from it)
