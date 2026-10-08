@@ -6,7 +6,8 @@ import { ICommand, ISavedSession, ITabOptions, ITabOptionsState } from "@types";
 import {ManagerContext, ITabManagerActions, ISettings} from "../context";
 import {getLocalStorageMap} from "@helpers/storage";
 import {currentShowMonitors, saveSetting, Settings, SETTING_DEFAULTS} from "@helpers/settings";
-import {buildDebugExport, debugFileName} from "../debugExport";
+import {buildEverythingExport} from "../debugExport";
+import {buildSessionsFile, everythingFileName, sessionsFileName} from "../sessionsFile";
 import {importSummary, planImport} from "../importCount";
 import {debugExportNote, sessionsExportNote} from "../exportNotes";
 import {switchShowMonitors} from "@helpers/monitors";
@@ -35,8 +36,8 @@ const HELP = {
 	windowTitles: "Enables/disables window titles. Default : on",
 	supportLinks: "Shows the Donate and Rate buttons at the top of the popup. Default : on",
 	sessions: "Allows you to save/restore windows into sessions. ( Tab History will be lost ) Default : off",
-	exportSessions: "Allows you to export your saved windows to an external backup",
-	importSessions: "Allows you to restore your saved windows from an external backup",
+	exportSessions: "Allows you to export your saved windows to an external sessions file",
+	importSessions: "Allows you to restore your saved windows from an external sessions file",
 	badge: "Shows the number of open tabs on the Tab Manager icon. Default : on",
 	openInOwnTab: "Open the Tab Manager by default in own tab, or as a popup?",
 	hide: "Automatically minimizes inactive browser windows. Default : off",
@@ -270,21 +271,21 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 							id="session_export"
 							help={this.help("exportSessions")}
 							icon="export-sessions"
-							label="Export/Backup Sessions"
-							description="Allows you to backup your saved windows to an external file."
+							label="Export Sessions"
+							description="Allows you to save your saved windows to an external sessions file."
 							notes={[sessionsExportNote(p.sessions)]}
 						>
 							<button type="button" onClick={this.exportSessions} id="session_export" name="session_export"
 							        disabled={!p.sessions?.length}>
-								Export/Backup Sessions
+								Export Sessions
 							</button>
 						</ActionOption>
 						<ActionOption
 							id="session_import"
 							help={this.help("importSessions")}
 							icon="import-sessions"
-							label="Import/Restore Sessions"
-							description="Allows you to restore your backup from an external file. The restored windows will be added to your current saved windows."
+							label="Import Sessions"
+							description="Allows you to restore saved windows from a sessions file (or from a debug file, which holds them too). The restored windows will be added to your current saved windows."
 							notes={[
 								...(importBlocked ? ["Due to a Firefox bug session import does not work in the popup. Please use the options screen or open Tab Manager Plus in its own tab"] : []),
 								...(this.state.importError ? [this.state.importError] : []),
@@ -427,7 +428,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 							        onClick={this.copyDebug}>{this.state.debugCopied ? "Copied" : "Copy to clipboard"}</button>
 						</div>
 						<Description
-							text="Writes every open window and tab (title, url, last used, pinned, active), the automatic name Tab Manager Plus gave each window, and your settings to a JSON file. Nothing is sent anywhere. Attach it to a bug report when a window name or a search result looks wrong."
+							text="Writes every open window and tab (title, url, last used, pinned, active), the automatic name Tab Manager Plus gave each window, your saved windows and your settings to a JSON file (everything-date-time.json, which Import Sessions can also read). Nothing is sent anywhere. Attach it to a bug report when a window name or a search result looks wrong."
 							notes={[debugExportNote(p.windowCount, p.tabCount), ...(this.state.debugError ? [this.state.debugError] : [])]}
 						/>
 					</div>
@@ -562,12 +563,12 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 			browser.storage.local.get(Object.keys(SETTING_DEFAULTS))
 		]);
 		const date = new Date();
-		const data = buildDebugExport(windows, { ...SETTING_DEFAULTS, ...stored }, {
+		const data = buildEverythingExport(windows, { ...SETTING_DEFAULTS, ...stored }, {
 			extension: browser.runtime.getManifest().version,
 			browser: navigator.userAgent,
 			exported: date,
 			names
-		});
+		}, this.props.sessions || []);
 		return { json: JSON.stringify(data, null, 2), date };
 	}
 	exportDebug = async () => {
@@ -577,7 +578,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 			const url = URL.createObjectURL(new Blob([json], { type: "application/json" }));
 			const a = document.createElement("a");
 			a.href = url;
-			a.download = debugFileName(date);
+			a.download = everythingFileName(date);
 			document.body.appendChild(a); // required for firefox
 			a.click();
 			a.remove();
@@ -615,20 +616,9 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 	exportSessions = () => {
 		// the button is disabled then (and the note says why): nothing to do
 		if (!this.props.sessions?.length) return;
-		let exportName = "tab-manager-plus-backup";
-		let today = new Date();
-		let y = today.getFullYear();
-		// JavaScript months are 0-based.
-		let m = ("0" + (today.getMonth() + 1)).slice(-2);
-		let d = ("0" + today.getDate()).slice(-2);
-		let h = ("0" + today.getHours()).slice(-2);
-		let mi = ("0" + today.getMinutes()).slice(-2);
-		let s = ("0" + today.getSeconds()).slice(-2);
-		exportName += "-" + y + m + d + "-" + h + mi + "-" + s;
-
-		const blob = new Blob([JSON.stringify(this.props.sessions, null, 2)], {type: "text/json"});
+		const blob = new Blob([JSON.stringify(buildSessionsFile(this.props.sessions), null, 2)], {type: "text/json"});
 		var downloadAnchorNode = document.createElement("a");
-		downloadAnchorNode.download = exportName + ".json";
+		downloadAnchorNode.download = sessionsFileName(new Date());
 		downloadAnchorNode.href = window.URL.createObjectURL(blob);
 		downloadAnchorNode.dataset.downloadurl = ["text/json", downloadAnchorNode.download, downloadAnchorNode.href].join(":");
 
@@ -657,7 +647,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 			let files = evt.target.files;
 			if (!files.length) {
 				this.setState({ importError: "No file selected!" });
-				this.context.setBottomText("Error: Could not read the backup file!");
+				this.context.setBottomText("Error: Could not read the sessions file!");
 				return;
 			}
 			let file = files[0];
@@ -670,8 +660,8 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 					backupFile = JSON.parse(event.target.result.toString());
 				} catch (err) {
 					console.error(err);
-					this.setState({ importError: "Could not read the backup file: " + (err instanceof Error ? err.message : err) });
-					this.context.setBottomText("Error: Could not read the backup file!");
+					this.setState({ importError: "Could not read the sessions file: " + (err instanceof Error ? err.message : err) });
+					this.context.setBottomText("Error: Could not read the sessions file!");
 					inputField.value = "";
 					return;
 				}
@@ -699,7 +689,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 			reader.readAsText(file);
 		} catch (err) {
 			console.error(err);
-			this.setState({ importError: "Could not import the backup file: " + (err instanceof Error ? err.message : err) });
+			this.setState({ importError: "Could not import the sessions file: " + (err instanceof Error ? err.message : err) });
 		}
 		this.showHelp("importSessions");
 		this.context.reload();

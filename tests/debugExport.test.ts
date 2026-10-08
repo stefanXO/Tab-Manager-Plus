@@ -5,7 +5,8 @@
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { buildDebugExport, debugFileName } from "../src/popup/debugExport.ts";
+import { readSessionsFile } from "../src/popup/sessionsFile.ts";
+import { buildDebugExport, buildEverythingExport } from "../src/popup/debugExport.ts";
 
 const windows = [
 	{
@@ -71,6 +72,10 @@ describe("buildDebugExport", () => {
 	});
 });
 
-test("debugFileName uses the local date", () => {
-	assert.equal(debugFileName(new Date(2030, 0, 2, 12)), "tab-manager-plus-debug-2030-01-02.json");
+test("buildEverythingExport adds the saved windows and stays readable as a sessions file", () => {
+	const sessions = [{ id: "a", windowsInfo: {}, tabs: [{}] }];
+	const out = buildEverythingExport(windows, settings, meta, sessions);
+	assert.deepEqual(out.sessions, sessions);
+	assert.equal(out.windows.length, 2);
+	assert.deepEqual(readSessionsFile(out), sessions);
 });

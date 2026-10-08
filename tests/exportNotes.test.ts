@@ -7,7 +7,7 @@ import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { sessionsExportNote, debugExportNote } from "../src/popup/exportNotes.ts";
 
-describe("sessionsExportNote: what Export/Backup Sessions writes", () => {
+describe("sessionsExportNote: what Export Sessions writes", () => {
 	test("saved windows and their tabs", () => {
 		assert.equal(sessionsExportNote([{ tabs: [{}, {}, {}] }, { tabs: [{}] }]), "Will export 2 saved windows with 4 tabs");
 	});

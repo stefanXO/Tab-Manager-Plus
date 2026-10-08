@@ -1,8 +1,9 @@
 "use strict";
 
 import { maybePluralize } from "../helpers/utils.ts";
+import { readSessionsFile } from "./sessionsFile.ts";
 
-// The options screen's session import: sorts the parsed backup file into the
+// The options screen's session import: sorts the parsed sessions file into the
 // saved windows that can be restored and the ones that cannot (with the
 // reason), and words the result.
 
@@ -19,11 +20,12 @@ export interface ImportPlan<T> {
 
 export function planImport<T = unknown>(parsed : unknown) : ImportPlan<T> {
 	const plan : ImportPlan<T> = { valid: [], skipped: {} };
-	if (!Array.isArray(parsed)) {
+	const list = readSessionsFile(parsed);
+	if (!list) {
 		plan.fatal = "The file is JSON, but not a list of saved windows";
 		return plan;
 	}
-	for (const entry of parsed) {
+	for (const entry of list as any[]) {
 		let reason : SkipReason | undefined;
 		if (!entry || typeof entry !== "object" || Array.isArray(entry)) reason = "not a saved window";
 		else if (!entry.windowsInfo) reason = "no window info";

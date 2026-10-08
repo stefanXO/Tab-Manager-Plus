@@ -1,6 +1,7 @@
 "use strict";
 
-// The debug export: a JSON snapshot of the windows, tabs and settings, to
+// The debug export ("everything"): a JSON snapshot of the windows, tabs, saved
+// windows and settings, to
 // attach to a bug report. Pure (no browser APIs), so it is unit tested in
 // tests/debugExport.test.ts. Only the fields listed here are copied.
 
@@ -70,6 +71,8 @@ export interface DebugExport {
 	exported: string;
 	settings: Record<string, unknown>;
 	windows: DebugWindow[];
+	// the saved windows, as in the session export: importing this file restores them
+	sessions?: unknown[];
 }
 
 export function buildDebugExport(windows: ExportWindowSource[], settings: Record<string, unknown>, meta: DebugMeta): DebugExport {
@@ -108,8 +111,8 @@ export function buildDebugExport(windows: ExportWindowSource[], settings: Record
 	};
 }
 
-// tab-manager-plus-debug-2030-01-02.json, in local time
-export function debugFileName(date: Date): string {
-	const p = (n: number) => ("0" + n).slice(-2);
-	return "tab-manager-plus-debug-" + date.getFullYear() + "-" + p(date.getMonth() + 1) + "-" + p(date.getDate()) + ".json";
+// The debug export is the session export plus the debug keys: the sessions
+// file reader finds `sessions` in it.
+export function buildEverythingExport(windows: ExportWindowSource[], settings: Record<string, unknown>, meta: DebugMeta, sessions: unknown[]): DebugExport {
+	return { ...buildDebugExport(windows, settings, meta), version: 1, sessions };
 }
