@@ -22,7 +22,7 @@ import {sizePopup, popupScreen} from "@helpers/popup_size";
 import {restoreDisplays} from "../restoreDisplays";
 import {scheduleWorkerCheck, requiredWorkerVersion, staleWorkerText} from "../workerCheck";
 import {applyTheme, nextTheme} from "@helpers/theme";
-import {actionHelp, trashKeys, newWindowKeys, themeHelp, themeLabel} from "../actionHelp";
+import {actionHelp, trashKeys, newWindowKeys, newWindowLabel, newWindowHelp, themeHelp, themeLabel} from "../actionHelp";
 import {StatsLayer, StatsSource} from "./StatsLayer";
 import {Notice} from "./Notice";
 import {MAX_NOTICES, NoticeBoard, NoticeOrder, NoticeRef, isMacPlatform, isUndoKey, undoKeyCaps, undoKeyForField, refusedText, openFailedText} from "../notices";
@@ -851,11 +851,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 										className="icon windowaction new"
 										style={savedSel ? savedSelStyle : {}}
 										role="button"
-										aria-label={this.state.selection.size > 0 ? "Move tabs to new window" : "Open new empty window"}
+										aria-label={newWindowLabel(this.state.selection.size)}
 										{...actionHelp(
-											savedSel ? savedSelTitle : this.state.selection.size > 0
-												? "Move tabs to new window\nWill move " + maybePluralize(this.state.selection.size, 'selected tab') + " to it"
-												: "Open new empty window",
+											savedSel ? savedSelTitle : newWindowHelp(this.state.selection.size),
 											newWindowKeys(this.state.selection.size, savedSel, this.state.searchLen > 0)
 										)}
 										onClick={this.addWindow}

@@ -6,7 +6,7 @@
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { actionHelp, actionCard, readKeys, deleteKeyCaps, trashKeys, newWindowKeys, themeLabel, themeHelp } from "../src/popup/actionHelp.ts";
+import { actionHelp, actionCard, readKeys, deleteKeyCaps, trashKeys, newWindowKeys, newWindowLabel, newWindowHelp, themeLabel, themeHelp } from "../src/popup/actionHelp.ts";
 import { undoKeyCaps } from "../src/popup/notices.ts";
 
 describe("actionHelp (the button's attributes)", () => {
@@ -88,6 +88,22 @@ describe("the trash button: Ctrl+Delete, Cmd+Backspace on a Mac", () => {
 	test("nothing selected: the button closes the current tab, the keys nothing", () => {
 		assert.equal(trashKeys(0, false), null);
 		assert.equal(trashKeys(0, true), null);
+	});
+});
+
+describe("the new window button: its words", () => {
+	test("nothing selected: an empty window", () => {
+		assert.equal(newWindowLabel(0), "Open new empty window");
+		assert.equal(newWindowHelp(0), "Open new empty window");
+	});
+	test("one selected tab is switched to, not moved", () => {
+		assert.equal(newWindowLabel(1), "Switch to the selected tab");
+		assert.equal(newWindowHelp(1), "Switch to the selected tab\nActivates it in its window");
+	});
+	test("two or more are moved to a new window", () => {
+		assert.equal(newWindowLabel(2), "Move tabs to new window");
+		assert.equal(newWindowHelp(2), "Move tabs to new window\nWill move 2 selected tabs to it");
+		assert.equal(newWindowHelp(5), "Move tabs to new window\nWill move 5 selected tabs to it");
 	});
 });
 

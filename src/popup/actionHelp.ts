@@ -9,6 +9,7 @@
 // Mac) closes the selection as the trash button does, Enter does what the new
 // window button does. Pure, unit tested in tests/actionHelp.test.ts.
 
+import {maybePluralize} from "../helpers/utils.ts";
 import {nextTheme, type Theme} from "../helpers/theme.ts";
 import type {StatsCard} from "./stats.ts";
 
@@ -68,6 +69,19 @@ export function newWindowKeys(selected : number, savedOnly : boolean, searching 
 	if (savedOnly) return null;
 	if (selected === 0 && searching) return null;
 	return ["Enter"];
+}
+
+// The new window button's name and help for `selected` tabs. One selected tab
+// is not moved: the button switches to it (TabManager.addWindow), so it says so.
+export function newWindowLabel(selected : number) : string {
+	if (selected === 0) return "Open new empty window";
+	return selected === 1 ? "Switch to the selected tab" : "Move tabs to new window";
+}
+
+export function newWindowHelp(selected : number) : string {
+	if (selected === 0) return newWindowLabel(selected);
+	if (selected === 1) return newWindowLabel(selected) + "\nActivates it in its window";
+	return newWindowLabel(selected) + "\nWill move " + maybePluralize(selected, "selected tab") + " to it";
 }
 
 const THEME_NAMES : Record<Theme, string> = { system: "System", light: "Light", dark: "Dark" };
