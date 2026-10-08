@@ -25,6 +25,10 @@ describe("readSessionsFile", () => {
 	test("everything export (extra keys ignored)", () => {
 		assert.deepEqual(readSessionsFile({ format: "tab-manager-plus-debug", windows: [], settings: {}, sessions: list }), list);
 	});
+	test("the export carries kind sessions, after format and version", () => {
+		assert.deepEqual(Object.keys(buildSessionsFile(list)), ["format", "version", "kind", "sessions"]);
+		assert.equal(buildSessionsFile(list).kind, "sessions");
+	});
 	test("format key", () => {
 		assert.equal(buildSessionsFile(list).format, "tab-manager-plus-export");
 		assert.deepEqual(readSessionsFile({ format: "tab-manager-plus-export", version: 1, windows: [], sessions: list }), list);

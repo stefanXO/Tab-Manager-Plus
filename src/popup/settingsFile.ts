@@ -7,7 +7,8 @@
 //   extension: "7.0.0", exported: "<ISO time>", settings: { theme: "dark", ... } }
 //
 // It is the same envelope as the saved windows file (./sessionsFile.ts) with a
-// `kind` of its own, so neither can be taken for the other: Import Sessions
+// `kind` of its own (every export file has one), so neither can be taken for
+// the other: Import Sessions
 // refuses a settings file (./importCount.ts) and Import Settings refuses a
 // saved windows file. The debug export ("everything") holds the settings too,
 // under the same `settings` key: Import Settings reads that part of it.
@@ -16,7 +17,7 @@
 
 import { maybePluralize } from "../helpers/utils.ts";
 import type { Settings } from "../helpers/settings.ts";
-import { EXPORT_FORMAT } from "./sessionsFile.ts";
+import { EXPORT_FORMAT, EVERYTHING_KIND, SESSIONS_KIND } from "./sessionsFile.ts";
 
 export const SETTINGS_KIND = "settings";
 
@@ -110,14 +111,15 @@ export function buildSettingsFile(settings : object, defaults : object, meta : S
 
 export type FileKind = "settings" | "everything" | "sessions" | "unknown";
 
-// What a parsed file is. A settings file carries kind "settings"; the debug
-// export ("everything") has settings and windows (and the saved windows);
-// anything else with a list of saved windows, or that list itself, is a saved
-// windows file.
+// What a parsed file is. The `kind` tag says so when there is one we know.
+// Files without one (the 7.0.0 test builds wrote it only in settings files)
+// are told by their shape: the debug export ("everything") has settings and
+// windows (and the saved windows); anything else with a list of saved windows,
+// or that list itself, is a saved windows file.
 export function fileKind(parsed : unknown) : FileKind {
 	if (Array.isArray(parsed)) return "sessions";
 	if (!isObject(parsed)) return "unknown";
-	if (parsed.kind === SETTINGS_KIND) return "settings";
+	if (parsed.kind === SETTINGS_KIND || parsed.kind === EVERYTHING_KIND || parsed.kind === SESSIONS_KIND) return parsed.kind;
 	if (isObject(parsed.settings) && Array.isArray(parsed.windows)) return "everything";
 	if (Array.isArray(parsed.sessions)) return "sessions";
 	return "unknown";

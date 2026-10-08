@@ -30,6 +30,8 @@ describe("buildDebugExport", () => {
 	test("shape", () => {
 		assert.equal(out.format, "tab-manager-plus-export");
 		assert.equal(out.version, 1);
+		assert.equal(out.kind, "everything");
+		assert.deepEqual(Object.keys(out).slice(0, 4), ["format", "version", "kind", "extension"]);
 		assert.equal(out.extension, "7.0.0");
 		assert.equal(out.browser, "UA/1.0");
 		assert.equal(out.exported, "2030-01-02T03:04:05.000Z");

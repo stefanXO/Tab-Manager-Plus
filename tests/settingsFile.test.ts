@@ -88,6 +88,24 @@ describe("fileKind", () => {
 	});
 });
 
+describe("fileKind: the kind tag and the shape", () => {
+	const sessions = [{ id: "a", tabs: [] }];
+	test("a kind we know wins over the shape", () => {
+		assert.equal(fileKind({ format: "tab-manager-plus-export", version: 1, kind: "sessions", sessions }), "sessions");
+		assert.equal(fileKind({ kind: "everything", settings: {}, windows: [] }), "everything");
+		// a settings file that also lists saved windows is still a settings file
+		assert.equal(fileKind({ kind: "settings", settings: {}, sessions }), "settings");
+		assert.equal(fileKind({ kind: "sessions", settings: DEFAULTS, windows: [] }), "sessions");
+	});
+	test("no kind, or one we do not know, falls back to the shape", () => {
+		assert.equal(fileKind({ format: "tab-manager-plus-export", version: 1, sessions }), "sessions");
+		assert.equal(fileKind({ format: "tab-manager-plus-debug", settings: DEFAULTS, windows: [], sessions }), "everything");
+		assert.equal(fileKind({ kind: "other", sessions }), "sessions");
+		assert.equal(fileKind({ kind: 5, settings: DEFAULTS, windows: [] }), "everything");
+		assert.equal(fileKind({ kind: "other" }), "unknown");
+	});
+});
+
 describe("planSettingsImport", () => {
 	test("valid settings that differ are applied, equal ones counted", () => {
 		const plan = planSettingsImport(file({ theme: "dark", compact: true, animations: true }), env());

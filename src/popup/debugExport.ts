@@ -66,6 +66,7 @@ export interface DebugWindow {
 export interface DebugExport {
 	format: "tab-manager-plus-export";
 	version: 1;
+	kind: "everything";
 	extension: string;
 	browser: string;
 	exported: string;
@@ -82,6 +83,7 @@ export function buildDebugExport(windows: ExportWindowSource[], settings: Record
 	return {
 		format: "tab-manager-plus-export",
 		version: 1,
+		kind: "everything",
 		extension: meta.extension,
 		browser: meta.browser,
 		exported: meta.exported.toISOString(),

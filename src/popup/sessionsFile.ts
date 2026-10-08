@@ -3,23 +3,29 @@
 // The saved windows file: the name of the downloads and the format reader.
 // Pure (no browser APIs), unit tested in tests/sessionsFile.test.ts.
 //
-// Session export: { format: "tab-manager-plus-export", version: 1, sessions: [...] }
-// Everything export: the same format plus the debug keys (see debugExport.ts),
-// so importing it restores its saved windows too.
-// The reader also accepts a bare list of saved windows and the tags written by
-// test builds ("tab-manager-plus-sessions", "tab-manager-plus-debug").
+// Session export: { format: "tab-manager-plus-export", version: 1, kind: "sessions", sessions: [...] }
+// Everything export: the same format with kind "everything" plus the debug keys
+// (see debugExport.ts), so importing it restores its saved windows too.
+// Every export file carries a `kind` (the settings file's is "settings",
+// ./settingsFile.ts), which tells the files apart. The reader does not need
+// it: it also accepts files without one (the 7.0.0 test builds wrote none), a
+// bare list of saved windows and the tags written by test builds
+// ("tab-manager-plus-sessions", "tab-manager-plus-debug").
 
 export const EXPORT_FORMAT = "tab-manager-plus-export";
+export const SESSIONS_KIND = "sessions";
+export const EVERYTHING_KIND = "everything";
 const LEGACY_FORMATS = ["tab-manager-plus-sessions", "tab-manager-plus-debug"];
 
 export interface SessionsFile<T = unknown> {
 	format : typeof EXPORT_FORMAT;
 	version : 1;
+	kind : typeof SESSIONS_KIND;
 	sessions : T[];
 }
 
 export function buildSessionsFile<T>(sessions : T[]) : SessionsFile<T> {
-	return { format: EXPORT_FORMAT, version: 1, sessions };
+	return { format: EXPORT_FORMAT, version: 1, kind: SESSIONS_KIND, sessions };
 }
 
 function stamp(date : Date) : string {
