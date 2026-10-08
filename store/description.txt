@@ -21,18 +21,22 @@ A simple and super-fast Google Extension to help you get the best overview over 
   ➤ Switch to found tab with "Enter"
   ➤ Move multiple highlighted tabs with "Enter"
   ➤ Search in titles with t:word, in urls with u:word, leave tabs out with -word, search "a phrase" or a /regular expression/
+  ➤ s:word searches saved windows only, -s:word open tabs only, also s:u:word, s:t:word
 ➤ Switch to your previously active tab with Alt+Shift+Comma (PC) / Ctrl+Shift+Comma (Mac)
 ➤ Limit open tabs - Tab Manager will open a new tab in a new window once your limit is reached
 ➤ Create new Tabs & Windows
 ➤ Move Tabs between Windows
-➤ Delete Tabs & Windows
+➤ Delete Tabs & Windows, saved ones too - close the selection with Ctrl+Del (Cmd+Backspace on a Mac), undo with Ctrl+Z
 ➤ Pin/unpin Tabs
 ➤ Discard tabs to save memory
 ➤ See which tabs play sound, are muted, asleep or pinned
 ➤ Windows are named after their sites automatically (GitHub, Gmail, Google Docs)
 ➤ Name and color your windows - names and colors survive a browser restart
-➤ Save windows and restore them later, with their size and position
-➤ Hold the mouse on a tab or window for details: last used, tab counts, sites, monitor
+➤ Save windows and restore them later, with their size and position (on by default); save the selected tabs as a new saved window
+➤ Rename and recolor a saved window by clicking its name; export and import saved windows
+➤ Drag saved tabs into open or other saved windows, open tabs into saved windows, and reorder them
+➤ "Enter" opens selected saved tabs in a new window
+➤ Hold the mouse on a tab or window for details: last used, tab counts, sites, monitor, and where a saved window will restore
 ➤ Light and dark theme, or follow your system
 ➤ Supports incognito mode, if you enable it
 
@@ -58,7 +62,7 @@ Faster
 - Typing right after opening the popup no longer loses the first characters
 
 Searching And Duplicates
-- Highlight Duplicates selects only the extra copies and keeps the one you used last, so Ctrl+Delete (Cmd+Delete on a Mac) closes just the duplicates (#142, #188, #240, #248, #260)
+- Highlight Duplicates selects only the extra copies and keeps the one you used last, so Ctrl+Del (Cmd+Backspace on a Mac) closes just the duplicates (#142, #188, #240, #248, #260)
 - The header shows how many tabs have duplicates and how many are selected
 - Searching while duplicates are highlighted searches within them
 - Pasting a search term, or editing in the middle of it, now searches the right tabs
@@ -69,20 +73,35 @@ Searching And Duplicates
 - Search with a regular expression: /\(\d+\)/ finds tabs with an unread count, /localhost:\d+/ local dev servers, /\.pdf$/ open PDFs (#247, #156)
 - Hover the search box for the whole search syntax
 - List view shows the part of a title that matched the search in bold
+- Hide non-matching tabs never hides a selected tab, and a new search keeps the tabs you selected
 - Highlight recently active tabs: the new clock button in the bar selects the tabs you used last: the shortest span (15 minutes, an hour, 3 hours, 12 hours, a day, 2 days ...) with more than one tab in it. Click again to reach further back, twice more (one more step lights up under the clock each time), a fourth click turns it off
 
-Windows And Sessions
+Windows
 - Automatic window names come from the sites in the window, with proper spelling (GitHub, Stack Overflow, Gmail, Google Docs), no more "Facebook, facebook & 5 more"
 - Window names and colors survive a browser restart, even when the window's tabs changed since
 - Names and colors of windows closed for more than a day are cleaned up, so a new window cannot inherit an old name (#103, #244)
-- Restored windows keep their size and position, fitted to the screen they are restored on; a window saved maximized comes back maximized (#205, #208)
-- Restoring a window in own-tab mode scrolls to it
-- Saved sessions could be lost when the update from version 5 was interrupted, e.g. by closing the popup
-- Saved sessions are no longer limited by the browser's 10 MB storage quota, and showing a session no longer changes it (which could corrupt exports)
-- Enabling the sessions feature shows your saved windows right away
 - The window order no longer resets on its own; the current window is always listed first and marked, also as a popup (#241)
 - Clicking the icon while Tab Manager Plus is already open in a tab switches to that tab
 - The "switch to previous tab" shortcut works again (#37, #108, #238)
+- Dragging several tabs shows them as a stack; a refused drop shows a not-allowed cursor
+
+Saved Windows (Sessions), rebuilt
+- On by default and no longer beta, also after the update from 6.x
+- New look: a dashed edge, a saved icon and faded favicons that regain their color under the mouse
+- Save the selected tabs as a new saved window with the bottom bar button (#201)
+- Rename and recolor a saved window by clicking its name or color (#172)
+- Restored windows keep their size and position, fitted to the screen; a window saved maximized comes back maximized on its own monitor when connected (#205, #207, #208). In own-tab mode the popup scrolls to it
+- Hover cards: when saved, size, and where a restore will land on your monitors; an open tab's card lists the saved windows holding it
+- Delete saved tabs and windows with the trash button or Ctrl+Del (Cmd+Backspace on a Mac). Undo for 8 seconds; Ctrl+Z (Cmd+Z) undoes the newest first, up to three Undo notices stack (#180)
+- Errors show in the same notice, in red, with the reason (full storage, unreadable file, refused drop)
+- Enter opens selected saved tabs in a new window
+- Drag saved tabs into open or saved windows; drag open tabs onto a saved window to add copies (#192); reorder saved tabs and windows
+- Search finds saved tabs too and selects them when no open tab matches: s:tax looks only in saved tabs, -s:tax only in open tabs
+- Ctrl+click or right-click selects a saved tab now
+- Import says how many saved windows it restored or skipped and why; duplicates are skipped (#39). It reads both export files (tab-manager-plus-sessions and -everything) and older backups
+- No longer limited by the browser's 10 MB storage quota, and showing a session no longer changes it (which could corrupt exports)
+- Saved sessions could be lost when the update from version 5 was interrupted, e.g. by closing the popup
+- Enabling saved windows shows them right away
 
 Smaller fixes
 - Settings, window names and colors no longer revert to an older state when the popup opens while they are being changed (#126, #131)
@@ -90,6 +109,7 @@ Smaller fixes
 - Window names and colors changed in the background refresh in the popup
 - Hover texts: restored when moving from a tab back to its window, sessions have one too, tab counts and plurals are right (#121, #183)
 - The drop indicator when dragging a tab fits every layout and shows in the dark theme; the color picker lists colors in order (#97)
+- A window hidden by Hide non-matching tabs shows again when the search ends
 - The window name and color screen covers the whole popup, its close button shows a pointer and Escape closes only that screen
 
 Tab And Window Info
@@ -111,77 +131,40 @@ Options
 - Advanced settings: Export tabs for debugging saves a JSON file with your windows, tabs and settings, to attach to a bug report
 
 ➤ 6.0.0 ( 1st October 2024 )
-- Open single tabs from your saved sessions
-- Experimental: restore window names and colors after a browser restart
-- Vertical layout takes the full width in popups, with nicer separators in a full window
+- Open single tabs from your saved sessions; experimental: window names and colors survive a browser restart
 - Closing, moving or discarding many tabs no longer stops early when the popup closes
-- Saved windows restore fully, also when saved off-screen or bigger than the current monitor
-- Favicons load reliably, also while a tab is loading
+- Saved windows restore fully, even if saved off-screen or bigger than the monitor
 - Window titles update after tabs load, use the hostname, show IPs properly and group by IP range
-- Dragged tabs drop next to the closest tab; choosing a window color no longer hides the other windows
-- Moving a mix of incognito and normal tabs opens two windows, one of each
-- No scroll animation when animations are off
+- Fixes: Vertical layout width and separators, dragged tabs drop next to the closest tab, picking a window color no longer hides other windows, mixed incognito and normal tabs move into two windows, no scroll animation when animations are off
 
-➤ 5.3.0 ( 22nd September 2024 )
-- Fix: Move to manifest v3
-
-➤ 5.2.1 ( 22nd September 2024 )
-- Fix: White page crash when tab had no hostname / title
-
-➤ 5.2.0 ( 22nd June 2020 )
-- Improves search! Searching for "google mail" will highlight tabs that have both words included #107
-- Improves search! Searching for "google OR mail" will highlight tabs that have either of the worlds included #106
-- Fix: Searching for the same string length would not trigger another search, but that could have stopped an accent selection #93
-- Shift-right click will now select tabs in between the last selected tab #104 #94
-- Design Fix: default font size set to 16px
-- Default popup size increased to 800x600
-- Default design changed to blocks
-- Improvements: Background clean up added, to keep resources low
-- Improvements: Don't render windows in the background while the color/title selection is active
-- Improvements: Warn when trying to backup empty sessions #98
-- Fix: Doesn't allow users to export empty session files, shows a warning instead
-- Fix: Don't show import/export options for sessions if the feature is not enabled #98
-- Fix: Make it more obvious that you can type right away #86
-- Fix: Pluralization fixes when only 1 tab was selected #87
-
-➤ 5.1.6 ( 17th June 2020 )
-- Reduce options that would be restored in sessions, to limit conflicts
-
-➤ 5.1.5 ( 17th June 2020 )
-- Dark mode has now dark input fields, to ease the eye strain
-- Slight design and color adjustments
-- Fix: Properly close title/color popup after pressing enter/escape ( instead of closing the TMP popup )
-- Fix: When selecting a tab in dark mode, the text was unreadable
-- Fix: Changed the way how tabs are counted - sometimes it was possible to open more tabs per window than allowed
-
-➤ 5.1.4 ( 17th June 2020 )
-- Moving multiple tabs would sometimes not work when using the button or [Enter] key. This should be fixed now
-
-➤ 5.1.3 ( 7th November 2019 ) popup width adjustable again
-➤ 5.1.2 ( 4th November 2019 ) friendlier context menu, faster with many tabs
-➤ 5.1.1 ( 1st November 2019 ) highlight duplicate tabs button is back
-➤ 5.1.0 ( 31st October 2019 ) see tabs playing sound, see and discard sleeping tabs, arrow key navigation
-➤ 5.0.8 ( 29th October 2019 ) backup and restore your saved windows
+➤ 5.3.0 ( 22nd September 2024 ) manifest v3
+➤ 5.2.1 ( 22nd September 2024 ) crash fix
+➤ 5.2.0 ( 22nd June 2020 ) smarter search, Shift-right click ranges, bigger popup, blocks by default
+➤ 5.1.6 ( 17th June 2020 ) fewer options restored in sessions
+➤ 5.1.5 ( 17th June 2020 ) dark input fields
+➤ 5.1.4 ( 17th June 2020 ) moving multiple tabs fixed
+➤ 5.1.3 ( 7th November 2019 ) popup width
+➤ 5.1.2 ( 4th November 2019 ) context menu, speed
+➤ 5.1.1 ( 1st November 2019 ) duplicates button back
+➤ 5.1.0 ( 31st October 2019 ) sleeping tabs, arrow keys
+➤ 5.0.8 ( 29th October 2019 ) backup
 ➤ 5.0.7 ( 28th October 2019 ) dark mode
-➤ 5.0.6 ( 25th October 2019 ) support for older browser versions
+➤ 5.0.6 ( 25th October 2019 ) older browsers
 ➤ 5.0.5 ( 23rd October 2019 ) one permission less
-➤ 5.0.4 ( 23rd October 2019 ) save and restore windows
-➤ 5.0.3 ( 15th August 2019 ) open Tab Manager in its own tab
+➤ 5.0.4 ( 23rd October 2019 ) save windows
+➤ 5.0.3 ( 15th August 2019 ) own-tab mode
 ➤ 5.0.2 ( 6th August 2019 ) Chrome hotfix
-➤ 5.0.1 ( 6th August 2019 ) launched for Firefox
-➤ 5.0.0 ( 5th August 2019 ) rate and review buttons, newer Chrome APIs
+➤ 5.0.0 ( 5th August 2019 ) rate and review buttons
 ➤ 4.9.9 ( 27th February 2019 ) scroll to the current tab
-➤ 4.9.8 ( 27th February 2019 ) smarter window titles
+➤ 4.9.8 ( 27th February 2019 ) window titles
 ➤ 4.9.7 ( 24th January 2019 ) rendering fixes
-➤ 4.9.6 ( 24th January 2019 ) nicer wrapping of windows
-➤ 4.9.5 ( 23rd January 2019 ) unnamed windows show their top sites
-➤ 4.9.4 ( 28th June 2018 ) auto-close forgotten tab managers
-➤ 4.9.3 fixes for older Chrome versions
+➤ 4.9.6 ( 24th January 2019 ) wrapping
+➤ 4.9.5 ( 23rd January 2019 ) top sites as names
+➤ 4.9.4 ( 28th June 2018 ) auto-close tab managers
+➤ 4.9.3 older Chrome fixes
 ➤ 4.9.2 settings fix
-➤ 4.9.1 auto-hide inactive windows, section for minimized windows
-➤ 4.9.0 window colors, minimize and maximize windows
-
-
+➤ 4.9.1 auto-hide inactive windows
+➤ 4.9.0 window colors, minimize, maximize
 
 Tab Manager Plus is open source.
 
@@ -198,7 +181,7 @@ If you don't like one of the layouts, there are 4 views available in total :
 
 You can move tabs between windows in every view - and you can select tabs with your right mouse button ( or CTRL+click on Mac ). Once you have selected a few tabs, simply press the "enter" key, and all tabs will be moved to a new browser window.
 
-Are you stuck with lost duplicate tabs? Simply press the "duplicate tabs" icon, and Tab Manager will select the extra copies for you and keep the one you used last. The delete button closes just the duplicates, "Enter" moves them to a separate window.
+Are you stuck with lost duplicate tabs? Simply press the "duplicate tabs" icon, and Tab Manager will select the extra copies for you and keep the one you used last. Ctrl+Del (Cmd+Backspace on a Mac) or the trash button closes just the duplicates, "Enter" moves them to a separate window.
 
 ➤ Don't like animations? You can turn off / turn on animations in the options.
 
