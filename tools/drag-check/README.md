@@ -7,7 +7,7 @@ runs the drags through Chrome itself instead, against the built extension.
 
 ```sh
 node build.mjs                          # build/chrome
-node tools/drag-check/check.mjs         # every check, ~75 s
+node tools/drag-check/check.mjs         # every check (105), ~4 min
 node tools/drag-check/check.mjs --only "saved tab -> open"
 ```
 

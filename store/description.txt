@@ -58,7 +58,7 @@ Faster
 - Typing right after opening the popup no longer loses the first characters
 
 Searching And Duplicates
-- Highlight Duplicates selects only the extra copies and keeps the one you used last, so Delete closes just the duplicates (#142, #188, #240, #248, #260)
+- Highlight Duplicates selects only the extra copies and keeps the one you used last, so Ctrl+Delete (Cmd+Delete on a Mac) closes just the duplicates (#142, #188, #240, #248, #260)
 - The header shows how many tabs have duplicates and how many are selected
 - Searching while duplicates are highlighted searches within them
 - Pasting a search term, or editing in the middle of it, now searches the right tabs

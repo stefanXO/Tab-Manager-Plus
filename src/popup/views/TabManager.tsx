@@ -1689,8 +1689,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	}
 	// A selection by right-click or a modifier click (whose mousedown is
 	// prevented, so the focus would stay where it was) moves the focus from
-	// the search box to the window list, as a left click does: Delete then
-	// closes the selection instead of editing the search text. Typing moves
+	// the search box to the window list, as a left click does: Ctrl/Cmd+Delete
+	// then closes the selection instead of deleting a word of the search text. Typing moves
 	// it back in (checkKey).
 	leaveSearchBox() {
 		const search = this.searchBoxRef.current;
@@ -1809,7 +1809,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			if (!onMainScreen(this.state)) return;
 			// the arrows select: the focus goes to the window list, unless they
 			// move the caret in a search box that holds text (an empty box
-			// gives the focus up too, so Delete then closes the selection)
+			// gives the focus up too, so Ctrl/Cmd+Delete then closes the selection)
 			if (document.activeElement !== this.windowContainerRef.current && (document.activeElement !== this.searchBoxRef.current || !this.searchBoxRef.current?.value)) {
 				this.windowContainerRef.current?.focus();
 			}

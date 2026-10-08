@@ -235,6 +235,10 @@ export class StatsHover {
 		// a zoom asked for before (this popup) is shown at once, no line popping in
 		const cached = kind === "tab" ? this.zoomCache.get(id) : undefined;
 		this.view.show(target, cached);
+		// a saved window's landing preview: the monitors again (the window may
+		// have moved to another monitor, or monitors changed, since the load),
+		// so it predicts by the list a Restore clicked now sends
+		if (kind === "session") this.loadDisplays();
 		if (kind !== "tab" || cached !== undefined || !browser.tabs.getZoom) return;
 		// async and allowed to fail (a sleeping tab, a restricted page): the
 		// line is simply added when the answer comes, if the card is still up
@@ -280,9 +284,10 @@ export class StatsHover {
 	}
 
 	// The monitors for the window card's map: fetched once, right after the
-	// popup has loaded (never when a card opens), and again when the
-	// system.display permission or the "Show all monitors" setting changes
-	// while the popup is open. Chrome with that optional permission (options:
+	// popup has loaded (never when an open window's card opens), again when
+	// the system.display permission or the "Show all monitors" setting changes
+	// while the popup is open, and each time a saved window's card opens
+	// (show). Chrome with that optional permission (options:
 	// "Show all monitors", or "Minimize inactive windows") and the setting not
 	// "off": every monitor, the primary one first; else (Chrome without it or
 	// switched off, Firefox) the popup's own monitor, `onlyPopup`. Applies the
@@ -312,7 +317,10 @@ export class StatsHover {
 		// only the latest load counts: an older one may have read the setting
 		// from before a switch
 		if (run !== this.displaysRun) return;
-		this.displays = list.length ? { list, onlyPopup: false, restore } : { list: [popupScreen()], onlyPopup: true, restore };
+		const displays = list.length ? { list, onlyPopup: false, restore } : { list: [popupScreen()], onlyPopup: true, restore };
+		// unchanged (a saved window card's refetch, mostly): nothing to redraw
+		if (JSON.stringify(displays) === JSON.stringify(this.displays)) return;
+		this.displays = displays;
 		// an open window card picks the map up
 		this.view.refresh();
 	}

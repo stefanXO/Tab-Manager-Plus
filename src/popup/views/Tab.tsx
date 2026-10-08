@@ -217,7 +217,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 		} else if (e.button === 2 || e.nativeEvent.metaKey || e.nativeEvent.altKey || e.nativeEvent.shiftKey || e.nativeEvent.ctrlKey) {
 			e.preventDefault();
 			// the prevented mousedown leaves the focus where it was: take it out of
-			// the search box, so Delete closes the selection
+			// the search box, so Ctrl/Cmd+Delete closes the selection
 			this.context.leaveSearchBox();
 			if (e.button === 2 && (e.nativeEvent.metaKey || e.nativeEvent.altKey || e.nativeEvent.shiftKey || e.nativeEvent.ctrlKey)) {
 				this.selectTo(tabId);
