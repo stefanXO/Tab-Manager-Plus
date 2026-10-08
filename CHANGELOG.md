@@ -45,6 +45,7 @@ Windows And Sessions
 - Deleting a saved window can be undone: it disappears at once and a notice with an 8 second countdown offers Undo; it is only removed for good when the countdown ends or the popup closes
 - Saved windows can be renamed and recolored with the same name and color screen as open windows, from the color button on the saved window's card (#172)
 - Ctrl+click or right-click on a tab of a saved window selects it, instead of an unrelated open tab that Delete would then close; saved windows are no longer marked as the active window
+- Tabs of saved windows can be deleted: select them, then use the trash button or the Delete key; a saved window with no tab left is deleted, and the same Undo notice applies (#180)
 - Saved windows look different from open windows: a dashed edge, a saved icon before the name, and faded favicons that regain their color under the mouse; they are no longer dimmed as a whole, so their tabs stay readable
 - Resting the mouse on a tab of a saved window shows a card like an open tab's: when it was saved, its place in the saved window, and the windows it is open in right now; an open tab's card lists the saved windows that also hold it
 - Resting the mouse on a saved window shows a card like an open window's: its tabs and sites, when it was saved, the size and state it was saved with, and a map of the monitors showing where it would land if restored now

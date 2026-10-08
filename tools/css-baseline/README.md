@@ -176,6 +176,12 @@ currently on disk — there is no stale copy to forget about.
   `src/helpers/geometry.ts` `predictLanding`). The fixture's saved windows carry the bounds
   they were saved at ("Tax 2029" on the second monitor); `-max` stores "Conference reading"
   as maximized (`apply.savedInfo`)
+- `saved-tabs-delete` (+ `-key`, `-all`, `-two`, `-undo`): deleting selected saved tabs
+  (`src/popup/savedDelete.ts`): Ctrl+click tabs of a saved window, then the trash button
+  (`-key`: the Delete key, via a `{key: 46}` entry in `apply.clicks`); `-all` selects every
+  tab of "Tax 2029", so the window goes whole; `-two` takes tabs of both saved windows;
+  `-undo` clicks Undo (`optional: true`: skipped when there is no such button, as before
+  the step). The `-undo` shot equals the plain list
 - `fresh` / `fresh-compact`: the List view's freshness bars (`src/popup/freshness.ts`, drawn at the end of every List row from the fixture's `lastAccessed`, 0 min .. 14 days: all five levels) — `fresh` as `plain`, `fresh-compact` with the `compact` setting on. `vertical` × 2 themes × `800x600`, dpr 1 only
 - `page-options-na-<theme>-<width>`: `options.html` standalone, 2 × 3 = 6
 - `page-changelog-na-<theme>-<width>`: `changelog.html` standalone, 2 × 3 = 6.

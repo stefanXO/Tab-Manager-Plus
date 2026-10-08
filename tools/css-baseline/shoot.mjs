@@ -204,6 +204,28 @@ const STATES = [
 		clicks: [{sel: '#session-s1 .icon.tabaction.delete'}], freezeClock: true, scrollEnd: true}},
 	{name: 'saved-delete-two', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {
 		clicks: [{sel: '#session-s1 .icon.tabaction.delete'}, {sel: '#session-s2 .icon.tabaction.delete'}], freezeClock: true}},
+	// deleting selected saved tabs (src/popup/savedDelete.ts): Ctrl+click two tabs
+	// of "Conference reading", then the trash button; the tabs are hidden at once
+	// and the Undo notice names them. The clock is frozen as for saved-delete.
+	// dpr 1, blocks + List, 800x600 and 380x900
+	{name: 'saved-tabs-delete', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {
+		clicks: [{sel: '#sessiontab_s1_1', ctrl: true}, {sel: '#sessiontab_s1_3', ctrl: true}, {sel: '.icon.windowaction.trash'}],
+		freezeClock: true, scrollInto: '#session-s1'}},
+	// the same with the Delete key instead of the button
+	{name: 'saved-tabs-delete-key', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {
+		clicks: [{sel: '#sessiontab_s1_0', ctrl: true}, {key: 46}], freezeClock: true, scrollInto: '#session-s1'}},
+	// every tab of "Tax 2029" selected (Ctrl+click the first, Shift+right-click
+	// the last) and deleted: the saved window goes with them
+	{name: 'saved-tabs-delete-all', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {
+		clicks: [{sel: '#sessiontab_s2_0', ctrl: true}, {sel: '#sessiontab_s2_2', shift: true, button: 2}, {sel: '.icon.windowaction.trash'}],
+		freezeClock: true, scrollEnd: true}},
+	// tabs of both saved windows at once
+	{name: 'saved-tabs-delete-two', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {
+		clicks: [{sel: '#sessiontab_s1_2', ctrl: true}, {sel: '#sessiontab_s2_1', ctrl: true}, {sel: '#sessiontab_s2_2', ctrl: true}, {sel: '.icon.windowaction.trash'}],
+		freezeClock: true, scrollEnd: true}},
+	// tabs deleted, then Undo clicked: everything is back
+	{name: 'saved-tabs-undo', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {
+		clicks: [{sel: '#sessiontab_s1_1', ctrl: true}, {sel: '.icon.windowaction.trash'}, {sel: '.undo-button', optional: true}], scrollInto: '#session-s1'}},
 	// a saved window that was the focused window when it was saved (its stored
 	// windowsInfo says focused, with the id of the focused open window "Work"):
 	// it must not look like the active window. dpr 1, blocks + List, 800x600
@@ -403,7 +425,14 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 		// 8. clicks with modifiers, as the user makes them: a left click is a
 		// click event, any other button a mousedown (Tab.tsx onMouseDown)
 		for (const c of s.clicks) {
+			if (c.key) {
+				// a key press on the list, as the root's onKeyDown sees it
+				q('#root').dispatchEvent(new KeyboardEvent('keydown', {bubbles: true, cancelable: true, keyCode: c.key, which: c.key}))
+				await frame()
+				continue
+			}
 			const el = q(c.sel)
+			if (!el && c.optional) continue
 			if (!el) throw new Error('nothing to click at ' + c.sel)
 			const init = {bubbles: true, cancelable: true, button: c.button || 0, ctrlKey: !!c.ctrl, shiftKey: !!c.shift}
 			el.dispatchEvent(new MouseEvent(c.button ? 'mousedown' : 'click', init))

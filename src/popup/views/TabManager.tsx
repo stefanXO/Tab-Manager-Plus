@@ -18,9 +18,16 @@ import {sizePopup} from "@helpers/popup_size";
 import {applyTheme} from "@helpers/theme";
 import {StatsLayer, StatsSource} from "./StatsLayer";
 import {UndoNotice} from "./UndoNotice";
-import {PendingDeletes, withoutSessions, noticeText} from "../pendingDelete";
+import {PendingDeletes, PendingItem, withoutItems, visibleSessions, noticeText} from "../pendingDelete";
+import {savedDeleteItems} from "../savedDelete";
 import {editSession, SessionEdit} from "../sessionEdit";
 import {searchSaved, searchSummary, SavedSearch} from "../searchSaved";
+
+// the focus is in a text box that holds text: Delete edits that text
+function editingText() : boolean {
+	const el = document.activeElement as HTMLInputElement | null;
+	return !!el && el.tagName === "INPUT" && el.type === "text" && el.value !== "";
+}
 
 // the settings the manager holds in its state and applies
 type ManagerSettings = Omit<Settings, "showMonitors">;
@@ -42,7 +49,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	private storedSessions : Record<string, ISavedSession> | null = null;
 	// saved windows deleted and not yet removed from storage (the Undo notice)
 	private readonly pending = new PendingDeletes({
-		commit: (ids, sync) => this.commitDeletes(ids, sync),
+		commit: (items, sync) => this.commitDeletes(items, sync),
 		onChange: () => this.forceUpdate()
 	});
 	// leaving the popup writes the deletes that are still counting down
@@ -277,15 +284,26 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		this.hoverIcon(el ? (el.dataset.hover ?? el.title) : "", !!el && el.dataset.hoverHold !== undefined);
 	}
 
+	// The saved windows as shown: without the ones deleted and the tabs of the
+	// others that were deleted, while their Undo countdown runs or the write is
+	// on its way. The same objects until state.sessions or that changes (the
+	// search's memo compares them).
+	private shownMemo : { sessions : ISavedSession[], version : number, result : ISavedSession[] } | null = null;
+	visibleSessions() : ISavedSession[] {
+		const m = this.shownMemo;
+		const version = this.pending.version;
+		if (m && m.sessions === this.state.sessions && m.version === version) return m.result;
+		const result = visibleSessions(this.state.sessions, this.pending.hiding());
+		this.shownMemo = { sessions: this.state.sessions, version, result };
+		return result;
+	}
+
 	// the stats card (StatsLayer, ../statsHover.ts) reads the manager's data
 	// through this when a card opens; it listens on #root (its parent) itself
 	private readonly statsSource : StatsSource = {
 		state: () => this.state,
 		searchBox: () => this.searchBoxRef.current,
-		sessions: () => {
-			const hidden = this.pending.hidden();
-			return this.state.sessions.filter((s) => !hidden.has(s.id));
-		}
+		sessions: () => this.visibleSessions()
 	};
 	// What the search (or Highlight Duplicates / recent) does to the saved
 	// windows, worked out again only when its inputs change (render runs on
@@ -366,9 +384,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			if (this.state.windows[i].state === "minimized") haveMin = true;
 		}
 
-		// a deleted saved window is hidden while its Undo countdown runs
-		const hiddenSessions = this.pending.hidden();
-		const sessions = this.state.sessions.filter((s) => !hiddenSessions.has(s.id));
+		// a deleted saved window (or tab) is hidden while its Undo countdown runs
+		const sessions = this.visibleSessions();
 		// the saved window the name / colour screen is open on
 		const namedSession = this.state.colorsSession ? this.state.sessions.find((s) => s.id === this.state.colorsSession) : undefined;
 		// the search, as far as it reaches saved tabs: which fade or hide
@@ -584,9 +601,10 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 									/>
 									<div
 										className="icon windowaction trash"
-										style={savedSel ? savedSelStyle : {}}
 										title={
-											savedSel ? savedSelTitle : this.state.selection.size > 0
+											savedSel
+												? "Delete selected saved tabs\nWill delete " + maybePluralize(this.state.selection.size, "saved tab") + " from their saved windows. Undo is possible for a few seconds"
+												: this.state.selection.size > 0
 												? "Close selected tabs\nWill close " + maybePluralize(this.state.selection.size, 'tab')
 												: "Close current Tab"
 										}
@@ -769,8 +787,18 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	deleteSession(session : ISavedSession) {
 		this.pending.add({id: session.id, name: session.name, tabs: session.tabs.length});
 		// its selected tabs go with it
-		const hidden = this.pending.hidden();
-		dropMissingSaved(this.state.selection, this.state.sessions.filter((s) => !hidden.has(s.id)));
+		dropMissingSaved(this.state.selection, this.visibleSessions());
+		this.setState(this.selectionText());
+	}
+	// Deletes the selected saved tabs from their saved windows: hidden now,
+	// removed from storage when the countdown ends, with the same Undo notice as
+	// a deleted window. A saved window left with no tab goes whole.
+	deleteSavedTabs() {
+		const items = savedDeleteItems(this.state.selection, this.visibleSessions());
+		if (items.length === 0) return;
+		for (const item of items) this.pending.add(item);
+		// everything selected was just deleted
+		this.clearSelection();
 		this.setState(this.selectionText());
 	}
 	// Renames / recolours a saved window (./sessionEdit.ts). Written from the
@@ -790,10 +818,10 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	// removes saved windows from storage. When the popup is closing (sync) the
 	// write starts without a read, from the copy sessionSync keeps: the set
 	// itself completes even as the page goes.
-	async commitDeletes(ids : string[], sync : boolean) {
+	async commitDeletes(items : PendingItem[], sync : boolean) {
 		if (sync && this.storedSessions) {
 			// later edits (a name flushed right after) build on the copy without them
-			const next = withoutSessions(this.storedSessions, ids) as Record<string, ISavedSession>;
+			const next = withoutItems(this.storedSessions, items);
 			this.storedSessions = next;
 			void setLocalStorage(S.sessions, next);
 			return;
@@ -801,14 +829,14 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		// from the copy when there is one: an edit written during a read here
 		// would be lost otherwise
 		const sessions = this.storedSessions || await getLocalStorage(S.sessions, {});
-		const next = withoutSessions(sessions, ids) as Record<string, ISavedSession>;
+		const next = withoutItems<ISavedSession>(sessions as Record<string, ISavedSession>, items);
 		await setLocalStorage(S.sessions, next);
 		// Bring the state up to date before the promise resolves: the ids stop
 		// being hidden right after, and the storage.onChanged -> sessionSync
 		// read may not be done yet, so state.sessions would show the deleted
 		// window for a moment. A failed set rejects above: the window shows again.
 		this.storedSessions = next;
-		this.setState({sessions: this.state.sessions.filter((s) => !ids.includes(s.id))});
+		this.setState({sessions: visibleSessions(this.state.sessions, items)});
 	}
 	focusRoot() {
 		this.setState({
@@ -894,8 +922,12 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		};
 	}
 	deleteTabs = async () => {
-		// only saved tabs selected: not the current tab either
-		if (onlySavedSelected(this.state.selection)) return;
+		// only saved tabs selected: they go from their saved windows (not the
+		// current tab either)
+		if (onlySavedSelected(this.state.selection)) {
+			this.deleteSavedTabs();
+			return;
+		}
 		const tabs = this.selectedTabs();
 		if (tabs.length) {
 			browser.runtime.sendMessage<ICommand>({command: S.close_tabs, tabs: tabs});
@@ -1152,9 +1184,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			});
 		} else {
 			// saved tabs that match are counted beside the open ones (never selected)
-			const hiddenSessions = this.pending.hidden();
 			const saved = searchSaved(
-				this.state.sessions.filter((s) => !hiddenSessions.has(s.id)),
+				this.visibleSessions(),
 				parsed,
 				this.state.dupTabs || this.state.recentLevel > 0
 			);
@@ -1218,6 +1249,13 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			}
 			this.clearSelection();
 			this.clearHiddenTabs();
+			return;
+		}
+		// Delete with saved tabs selected removes them from their saved windows,
+		// unless it is editing the search text
+		if (e.keyCode === 46 && onlySavedSelected(this.state.selection) && onMainScreen(this.state) && !editingText()) {
+			e.preventDefault();
+			this.deleteSavedTabs();
 			return;
 		}
 		// any typed keys
@@ -1541,8 +1579,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	selectionText() : Pick<ITabManagerState, "topText" | "bottomText"> {
 		const selected = this.state.selection.size;
 		if (selected === 0) return { topText: "No tabs selected", bottomText: " " };
-		// saved tabs (all of one kind, see select): nothing for Enter to do yet
-		if (onlySavedSelected(this.state.selection)) return { topText: "Selected " + maybePluralize(selected, "saved tab"), bottomText: " " };
+		// saved tabs (all of one kind, see select): Delete removes them, Enter has nothing to do yet
+		if (onlySavedSelected(this.state.selection)) return { topText: "Selected " + maybePluralize(selected, "saved tab"), bottomText: "Press delete to remove " + (selected === 1 ? "it" : "them") + " from the saved window" };
 		if (selected === 1) return { topText: "Selected " + selected + " tab", bottomText: "Press enter to switch to it" };
 		return { topText: "Selected " + selected + " tabs", bottomText: "Press enter to move them to a new window" };
 	}
@@ -1577,11 +1615,12 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				rangeIndex2 = i;
 			}
 		}
-		if (!!lastSelect && !rangeIndex2) {
+		// (index 0 is a valid anchor: the first tab of a window)
+		if (!!lastSelect && rangeIndex2 === undefined) {
 			this.select(id);
 			return;
 		}
-		if (!rangeIndex2) {
+		if (rangeIndex2 === undefined) {
 			const neighbours = [];
 			for (let i = 0; i < tabs.length; i++) {
 				const tabId = tabs[i].id;

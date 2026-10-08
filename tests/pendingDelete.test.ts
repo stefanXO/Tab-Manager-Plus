@@ -6,6 +6,7 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { PendingDeletes, withoutSessions, noticeText, secondsLeft, fractionLeft, UNDO_MS } from "../src/popup/pendingDelete.ts";
+import type { PendingItem } from "../src/popup/pendingDelete.ts";
 
 // a clock and timers the test moves by hand
 function fakeTimers() {
@@ -24,12 +25,12 @@ function fakeTimers() {
 	};
 }
 
-function setup(commit : (ids : string[], sync : boolean) => Promise<unknown> | void = () => {}) {
+function setup(commit : (items : PendingItem[], sync : boolean) => Promise<unknown> | void = () => {}) {
 	const t = fakeTimers();
 	const commits : { ids : string[], sync : boolean }[] = [];
 	let changes = 0;
 	const p = new PendingDeletes({
-		commit: (ids, sync) => { commits.push({ ids, sync }); return commit(ids, sync); },
+		commit: (items, sync) => { commits.push({ ids: items.map((i) => i.id), sync }); return commit(items, sync); },
 		onChange: () => { changes++; },
 		timers: t
 	});
