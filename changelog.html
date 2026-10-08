@@ -155,19 +155,20 @@
 								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/172" target="_blank" rel="noopener">#172</a>)
 							</li>
 							<li>Saved windows are switched on by default (no longer called beta or experimental
-								in the settings); the switch in the options still turns them off</li>
+								in the settings), also after the update from 6.x when no saved window is stored;
+								the switch in the options still turns them off</li>
 							<li>Ctrl+click or right-click on a tab of a saved window selects it, instead of an
 								unrelated open tab that Delete would then close; saved windows are no longer
 								marked as the active window</li>
-							<li>Tabs of saved windows can be deleted: select them, then use the trash button or
-								the Delete key; a saved window with no tab left is deleted, and the same Undo
-								notice applies
-								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/180" target="_blank" rel="noopener">#180</a>)
-							</li>
-							<li>Delete and Backspace close the selected tabs, as the trash button does (the
-								selected tabs of saved windows are removed from them, with Undo), unless the
-								search box is focused or holds text, where they edit the search; Enter with
-								saved tabs selected opens them in one new window, in the order shown</li>
+							<li>Tabs of saved windows can be deleted: select them, then use the trash button,
+								Delete or Backspace; a saved window with no tab left is deleted, and the same
+								Undo notice applies (<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/180" target="_blank" rel="noopener">#180</a>). Delete and Backspace close selected open tabs too,
+								as the trash button does, whenever the search box is not focused, whatever it
+								holds (search, select results, Delete); selecting with a right-click, a modifier
+								click or the arrow keys takes the focus out of the search box, typing puts it
+								back. Enter with saved tabs selected opens them in one new window, in the order
+								shown; Enter after a search that selected no open tab does nothing instead of
+								opening an empty window</li>
 							<li>Selected tabs can be saved as a new saved window, named from their sites: the new button next to "Move tabs to new window" in the bottom bar
 								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/201" target="_blank" rel="noopener">#201</a>)
 							</li>
@@ -209,8 +210,7 @@
 							<li>Search finds tabs in saved windows too: matching saved tabs stay clear while the
 								others fade (or hide, with Hide non-matching tabs on, together with saved
 								windows that have no match, instead of all saved windows disappearing), and the
-								header counts them; they are never selected, so Enter and Delete still only act
-								on open tabs</li>
+								header counts them; a search never selects them</li>
 							<li>Search only saved windows with <code>s:word</code>: open tabs never match it, and with Hide
 								non-matching tabs on, the open windows hide; a bare <code>s:</code> shows the saved windows
 								alone. It combines with the rest of the syntax (<code>s:tax t:2029</code>, <code>s:tax -u:old</code>,

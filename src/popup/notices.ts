@@ -33,7 +33,8 @@ export interface NoticeBoardOptions {
 }
 
 // The errors and infos on screen, oldest first. The same message shown again
-// does not pile up: it replaces the earlier one and starts its countdown over.
+// does not pile up: the earlier one moves to the end and starts its countdown
+// over, keeping its id, so its component (and a mouse hold on it) stays.
 export class NoticeBoard {
 	private list : Notice[] = [];
 	private readonly clocks = new Map<number, Countdown>();
@@ -52,7 +53,14 @@ export class NoticeBoard {
 
 	show(kind : Notice["kind"], text : string, ms? : number) : number {
 		const length = ms ?? (kind === "error" ? ERROR_MS : INFO_MS);
-		for (const old of this.list.filter((n) => n.kind === kind && n.text === text)) this.drop(old.id);
+		const again = this.list.find((n) => n.kind === kind && n.text === text);
+		if (again) {
+			// in place: a held countdown stays held and starts when let go
+			this.list = [...this.list.filter((n) => n !== again), { ...again, ms: length }];
+			this.clocks.get(again.id)?.start(length);
+			this.options.onChange();
+			return again.id;
+		}
 		while (this.list.length >= MAX_NOTICES) this.drop(this.list[0].id);
 		const id = this.next++;
 		this.list.push({ id, kind, text, ms: length });

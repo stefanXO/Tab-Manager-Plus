@@ -111,12 +111,29 @@ describe("NoticeBoard", () => {
 		const first = board.error("Could not save the window");
 		t.advance(ERROR_MS - 1000);
 		const second = board.error("Could not save the window");
-		assert.notEqual(first, second);
+		// the same notice, its countdown run again (the bar restarts)
+		assert.equal(first, second);
+		assert.equal(board.runs(first), 2);
 		assert.equal(board.items.length, 1);
 		t.advance(ERROR_MS - 1);
 		assert.equal(board.items.length, 1);
 		t.advance(1);
 		assert.equal(board.items.length, 0);
+	});
+
+	test("the same message again while the mouse holds it stays held, and moves to the end", () => {
+		const { t, board } = setup();
+		const first = board.error("Could not save the window");
+		board.info("Imported");
+		board.hold(first, true);
+		t.advance(1000);
+		assert.equal(board.error("Could not save the window"), first);
+		assert.deepEqual(texts(board), ["Imported", "Could not save the window"]);
+		t.advance(ERROR_MS * 2);
+		assert.equal(board.left(first), ERROR_MS);
+		board.hold(first, false);
+		t.advance(ERROR_MS);
+		assert.ok(!board.items.some((n) => n.id === first));
 	});
 
 	test("an error and an info with one text are two notices", () => {

@@ -296,10 +296,16 @@ export class Session extends React.Component<ISession, ISessionState> {
 			this.context.showError(refusedText(tabId === null ? "restore the saved window" : "restore the saved tab", err));
 			return;
 		}
+		if (typeof windowId !== "number") {
+			// the worker answered without a window: the browser refused both
+			// windows.create calls. The popup stays open to say so.
+			this.context.showError(tabId === null ? "Could not restore the saved window" : "Could not restore the saved tab");
+			return;
+		}
 
 		if (!!window.inPopup) {
 			window.close();
-		} else if (typeof windowId === "number") {
+		} else {
 			// give the popup a moment to pick up the new window and render it
 			setTimeout(() => {
 				this.context.scrollTo("window", windowId.toString());

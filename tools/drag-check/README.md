@@ -14,10 +14,13 @@ node tools/drag-check/check.mjs --only "saved tab -> open"
 It exits 1 when any check fails (and 2 when `build/chrome` is missing). Run it in the gate
 of every step that touches drag code.
 
-Fourteen more checks (`--only keys`, own tab, blocks and vertical) press Delete, Backspace and Enter with
+Twenty more checks (`--only keys`, own tab, blocks and vertical) press Delete, Backspace and Enter with
 the browser's own key events (`page.keyboard`) after a ctrl+click: saved tabs deleted from their saved
 windows, open tabs closed, nothing closes while the search box is focused, Enter opens the selected
 saved tabs in one new window in the shown order, Enter with open tabs still moves them; a double press and a held Enter still open one window.
+Delete also closes the selection after a search plus a right-click select (text in the box, focus moved
+out by the popup) and after an arrow-key select started in the empty, focused search box; Enter after an
+`s:` search (which selects no open tab) opens no window.
 
 ## What it does
 

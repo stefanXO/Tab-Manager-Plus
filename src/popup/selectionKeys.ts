@@ -5,8 +5,10 @@
 // tests/selectionKeys.test.ts.
 //
 // Delete and Backspace close the selection (saved tabs: remove them from their
-// saved windows, with Undo) only when the search box is not focused and
-// empty: otherwise they edit the search text, as they always did. Enter
+// saved windows, with Undo) when the search box is not focused, whatever text
+// it holds (search, select results, Delete); with the box focused they edit
+// the search text, as they always did. Selecting moves the focus out of the
+// box (TabManager.leaveSearchBox), typing moves it back in. Enter
 // opens the selected saved tabs in one new window; with open tabs selected,
 // or nothing, it keeps its old meaning (TabManager.addWindow).
 
@@ -31,10 +33,8 @@ export interface SelectionKeyContext {
 	modified : boolean;
 	// the window list is shown (not the options or the name / colour screen)
 	mainScreen : boolean;
-	// the search box has the keyboard focus
+	// the search box has the keyboard focus (its text does not matter)
 	searchFocused : boolean;
-	// the search box holds no text
-	searchEmpty : boolean;
 	// the selection keys (open tab ids and saved tab keys, ./sessionKeys.ts)
 	selection : ReadonlySet<number>;
 }
@@ -46,7 +46,7 @@ export function selectionKeyAction(c : SelectionKeyContext) : SelectionKeyAction
 	const saved = onlySavedSelected(c.selection);
 	if (c.keyCode === KEY_ENTER) return saved ? "open-saved" : null;
 	if (c.keyCode === KEY_DELETE || c.keyCode === KEY_BACKSPACE) {
-		if (c.modified || c.searchFocused || !c.searchEmpty) return null;
+		if (c.modified || c.searchFocused) return null;
 		return saved ? "delete-saved" : "close-open";
 	}
 	return null;

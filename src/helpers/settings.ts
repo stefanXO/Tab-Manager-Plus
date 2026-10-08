@@ -3,6 +3,7 @@
 import * as browser from 'webextension-polyfill';
 import {readShowMonitors, resolveShowMonitors, ShowMonitors} from "./monitors";
 import {readTheme, Theme} from "./theme";
+import {mayHoldOldSessionsDefault, upgradeSessionsFeature} from "./sessionsUpgrade";
 
 // The four layouts, by their storage value. The user-facing names live in
 // TabManager.readablelayout().
@@ -70,8 +71,14 @@ const LEGACY_DARK = "dark";
 // version). Writing every key from a snapshot would overwrite whatever the
 // worker changed in the meantime: window names, colors, the window order.
 export async function readSettings(version : string) : Promise<Settings> {
-	const { [LEGACY_DARK]: legacyDark, ...stored } = await browser.storage.local.get([...Object.keys(SETTING_DEFAULTS), LEGACY_DARK]);
+	const { [LEGACY_DARK]: legacyDark, version: storedVersion, ...stored } = await browser.storage.local.get([...Object.keys(SETTING_DEFAULTS), LEGACY_DARK, "version"]);
 	const missing : Record<string, unknown> = { version: version };
+	// the first run after 6.x: its written sessionsFeature false is switched
+	// on when no saved window is stored (./sessionsUpgrade.ts)
+	if (mayHoldOldSessionsDefault(storedVersion, stored.sessionsFeature)) {
+		const { sessions } = await browser.storage.local.get("sessions");
+		if (upgradeSessionsFeature(storedVersion, stored.sessionsFeature, sessions)) missing.sessionsFeature = true;
+	}
 	for (const key of Object.keys(SETTING_DEFAULTS)) {
 		if (stored[key] === undefined || (key === "layout" && !stored[key])) missing[key] = SETTING_DEFAULTS[key];
 	}

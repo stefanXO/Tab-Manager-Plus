@@ -60,6 +60,9 @@ export interface ITabManagerActions {
 	importSavedWindows(sessions : ISavedSession[]) : Promise<number>;
 	// delete a saved window, with an Undo countdown before it leaves storage
 	deleteSession(session : ISavedSession) : void;
+	// a right-click / modifier selection: the focus leaves the search box for
+	// the window list (when the box has it), as on a left click
+	leaveSearchBox() : void;
 	// An error notice (red edge and tint, closes by itself after a while or
 	// with its close button): for what the user asked and did not happen, a
 	// refused write or a failure. The text says what, e.g. refusedText() in

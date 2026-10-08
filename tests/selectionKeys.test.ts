@@ -22,7 +22,6 @@ function ctx(over : Partial<SelectionKeyContext>) : SelectionKeyContext {
 		modified: false,
 		mainScreen: true,
 		searchFocused: false,
-		searchEmpty: true,
 		selection: new Set(OPEN),
 		...over
 	};
@@ -45,10 +44,10 @@ describe("selectionKeyAction: Delete and Backspace", () => {
 			assert.equal(selectionKeyAction(ctx({ keyCode, searchFocused: true, selection: new Set(SAVED) })), null);
 		});
 
-		test(name + " does nothing while the search box holds text, focused or not", () => {
-			assert.equal(selectionKeyAction(ctx({ keyCode, searchEmpty: false })), null);
-			assert.equal(selectionKeyAction(ctx({ keyCode, searchEmpty: false, selection: new Set(SAVED) })), null);
-			assert.equal(selectionKeyAction(ctx({ keyCode, searchEmpty: false, searchFocused: true })), null);
+		test(name + " acts while the search box holds text, as long as it is not focused (search, select, " + name + ")", () => {
+			// the search text is not part of the decision: only the focus is
+			assert.equal(selectionKeyAction(ctx({ keyCode })), "close-open");
+			assert.equal(selectionKeyAction(ctx({ keyCode, selection: new Set(SAVED) })), "delete-saved");
 		});
 
 		test(name + " with nothing selected does nothing (no tab is closed)", () => {
@@ -71,7 +70,7 @@ describe("selectionKeyAction: Enter", () => {
 	});
 
 	test("with saved tabs selected it also opens them from the search box, whatever it holds", () => {
-		assert.equal(selectionKeyAction(ctx({ keyCode: KEY_ENTER, selection: new Set(SAVED), searchFocused: true, searchEmpty: false })), "open-saved");
+		assert.equal(selectionKeyAction(ctx({ keyCode: KEY_ENTER, selection: new Set(SAVED), searchFocused: true })), "open-saved");
 	});
 
 	test("with open tabs, or nothing, selected it keeps its old meaning", () => {

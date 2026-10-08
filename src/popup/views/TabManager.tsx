@@ -260,6 +260,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			addSavedWindows: (sessions) => this.addSavedWindows(sessions),
 			importSavedWindows: (sessions) => this.importSavedWindows(sessions),
 			deleteSession: (session) => this.deleteSession(session),
+			leaveSearchBox: () => this.leaveSearchBox(),
 			showError: (text) => { this.board.error(text); },
 			showInfo: (text) => { this.board.info(text); },
 			closeNotices: () => this.closeNotices(),
@@ -1006,6 +1007,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		if (!session) return;
 		this.restoring = true;
 		let windowId : number | undefined;
+		let failure : unknown = null;
 		try {
 			windowId = await browser.runtime.sendMessage<ICommand, number | undefined>({
 				command: S.create_window_with_session_tabs,
@@ -1016,13 +1018,15 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			});
 		} catch (e) {
 			console.error(e);
+			failure = e;
 		} finally {
 			// before the failure branch: a refused restore can be retried
 			this.restoring = false;
 		}
 		if (typeof windowId !== "number") {
-			// the browser refused the window: stay open, the selection stays
-			this.setState({ ...openedText(0, ""), dirty: true });
+			// the worker threw, or the browser refused the window: the error
+			// notice says so, the popup stays open and the selection stays
+			this.board.error(failure ? refusedText("open the saved tabs", failure) : openFailedText(session.tabs.length, 0));
 			return;
 		}
 		this.clearSelection();
@@ -1692,6 +1696,15 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			lastSelect: 0
 		});
 	}
+	// A selection by right-click or a modifier click (whose mousedown is
+	// prevented, so the focus would stay where it was) moves the focus from
+	// the search box to the window list, as a left click does: Delete then
+	// closes the selection instead of editing the search text. Typing moves
+	// it back in (checkKey).
+	leaveSearchBox() {
+		const search = this.searchBoxRef.current;
+		if (!!search && document.activeElement === search) this.windowContainerRef.current?.focus();
+	}
 	checkKey = async (e) => {
 		// enter: only on the window list. On the options screen or the window
 		// name / colour overlay it must not open or move to a window.
@@ -1702,7 +1715,6 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			modified: e.ctrlKey || e.altKey || e.metaKey,
 			mainScreen: onMainScreen(this.state),
 			searchFocused: !!search && document.activeElement === search,
-			searchEmpty: !search || search.value === "",
 			selection: this.state.selection
 		});
 		// a held key (auto-repeat) acts once: only the first press counts
@@ -1731,6 +1743,10 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		}
 		if (e.keyCode === 13) {
 			if (!onMainScreen(this.state)) return;
+			// a search that selected no open tab (no match, or an s: search,
+			// which never matches open tabs): Enter does nothing, instead of
+			// opening an empty window
+			if (this.state.searchLen > 0 && this.state.selection.size === 0) return;
 			await this.addWindow();
 			return;
 		}
@@ -1797,7 +1813,10 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		if (e.keyCode >= 37 && e.keyCode <= 40) {
 			// off the window list the arrows scroll the page as usual
 			if (!onMainScreen(this.state)) return;
-			if (document.activeElement !== this.windowContainerRef.current && document.activeElement !== this.searchBoxRef.current) {
+			// the arrows select: the focus goes to the window list, unless they
+			// move the caret in a search box that holds text (an empty box
+			// gives the focus up too, so Delete then closes the selection)
+			if (document.activeElement !== this.windowContainerRef.current && (document.activeElement !== this.searchBoxRef.current || !this.searchBoxRef.current?.value)) {
 				this.windowContainerRef.current?.focus();
 			}
 

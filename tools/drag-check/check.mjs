@@ -297,6 +297,15 @@ try {
 		await cdp.detach()
 	}
 
+	async function rightClick(p, selector) {
+		const at = await point(p, selector)
+		const cdp = await p.createCDPSession()
+		await cdp.send('Input.dispatchMouseEvent', {type: 'mouseMoved', x: at.x, y: at.y})
+		await cdp.send('Input.dispatchMouseEvent', {type: 'mousePressed', x: at.x, y: at.y, button: 'right', buttons: 2, clickCount: 1})
+		await cdp.send('Input.dispatchMouseEvent', {type: 'mouseReleased', x: at.x, y: at.y, button: 'right', buttons: 0, clickCount: 1})
+		await cdp.detach()
+	}
+
 	const titlesOf = (windowId) => api(async (id) => {
 		const tabs = await chrome.tabs.query({windowId: id})
 		return tabs.sort((a, b) => a.index - b.index).map((t) => t.title || t.pendingUrl || t.url)
@@ -509,6 +518,33 @@ try {
 			const want = [['Alpha', 'Bravo', 'Charlie'], ['Hotel', 'India', 'Juliett', 'Kilo']]
 			return {got: [await titlesOf(w1), await shownIn(p, '#session-s1')], want}
 		})
+		// patch 26: the search text does not hold the keys back, only the focus,
+		// and selecting takes the focus out of the box
+		key('Delete after a search and a right-click select: they close', async () => {
+			const [w1] = await fixture(layout)
+			const p = await openPopup()
+			// the search selects Bravo; the right-click adds Alpha, its mousedown
+			// is prevented, so the popup itself must move the focus
+			await p.focus('.searchBoxInput')
+			await p.keyboard.type('Bravo')
+			await p.waitForFunction(() => document.querySelector('.searchBoxInput').value === 'Bravo')
+			await new Promise((r) => setTimeout(r, 300))
+			await rightClick(p, tabSel('Alpha'))
+			await p.keyboard.press('Delete')
+			const want = [['Charlie'], 'Bravo']
+			return {got: [await settle(() => titlesOf(w1), want[0]), await p.$eval('.searchBoxInput', (i) => i.value)], want}
+		})
+		key('Delete after an arrow select from the empty search box: it closes', async () => {
+			const [w1] = await fixture(layout)
+			const p = await openPopup()
+			await ctrlClick(p, tabSel('Alpha'))
+			await p.focus('.searchBoxInput')
+			// the next tab: Bravo (the list view's arrows run down the list)
+			await p.keyboard.press(layout === 'vertical' ? 'ArrowDown' : 'ArrowRight')
+			await p.keyboard.press('Delete')
+			const want = ['Alpha', 'Charlie']
+			return {got: await settle(() => titlesOf(w1), want), want}
+		})
 		key('Enter, saved tabs selected: one new window, in the order shown', async () => {
 			await fixture(layout)
 			const p = await openPopup()
@@ -546,6 +582,19 @@ try {
 				return {got: await newWindow(before, want), want}
 			})
 		}
+		// an s: search never selects an open tab: Enter must not open an empty window
+		key('Enter after an s: search that selected nothing: no new window', async () => {
+			await fixture(layout)
+			const p = await openPopup()
+			const before = await windowsNow()
+			await p.focus('.searchBoxInput')
+			await p.keyboard.type('s:Kilo')
+			await new Promise((r) => setTimeout(r, 300))
+			await p.keyboard.press('Enter')
+			await new Promise((r) => setTimeout(r, 800))
+			const want = []
+			return {got: await newWindow(before, want), want}
+		})
 		key('Enter, open tabs selected: the old move to a new window', async () => {
 			await fixture(layout)
 			const p = await openPopup()
