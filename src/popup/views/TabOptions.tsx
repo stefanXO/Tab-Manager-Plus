@@ -11,7 +11,8 @@ import {buildSessionsFile, everythingFileName, sessionsFileName} from "../sessio
 import {importSummary, importWorked, planImport} from "../importCount";
 import {debugExportNote, sessionsExportNote} from "../exportNotes";
 import {switchShowMonitors} from "@helpers/monitors";
-import {sizePopup} from "@helpers/popup_size";
+import {sizePopup, popupScreen} from "@helpers/popup_size";
+import {restoreDisplays} from "../restoreDisplays";
 import {getShortcuts} from "@helpers/shortcuts";
 import {applyTheme, Theme} from "@helpers/theme";
 import type {IconName} from "@icons/types";
@@ -567,7 +568,22 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 			exported: date,
 			names
 		}, this.props.sessions || []);
+		data.restore = await this.restoreDiagnostic();
 		return { json: JSON.stringify(data, null, 2), date };
+	}
+	// the worker's view of a restore: its monitors, the permission, the plan
+	// for each saved window and the last restores (helpers/restoreDiagnostic.ts)
+	private restoreDiagnostic = async () : Promise<unknown> => {
+		try {
+			const answer = await browser.runtime.sendMessage<ICommand, unknown>({
+				command: S.restore_diagnostic,
+				screen: popupScreen(),
+				displays: await restoreDisplays()
+			});
+			return answer ?? { error: "the worker did not answer" };
+		} catch (e) {
+			return { error: String(e instanceof Error ? e.message : e) };
+		}
 	}
 	exportDebug = async () => {
 		try {

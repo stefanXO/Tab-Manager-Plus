@@ -2,7 +2,7 @@
 
 import { globalTabsActive, tabsActiveLoaded, persistTabsActive } from '@context'
 import * as S from "@strings";
-import { focusOnWindow, focusOnWindowDelayed, createWindowWithTabs, createWindowWithSessionTabs } from '@background/windows';
+import { focusOnWindow, focusOnWindowDelayed, createWindowWithTabs, createWindowWithSessionTabs, restoreDiagnostic } from '@background/windows';
 import { hashcode } from "@helpers/windows";
 import { getLocalStorageMap, setLocalStorageMap, serialized } from "@helpers/storage";
 import { setupPopup } from "@ui/open";
@@ -66,7 +66,9 @@ function dispatch(request : ICommand) : Promise<unknown> | void {
 		case S.create_window_with_tabs:
 			return createWindowWithTabs(request.tabs, request.incognito);
 		case S.create_window_with_session_tabs:
-			return createWindowWithSessionTabs(request.session, request.tab_id, request.screen);
+			return createWindowWithSessionTabs(request.session, request.tab_id, request.screen, request.displays);
+		case S.restore_diagnostic:
+			return restoreDiagnostic(request.screen, request.displays);
 		case S.close_tabs:
 			return closeTabs(request.tabs);
 		case S.open_saved_tabs:

@@ -38,6 +38,21 @@ short one, at the start, middle and end of the text. Each click must open the na
 window, the title must show inside its bar (no bare "..." from the bar's own ellipsis), and a click on the card
 away from the title still restores the window.
 
+Six more checks (`--only restore:`, `monitors.mjs`) restore saved windows on two screens: a second
+headless Chrome started with `--screen-info={0,0 1920x1080 workAreaBottom=40}{1920,0 1920x1080 workAreaBottom=40}`
+(two monitors side by side, a 40 px taskbar each). The popup (`popup.html` in a tab on screen 1) is
+hovered over a saved window, the card's landing line is read ("restores maximized on monitor 2 of 2"),
+the saved window's restore icon is clicked, and the new window's state and monitor are read back with
+`chrome.windows.get`: a window saved maximized on monitor 2 (as Chrome on Windows saves it, -8,-8 and
+1936x1056) is maximized on monitor 2, one saved on monitor 1 on monitor 1, a normal one keeps its place,
+one saved on a monitor that is not connected is maximized on the popup's, and the card says the same
+each time. Two of them give the worker no monitors (an empty list, or an error) while the popup knows
+both, the case where a window saved maximized on monitor 2 used to come back on monitor 1: it must
+still land on monitor 2. `system.display.getInfo()` crashes headless Chrome on Windows (Chrome 154), so
+these checks run a temporary copy of `build/chrome` with the permission granted at install and its
+`getInfo()` calls answering the two screens (in the worker: the screens, nothing, or an error); the
+placement itself is Chrome's.
+
 ## What it does
 
 - Starts its **own headless** Chrome for Testing (the newest under `~/.cache/puppeteer/chrome`,

@@ -19,6 +19,7 @@ import {ICommand, ITabManager, ITabManagerState, ISavedSession} from "@types";
 import {ManagerContext, ITabManagerActions, ISettings} from "../context";
 import {attachMasonry, Masonry} from "../masonry";
 import {sizePopup, popupScreen} from "@helpers/popup_size";
+import {restoreDisplays} from "../restoreDisplays";
 import {applyTheme} from "@helpers/theme";
 import {StatsLayer, StatsSource} from "./StatsLayer";
 import {Notice} from "./Notice";
@@ -1002,7 +1003,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				session: session,
 				tab_id: null,
 				// the worker has no screen; this is the display the popup is on
-				screen: popupScreen()
+				screen: popupScreen(),
+				// and the monitors the hover card predicted the landing with
+				displays: await restoreDisplays()
 			});
 		} catch (e) {
 			console.error(e);

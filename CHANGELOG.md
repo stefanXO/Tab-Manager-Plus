@@ -36,7 +36,7 @@ Windows And Sessions
 - Automatic window names come from the sites in the window, with proper spelling (GitHub, Stack Overflow, Gmail, Google Docs), no more "Facebook, facebook & 5 more"
 - Window names and colors survive a browser restart, even when the window's tabs changed since (#16, #50, #103, #159, #178, #195, #223, #232, #236, #244)
 - Names and colors of windows closed for more than a day are cleaned up, so a new window cannot inherit an old name (#103, #244)
-- Restored windows keep their size and position, fitted to the screen they are restored on; a window saved maximized comes back maximized on the monitor it was saved on when that monitor is connected, else on the monitor you restore from; the hover card of a saved window shows the same (#205, #207, #208)
+- Restored windows keep their size and position, fitted to the screen they are restored on; a window saved maximized comes back maximized on the monitor it was saved on when that monitor is connected, else on the monitor you restore from. The hover card of a saved window shows where it will land, and Restore goes by the same monitors as the card, so the window lands there (before, a window saved maximized on a second monitor could come back on the current one while the card said otherwise). The debug file (everything-....json) now also says how each saved window would be restored on your monitors (#205, #207, #208)
 - Restoring a window in own-tab mode scrolls to it
 - Saved sessions could be lost when the update from version 5 was interrupted, e.g. by closing the popup
 - Saved sessions are no longer limited by the browser's 10 MB storage quota, and showing a session no longer changes it (which could corrupt exports)

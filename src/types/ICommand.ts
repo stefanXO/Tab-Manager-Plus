@@ -12,6 +12,8 @@ export interface ICommand
 	index?: number,
 	// the display the popup is on (screen.avail*), for placing a restored window
 	screen?: IScreenBounds,
+	// the displays the popup predicts a restore with (popup/restoreDisplays.ts)
+	displays?: IScreenBounds[],
 	color?: string,
 	name?: string,
 	session?: ISavedSession,

@@ -126,11 +126,9 @@ export interface Landing {
 }
 
 export function landingOf(plan : RestorePlan, displays : Bounds[]) : Landing {
-	const create = plan.create;
 	if (plan.maximize && plan.display) return { bounds: { ...plan.display }, maximized: true };
-	if (create.state === "maximized") return { bounds: displays.length ? { ...displays[0] } : null, maximized: true };
-	const b = { left: create.left, top: create.top, width: create.width, height: create.height };
-	return { bounds: Object.values(b).every((v) => typeof v === "number") ? b as Bounds : null, maximized: false };
+	if (plan.create.state === "maximized") return { bounds: displays.length ? { ...displays[0] } : null, maximized: true };
+	return { bounds: planBounds(plan), maximized: false };
 }
 
 // where a saved window would land if restored now
@@ -148,6 +146,51 @@ export function knownDisplayList(screen : Bounds | undefined, infos : { bounds :
 		if (!list.some((s) => s.left === b.left && s.top === b.top)) list.push({ left: b.left, top: b.top, width: b.width, height: b.height });
 	}
 	return list;
+}
+
+// The display list a restore goes by. The popup sends the list its landing
+// preview used (`sent`, ../popup/restoreDisplays.ts); the worker has its own
+// (`own`, from system.display in the worker). The popup's wins unless the
+// worker knows more monitors, so Restore does what the hover card showed,
+// even when the worker's own query fails or comes back short; entries that
+// are not usable bounds are dropped.
+export function chooseRestoreDisplays(sent : unknown, own : Bounds[]) : { displays : Bounds[], from : "popup" | "worker" } {
+	const list = displayList(sent);
+	if (list.length > 0 && list.length >= own.length) return { displays: list, from: "popup" };
+	return { displays: own, from: "worker" };
+}
+
+// the usable bounds in a list from elsewhere (a message): finite numbers, a size
+export function displayList(value : unknown) : Bounds[] {
+	if (!Array.isArray(value)) return [];
+	const out : Bounds[] = [];
+	for (const v of value) {
+		if (!v || typeof v !== "object") continue;
+		const b = v as Partial<Bounds>;
+		const values = [b.left, b.top, b.width, b.height];
+		if (!values.every((n) => typeof n === "number" && isFinite(n)) || b.width <= 0 || b.height <= 0) continue;
+		out.push({ left: b.left, top: b.top, width: b.width, height: b.height });
+	}
+	return out;
+}
+
+// After the window exists (windows.get): is it on the display the plan meant?
+// Only a `maximize` plan names one; the window's centre must lie in it (a
+// maximized window overhangs its monitor by a few pixels on Windows, -8,-8,
+// so not its corner). Anything else counts as there; so does a window that
+// reports no position (the check can only correct what it can see).
+export function onPlannedDisplay(plan : RestorePlan, win : Partial<Bounds> | null | undefined) : boolean {
+	if (!plan.maximize || !plan.display || !win) return true;
+	const values = [win.left, win.top, win.width, win.height];
+	if (!values.every((v) => typeof v === "number" && isFinite(v))) return true;
+	return isInBounds({ left: win.left + win.width / 2, top: win.top + win.height / 2 }, plan.display);
+}
+
+// the bounds a plan creates its window with (none: the browser's placement)
+export function planBounds(plan : RestorePlan) : Bounds | null {
+	const c = plan.create;
+	const b = { left: c.left, top: c.top, width: c.width, height: c.height };
+	return Object.values(b).every((v) => typeof v === "number") ? b as Bounds : null;
 }
 
 // "Minimize inactive windows": the ids of the windows to minimize when the

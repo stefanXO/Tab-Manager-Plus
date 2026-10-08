@@ -123,8 +123,12 @@
 							</li>
 							<li>Restored windows keep their size and position, fitted to the screen they are
 								restored on; a window saved maximized comes back maximized on the monitor it was
-								saved on when that monitor is connected, else on the monitor you restore from;
-								the hover card of a saved window shows the same
+								saved on when that monitor is connected, else on the monitor you restore from.
+								The hover card of a saved window shows where it will land, and Restore goes by
+								the same monitors as the card, so the window lands there (before, a window saved
+								maximized on a second monitor could come back on the current one while the card
+								said otherwise). The debug file (everything-....json) now also says how each
+								saved window would be restored on your monitors
 								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/205" target="_blank" rel="noopener">#205</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/207" target="_blank" rel="noopener">#207</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/208" target="_blank" rel="noopener">#208</a>)
 							</li>
 							<li>Restoring a window in own-tab mode scrolls to it</li>

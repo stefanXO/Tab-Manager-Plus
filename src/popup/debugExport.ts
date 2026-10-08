@@ -73,6 +73,9 @@ export interface DebugExport {
 	windows: DebugWindow[];
 	// the saved windows, as in the session export: importing this file restores them
 	sessions?: unknown[];
+	// how a restore places the saved windows on the monitors, as the worker
+	// sees it (../helpers/restoreDiagnostic.ts), or why it could not say
+	restore?: unknown;
 }
 
 export function buildDebugExport(windows: ExportWindowSource[], settings: Record<string, unknown>, meta: DebugMeta): DebugExport {

@@ -26,6 +26,7 @@ import {existsSync, readdirSync, mkdtempSync, rmSync} from 'node:fs'
 import {tmpdir, homedir} from 'node:os'
 import {dirname, join, resolve} from 'node:path'
 import {fileURLToPath} from 'node:url'
+import {monitorChecks} from './monitors.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const extDir = join(root, 'build', 'chrome')
@@ -854,6 +855,17 @@ try {
 	await browser.close().catch(() => {})
 	server.close()
 	try { rmSync(profile, {recursive: true, force: true}) } catch {}
+}
+// restoring saved windows on two screens: a browser of its own (monitors.mjs)
+try {
+	await monitorChecks({puppeteer, executablePath: chromePath(), extDir, only, report(name, ok, detail, ms) {
+		if (!ok) failures++
+		results.push({name, ok})
+		console.log((ok ? 'ok   ' : 'FAIL ') + name + '  (' + ms + ' ms)' + (detail ? '\n      ' + detail : ''))
+	}})
+} catch (e) {
+	failures++
+	console.error(e)
 }
 console.log((failures ? failures + ' failed' : 'all ' + results.length + ' passed') + ' in ' + Math.round((Date.now() - started) / 1000) + ' s')
 process.exit(failures ? 1 : 0)

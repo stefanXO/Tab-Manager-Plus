@@ -6,7 +6,8 @@ import {LAYOUT, currentShowMonitors} from "@helpers/settings";
 import {popupScreen} from "@helpers/popup_size";
 import {onMainScreen} from "./screen";
 import {tabStats, savedTabStats, savedWindowStats, savedWindowsWith, windowStats, topSites, monitorMap, Bounds, MonitorMap, Rect} from "./stats";
-import {predictLanding, knownDisplayList} from "@helpers/geometry";
+import {predictLanding} from "@helpers/geometry";
+import {restoreDisplays} from "./restoreDisplays";
 import {savedTabKeys} from "./sessionKeys";
 import {savedTile} from "./savedTiles";
 import {shownSavedName} from "./sessionEdit";
@@ -286,21 +287,19 @@ export class StatsHover {
 	// "off": every monitor, the primary one first; else (Chrome without it or
 	// switched off, Firefox) the popup's own monitor, `onlyPopup`. Applies the
 	// setting's unset -> on rule on the way (helpers/monitors.ts).
-	// The landing preview needs what the worker will know when it restores:
-	// every monitor's work area whenever the permission is granted (whatever
-	// the setting), after the popup's own (helpers/geometry.ts knownDisplayList).
+	// The landing preview goes by the list a restore sends the worker
+	// (./restoreDisplays.ts): every monitor's work area whenever the permission
+	// is granted (whatever the setting), after the popup's own.
 	private displaysRun = 0;
 	private async loadDisplays() {
 		const run = ++this.displaysRun;
 		let list : Bounds[] = [];
-		let restore = knownDisplayList(popupScreen(), []);
+		const restore = await restoreDisplays();
 		if (!IS_FIREFOX) {
 			try {
 				const show = (await currentShowMonitors()).enabled;
-				const granted = show || await browser.permissions.contains({ permissions: ["system.display"] });
-				const info = granted ? await chrome.system.display.getInfo() : [];
-				restore = knownDisplayList(popupScreen(), info);
 				if (show) {
+					const info = await chrome.system.display.getInfo();
 					list = info
 						.map((d, i) => ({ d, i }))
 						.sort((a, b) => (Number(!!b.d.isPrimary) - Number(!!a.d.isPrimary)) || a.i - b.i)

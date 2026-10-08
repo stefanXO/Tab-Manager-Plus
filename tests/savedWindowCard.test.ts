@@ -149,16 +149,24 @@ describe("landing preview = the worker's restore", () => {
 	// the two callers must keep going through the shared functions
 	test("the worker and the popup call the shared placement", () => {
 		const worker = readFileSync(new URL("../src/service_worker/background/windows.ts", import.meta.url), "utf8");
-		assert.match(worker, /return restorePlan\(saved, await knownDisplays\(screen\)\);/);
-		// created normal inside the monitor, then maximized, when the plan says so
-		assert.match(worker, /plan\.maximize[\s\S]{0,300}browser\.windows\.update\(newWindow\.id, \{state: "maximized"\}\)/);
-		assert.match(worker, /knownDisplayList\(screen, await chrome\.system\.display\.getInfo\(\)\)/);
+		// the plan over the display list the popup sent, unless the worker knows more
+		assert.match(worker, /const choice = chooseRestoreDisplays\(sent, own\.displays\);/);
+		assert.match(worker, /plan: restorePlan\(saved, choice\.displays\)/);
+		// created normal inside the monitor, then maximized (and checked), when the plan says so
+		assert.match(worker, /plan\.maximize\) \{[^}]*await maximizeOnDisplay\(windowApi, newWindow\.id, plan, trace\.steps\);/);
+		assert.match(worker, /knownDisplayList\(screen, info\)/);
 		const popup = readFileSync(new URL("../src/popup/statsHover.ts", import.meta.url), "utf8");
 		assert.match(popup, /predictLanding\(info, this\.displays\.restore\)/);
-		assert.match(popup, /knownDisplayList\(popupScreen\(\), info\)/);
-		// and the popup sends the worker the same screen it previews with
-		const session = readFileSync(new URL("../src/popup/views/Session.tsx", import.meta.url), "utf8");
-		assert.match(session, /screen: popupScreen\(\)/);
+		assert.match(popup, /const restore = await restoreDisplays\(\);/);
+		const list = readFileSync(new URL("../src/popup/restoreDisplays.ts", import.meta.url), "utf8");
+		assert.match(list, /knownDisplayList\(popupScreen\(\), await chrome\.system\.display\.getInfo\(\)\)/);
+		// and both restore commands send the worker the screen and the list it previews with
+		for (const file of ["Session.tsx", "TabManager.tsx"]) {
+			const view = readFileSync(new URL("../src/popup/views/" + file, import.meta.url), "utf8");
+			assert.match(view, /command: S\.create_window_with_session_tabs,[\s\S]{0,200}screen: popupScreen\(\),\s*\/\/[^\n]*\n\s*displays: await restoreDisplays\(\)/, file);
+		}
+		const actions = readFileSync(new URL("../src/service_worker/background/actions.ts", import.meta.url), "utf8");
+		assert.match(actions, /createWindowWithSessionTabs\(request\.session, request\.tab_id, request\.screen, request\.displays\)/);
 	});
 });
 

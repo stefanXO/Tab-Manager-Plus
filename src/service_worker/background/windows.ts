@@ -2,7 +2,9 @@
 
 import {cleanupDebounce} from "@background/tracking";
 import {getLocalStorage, getLocalStorageMap, setLocalStorage, setLocalStorageMap, serialized} from "@helpers/storage";
-import {restorePlan, knownDisplayList, windowsToMinimize, RestorePlan} from "@helpers/geometry";
+import {restorePlan, knownDisplayList, windowsToMinimize, chooseRestoreDisplays, displayList} from "@helpers/geometry";
+import {maximizeOnDisplay, WindowApi} from "@helpers/restoreMaximize";
+import {RestoreTrace, appendRestoreLog, buildRestoreDiagnostic, RestoreDiagnostic, savedBox, windowBox} from "@helpers/restoreDiagnostic";
 import {hashcode} from "@helpers/windows";
 import {firefoxCanOpen} from "@helpers/aboutPages";
 import {setWindowColor, setWindowName} from "@background/actions";
@@ -69,7 +71,8 @@ export async function createWindowWithTabs(tabs : browser.Tabs.Tab[], isIncognit
 }
 
 // resolves with the id of the new window, so the popup can scroll to it
-export async function createWindowWithSessionTabs(session: ISavedSession, tabId: number, screen? : IScreenBounds) : Promise<number | undefined> {
+// `displays`: the list the popup's landing preview went by (see windowGeometry)
+export async function createWindowWithSessionTabs(session: ISavedSession, tabId: number, screen? : IScreenBounds, displays? : IScreenBounds[]) : Promise<number | undefined> {
 
 	var customName : string;
 	if (session && session.name && session.customName) {
@@ -86,20 +89,17 @@ export async function createWindowWithSessionTabs(session: ISavedSession, tabId:
 		whitelistTab = ["url", "active", "pinned", "index"];
 	}
 
-	const plan = await windowGeometry(session.windowsInfo, screen);
+	const trace = await windowGeometry(session.windowsInfo, screen, displays);
+	const plan = trace.plan;
 	const filteredWindow = plan.create;
-
-	// console.log("filtered window", filteredWindow);
 
 	let newWindow : browser.Windows.Window | void = await browser.windows.create(filteredWindow).catch(function (error) {
 		console.error("restoring with the saved geometry failed, using the fallback", filteredWindow, error);
+		trace.steps.push({step: "create refused", error: String(error)});
 	});
 	if (newWindow && plan.maximize) {
-		// created normal inside the monitor it was saved on (a state and bounds
-		// cannot go together), maximized now; refused: it stays that size
-		await browser.windows.update(newWindow.id, {state: "maximized"}).catch(function (error) {
-			console.error("maximizing the restored window failed", error);
-		});
+		// maximized on its monitor, and checked (helpers/restoreMaximize.ts)
+		await maximizeOnDisplay(windowApi, newWindow.id, plan, trace.steps);
 	}
 	if (!newWindow) {
 		// the browser refused the geometry: the old, always-accepted 800x600 at the corner
@@ -109,8 +109,11 @@ export async function createWindowWithSessionTabs(session: ISavedSession, tabId:
 			left: 0, top: 0, width: 800, height: 600
 		}).catch(function (error) {
 			console.error(error);
+			trace.steps.push({step: "fallback refused", error: String(error)});
 		});
+		if (newWindow) trace.steps.push({step: "fallback", window: windowBox(newWindow)});
 	}
+	await logRestore(trace);
 
 	if (!newWindow) return undefined;
 
@@ -170,6 +173,25 @@ export async function createWindowWithSessionTabs(session: ISavedSession, tabId:
 	return newWindow.id;
 }
 
+// browser.windows for helpers/restoreMaximize.ts
+const windowApi : WindowApi = {
+	get: (windowId) => browser.windows.get(windowId),
+	update: (windowId, props) => browser.windows.update(windowId, props),
+	sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+};
+
+// the last restores, in storage.session (kept across worker restarts, not
+// across browser restarts), for the everything export
+const RESTORE_LOG = "restoreLog";
+async function logRestore(trace : RestoreTrace) {
+	try {
+		const stored = await browser.storage.session.get(RESTORE_LOG);
+		await browser.storage.session.set({[RESTORE_LOG]: appendRestoreLog(stored[RESTORE_LOG], trace)});
+	} catch (e) {
+		console.error(e);
+	}
+}
+
 // How a saved window comes back (helpers/geometry.ts restorePlan): a
 // maximized window maximized on the monitor it was saved on when that is
 // connected (created normal inside it, then maximized), else on the popup's;
@@ -178,18 +200,71 @@ export async function createWindowWithSessionTabs(session: ISavedSession, tabId:
 // system.display permission when granted, else the one display the popup
 // reported. The old fix squeezed every window into 800x600 at the top left
 // corner (#205). The popup's landing preview (the saved window's hover card)
-// calls the same function with the same display list.
-async function windowGeometry(saved : browser.Windows.Window, screen? : IScreenBounds) : Promise<RestorePlan> {
-	return restorePlan(saved, await knownDisplays(screen));
+// calls the same function, and the popup sends the display list it used:
+// the restore goes by that one unless the worker knows more monitors itself
+// (geometry.ts chooseRestoreDisplays). Going by its own list alone, a worker
+// that saw fewer monitors than the popup put a window saved maximized on
+// monitor 2 on the popup's monitor while the card said "monitor 2".
+// Resolves with the trace of this restore, which holds the plan.
+async function windowGeometry(saved : browser.Windows.Window, screen? : IScreenBounds, sent? : IScreenBounds[]) : Promise<RestoreTrace> {
+	const own = await knownDisplays(screen);
+	const choice = chooseRestoreDisplays(sent, own.displays);
+	const trace : RestoreTrace = {
+		at: new Date().toISOString(),
+		saved: savedBox(saved),
+		screen: screen || null,
+		own: own.displays,
+		sent: displayList(sent),
+		from: choice.from,
+		plan: restorePlan(saved, choice.displays),
+		steps: []
+	};
+	if (own.error) trace.ownError = own.error;
+	return trace;
 }
 
 // the displays available now: all of them with the permission, else the one
-// the popup is on (first in the list, so it is the fallback target)
-async function knownDisplays(screen? : IScreenBounds) : Promise<IScreenBounds[]> {
-	if (!IS_FIREFOX && await browser.permissions.contains({ permissions: ["system.display"] })) {
-		return knownDisplayList(screen, await chrome.system.display.getInfo());
+// the popup is on (first in the list, so it is the fallback target). A failed
+// query (no system.display in the worker) is logged and leaves the popup's
+// monitor; the restore then goes by the popup's list.
+async function knownDisplays(screen? : IScreenBounds) : Promise<{ displays : IScreenBounds[], info : chrome.system.display.DisplayUnitInfo[], permission : boolean | null, error? : string }> {
+	if (IS_FIREFOX) {
+		return { displays: knownDisplayList(screen, []), info: [], permission: null };
+	} else {
+		let permission = false;
+		try {
+			permission = await browser.permissions.contains({ permissions: ["system.display"] });
+			if (permission) {
+				const info = await chrome.system.display.getInfo();
+				return { displays: knownDisplayList(screen, info), info, permission };
+			}
+		} catch (e) {
+			console.error("the monitors are not known in the worker", e);
+			return { displays: knownDisplayList(screen, []), info: [], permission, error: String(e) };
+		}
+		return { displays: knownDisplayList(screen, []), info: [], permission };
 	}
-	return knownDisplayList(screen, []);
+}
+
+// The "restore" part of the everything export (helpers/restoreDiagnostic.ts):
+// the monitors as the worker sees them, and for each saved window the plan a
+// restore would use now, with the popup's screen and display list.
+export async function restoreDiagnostic(screen? : IScreenBounds, sent? : IScreenBounds[]) : Promise<RestoreDiagnostic> {
+	const own = await knownDisplays(screen);
+	const stored = await browser.storage.local.get("sessions").catch(() => ({} as Record<string, unknown>));
+	const map = stored.sessions;
+	const sessions = map && typeof map === "object" ? Object.values(map as Record<string, ISavedSession>) : [];
+	const log = await browser.storage.session.get(RESTORE_LOG).then((x) => x[RESTORE_LOG], () => []);
+	return buildRestoreDiagnostic({
+		browser: IS_FIREFOX ? "firefox" : "chrome",
+		permission: own.permission,
+		displayInfo: own.info,
+		displayError: own.error,
+		screen: screen || null,
+		popupDisplays: sent,
+		sessions: sessions,
+		log
+	});
 }
 
 export function focusOnWindowDelayed(windowId: number) {

@@ -8,6 +8,7 @@ import * as browser from 'webextension-polyfill';
 import {ICommand, ISession} from '@types';
 import * as S from "@strings";
 import {popupScreen} from "@helpers/popup_size";
+import {restoreDisplays} from "../restoreDisplays";
 import {ManagerContext, ITabManagerActions} from '../context';
 import {savedTabKeys} from '../sessionKeys';
 import {refusedText} from '../notices';
@@ -293,7 +294,9 @@ export class Session extends React.Component<ISession, ISessionState> {
 				session: this.props.session,
 				tab_id: tabId,
 				// the worker has no screen; this is the display the popup is on
-				screen: popupScreen()
+				screen: popupScreen(),
+				// and the monitors the hover card predicted the landing with
+				displays: await restoreDisplays()
 			});
 		} catch (err) {
 			// the worker did not take it: the popup stays open to say so
