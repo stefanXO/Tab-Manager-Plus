@@ -5,7 +5,7 @@
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { parseQuery } from "../src/popup/search.ts";
+import { parseQuery, queryReach } from "../src/popup/search.ts";
 import { searchSaved, searchSummary } from "../src/popup/searchSaved.ts";
 import { SavedTabKeys, isSavedTabKey } from "../src/popup/sessionKeys.ts";
 
@@ -174,21 +174,41 @@ describe("searchSaved with s:", () => {
 		assert.equal(q("s:u:google").windows, 1);
 	});
 
-	test("-s:u:x and -s:t:x hide only the matching saved tabs", () => {
-		const r = searchSaved(SESSIONS, parseQuery("-s:u:google"), false, new SavedTabKeys());
-		assert.equal(r.tabs, 3);
-		assert.equal(r.hidden.size, 2);
-		assert.equal(r.windows, 1);
-		const t = searchSaved(SESSIONS, parseQuery("-s:t:inbox"), false, new SavedTabKeys());
-		assert.equal(t.tabs, 4);
-		assert.equal(t.hidden.size, 1);
+	test("-s:word, -s:u:x and -s:t:x are the open scope: every saved tab hides", () => {
+		for (const q of ["-s:google", "-s:u:google", "-s:t:inbox", "-s:http://", "-s:\"react - npm\"", "-s:/react/"]) {
+			const r = searchSaved(SESSIONS, parseQuery(q), false, new SavedTabKeys());
+			assert.equal(r.active, true, q);
+			assert.equal(r.tabs, 0, q);
+			assert.equal(r.windows, 0, q);
+			assert.equal(r.shown.size, 0, q);
+			assert.equal(r.hidden.size, 5, q);
+		}
 	});
 
-	test("-s: leaves out every saved tab: all of them hide", () => {
+	test("-s:http:// finds no saved window, whatever their urls hold", () => {
+		const web = [{ id: "w", tabs: [{ index: 0, title: "A", url: "http://example.com/" }] }];
+		assert.equal(searchSaved(web, parseQuery("-s:http://"), false, new SavedTabKeys()).tabs, 0);
+		assert.equal(searchSaved(web, parseQuery("s:http://"), false, new SavedTabKeys()).tabs, 1);
+		assert.equal(searchSaved(web, parseQuery("http://"), false, new SavedTabKeys()).tabs, 1);
+	});
+
+	test("-s: leaves no saved tab: all of them hide", () => {
 		const r = searchSaved(SESSIONS, parseQuery("-s:"), false, new SavedTabKeys());
 		assert.equal(r.tabs, 0);
 		assert.equal(r.shown.size, 0);
 		assert.equal(r.hidden.size, 5);
+		// with other terms too
+		const t = searchSaved(SESSIONS, parseQuery("-s: google"), false, new SavedTabKeys());
+		assert.equal(t.tabs, 0);
+		assert.equal(t.hidden.size, 5);
+	});
+
+	test("with the feature off, s: is text and -s: a negation: saved tabs follow the words", () => {
+		const web = [{ id: "w", tabs: [{ index: 0, title: "about s:foo", url: "http://a.test" }, { index: 1, title: "foo", url: "http://b.test" }] }];
+		const keys = new SavedTabKeys();
+		assert.equal(searchSaved(web, parseQuery("s:foo", false), false, keys).tabs, 1);
+		assert.equal(searchSaved(web, parseQuery("-s:foo", false), false, keys).tabs, 1);
+		assert.equal(searchSaved(web, parseQuery("s:", false), false, keys).tabs, 1);
 	});
 
 	test("Highlight Duplicates still beats it: no saved tab belongs to what it picked", () => {
@@ -197,8 +217,70 @@ describe("searchSaved with s:", () => {
 		assert.equal(r.hidden.size, 5);
 	});
 
-	test("the header for a bare s:", () => {
+	test("the header for a bare s: reads like the saved part of a normal search", () => {
 		const r = searchSaved(SESSIONS, parseQuery("s:"), false, new SavedTabKeys());
-		assert.equal(searchSummary("s:", 0, r).top, "5 matches for 's:' in 2 saved windows");
+		assert.equal(searchSummary("s:", 0, r, "saved").top, "5 tabs in 2 saved windows");
+	});
+});
+
+describe("searchSummary for a search only saved tabs can match", () => {
+	const run = (text : string, openCount = 0) => {
+		const q = parseQuery(text);
+		const saved = searchSaved(SESSIONS, q, false, new SavedTabKeys());
+		const reach = queryReach(q);
+		const kind = reach.saved && !reach.open ? "saved" : "all";
+		return searchSummary(text, openCount, saved, kind);
+	};
+
+	test("N tabs in M saved windows, the wording of a normal search's saved part", () => {
+		assert.equal(run("s:").top, "5 tabs in 2 saved windows");
+		assert.equal(run("s:google").top, "2 tabs in a saved window");
+		assert.equal(run("s:u:google").top, "2 tabs in a saved window");
+		assert.equal(run("s:t:inbox").top, "1 tab in a saved window");
+		assert.equal(run("s: -google").top, "3 tabs in a saved window");
+		assert.equal(run("s:/o/").top, "5 tabs in 2 saved windows");
+		assert.equal(run("s:/lofi|hacker/").top, "2 tabs in a saved window");
+	});
+
+	test("the saved part is the same words as in a mixed search", () => {
+		const mixed = searchSummary("g", 5, { tabs: 2, windows: 1 }).top;
+		assert.ok(mixed.endsWith(", and 2 in a saved window"));
+		assert.ok(run("s:google").top.endsWith("in a saved window"));
+		assert.ok(run("s:").top.endsWith("in 2 saved windows"));
+		assert.ok(searchSummary("g", 1, { tabs: 3, windows: 2 }).top.endsWith("3 in 2 saved windows"));
+	});
+
+	test("the hint says the saved tabs are not selected", () => {
+		assert.match(run("s:").bottom, /not selected/);
+	});
+
+	test("no match still says so, with the text", () => {
+		assert.equal(run("s:nothinglikethis").top, "No matches for 's:nothinglikethis'");
+		assert.equal(run("s:nothinglikethis").bottom, "");
+	});
+
+	test("a search that can match open tabs keeps the usual header", () => {
+		assert.equal(searchSummary("g", 4, { tabs: 0, windows: 0 }, "all").top, "4 matches for 'g'");
+	});
+});
+
+describe("searchSummary for a query of only -s:", () => {
+	test("N tabs in M open windows, none selected", () => {
+		const s = searchSummary("-s:", 24, { tabs: 0, windows: 0 }, "open list", 3);
+		assert.equal(s.top, "24 tabs in 3 open windows");
+		assert.match(s.bottom, /none is selected/);
+		assert.equal(searchSummary("-s:", 1, { tabs: 0, windows: 0 }, "open list", 1).top, "1 tab in an open window");
+		assert.equal(searchSummary("-s:", 0, { tabs: 0, windows: 0 }, "open list", 0).top, "No open tabs");
+	});
+});
+
+describe("-s:word header", () => {
+	test("open matches only, saved tabs never counted", () => {
+		const q = parseQuery("-s:google");
+		const saved = searchSaved(SESSIONS, q, false, new SavedTabKeys());
+		assert.equal(saved.tabs, 0);
+		const s = searchSummary("-s:google", 3, saved, "all");
+		assert.equal(s.top, "3 matches for '-s:google'");
+		assert.equal(s.bottom, "Press enter to move them to a new window");
 	});
 });

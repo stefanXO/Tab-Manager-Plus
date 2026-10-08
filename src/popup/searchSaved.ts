@@ -64,11 +64,34 @@ export function searchSaved(
 	return out;
 }
 
+// What kind of search the header describes: "all" (words that can match open
+// and saved tabs), "saved" (only saved tabs can match, as for s:), or "open
+// list" (a query of only -s:: every open tab shows, none is selected).
+export type SummaryKind = "all" | "saved" | "open list";
+
 // the header of a running search: the open matches, and the saved ones
 // beside them. `top` is the title line, `bottom` the hint under it.
-export function searchSummary(text : string, open : number, saved : { tabs : number, windows : number }) : { top : string, bottom : string } {
+// "open list": `open` is the number of open tabs shown, `windows` the open
+// windows they are in.
+export function searchSummary(
+	text : string,
+	open : number,
+	saved : { tabs : number, windows : number },
+	kind : SummaryKind = "all",
+	windows = 0
+) : { top : string, bottom : string } {
 	const noun = (n : number) => n === 1 ? "match" : "matches";
 	const where = saved.windows === 1 ? "a saved window" : saved.windows + " saved windows";
+	if (kind === "open list") {
+		const inWindows = windows === 1 ? "an open window" : windows + " open windows";
+		if (open === 0) return { top: "No open tabs", bottom: "" };
+		return { top: open + (open === 1 ? " tab" : " tabs") + " in " + inWindows, bottom: "Open tabs only, none is selected" };
+	}
+	// only saved tabs can match: the words are in the box already, so the
+	// header reads like the saved part of a normal search
+	if (kind === "saved" && saved.tabs > 0) {
+		return { top: saved.tabs + (saved.tabs === 1 ? " tab" : " tabs") + " in " + where, bottom: "Saved tabs are not selected. Click one to restore it" };
+	}
 	let top : string;
 	if (open === 0 && saved.tabs === 0) top = "No matches for '" + text + "'";
 	else if (saved.tabs === 0) top = open + " " + noun(open) + " for '" + text + "'";

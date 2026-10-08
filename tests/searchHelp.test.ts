@@ -13,7 +13,7 @@ import { matchTab, parseQuery, searchable } from "../src/popup/search.ts";
 describe("search help rows", () => {
 	test("with saved windows on, the s: rows are listed, in the nested form too", () => {
 		const codes = searchHelpRows(true).map((r) => r.code);
-		for (const c of ["s:tax", "s:u:github", "s: t:tax", "-s:"]) assert.ok(codes.includes(c), c);
+		for (const c of ["s:tax", "s:u:github", "s: t:tax", "-s:tax", "-s:"]) assert.ok(codes.includes(c), c);
 	});
 
 	test("with saved windows off, no row mentions them", () => {
@@ -42,8 +42,30 @@ describe("search help rows", () => {
 		assert.equal(saved("s:u:github", "github", "https://x.test"), false);
 		assert.equal(saved("s: t:tax", "Tax", "https://x.test"), true);
 		assert.equal(open("s: t:tax", "Tax", "https://x.test"), false);
+		// -s:tax: open tabs only (-s:u: url, -s:t: title)
+		assert.equal(open("-s:tax", "Tax", "https://x.test"), true);
+		assert.equal(saved("-s:tax", "Tax", "https://x.test"), false);
+		assert.equal(open("-s:u:github", "x", "https://github.com"), true);
+		assert.equal(open("-s:t:github", "x", "https://github.com"), false);
+		assert.equal(saved("-s:u:github", "x", "https://github.com"), false);
+		// -s: alone: open windows only, selects nothing
 		assert.equal(open("-s:", "Tax", "https://x.test"), true);
 		assert.equal(saved("-s:", "Tax", "https://x.test"), false);
+		assert.equal(parseQuery("-s:").scopeOnly, true);
+	});
+
+	test("the -s: rows say open, not leave out", () => {
+		const rows = searchHelpRows(true).filter((r) => r.code.startsWith("-s:"));
+		assert.equal(rows.length, 2);
+		for (const r of rows) {
+			assert.match(r.text, /open/);
+			assert.ok(!/leave out/.test(r.text), r.text);
+		}
+	});
+
+	test("with the feature off, s: is plain text and has no help", () => {
+		assert.equal(searchHelpRows(false).some((r) => /s:/.test(r.code)), false);
+		assert.equal(matchTab(searchable("s:tax", "https://x.test"), parseQuery("s:tax", false)), true);
 	});
 });
 

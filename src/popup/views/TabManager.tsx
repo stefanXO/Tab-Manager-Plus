@@ -2,7 +2,7 @@ import {getLocalStorage, setLocalStorage, getLocalStorageMap} from "@helpers/sto
 import {readSettings, writeBootCache, SETTING_DEFAULTS, Settings, Layout, LAYOUT, getSetting, saveSetting} from "@helpers/settings";
 import {sortWindows} from "@helpers/windows";
 import {groupSelection, buildSavedWindow, newSessionId, savedText} from "@helpers/sessions";
-import {parseQuery, matchTab, searchable} from "../search";
+import {parseQuery, matchTab, searchable, queryReach} from "../search";
 import {SAVED_SEARCH_TIP, searchHelpIntro, searchHelpRows, searchTips} from "../searchHelp";
 import {duplicatesTitle, findDuplicates} from "../duplicates";
 import {recentTabs, recentText, recentTitle, RecentTabs, RECENT_LEVELS} from "../recent";
@@ -27,7 +27,7 @@ import {NoticeBoard, isMacPlatform, isUndoKey, undoKeyCaps, undoKeyForField, ref
 import {PendingDeletes, PendingItem, withoutItems, visibleSessions, noticeText, goneUrls, UNDO_MS} from "../pendingDelete";
 import {savedDeleteItems} from "../savedDelete";
 import {editSession, shownSavedName, SessionEdit} from "../sessionEdit";
-import {searchSaved, searchSummary, SavedSearch} from "../searchSaved";
+import {searchSaved, searchSummary, SavedSearch, SummaryKind} from "../searchSaved";
 import {draggedSaved, savedTabsToOpen, openedText} from "../savedDrag";
 import {moveSession, reorderShown} from "../sessionOrder";
 import {tidyStored, listSessions, addSessions, importSessions} from "../sessionStore";
@@ -273,6 +273,12 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 
 	async componentDidUpdate(prevProps, prevState) {
 		this.syncMasonry();
+		// s: and -s: are syntax only while saved windows are on: a search typed
+		// under the other setting is read again
+		if (prevState.sessionsFeature !== this.state.sessionsFeature && this.state.searchLen > 0) {
+			const box = this.searchBoxRef.current;
+			if (box && box.value) this.runSearch(box.value);
+		}
 		if (this.state.dirty) {
 			await this.update();
 			this.setState({dirty: false});
@@ -1601,8 +1607,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		let hiddenCount = this.state.hiddenCount || 0;
 		const searchQuery = query || "";
 		const searchLen = searchQuery.length;
-		// see src/popup/search.ts for the grammar
-		const parsed = parseQuery(searchQuery);
+		// see src/popup/search.ts for the grammar; s: and -s: are syntax only
+		// while the saved windows feature is on
+		const parsed = parseQuery(searchQuery, this.state.sessionsFeature);
 
 		if (!searchLen) {
 			this.state.selection.clear();
@@ -1631,7 +1638,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				const match = matchTab(searchable(tab.title, tab.url || tab.pendingUrl), parsed);
 				if (match) {
 					hiddenCount -= this.state.hiddenTabs.has(id) ? 1 : 0;
-					this.state.selection.add(id);
+					// a query of only -s: shows every open tab and selects none
+					if (parsed.scopeOnly) this.state.selection.delete(id);
+					else this.state.selection.add(id);
 					this.state.hiddenTabs.delete(id);
 				} else {
 					hiddenCount += 1 - (this.state.hiddenTabs.has(id) ? 1 : 0);
@@ -1665,7 +1674,18 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				parsed,
 				this.state.dupTabs || this.state.recentLevel > 0
 			);
-			const summary = searchSummary(searchQuery, matches, saved);
+			// only saved tabs can match (a bare s:, s:word...): the saved part
+			// of the header alone. Only -s:: the open tabs shown, none selected
+			const reach = queryReach(parsed);
+			let kind : SummaryKind = "all";
+			let openWindows = 0;
+			if (parsed.scopeOnly && !reach.saved && reach.open) {
+				kind = "open list";
+				const shown = new Set<number>();
+				for (const [id, tab] of this.state.tabsbyid) if (!this.state.hiddenTabs.has(id)) shown.add(tab.windowId);
+				openWindows = shown.size;
+			} else if (reach.saved && !reach.open) kind = "saved";
+			const summary = searchSummary(searchQuery, matches, saved, kind, openWindows);
 			this.setState({
 				topText: summary.top,
 				bottomText: summary.bottom

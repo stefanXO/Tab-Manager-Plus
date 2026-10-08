@@ -444,9 +444,15 @@ const STATES = [
 	// s: is a scope prefix: s:u:google looks at saved urls only, s:t:inbox at saved titles only
 	{name: 'ssearch-nested', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {search: 's:u:google', scrollEnd: true}},
 	{name: 'ssearch-nested-title', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {search: 's:t:inbox', store: {'filter-tabs': true}, scrollEnd: true}},
-	// -s: leaves the saved windows out (open tabs only); -s:u:google only the saved tabs with google in the url
+	// a query of only -s: shows the open windows, selects nothing ("N tabs in M open windows");
+	// -s:u:google selects the open tabs with google in the url and hides the saved ones
 	{name: 'ssearch-excl', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {search: '-s:', store: {'filter-tabs': true}, scrollEnd: true}},
 	{name: 'ssearch-excl-url', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {search: '-s:u:google', store: {'filter-tabs': true}, scrollEnd: true}},
+	// -s: is the open-tabs scope, the mirror of s: (src/popup/search.ts): "-s:google" matches and
+	// selects only the open tabs with google; saved tabs never match and hide with the filter on
+	{name: 'ssearch-open', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {search: '-s:google', store: {'filter-tabs': true}, scrollEnd: true}},
+	// with saved windows switched off s: is plain text: "s:google" finds the text, saved windows are gone
+	{name: 'ssearch-off', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {search: 's:google', store: {sessionsFeature: false}, scrollEnd: true}},
 	// the search syntax help (hover the search box) with its s: rows; with saved windows
 	// switched off the s: rows are not listed
 	{name: 'search-help', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {}, searchHelp: true},

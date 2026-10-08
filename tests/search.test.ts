@@ -5,7 +5,7 @@
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { parseQuery, matchTab, searchable, titleHits } from "../src/popup/search.ts";
+import { parseQuery, matchTab, searchable, titleHits, queryReach } from "../src/popup/search.ts";
 import type { Searchable, SearchQuery } from "../src/popup/search.ts";
 import {
 	RAW_TABS, T,
@@ -871,14 +871,17 @@ describe("s: saved windows only", () => {
 		assert.equal(open("s: OR tax"), true);
 	});
 
-	test("-s:word leaves out saved tabs that match; -s: leaves out every saved tab", () => {
-		assert.equal(saved("-s:tax"), false);
-		assert.equal(saved("-s:reddit"), true);
+	test("-s:word is the open scope: open tabs with the word, never a saved tab", () => {
 		assert.equal(open("-s:tax"), true);
+		assert.equal(open("-s:reddit"), false);
+		assert.equal(saved("-s:tax"), false);
+		assert.equal(saved("-s:reddit"), false);
+		// a bare -s: is every open tab and no saved one
 		assert.equal(saved("-s:"), false);
 		assert.equal(open("-s:"), true);
 		assert.equal(open("-s: tax"), true);
 		assert.equal(open("-s: reddit"), false);
+		assert.equal(saved("-s: tax"), false);
 	});
 
 	test("a quoted token that starts with s: is a plain word", () => {
@@ -898,7 +901,7 @@ describe("s: saved windows only", () => {
 	test("title hits: s:word marks the word in a saved title, bare s: nothing", () => {
 		assert.deepEqual(titleHits("Tax return", parseQuery("s:tax"), true), [[0, 3]]);
 		assert.deepEqual(titleHits("Tax return", parseQuery("s:")), []);
-		assert.deepEqual(titleHits("Tax return", parseQuery("-s:tax")), []);
+		assert.deepEqual(titleHits("Tax return", parseQuery("-s:tax"), true), []);
 	});
 });
 
@@ -914,18 +917,26 @@ describe("s: scope prefix", () => {
 	const saved = (q : string, title = TITLE, url = URL) => matchTab(searchable(title, url, true), parseQuery(q));
 
 	test("parses into the scope and the inner field", () => {
-		const f = (q : string) => { const t = parseQuery(q).terms[0]; return t && [t.saved, t.field, t.negate]; };
-		assert.deepEqual(f("s:tax"), [true, "any", false]);
-		assert.deepEqual(f("s:u:github"), [true, "url", false]);
-		assert.deepEqual(f("s:t:tax"), [true, "title", false]);
-		assert.deepEqual(f("S:U:github"), [true, "url", false]);
-		assert.deepEqual(f("-s:u:github"), [true, "url", true]);
-		assert.deepEqual(f("-s:t:tax"), [true, "title", true]);
-		assert.deepEqual(f("u:github"), [false, "url", false]);
-		assert.deepEqual(f("s:"), [true, "any", false]);
-		assert.deepEqual(f("-s:"), [true, "any", true]);
-		assert.deepEqual(f('s:"a b"'), [true, "any", false]);
-		assert.deepEqual(f("s:/a/"), [true, "any", false]);
+		const f = (q : string) => { const t = parseQuery(q).terms[0]; return t && [t.scope, t.field, t.negate]; };
+		assert.deepEqual(f("s:tax"), ["saved", "any", false]);
+		assert.deepEqual(f("s:u:github"), ["saved", "url", false]);
+		assert.deepEqual(f("s:t:tax"), ["saved", "title", false]);
+		assert.deepEqual(f("S:U:github"), ["saved", "url", false]);
+		assert.deepEqual(f("u:github"), ["any", "url", false]);
+		assert.deepEqual(f("s:"), ["saved", "any", false]);
+		assert.deepEqual(f('s:"a b"'), ["saved", "any", false]);
+		assert.deepEqual(f("s:/a/"), ["saved", "any", false]);
+		// -s: is the open scope, not a negation
+		assert.deepEqual(f("-s:tax"), ["open", "any", false]);
+		assert.deepEqual(f("-s:u:github"), ["open", "url", false]);
+		assert.deepEqual(f("-s:t:tax"), ["open", "title", false]);
+		assert.deepEqual(f("-S:T:tax"), ["open", "title", false]);
+		assert.deepEqual(f("-s:"), ["open", "any", false]);
+		assert.deepEqual(f('-s:"a b"'), ["open", "any", false]);
+		assert.deepEqual(f("-s:/a/"), ["open", "any", false]);
+		// the other minus forms are still negations
+		assert.deepEqual(f("-tax"), ["any", "any", true]);
+		assert.deepEqual(f("-u:github"), ["any", "url", true]);
 	});
 
 	test("s:u:word looks at the url of saved tabs only", () => {
@@ -990,30 +1001,99 @@ describe("s: scope prefix", () => {
 		assert.equal(saved("s:tax u:github"), true);
 	});
 
-	test("a bare -s: leaves out the saved windows: open tabs only", () => {
+	test("a bare -s: with other terms limits the whole search to open tabs (AND)", () => {
 		assert.equal(open("-s:"), true);
 		assert.equal(saved("-s:"), false);
 		assert.equal(open("-s: u:github"), true);
 		assert.equal(open("-s: u:reddit"), false);
 		assert.equal(saved("-s: u:github"), false);
+		assert.equal(open("-s: u:github t:tax"), true);
+		assert.equal(open("-s: u:github t:reddit"), false);
+		assert.equal(open("-s: github -reddit"), true);
+		assert.equal(open("-s: github -tax"), false);
+		assert.equal(saved("-s: github -reddit"), false);
 	});
 
-	test("-s:word, -s:u:x and -s:t:x leave out the matching saved tabs only", () => {
-		// the saved tab matches: out; an open tab never does: stays
-		assert.equal(saved("-s:tax"), false);
+	test("-s:word, -s:u:x and -s:t:x match open tabs only, saved tabs never", () => {
 		assert.equal(open("-s:tax"), true);
-		assert.equal(saved("-s:u:github"), false);
+		assert.equal(saved("-s:tax"), false);
 		assert.equal(open("-s:u:github"), true);
-		assert.equal(saved("-s:t:2029"), false);
+		assert.equal(saved("-s:u:github"), false);
 		assert.equal(open("-s:t:2029"), true);
-		// a saved tab that does not match stays
-		assert.equal(saved("-s:u:reddit"), true);
-		assert.equal(saved("-s:t:github"), true);
-		assert.equal(saved("-s:u:2029"), true);
+		assert.equal(saved("-s:t:2029"), false);
+		// the field and the word still count
+		assert.equal(open("-s:u:reddit"), false);
+		assert.equal(open("-s:t:github"), false);
+		assert.equal(open("-s:u:2029"), false);
+		assert.equal(open("-s:t:TAX"), true);
 		// combined with a positive term
-		assert.equal(saved("tax -s:u:github"), false);
 		assert.equal(open("tax -s:u:github"), true);
-		assert.equal(saved("tax -s:u:reddit"), true);
+		assert.equal(saved("tax -s:u:github"), false);
+		assert.equal(open("tax -s:u:reddit"), false);
+		// a phrase and a pattern, alone and inside u:/t:
+		assert.equal(open('-s:"tax return"'), true);
+		assert.equal(open('-s:"return tax"'), false);
+		assert.equal(saved('-s:"tax return"'), false);
+		assert.equal(open("-s:/\\d{4}/"), true);
+		assert.equal(open("-s:/^\\d{4}$/"), false);
+		assert.equal(saved("-s:/\\d{4}/"), false);
+		assert.equal(open('-s:t:"tax return"'), true);
+		assert.equal(open("-s:u:/tax-\\w+$/"), true);
+		assert.equal(saved("-s:u:/tax-\\w+$/"), false);
+	});
+
+	test("-s:http:// is an open-tabs search for that text, never a saved one", () => {
+		assert.equal(open("-s:http://", "a", "http://example.com/"), true);
+		assert.equal(open("-s:http://", "a", "https://example.com/"), false);
+		assert.equal(saved("-s:http://", "a", "http://example.com/"), false);
+		assert.equal(open("-s:u:http://", "a", "http://example.com/"), true);
+		assert.equal(saved("-s:u:http://", "a", "http://example.com/"), false);
+	});
+
+	test("-s: and s: together can match nothing, in an OR either one", () => {
+		assert.equal(open("s: -s:"), false);
+		assert.equal(saved("s: -s:"), false);
+		assert.equal(open("s:tax OR -s:tax"), true);
+		assert.equal(saved("s:tax OR -s:tax"), true);
+		assert.equal(open("-s:reddit OR t:tax"), true);
+		assert.equal(saved("-s:tax OR t:tax"), true);
+		assert.equal(saved("-s:reddit OR t:reddit"), false);
+	});
+
+	test("scopeOnly: a query of only bare s: / -s: terms", () => {
+		const only = (q : string) => parseQuery(q).scopeOnly;
+		assert.equal(only("-s:"), true);
+		assert.equal(only("s:"), true);
+		assert.equal(only("  -s:  "), true);
+		assert.equal(only("-s:u:"), true);
+		assert.equal(only("s:t:"), true);
+		assert.equal(only("-s: tax"), false);
+		assert.equal(only("-s:tax"), false);
+		assert.equal(only("s: t:tax"), false);
+		assert.equal(only("tax"), false);
+		assert.equal(only(""), false);
+		assert.equal(only("   "), false);
+		// a bare -s: alone matches every open tab (the caller selects none)
+		assert.equal(parseQuery("-s:").empty, false);
+	});
+
+	test("queryReach: the kinds of tab a query can match", () => {
+		const r = (q : string) => queryReach(parseQuery(q));
+		assert.deepEqual(r(""), { open: true, saved: true });
+		assert.deepEqual(r("tax"), { open: true, saved: true });
+		assert.deepEqual(r("s:"), { open: false, saved: true });
+		assert.deepEqual(r("s:tax"), { open: false, saved: true });
+		assert.deepEqual(r("s:u:github"), { open: false, saved: true });
+		assert.deepEqual(r("s: t:tax"), { open: false, saved: true });
+		assert.deepEqual(r("-s:"), { open: true, saved: false });
+		assert.deepEqual(r("-s:tax"), { open: true, saved: false });
+		assert.deepEqual(r("-s: tax"), { open: true, saved: false });
+		assert.deepEqual(r("s: -s:"), { open: false, saved: false });
+		// OR: a kind is reachable when any term can match it
+		assert.deepEqual(r("s:tax OR reddit"), { open: true, saved: true });
+		assert.deepEqual(r("s:tax OR s:reddit"), { open: false, saved: true });
+		assert.deepEqual(r("-s:tax OR -s:reddit"), { open: true, saved: false });
+		assert.deepEqual(r("s:tax OR -s:tax"), { open: true, saved: true });
 	});
 
 	test("a quoted \"s:tax\" or \"s:u:x\" stays a literal word", () => {
@@ -1036,16 +1116,97 @@ describe("s: scope prefix", () => {
 		assert.equal(open("s:u:", "a", "b"), false);
 		assert.equal(saved("-s:t:", "a", "b"), false);
 		assert.equal(open("-s:t:", "a", "b"), true);
+		assert.equal(open("-s:", "a", "b"), true);
 	});
 
 	test("title hits: only terms that look at the title of a saved tab", () => {
 		assert.deepEqual(titleHits(TITLE, parseQuery("s:t:tax"), true), [[0, 3]]);
 		assert.deepEqual(titleHits(TITLE, parseQuery("s:tax"), true), [[0, 3]]);
 		assert.deepEqual(titleHits(TITLE, parseQuery("s:u:tax"), true), []);
+		// -s: marks open tabs only
 		assert.deepEqual(titleHits(TITLE, parseQuery("-s:t:tax"), true), []);
+		assert.deepEqual(titleHits(TITLE, parseQuery("-s:t:tax"), false), [[0, 3]]);
+		assert.deepEqual(titleHits(TITLE, parseQuery("-s:tax"), false), [[0, 3]]);
+		assert.deepEqual(titleHits(TITLE, parseQuery("-s:u:tax"), false), []);
+		assert.deepEqual(titleHits(TITLE, parseQuery("-s:"), false), []);
 		assert.deepEqual(titleHits(TITLE, parseQuery("s: t:return"), true), [[4, 10]]);
 		// an open tab's title is not marked by a term it cannot match
 		assert.deepEqual(titleHits(TITLE, parseQuery("s:tax OR 2029"), false), [[11, 15]]);
 		assert.deepEqual(titleHits(TITLE, parseQuery("s:tax OR 2029"), true), [[0, 3], [11, 15]]);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// s: and -s: only exist while the saved windows feature is on: parseQuery's
+// second argument. Off, they are plain text.
+// ---------------------------------------------------------------------------
+
+describe("s: and -s: with the saved windows feature off", () => {
+	const open = (q : string, title : string, url : string, feature = false) => matchTab(searchable(title, url, false), parseQuery(q, feature));
+	const saved = (q : string, title : string, url : string, feature = false) => matchTab(searchable(title, url, true), parseQuery(q, feature));
+
+	test("the default is on", () => {
+		assert.equal(parseQuery("s:tax").terms[0].scope, "saved");
+		assert.equal(parseQuery("s:tax", true).terms[0].scope, "saved");
+		assert.equal(parseQuery("s:tax", false).terms[0].scope, "any");
+	});
+
+	test("s:foo is the text s:foo, in any tab", () => {
+		assert.equal(open("s:foo", "about s:foo syntax", "https://x.test"), true);
+		assert.equal(open("s:foo", "foo", "https://x.test"), false);
+		assert.equal(open("s:foo", "x", "https://x.test/?q=s:foo"), true);
+		// open and saved tabs alike
+		assert.equal(saved("s:foo", "about s:foo", "https://x.test"), true);
+		assert.equal(saved("s:foo", "foo", "https://x.test"), false);
+		// and on, it is the scope
+		assert.equal(open("s:foo", "about s:foo syntax", "https://x.test", true), false);
+		assert.equal(saved("s:foo", "foo", "https://x.test", true), true);
+	});
+
+	test("-s:foo leaves out tabs that hold the text s:foo", () => {
+		assert.equal(open("-s:foo", "about s:foo syntax", "https://x.test"), false);
+		assert.equal(open("-s:foo", "foo", "https://x.test"), true);
+		assert.equal(saved("-s:foo", "foo", "https://x.test"), true);
+		// not an open-tabs scope: nothing is open-only
+		assert.deepEqual(queryReach(parseQuery("-s:foo", false)), { open: true, saved: true });
+		assert.equal(parseQuery("-s:foo", false).terms[0].negate, true);
+	});
+
+	test("s:u:x, s:t:x, quotes and patterns stay text; u: and t: still work", () => {
+		assert.equal(open("s:u:x", "s:u:x", "https://y.test"), true);
+		assert.equal(open("s:u:x", "x", "https://x.test"), false);
+		assert.equal(open('s:"a b"', 's:"a b"', "https://y.test"), true);
+		assert.equal(open("s:/a/", "s:/a/", "https://y.test"), true);
+		assert.equal(open("s:/a/", "a", "https://y.test"), false);
+		assert.equal(open("-s:t:x", "s:t:x", "https://y.test"), false);
+		assert.equal(open("-s:t:x", "x", "https://y.test"), true);
+		assert.equal(open("u:x", "a", "https://x.test"), true);
+		assert.equal(open("t:x", "x", "https://a.test"), true);
+		assert.equal(open("-u:x", "a", "https://x.test"), false);
+	});
+
+	test("a bare s: or -s: is the word itself, not a scope", () => {
+		for (const q of ["s:", "-s:"]) {
+			const parsed = parseQuery(q, false);
+			assert.equal(parsed.scopeOnly, false, q);
+			assert.deepEqual(queryReach(parsed), { open: true, saved: true }, q);
+		}
+		assert.equal(open("s:", "about s: things", "https://x.test"), true);
+		assert.equal(open("s:", "nothing", "http://x.test"), false);
+		assert.equal(open("-s:", "about s: things", "https://x.test"), false);
+		assert.equal(open("-s:", "nothing", "http://x.test"), true);
+	});
+
+	test("the rest of the grammar is the same", () => {
+		const q = 'tax OR -reddit t:x u:y "a b" /c/';
+		const on = parseQuery(q, true);
+		const off = parseQuery(q, false);
+		assert.deepEqual(off.terms.map((t) => [t.field, t.negate, t.scope]), on.terms.map((t) => [t.field, t.negate, t.scope]));
+		assert.equal(on.mode, off.mode);
+	});
+
+	test("titleHits marks the text", () => {
+		assert.deepEqual(titleHits("about s:tax", parseQuery("s:tax", false), false), [[6, 11]]);
+		assert.deepEqual(titleHits("about s:tax", parseQuery("s:tax", true), false), []);
 	});
 });
