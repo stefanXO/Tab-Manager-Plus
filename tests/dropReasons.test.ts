@@ -7,7 +7,7 @@
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { splitByKind, planMove, planAdd, whyUnsavable, leftClause, leftTotal, dropErrorText, openMoveVerdict, openSavedVerdict, refusalNotice, REFUSAL_FRESH_MS } from "../src/popup/dropReasons.ts";
+import { splitByKind, planMove, planAdd, whyUnsavable, leftClause, leftTotal, dropErrorText, openMoveVerdict, openSavedVerdict, refusalNotice, REFUSAL_FRESH_MS, endedOutside } from "../src/popup/dropReasons.ts";
 import type { Left } from "../src/popup/dropReasons.ts";
 import { moveSavedTabs } from "../src/popup/savedMove.ts";
 import { addOpenTabs } from "../src/popup/savedAdd.ts";
@@ -305,5 +305,25 @@ describe("refusalNotice: the notice when a drag ends over a refusing target", ()
 	test("an old dragover is a drag that left the popup: no notice", () => {
 		assert.equal(refusalNotice(refusal, 10000 + REFUSAL_FRESH_MS + 1, "none", false), "");
 		assert.equal(refusalNotice(refusal, 9000, "none", false), "");
+	});
+
+	test("a drag that ended outside the page, right after leaving a refusing target, says nothing", () => {
+		assert.equal(refusalNotice(refusal, 10040, "none", false, true), "");
+		assert.equal(refusalNotice(refusal, 10040, "none", false, false), refusal.text);
+	});
+});
+
+describe("endedOutside: where a drag ended", () => {
+	test("inside the page, its edges included", () => {
+		assert.equal(endedOutside(10, 20, 800, 600), false);
+		assert.equal(endedOutside(0, 0, 800, 600), false);
+		assert.equal(endedOutside(800, 600, 800, 600), false);
+	});
+
+	test("left of, above, right of or below the page", () => {
+		assert.equal(endedOutside(-40, 300, 800, 600), true);
+		assert.equal(endedOutside(300, -1, 800, 600), true);
+		assert.equal(endedOutside(801, 300, 800, 600), true);
+		assert.equal(endedOutside(300, 650, 800, 600), true);
 	});
 });

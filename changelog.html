@@ -200,12 +200,7 @@
 								Tab Manager tab or sidebar other than the one the drag started in</li>
 							<li>Dragging several tabs (open or saved) shows them as a small stack of tabs with
 								their number under the mouse: with titles in the List view, icons only in the
-								views that show tabs as icons, as big as that view's tabs. Selected tabs are
-								always shown: Hide non-matching tabs (and the hide mode of Highlight Duplicates
-								and Highlight recently active tabs) never hides a selected tab, open or saved. A
-								selected tab that does not match stays on screen, faded and selected, and its
-								window or saved window stays with it, so every selected tab takes part in every
-								move and the stack counts them all</li>
+								views that show tabs as icons, as big as that view's tabs</li>
 							<li>Tabs of saved windows can be reordered: drag one before or after another tab of
 								the same saved window, onto a tab of another saved window to move it there, or
 								onto another saved window's title or edge to add it at the end; selected saved
@@ -238,8 +233,17 @@
 								… ago" when the two differ</li>
 							<li>Search finds tabs in saved windows too: matching saved tabs stay clear while the
 								others fade (or hide, with Hide non-matching tabs on, together with saved
-								windows that have no match, instead of all saved windows disappearing), and the
-								header counts them; a search never selects them</li>
+								windows that have no match and hold no selected tab, instead of all saved
+								windows disappearing), and the header counts them; a search never selects them</li>
+							<li>Selected tabs are always shown: Hide non-matching tabs (and the hide mode of
+								Highlight Duplicates and Highlight recently active tabs) never hides a selected
+								tab, open or saved. A selected tab that does not match stays on screen,
+								selected, as if the hiding were off, and its window or saved window stays with
+								it, so every selected tab takes part in every move and close, and the drag stack
+								counts them all. A new search keeps the tabs you selected yourself (Ctrl+click,
+								right-click, a range with Shift+right-click, a drag, the arrow keys) and only
+								replaces the ones an earlier search selected; a range takes only the tabs on
+								screen, and the arrow keys also stop on a selected tab that does not match</li>
 							<li><code>s:</code> and <code>-s:</code> in the search box pick where to look. <code>s:tax</code> (title or url),
 								<code>s:u:github</code> (url only), <code>s:t:tax</code> (title only), <code>s:"pull request"</code> and <code>s:/\.pdf$/</code>
 								match saved tabs only, never open ones; <code>-s:</code> is the mirror and matches open tabs

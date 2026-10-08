@@ -32,12 +32,16 @@ first, then the move, and storage is as before; Ctrl+Z held down (auto-repeat) t
 the two; a delete followed by an emptying move keeps both
 notices, and the older notice's Undo button still takes back its delete.
 
-Twenty-six more checks (`--only "drops "`, own tab, Blocks and List) are the drops of Round 3 (patch drops3) and the rule of
+Thirty-four more checks (`--only "drops "`, own tab, Blocks and List) are the drops of Round 3 (patch drops3) and the rule of
 Round 4 that selected tabs are always shown: a search, a Ctrl+click on a tab it fades (Bravo) and "Hide non-matching tabs"
 leave that tab on screen, faded and selected, with its window (the unselected non-matches, Echo, stay hidden); a real drag
 of the four selected tabs onto an open tab, onto a saved window, and Enter, move or copy all four (the drag image says
-"4 tabs"); one selected non-matching tab alone is switched to by Enter and opens no window; a new search replaces the
-selection with its matches, so the kept tab hides again; the same for saved tabs (a non-matching Kilo selected with two
+"4 tabs"); one selected non-matching tab alone is switched to by Enter and opens no window; a new search keeps the tab
+selected by hand (selected and on screen, though it matches neither search) and takes back only what the last search
+selected (Charlie leaves and hides); a range (Shift+right-click) with the hiding on skips the hidden tab between its ends;
+the arrow keys go on from a selected non-matching tab to the next match; an unselected open tab dragged while a saved tab
+is selected moves alone, and the saved tab stays selected and on screen with its saved window, also during the drag; the
+same for saved tabs (a non-matching Kilo selected with two
 matches is dragged out and opened with them by a drag and by Enter, and alone by Enter, the saved window unchanged). Drops that do nothing or only part say why in the red notice:
 a normal saved tab or a normal open tab dropped on a saved window that is private (seeded, the headless browser has no
 private windows), private and normal saved tabs selected together and dropped on a normal saved window (the normal one moves,
@@ -46,7 +50,7 @@ saved window and on an open tab. Before Round 4 a drop that is refused for a rea
 with); it is no longer: the notice comes when the drag ends there (see the `notallowed` checks below), and these checks read it after
 the release.
 
-Forty-two more checks (`--only notallowed`, own tab, Blocks and List) are the not-allowed cursor of Round 4 (patch notallowed).
+Forty-four more checks (`--only notallowed`, own tab, Blocks and List) are the not-allowed cursor of Round 4 (patch notallowed).
 Over a target that refuses a drag (a normal tab or saved tab over a private saved window, a private saved tab over a normal one,
 a normal open tab over a private open window and the other way round, seeded or, for open windows, told to the popup in
 `makePrivate`, as the headless browser has no private windows the extension may see) the page's answer to the last dragover,
@@ -55,11 +59,14 @@ or outline anywhere, no drop event at all (the browser delivers none), and a dra
 the reason comes once, after the release (and not before), and nothing moved. A drag that is not allowed but has no reason to
 give (an open tab over its own place, a saved tab over its own place, the last saved tab over the title of its own saved window,
 a saved window card over itself) is refused the same way and shows no notice. A refusing target the pointer left again before the
-release (onto nothing; onto an allowed target, where it is then dropped) gives no notice. Allowed targets are unchanged: saved
+release (onto nothing; onto an allowed target, where it is then dropped; out of the page, where the drag ends) gives no notice. Allowed targets are unchanged: saved
 tab over an open tab, open tab over an open tab, open tab over a saved window, saved tab over a saved window, card over card:
 allowed, marker, a drop event, the result, no notice; a private tab over its own private window; a drop that is only partly
 possible (private and normal saved tabs together over a normal saved window) is allowed and keeps its partial notice.
-`drag()` takes `opts.moveOn` (the pointer moves on to another target before the release).
+`drag()` takes `opts.moveOn` (the pointer moves on to another target before the release) and `opts.cancel` (the pointer
+leaves the viewport and the drag ends out there with dragCancel, no drop: the page's dragend reports that position).
+A dragleave without relatedTarget does not mean the pointer left the page: Chrome sends one to a target that refuses
+the release, too.
 
 Sixteen more checks (`--only "drag image"`, own tab) cover the drag image of a several-tab drag in every layout
 (blocks, blocks-big, horizontal, vertical), light and dark, for three saved and three open tabs: the stack is

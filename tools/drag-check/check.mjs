@@ -238,6 +238,8 @@ try {
 	// change made behind the drag's back (a saved tab deleted by another popup).
 	// `opts.moveOn` (a selector, or {selector, fx, fy}): after a few dragovers on
 	// `to`, the pointer moves on there, and the drop / the release happens there.
+	// `opts.cancel`: no drop; the drag leaves the page and ends outside it (the
+	// way Chrome reports a release over another window, or Escape).
 	async function drag(p, from, to, into = p, opts = {}) {
 		const cdp = await p.createCDPSession()
 		const target = into === p ? cdp : await into.createCDPSession()
@@ -287,7 +289,14 @@ try {
 					await new Promise((r) => setTimeout(r, 30))
 				}
 			}
-			await dragEvent('drop', end)
+			if (opts.cancel) {
+				// out of the viewport, left of it, then the end out there
+				const out = {x: -40, y: end.y}
+				await dragEvent('dragOver', out)
+				await new Promise((r) => setTimeout(r, 30))
+				await dragEvent('dragCancel', out)
+			}
+			else await dragEvent('drop', end)
 			// the page it left: the drag ends there, dropped elsewhere
 			if (into !== p) await cdp.send('Input.dispatchDragEvent', {type: 'dragCancel', x: 0, y: 0, data})
 			await mouse('mouseReleased', into === p ? end : src, {buttons: 0, clickCount: 1})
@@ -397,6 +406,16 @@ try {
 		await cdp.send('Input.dispatchMouseEvent', {type: 'mouseMoved', x: at.x, y: at.y})
 		await cdp.send('Input.dispatchMouseEvent', {type: 'mousePressed', x: at.x, y: at.y, button: 'right', buttons: 2, clickCount: 1})
 		await cdp.send('Input.dispatchMouseEvent', {type: 'mouseReleased', x: at.x, y: at.y, button: 'right', buttons: 0, clickCount: 1})
+		await cdp.detach()
+	}
+
+	// Shift+right-click: selects the range from the last selected tab
+	async function rangeClick(p, selector) {
+		const at = await point(p, selector)
+		const cdp = await p.createCDPSession()
+		await cdp.send('Input.dispatchMouseEvent', {type: 'mouseMoved', x: at.x, y: at.y, modifiers: 8})
+		await cdp.send('Input.dispatchMouseEvent', {type: 'mousePressed', x: at.x, y: at.y, button: 'right', buttons: 2, clickCount: 1, modifiers: 8})
+		await cdp.send('Input.dispatchMouseEvent', {type: 'mouseReleased', x: at.x, y: at.y, button: 'right', buttons: 0, clickCount: 1, modifiers: 8})
 		await cdp.detach()
 	}
 
@@ -1036,18 +1055,65 @@ try {
 			const got = [shown, await newWindows(known, []), sorted(await titlesOf(w1)), await noticesOf(p)]
 			return {got, want}
 		})
-		// a new search replaces the open-tab selection with its matches: the tab
-		// that was kept on screen is deselected and hides with the filter
-		drops('selected non-matching tab: a new search replaces the selection, the tab hides again', async () => {
+		// A new search replaces only what the search selected: the tab selected
+		// by hand (Bravo) stays selected, so on screen, though it matches neither
+		// search; Charlie, selected by the first search, leaves and hides.
+		drops('selected non-matching tab: a new search keeps it selected and on screen, and takes back only what the last search selected', async () => {
 			await fixture(layout)
 			const p = await openPopup()
 			await shownSelected(p, SEARCH, [tabSel('Bravo')])
 			await p.focus('.searchBoxInput')
-			await p.keyboard.press('End')
-			await p.keyboard.type(' OR Echo')
-			const want = [['Alpha', 'Charlie', 'Delta', 'Echo'], ['Alpha', 'Charlie', 'Delta', 'Echo']]
+			await p.keyboard.down('Control')
+			await p.keyboard.press('KeyA')
+			await p.keyboard.up('Control')
+			await p.keyboard.type('Alpha OR Delta OR Echo')
+			const want = [['Alpha', 'Bravo', 'Delta', 'Echo'], ['Alpha', 'Bravo', 'Delta', 'Echo'], ['Bravo']]
 			const got = [await settle(async () => sorted(await shownIn(p, WINDOWS)), want[0])]
 			got.push(await selectedIn(p, WINDOWS))
+			got.push(await fadedIn(p, WINDOWS))
+			return {got, want}
+		})
+		// a range takes only the tabs on screen: Bravo, hidden between Alpha and
+		// Charlie, is not selected (and so does not show up under the pointer)
+		drops('a range with Hide non-matching tabs on skips the hidden tabs between its ends', async () => {
+			await fixture(layout)
+			const p = await openPopup()
+			await shownSelected(p, SEARCH, [], tabSel('Bravo'))
+			// Alpha deselected and selected again by hand: the range starts there
+			await ctrlClick(p, tabSel('Alpha'))
+			await ctrlClick(p, tabSel('Alpha'))
+			await rangeClick(p, tabSel('Charlie'))
+			await new Promise((r) => setTimeout(r, 300))
+			const want = [['Alpha', 'Charlie', 'Delta'], ['Alpha', 'Charlie', 'Delta']]
+			return {got: [sorted(await shownIn(p, WINDOWS)), await selectedIn(p, WINDOWS)], want}
+		})
+		// the arrows go on from a selected tab that does not match (it is on
+		// screen): from Bravo to Charlie, not back to the first match
+		drops('the arrow keys go on from a selected non-matching tab to the next match', async () => {
+			await fixture(layout)
+			const p = await openPopup()
+			await shownSelected(p, 'Alpha OR Charlie', [tabSel('Bravo'), tabSel('Alpha'), tabSel('Charlie')], tabSel('Delta'))
+			const before = await selectedIn(p, WINDOWS)
+			await p.keyboard.press(layout === 'vertical' ? 'ArrowDown' : 'ArrowRight')
+			const want = [['Bravo'], ['Charlie']]
+			return {got: [before, await settle(() => selectedIn(p, WINDOWS), want[1])], want}
+		})
+		// an open tab dragged while saved tabs are selected goes alone: the saved
+		// selection, and the saved window it keeps on screen, stay
+		drops('an unselected open tab dragged while a saved tab is selected: it moves alone, the saved tab stays selected and on screen', async () => {
+			const [, w2] = await fixture(layout)
+			const p = await openPopup()
+			await shownSelected(p, 'Alpha OR Delta', [savedSel('Kilo')])
+			const before = sorted(await shownIn(p, '.session'))
+			let during = null
+			await drag(p, tabSel('Alpha'), {selector: tabSel('Delta'), fx: 0.1, fy: 0.1}, p, {afterStart: async () => {
+				await new Promise((r) => setTimeout(r, 200))
+				during = sorted(await shownIn(p, '.session'))
+			}})
+			const want = [['Kilo'], ['Kilo'], ['Alpha', 'Delta', 'Echo', 'Foxtrot'], ['Kilo'], ['Kilo']]
+			const got = [before, during, await settle(async () => sorted(await titlesOf(w2)), want[2])]
+			got.push(await selectedIn(p, '.session'))
+			got.push(sorted(await shownIn(p, '.session')))
 			return {got, want}
 		})
 		// the saved side of the same rule
@@ -1312,6 +1378,18 @@ try {
 			await drag(p, tabSel('Bravo'), '#session-s2 h3.windowTitle', p, {moveOn: {selector: '.window-container', fx: 0.5, fy: 0.97}})
 			await quiet(900)
 			return {got: [await seen(), await noticesOf(p), await savedTitles()], want: [['none', 'no marker', 0, ['none']], [], SAVED]}
+		})
+		// the pointer leaves the page over a refusing target and the drag ends
+		// out there (dragend's position is outside the page): nothing to say
+		na('over a refusing target, then out of the page, ended there: no notice', async () => {
+			await fixture(layout)
+			await seedSaved({s2: {incognito: true}})
+			const p = await openPopup()
+			const seen = await watchDrag(p)
+			await drag(p, tabSel('Bravo'), '#session-s2 h3.windowTitle', p, {cancel: true})
+			await quiet(900)
+			const want = [['none', 'no marker', 0, ['none']], [], SAVED]
+			return {got: [await seen(), await noticesOf(p), await savedTitles()], want}
 		})
 		na('over a refusing target, then on an allowed one, dropped there: it drops, no notice', async () => {
 			const [w1] = await fixture(layout)

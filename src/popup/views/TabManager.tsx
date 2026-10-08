@@ -29,12 +29,13 @@ import {savedDeleteItems} from "../savedDelete";
 import {editSession, shownSavedName, SessionEdit} from "../sessionEdit";
 import {searchSaved, searchSummary, SavedSearch, SummaryKind} from "../searchSaved";
 import {isHiddenTab, savedSelectionSignature, shownWithSelection} from "../selectedShown";
+import {SearchPicks, searchSelects, searchTab, keptByHand} from "../searchPicks";
 import {draggedSaved, openableSaved, openedText} from "../savedDrag";
 import {moveSession, reorderShown} from "../sessionOrder";
 import {tidyStored, listSessions, addSessions, importSessions} from "../sessionStore";
 import {moveSavedTabs, remapSavedKeys, movedText, SavedTabMove, SavedDropTarget} from "../savedMove";
 import {addOpenTabs, addedText, SavedAddResult} from "../savedAdd";
-import {splitByKind, planMove, planAdd, whyUnsavable, dropErrorText, openMoveVerdict, openSavedVerdict, refusalNotice, Left, MovePlan, AddPlan, Refusal, DropVerdict} from "../dropReasons";
+import {splitByKind, planMove, planAdd, whyUnsavable, dropErrorText, openMoveVerdict, openSavedVerdict, refusalNotice, endedOutside, Left, MovePlan, AddPlan, Refusal, DropVerdict} from "../dropReasons";
 import {SavedWrites, SavedChange} from "../savedWrites";
 import {stampUpdated} from "../savedUpdated";
 import {moveUndoRecord, undoMove, emptiedText, undoneText, UndoOffers, MoveUndo} from "../moveUndo";
@@ -132,6 +133,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	private readonly flushPendingHidden = () => { if (document.visibilityState === "hidden") this.pending.flush(true); };
 
 	private readonly runUpdate = () => this.setState({ dirty: true });
+	// the open tabs the search (or a highlight) selected, as opposed to the
+	// ones selected by hand, which a new search leaves selected (../searchPicks.ts)
+	private readonly searchPicks = new SearchPicks();
 	// the saved tabs being dragged (../savedDrag.ts), from dragstart until the
 	// drop or the drag's end; null while open tabs (or nothing) are dragged
 	private draggingSaved : number[] | null = null;
@@ -1703,7 +1707,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		for (const dupItem of dup) {
 			searchLen++;
 			hiddenCount -= this.state.hiddenTabs.has(dupItem) ? 1 : 0;
-			this.state.selection.add(dupItem);
+			this.searchPicks.pick(this.state.selection, dupItem);
 			this.state.hiddenTabs.delete(dupItem);
 			this.setState({
 				lastSelect: dupItem,
@@ -1759,6 +1763,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		const recent = level ? this.getRecent(level) : null;
 		if (this.searchBoxRef.current) this.searchBoxRef.current.value = "";
 		this.state.selection.clear();
+		this.searchPicks.clear();
 		this.clearHiddenTabs();
 		this.recentIds = recent ? recent.ids : [];
 		let hiddenCount = 0;
@@ -1766,7 +1771,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			const ids = new Set(recent.ids);
 			for (const id of this.state.tabsbyid.keys()) {
 				if (ids.has(id)) {
-					this.state.selection.add(id);
+					this.searchPicks.pick(this.state.selection, id);
 				} else {
 					this.state.hiddenTabs.add(id);
 					hiddenCount++;
@@ -1796,7 +1801,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		const parsed = parseQuery(searchQuery, this.state.sessionsFeature);
 
 		if (!searchLen) {
-			this.state.selection.clear();
+			// what the search selected leaves; the tabs selected by hand stay
+			this.searchPicks.unpickAll(this.state.selection);
 			this.setState({
 				hiddenCount: 0,
 				dupTabs: false,
@@ -1806,8 +1812,11 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			this.clearHiddenTabs();
 			hiddenCount = 0;
 		} else {
-			// search selects open tabs only: selected saved tabs are dropped
-			keepKind(this.state.selection, "open");
+			// The search selects the open tabs it matches and takes back what an
+			// earlier search selected; tabs selected by hand stay selected, and so
+			// on screen, matching or not (saved tabs too: then it selects nothing,
+			// the selection never mixes them, see ../searchPicks.ts)
+			const selects = searchSelects(this.state.selection, parsed.scopeOnly);
 			let idList : number[] = [ ...this.state.tabsbyid.keys() ];
 			if(this.state.dupTabs) {
 				const duplicates = this.getDuplicates();
@@ -1822,15 +1831,13 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				const match = matchTab(searchable(tab.title, tab.url || tab.pendingUrl), parsed);
 				if (match) {
 					hiddenCount -= this.state.hiddenTabs.has(id) ? 1 : 0;
-					// a query of only -s: shows every open tab and selects none
-					if (parsed.scopeOnly) this.state.selection.delete(id);
-					else this.state.selection.add(id);
 					this.state.hiddenTabs.delete(id);
 				} else {
 					hiddenCount += 1 - (this.state.hiddenTabs.has(id) ? 1 : 0);
 					this.state.hiddenTabs.add(id);
-					this.state.selection.delete(id);
 				}
+				// a query of only -s: shows every open tab and selects none
+				searchTab(this.state.selection, this.searchPicks, id, match, selects);
 				this.setState({
 					lastSelect: id,
 					dirty: true
@@ -1872,7 +1879,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			const summary = searchSummary(searchQuery, matches, saved, kind, openWindows);
 			this.setState({
 				topText: summary.top,
-				bottomText: summary.bottom
+				// tabs selected by hand go along with Enter: say what Enter does
+				bottomText: keptByHand(this.state.selection, this.searchPicks) ? this.selectionText().bottomText : summary.bottom
 			});
 		}
 		this.setState({
@@ -1887,6 +1895,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	}
 	clearSelection = () => {
 		this.state.selection.clear();
+		this.searchPicks.clear();
 		this.setState({
 			lastSelect: 0
 		});
@@ -2086,7 +2095,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 							if (_window.state.hidden) continue;
 							if (found) break;
 							for (const _t of _w.tabs) {
-								if (this.state.hiddenTabs.has(_t.id)) continue;
+								// the arrows walk the matches, and the selected
+								// tabs, which are on screen whatever they match
+								if (this.offArrowPath(_t.id)) continue;
 								last = _t.id;
 								if (!first) first = _t.id;
 								if (!selectedTab) {
@@ -2151,7 +2162,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 							if (found) break;
 							if (!first) first = _w.id;
 							for (const _t of _w.tabs) {
-								if (this.state.hiddenTabs.has(_t.id)) continue;
+								if (this.offArrowPath(_t.id)) continue;
 								i++;
 								last = _w.id;
 								if (!selectedTab) {
@@ -2210,14 +2221,20 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			return;
 		}
 	}
+	// The arrows skip the tabs that do not match (faded or hidden), as always,
+	// but not a selected one: it is on screen (../selectedShown.ts) and the
+	// arrows go on from it.
+	private offArrowPath(id : number) : boolean {
+		return isHiddenTab(id, this.state.hiddenTabs, true, this.state.selection);
+	}
 	selectWindowTab(windowId : number, tabPosition : number) {
 		if (!tabPosition || tabPosition < 1) tabPosition = 1;
 		let _w = this.state.windowsbyid.get(windowId);
 
 		let i = 0;
 
-		// remove tabs that are in this.state.hiddenTabs
-		let filteredTabs = _w.tabs.filter(tab => !this.state.hiddenTabs.has(tab.id));
+		// the tabs the arrows walk (offArrowPath)
+		let filteredTabs = _w.tabs.filter(tab => !this.offArrowPath(tab.id));
 
 		for (let _t of filteredTabs) {
 			i++;
@@ -2284,6 +2301,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		return tabs;
 	}
 	select(id : number) {
+		// selected or deselected by hand: a new search leaves it as it is now
+		this.searchPicks.touch(id);
 		if (this.state.selection.has(id)) {
 			this.state.selection.delete(id);
 			this.setState({
@@ -2309,9 +2328,20 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		if (selected === 1) return { topText: "Selected " + selected + " tab", bottomText: "Press enter to switch to it" };
 		return { topText: "Selected " + selected + " tabs", bottomText: "Press enter to move them to a new window" };
 	}
+	// The tabs of `tabs` (one window's, or one saved window's) that are on
+	// screen: with "Hide non-matching tabs" on, not the ones it hides.
+	private tabsOnScreen(tabs : browser.Tabs.Tab[]) : browser.Tabs.Tab[] {
+		if (!this.state.filterTabs || tabs.length === 0) return tabs;
+		const raw = isSavedTabKey(tabs[0].id) ? this.savedSearch(this.visibleSessions()).hidden : this.state.hiddenTabs;
+		return tabs.filter((tab) => !isHiddenTab(tab.id, raw, true, this.state.selection));
+	}
 	selectTo(id : number, tabs : browser.Tabs.Tab[]) {
 		// a range is of one kind; `tabs` is one window's (or one saved window's)
 		keepKind(this.state.selection, tabKind(id));
+		// A range takes only what is on screen: the tabs "Hide non-matching
+		// tabs" hides between its ends stay out (selected, they would show up
+		// and shift the tiles under the pointer, and go along in every action).
+		tabs = this.tabsOnScreen(tabs);
 		let activate = false;
 		const lastSelect = this.state.lastSelect;
 		if (id === lastSelect) {
@@ -2414,6 +2444,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		for (let i = 0; i < tabs.length; i++) {
 			if (i >= rangeIndex1 && i <= rangeIndex2) {
 				const _tab_id = tabs[i].id;
+				// selected or deselected by hand (../searchPicks.ts)
+				this.searchPicks.touch(_tab_id);
 				if (activate) {
 					this.state.selection.add(_tab_id);
 				} else {
@@ -2439,7 +2471,11 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		if (e && e.type === "dragend") {
 			if (e === this.lastEnd) return;
 			this.lastEnd = e;
-			const text = refusalNotice(this.refusal, Date.now(), (e as DragEvent).dataTransfer?.dropEffect, this.dropped);
+			// a drag that left the page from a refusing target and ended out
+			// there (another window, the desktop) says nothing
+			const end = e as DragEvent;
+			const outside = endedOutside(end.clientX, end.clientY, window.innerWidth, window.innerHeight);
+			const text = refusalNotice(this.refusal, Date.now(), end.dataTransfer?.dropEffect, this.dropped, outside);
 			if (text) this.board.error(text);
 			this.refusal = null;
 			this.dropped = false;
@@ -2479,8 +2515,17 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			return encodeSaved(refsOf(keys));
 		}
 		this.draggingSaved = null;
+		// An unselected open tab while saved tabs are selected goes alone, and
+		// the saved selection stays: dropping it here would take off screen the
+		// saved windows shown only for a selected tab (../selectedShown.ts),
+		// under the pointer, in the middle of the drag.
+		if (!this.state.selection.has(id) && onlySavedSelected(this.state.selection)) {
+			const tab = this.state.tabsbyid.get(id);
+			this.draggingOpen = tab ? [tab] : [];
+			return encodeIds(tabIds(this.draggingOpen));
+		}
 		if (!this.state.selection.has(id)) {
-			keepKind(this.state.selection, tabKind(id));
+			this.searchPicks.touch(id);
 			this.state.selection.add(id);
 			this.setState({
 				lastSelect: id

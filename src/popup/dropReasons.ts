@@ -3,14 +3,19 @@
 // Drops that do nothing, or only part of what was dragged, and why. Three
 // things live here, all pure (unit tested in tests/dropReasons.test.ts):
 //
-// - what a drop on saved windows takes of what was dragged and what it leaves
-//   out (`planMove`, `planAdd`, `splitByKind`, ./savedDrag.ts for the saved
-//   tabs that open in an open window), each left-out tab with its reason;
+// - what a drop takes of what was dragged and what it leaves out, each
+//   left-out tab with its reason (`planMove`, `planAdd`, `splitByKind`;
+//   ./savedDrag.ts for the saved tabs that open in an open window);
 // - the red error notice for that (`dropErrorText`): "Nothing added: …" when
-//   the drop did nothing, "2 of 5 tabs left out: …" when it did part.
+//   the drop did nothing, "2 of 5 tabs left out: …" when it did part;
+// - whether a target takes the drag at all while it is over it
+//   (`openMoveVerdict`, `openSavedVerdict`; the saved targets use the plans
+//   above): a target that would take nothing answers the dragover with the
+//   not-allowed cursor and no marker, and the reason is shown when the drag
+//   ends there (`refusalNotice`).
 //
 // A drop that changes nothing on purpose (a tab dropped where it already is)
-// has no reason and no notice.
+// is not allowed either, but has no reason and no notice.
 
 import type {SavedTabRef} from "./sessionKeys.ts";
 import type {MovableWindow, SavedDropTarget} from "./savedMove.ts";
@@ -266,10 +271,19 @@ export interface Refusal {
 
 // The error notice for a drag that ended (dragend) over a refusing target,
 // "" when there is none: the drag was dropped nowhere (`dropEffect` "none"
-// and no drop event came), and the last dragover was over a target that
-// refused it for a reason, not long ago
-export function refusalNotice(refusal : Refusal | null, now : number, dropEffect : string | undefined, dropped : boolean) : string {
-	if (!refusal || !refusal.text || dropped || dropEffect !== "none") return "";
+// and no drop event came), not `outside` the page (endedOutside), and the
+// last dragover was over a target that refused it for a reason, not long ago
+export function refusalNotice(refusal : Refusal | null, now : number, dropEffect : string | undefined, dropped : boolean, outside = false) : string {
+	if (!refusal || !refusal.text || dropped || outside || dropEffect !== "none") return "";
 	if (now - refusal.at > REFUSAL_FRESH_MS || now < refusal.at) return "";
 	return refusal.text;
+}
+
+// Whether a drag ended (dragend's clientX / clientY) outside the page of
+// `width` x `height`: let go over another window or the desktop, the pointer
+// having left the page from a refusing target. Such a drag is not "let go
+// over a place that refuses it" and says nothing. (A browser that reports no
+// position gives 0, 0: inside, as before.)
+export function endedOutside(x : number, y : number, width : number, height : number) : boolean {
+	return x < 0 || y < 0 || x > width || y > height;
 }
