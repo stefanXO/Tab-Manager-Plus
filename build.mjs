@@ -10,7 +10,7 @@
 // A folder holds everything the browser needs: the merged manifest, the three
 // html pages, css/popup.css (the stylesheet bundle, see scripts/css.mjs), images/, fonts/,
 // dist/ (the esbuild output; it keeps that subpath so the <script src="dist/…">
-// references in the html files stay as they are) and the two legal documents. Load build/chrome unpacked in Chrome, and point
+// references in the html files stay as they are), features/ (the changelog clips, when present) and the two legal documents. Load build/chrome unpacked in Chrome, and point
 // web-ext or about:debugging at build/firefox. readme.md and CHANGELOG.md stay
 // out: the stores want the extension, not its documentation.
 //
@@ -53,9 +53,15 @@ const outDir = join('build', browser)
 // here: the stylesheet is bundled (below), the raw files under css/ never ship
 const STATIC = ['popup.html', 'options.html', 'changelog.html', 'images', 'fonts', 'LICENSE.md', 'PRIVACY.md']
 
+// features/<version>/ holds the clips of the changelog page (changelog.html shows them,
+// see scripts/changelog.mjs), whole, as the stores zip build/<browser>. It is copied when it
+// exists, since a clip that is not shipped is simply hidden by the page; brag-output*
+// (the render workspace) is a different folder and never ships
+const OPTIONAL_STATIC = ['features']
+
 // the sources watch mode keeps an eye on: the static files plus both manifests
 // (css/ is watched by the esbuild context of the stylesheet bundle)
-const WATCHED = ['popup.html', 'options.html', 'changelog.html', 'images', 'fonts', 'manifest.json', 'manifest.firefox.json']
+const WATCHED = ['popup.html', 'options.html', 'changelog.html', 'images', 'fonts', 'features', 'manifest.json', 'manifest.firefox.json']
 
 // React DevTools talks to the page over a websocket on 8097; only a dev build
 // may allow it, and only Chrome needs a policy for it at all
@@ -119,6 +125,7 @@ function copy(path) {
 
 function copyStatic() {
 	for (const path of STATIC) copy(path)
+	for (const path of OPTIONAL_STATIC) if (existsSync(path)) copy(path)
 }
 
 if (devtools && browser === 'firefox') console.log('--devtools only applies to Chrome, ignoring it')

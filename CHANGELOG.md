@@ -1,6 +1,7 @@
 7.0.0
 =====
 A Brand New Look!
+![Layouts, badges, recency bars and the new theme button](features/7.0.0/look.webm)
 - Every layout redesigned: Block view is a grid, List view (was Vertical) shows one tab per line, Rows view (was Horizontal) one window per row (#264)
 - Dark theme rebuilt with consistent colors; window colors show as a colored edge; scrollbars and controls are dark too; the active tab has a clear outline (#45, #67, #99, #147, #151, #241)
 - Theme: System, Light or Dark. System is the new default and follows your operating system's dark mode, also while the popup is open; if you had dark mode on, it stays dark (#84, #182)
@@ -20,6 +21,7 @@ Faster
 - Typing right after opening the popup no longer loses the first characters (#122)
 
 Searching And Duplicates
+![Search with u: and -word, Highlight Duplicates and the recent tabs clock](features/7.0.0/search.webm)
 - Highlight Duplicates selects only the extra copies and keeps the one you used last, so Ctrl+Delete (Cmd+Delete on a Mac) closes just the duplicates (#54, #142, #188, #240, #248, #260)
 - The header shows how many tabs have duplicates and how many are selected
 - Searching while duplicates are highlighted searches within them
@@ -43,6 +45,7 @@ Windows
 - The "switch to previous tab" shortcut works again (#37, #108, #238)
 
 Saved Windows
+![Save selected tabs, rename and recolor, drag saved tabs out, s: search, delete and Ctrl+Z](features/7.0.0/saved.webm)
 - Restored windows keep their size and position, fitted to the screen they are restored on; a window saved maximized comes back maximized on the monitor it was saved on when that monitor is connected, else on the monitor you restore from. The hover card of a saved window shows where it will land, and Restore goes by the same monitors as the card, so the window lands there (before, a window saved maximized on a second monitor could come back on the current one while the card said otherwise). The debug file (tab-manager-plus-everything-....json) now also says how each saved window would be restored on your monitors (#205, #207, #208)
 - Restoring a window in own-tab mode scrolls to it
 - Saved sessions could be lost when the update from version 5 was interrupted, e.g. by closing the popup
@@ -85,6 +88,7 @@ Smaller fixes
 - The popup warns once, with a red notice, when the background part of the extension is older than the popup (a rebuilt extension that was not reloaded) and says where to reload it (chrome://extensions, in Firefox about:debugging); it compares a fingerprint of the background code, so a rebuild that leaves that code unchanged raises no warning
 
 Tab And Window Info
+![Hover cards for a tab, a window with its monitor map, and a button with its keys](features/7.0.0/info.webm)
 - Hold the mouse on a tab to see when it was last used, its state (asleep, muted and why, playing, pinned), its position, which tab opened it, copies in other windows and its zoom
 - Hold the mouse on a window for its tab counts, sites, last activity, oldest and newest tab, size, and a small map of your monitors showing where the window is
 - The card follows the mouse and switches instantly between tabs; Escape closes it
@@ -92,6 +96,7 @@ Tab And Window Info
 - Hovering and switching layouts are much faster in the popup with many windows and tabs
 
 Options
+![Options: Donate and Rate switch, settings export and import, keyboard shortcuts](features/7.0.0/options.webm)
 - The options list each keyboard shortcut with its current key, or "Not set"
 - "Donate and Rate buttons" in the options hides those two buttons at the top of the popup
 - New default keys for new installs, as the browser took the old ones: Alt+Shift+M opens Tab Manager Plus, Alt+Shift+, switches to the previous tab (Ctrl+Shift+M and Ctrl+Shift+, on Mac). Existing installs keep their keys

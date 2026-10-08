@@ -90,3 +90,33 @@ h3 time {
 	font-size: 1.1em;
 	margin-bottom: 0.2rem;
 }
+
+/* clips: short silent loops of the popup under a 7.0.0 subsection, played by
+   src/popup/changelog.ts only while on screen. The space is reserved with
+   aspect-ratio so the page does not jump when the poster or video arrives;
+   change --clip-aspect to the real size of the clips. */
+.clip {
+	--clip-aspect: 4 / 3;
+	display: block;
+	box-sizing: border-box;
+	margin: 0.6rem 0 1rem;
+	max-width: min(100%, 40rem);
+	aspect-ratio: var(--clip-aspect);
+	overflow: hidden;
+	border: 1px solid var(--code-inline-border);
+	border-radius: 10px;
+	background: var(--code-inline-bg);
+	cursor: pointer;
+}
+.clip.still {
+	cursor: default;
+}
+.clip[hidden] {
+	display: none;
+}
+.clip video {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}

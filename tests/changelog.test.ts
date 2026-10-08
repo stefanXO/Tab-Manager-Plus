@@ -1,6 +1,6 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { inlineHtml, renderChangelog, wrapHtml } from "../scripts/changelog.mjs";
+import { clipHtml, inlineHtml, renderChangelog, wrapHtml } from "../scripts/changelog.mjs";
 
 // ---------------------------------------------------------------------------
 // inlineHtml
@@ -199,5 +199,75 @@ describe("wrapHtml", () => {
 	test("trailing issue links stay inline on a short bullet", () => {
 		const html = renderChangelog("1.0.0\n=====\n- short fix #12\n");
 		assert.match(html, /<li>short fix <a [^>]*>#12<\/a><\/li>/);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// clips
+// ---------------------------------------------------------------------------
+
+describe("clips", () => {
+	const FIGURE =
+		'<figure class="clip"><video muted loop playsinline preload="none" poster="features/7.0.0/saved.jpg" aria-label="Saved windows">' +
+		'<source src="features/7.0.0/saved.webm" type="video/webm"></video></figure>';
+
+	test("clipHtml renders the figure, deriving the poster from the webm path", () => {
+		assert.equal(clipHtml("![Saved windows](features/7.0.0/saved.webm)"), FIGURE);
+	});
+
+	test("clipHtml escapes the alt text", () => {
+		const html = clipHtml('![A "quoted" <b> & more](features/7.0.0/saved.webm)');
+		assert.match(html, /aria-label="A &quot;quoted&quot; &lt;b&gt; &amp; more"/);
+	});
+
+	test("clipHtml only accepts a webm inside features/", () => {
+		assert.equal(clipHtml("![x](features/7.0.0/saved.mp4)"), null);
+		assert.equal(clipHtml("![x](images/saved.webm)"), null);
+		assert.equal(clipHtml("![x](https://example.com/features/saved.webm)"), null);
+		assert.equal(clipHtml('![x](features/7.0.0/a" onerror="x.webm)'), null);
+		assert.equal(clipHtml("Group A"), null);
+		assert.equal(clipHtml("- ![x](features/7.0.0/saved.webm)"), null);
+	});
+
+	test("a clip under a subsection heading renders between the <h4> and the <ul>", () => {
+		const md = "1.0.0\n=====\nGroup A\n![Saved windows](features/7.0.0/saved.webm)\n- a1\nGroup B\n- b1\n";
+		const html = renderChangelog(md);
+		assert.ok(html.includes(`<h4>Group A</h4>\n\t\t\t\t\t\t${FIGURE}\n\t\t\t\t\t\t<ul>\n\t\t\t\t\t\t\t<li>a1</li>`));
+		assert.equal(html.split("<figure").length - 1, 1);
+		assert.match(html, /<h4>Group B<\/h4>\n\t{6}<ul>/);
+	});
+
+	test("a clip directly under the version heading comes before the first <ul>", () => {
+		const md = "1.0.0\n=====\n![Saved windows](features/7.0.0/saved.webm)\n- one\n";
+		const html = renderChangelog(md);
+		assert.ok(html.indexOf("<h3>1.0.0</h3>") < html.indexOf("<figure"));
+		assert.ok(html.indexOf("<figure") < html.indexOf("<ul>"));
+		assert.doesNotMatch(html, /<h4>/);
+	});
+
+	test("a clip line is never mistaken for a subsection heading", () => {
+		const md = "1.0.0\n=====\nGroup A\n![Saved windows](features/7.0.0/saved.webm)\n- a1\n";
+		assert.doesNotMatch(renderChangelog(md), /<h4>!\[/);
+	});
+
+	test("a subsection with a clip but no bullets renders nothing", () => {
+		const md = "1.0.0\n=====\nEmpty\n![Saved windows](features/7.0.0/saved.webm)\nGroup A\n- a1\n";
+		const html = renderChangelog(md);
+		assert.doesNotMatch(html, /<figure/);
+		assert.doesNotMatch(html, /Empty/);
+	});
+
+	test("the real CHANGELOG.md has the five 7.0.0 clips, each under its subsection", async () => {
+		const { readFileSync } = await import("node:fs");
+		const html = renderChangelog(readFileSync("CHANGELOG.md", "utf8"));
+		for (const [heading, name] of [
+			["A Brand New Look!", "look"],
+			["Searching And Duplicates", "search"],
+			["Saved Windows", "saved"],
+			["Tab And Window Info", "info"],
+			["Options", "options"],
+		]) {
+			assert.match(html, new RegExp(`<h4>${heading}</h4>\\n\\t{6}<figure class="clip">.*src="features/7\\.0\\.0/${name}\\.webm"`));
+		}
 	});
 });

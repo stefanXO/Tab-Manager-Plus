@@ -8,6 +8,13 @@
 // <div class="toggle-box"> that follows <h3>What's new</h3>:
 //   <!-- CHANGELOG -->...generated...<!-- /CHANGELOG -->
 // A missing marker is an error, so the file can never silently drift.
+//
+// A clip is a line of its own under a subsection heading (or the version
+// heading), an image link to a webm:
+//   ![Layouts, badges and the theme button](features/7.0.0/look.webm)
+// On GitHub that shows as an image link; here it becomes a <figure class="clip">
+// with a silent looping <video> (webm and mp4 sources, jpg poster, same name).
+// src/popup/changelog.ts plays it only while it is on screen.
 
 import { readFileSync, writeFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
@@ -25,6 +32,11 @@ export function escapeHtml(text) {
 	return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+/** Escapes text for a double-quoted html attribute. */
+export function escapeAttr(text) {
+	return escapeHtml(text).replace(/"/g, "&quot;");
+}
+
 export function inlineHtml(text) {
 	return text
 		.split(/(`[^`]+`)/)
@@ -38,6 +50,23 @@ export function inlineHtml(text) {
 			);
 		})
 		.join("");
+}
+
+// ---- clips -------------------------------------------------------------------
+
+// ![alt](features/<folder>/<name>.webm): only webm files inside features/
+const CLIP_RE = /^!\[([^\]]*)\]\((features\/[\w.-]+(?:\/[\w.-]+)*\.webm)\)$/;
+
+/** Renders the <figure> of a clip line, or null if the line is not one. */
+export function clipHtml(line) {
+	const m = line.trim().match(CLIP_RE);
+	if (!m) return null;
+	const [, alt, webm] = m;
+	const base = webm.slice(0, -".webm".length);
+	return (
+		`<figure class="clip"><video muted loop playsinline preload="none" poster="${base}.jpg" aria-label="${escapeAttr(alt)}">` +
+		`<source src="${webm}" type="video/webm"></video></figure>`
+	);
 }
 
 // ---- markdown parsing ----------------------------------------------------
@@ -67,6 +96,16 @@ function parseGroups(contentLines) {
 	for (const raw of contentLines) {
 		if (raw.trim() === "") continue; // blank lines are just separators, never meaningful
 
+		const clip = clipHtml(raw);
+		if (clip) {
+			if (!current) {
+				current = { heading: null, bullets: [], clips: [] };
+				groups.push(current);
+			}
+			current.clips.push(clip);
+			continue;
+		}
+
 		if (/^\s/.test(raw)) {
 			// continuation of the previous bullet's wrapped text
 			if (current && current.bullets.length) {
@@ -77,12 +116,12 @@ function parseGroups(contentLines) {
 
 		if (raw.startsWith("- ")) {
 			if (!current) {
-				current = { heading: null, bullets: [] };
+				current = { heading: null, bullets: [], clips: [] };
 				groups.push(current);
 			}
 			current.bullets.push(raw.slice(2).trim());
 		} else {
-			current = { heading: raw.trim(), bullets: [] };
+			current = { heading: raw.trim(), bullets: [], clips: [] };
 			groups.push(current);
 		}
 	}
@@ -145,8 +184,9 @@ function renderBlock({ version, date, groups }) {
 	];
 
 	for (const group of groups) {
-		if (group.bullets.length === 0) continue; // empty groups produce nothing
+		if (group.bullets.length === 0) continue; // empty groups produce nothing, clips included
 		if (group.heading) lines.push(`${H}<h4>${inlineHtml(group.heading)}</h4>`);
+		for (const clip of group.clips) lines.push(`${H}${clip}`);
 		lines.push(`${H}<ul>`);
 		for (const bullet of group.bullets) lines.push(renderBullet(bullet));
 		lines.push(`${H}</ul>`);
