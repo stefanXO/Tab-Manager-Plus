@@ -14,14 +14,12 @@ export interface SavedWindowOpen {
 }
 
 // The saved tabs a drag takes: every selected saved tab when the dragged one
-// is selected, else only the dragged one (the selection is left alone). With
-// "Hide non-matching tabs" on, `hidden` holds the keys the search hides: those
-// stay out (the dragged one is on screen, it always goes). An open tab id
-// gives nothing.
-export function draggedSaved(key : number, selection : ReadonlySet<number>, hidden? : ReadonlySet<number>) : number[] {
+// is selected, else only the dragged one (the selection is left alone). An
+// open tab id gives nothing.
+export function draggedSaved(key : number, selection : ReadonlySet<number>) : number[] {
 	if (!isSavedTabKey(key)) return [];
 	if (!selection.has(key)) return [key];
-	return [...selection].filter((id) => isSavedTabKey(id) && (id === key || !hidden || !hidden.has(id)));
+	return [...selection].filter((id) => isSavedTabKey(id));
 }
 
 // What to open for these keys, in the order the saved windows and their tabs

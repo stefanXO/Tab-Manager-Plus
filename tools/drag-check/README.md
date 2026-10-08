@@ -7,7 +7,7 @@ runs the drags through Chrome itself instead, against the built extension.
 
 ```sh
 node build.mjs                          # build/chrome
-node tools/drag-check/check.mjs         # every check (133), ~6 min
+node tools/drag-check/check.mjs         # every check (143), ~6 min
 node tools/drag-check/check.mjs --only "saved tab -> open"
 ```
 
@@ -32,13 +32,13 @@ first, then the move, and storage is as before; Ctrl+Z held down (auto-repeat) t
 the two; a delete followed by an emptying move keeps both
 notices, and the older notice's Undo button still takes back its delete.
 
-Twenty-four more checks (`--only "drops "`, own tab, Blocks and List) are the drops of Round 3 (patch drops3). Hidden tabs never
-move: a search, a Ctrl+click on a tab it fades (Bravo) and "Hide non-matching tabs" leave a selected tab out of sight, and a
-real drag of the three selected tabs on screen onto an open tab, onto a saved window, and Enter, move or copy only those three
-(the drag image says "3 tabs", not 4), and Bravo stays in its window, selected (read back by turning the hiding off again, as
-hidden tabs are not on the page); Enter with only hidden tabs selected opens no window and shows the red notice; the same for
-a hidden selected saved tab dragged out into an open window, and for Enter on selected saved tabs (only the two on
-screen open; with only the hidden one selected, no window and the red notice). Drops that do nothing or only part say why in the red notice:
+Twenty-six more checks (`--only "drops "`, own tab, Blocks and List) are the drops of Round 3 (patch drops3) and the rule of
+Round 4 that selected tabs are always shown: a search, a Ctrl+click on a tab it fades (Bravo) and "Hide non-matching tabs"
+leave that tab on screen, faded and selected, with its window (the unselected non-matches, Echo, stay hidden); a real drag
+of the four selected tabs onto an open tab, onto a saved window, and Enter, move or copy all four (the drag image says
+"4 tabs"); one selected non-matching tab alone is switched to by Enter and opens no window; a new search replaces the
+selection with its matches, so the kept tab hides again; the same for saved tabs (a non-matching Kilo selected with two
+matches is dragged out and opened with them by a drag and by Enter, and alone by Enter, the saved window unchanged). Drops that do nothing or only part say why in the red notice:
 a normal saved tab or a normal open tab dropped on a saved window that is private (seeded, the headless browser has no
 private windows), private and normal saved tabs selected together and dropped on a normal saved window (the normal one moves,
 the notice says "1 of 2 saved tabs left out: ..."), and a saved tab deleted from storage after the drag started, dropped on a

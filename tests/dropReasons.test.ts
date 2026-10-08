@@ -1,14 +1,13 @@
 "use strict";
 
 // Unit tests for the drops that do nothing or only part of what was dragged
-// (src/popup/dropReasons.ts): which selected open tabs move at all (hidden
-// ones never), what a drop on saved windows takes of what was dragged, and the
-// words of the error notice.
+// (src/popup/dropReasons.ts): what a drop on saved windows takes of what was
+// dragged, and the words of the error notice.
 // Run with: npm test  (== node --test tests/)
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { movableOpen, splitByKind, planMove, planAdd, whyUnsavable, leftClause, leftTotal, dropErrorText } from "../src/popup/dropReasons.ts";
+import { splitByKind, planMove, planAdd, whyUnsavable, leftClause, leftTotal, dropErrorText } from "../src/popup/dropReasons.ts";
 import type { Left } from "../src/popup/dropReasons.ts";
 import { moveSavedTabs } from "../src/popup/savedMove.ts";
 import { addOpenTabs } from "../src/popup/savedAdd.ts";
@@ -25,33 +24,6 @@ const store = () : Record<string, W> => ({
 });
 const ref = (sessionId : string, index : number) => ({ sessionId, index });
 const open = (url : string, extra : Partial<AddableTab> = {}) : AddableTab => ({ index: 0, windowId: 1, url, title: url, ...extra });
-
-describe("movableOpen: hidden tabs never move", () => {
-	const tabs = [{ id: 1 }, { id: 2 }, { id: 3 }, { id: 4 }];
-
-	test("nothing hidden (the filter is off): every selected tab", () => {
-		assert.deepEqual(movableOpen(tabs).map((t) => t.id), [1, 2, 3, 4]);
-	});
-
-	test("the tabs the search hides stay out", () => {
-		assert.deepEqual(movableOpen(tabs, new Set([2, 4])).map((t) => t.id), [1, 3]);
-	});
-
-	test("the dragged tab is on screen and always goes", () => {
-		assert.deepEqual(movableOpen(tabs, new Set([2, 4]), 4).map((t) => t.id), [1, 3, 4]);
-	});
-
-	test("only hidden tabs selected: nothing moves", () => {
-		assert.deepEqual(movableOpen(tabs, new Set([1, 2, 3, 4])), []);
-	});
-
-	test("the list it gets is not changed", () => {
-		const hidden = new Set([1]);
-		movableOpen(tabs, hidden);
-		assert.equal(tabs.length, 4);
-		assert.deepEqual([...hidden], [1]);
-	});
-});
 
 describe("splitByKind: private and normal windows", () => {
 	const tabs = [{ id: 1 }, { id: 2, incognito: true }, { id: 3, incognito: false }, { id: 4, incognito: true }];

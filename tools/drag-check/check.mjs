@@ -852,16 +852,16 @@ try {
 		})
 	}
 
-	// Round 3, drops3, with real drags and real keys. (a) Hidden tabs never
-	// move ("if we can't see them, we can't move them"): tabs selected and then
-	// hidden by "Hide non-matching tabs" stay in their window, stay selected, and
-	// are not in the drag image's count, whatever the drop does. (b) A drop that
-	// does nothing, or only part of what was dragged, says why in the red notice:
-	// private and normal never mix (a saved window marked private is seeded; the
-	// headless browser has no private windows), the dragged saved tab is gone
-	// (deleted behind the drag's back). A drop refused for a reason shows no
-	// marker, but must still be taken by the page (the drop event has to come
-	// for the notice to be shown). Own tab, Blocks and List.
+	// Round 3, drops3, with real drags and real keys, and Round 4. (a) Selected
+	// tabs are always shown: tabs selected and then non-matching under "Hide
+	// non-matching tabs" stay on screen (faded, selected, with their window), so
+	// every selected tab takes part in every move, and the drag image counts them
+	// all. (b) A drop that does nothing, or only part of what was dragged, says
+	// why in the red notice: private and normal never mix (a saved window marked
+	// private is seeded; the headless browser has no private windows), the
+	// dragged saved tab is gone (deleted behind the drag's back). A drop refused
+	// for a reason shows no marker, but must still be taken by the page (the drop
+	// event has to come for the notice to be shown). Own tab, Blocks and List.
 	for (const layout of ['blocks', 'vertical']) {
 		const drops = (name, fn) => checks.push({name: 'drops ' + layout + ': ' + name, fn, mode: 'tab'})
 		const SEARCH = 'Alpha OR Charlie OR Delta'
@@ -877,19 +877,11 @@ try {
 		const sorted = (titles) => [...titles].sort()
 		const selectedIn = (p, card) => p.evaluate((card) => [...document.querySelectorAll(card + ' .tab.selected')]
 			.map((t) => (t.getAttribute('data-hover') || '').split('\n')[0]).sort(), card)
-		// Hidden tabs are not on the page at all; to see which ones are still selected,
-		// "Hide non-matching tabs" is turned off again (the faded tabs show). Last in a check.
-		const revealed = async (p, card) => {
-			await click(p, '.windowaction.filter')
-			await p.waitForFunction(() => !document.querySelector('.windowaction.filter.enabled'), {timeout: 3000})
-			await new Promise((r) => setTimeout(r, 300))
-			return selectedIn(p, card)
-		}
 		const noticesOf = (p) => p.evaluate(() => [...document.querySelectorAll('.notice.error .notice-text')].map((e) => e.textContent))
-		// Searched, Bravo (faded: not a match) selected with Ctrl+click, then "Hide
-		// non-matching tabs" on: Bravo is selected and out of sight, the matches
-		// (Alpha, Charlie, Delta) are selected and on screen.
-		async function hiddenSelected(p, query = SEARCH, extra = []) {
+		// Selected tabs are always shown (Round 4): a search, a Ctrl+click on a tab
+		// it fades (Bravo) and "Hide non-matching tabs" leave that tab on screen,
+		// faded and still selected, with its window; the unselected non-matches hide.
+		async function shownSelected(p, query = SEARCH, extra = [], hides = tabSel('Echo')) {
 			await p.focus('.searchBoxInput')
 			await p.keyboard.type(query)
 			await p.waitForFunction((q) => document.querySelector('.searchBoxInput').value === q, {}, query)
@@ -897,8 +889,12 @@ try {
 			for (const sel of extra) await ctrlClick(p, sel)
 			await click(p, '.windowaction.filter')
 			await p.waitForFunction(() => document.querySelector('.windowaction.filter.enabled'), {timeout: 3000})
-			await p.waitForFunction((sel) => [...document.querySelectorAll(sel)].every((t) => !t.offsetParent), {timeout: 3000}, tabSel('Bravo'))
+			// an unselected non-match is gone (Echo), so the filter is on
+			await p.waitForFunction((sel) => [...document.querySelectorAll(sel)].every((t) => !t.offsetParent), {timeout: 3000}, hides)
 		}
+		// the faded tabs on screen of a card
+		const fadedIn = (p, card) => p.evaluate((card) => [...document.querySelectorAll(card + ' .tab.search-faded')]
+			.filter((t) => t.offsetParent).map((t) => (t.getAttribute('data-hover') || '').split('\n')[0]).sort(), card)
 		// the drag image's count and its front tile, as the page built them
 		const stackOf = async (stacks) => (await stacks()).map((st) => ({label: st.label, tiles: st.tiles.length, front: st.tiles[0]}))
 		const stackIs = (count, front) => [{label: count + ' tabs', tiles: Math.min(count, 3), front: layout === 'vertical' ? front : ''}]
@@ -918,111 +914,127 @@ try {
 			await chrome.storage.local.set({sessions})
 		}, patch, add)
 		const SAVED = {s1: ['Hotel', 'India', 'Juliett', 'Kilo'], s2: ['Lima', 'Mike', 'November']}
+		const WINDOWS = '.window:not(.session)'
 
-		// (a) open tabs between open windows
-		drops('hidden selected tab: dropped on a tab, only the three on screen move, it stays in place and selected', async () => {
-			const [w1, w2] = await fixture(layout)
+		// (a) selected tabs are always shown, and every one of them takes part
+		drops('selected non-matching tab: stays on screen, faded and selected, with the others it was selected with', async () => {
+			await fixture(layout)
 			const p = await openPopup()
-			await hiddenSelected(p, SEARCH, [tabSel('Bravo')])
-			const stacks = await watchStacks(p)
-			await drag(p, tabSel('Alpha'), {selector: tabSel('Delta'), fx: 0.1, fy: 0.1})
-			const want = [['Bravo'], ['Alpha', 'Charlie', 'Delta', 'Echo', 'Foxtrot'], ['Bravo'], stackIs(3, 'Alpha')]
-			const got = [await settle(() => titlesOf(w1), want[0])]
-			got.push(await settle(async () => sorted(await titlesOf(w2)), want[1]))
-			got.push(await stackOf(stacks))
-			got.splice(2, 0, await revealed(p, '.window:not(.session)'))
+			await shownSelected(p, SEARCH, [tabSel('Bravo')])
+			const want = [['Alpha', 'Bravo', 'Charlie', 'Delta'], ['Alpha', 'Bravo', 'Charlie', 'Delta'], ['Bravo'], false]
+			// Bravo fades like Echo would (Alpha, Charlie and Delta match); Echo and Foxtrot are not selected: still hidden
+			const got = [sorted(await shownIn(p, WINDOWS)), await selectedIn(p, WINDOWS), await fadedIn(p, WINDOWS)]
+			got.push(await p.evaluate((sel) => [...document.querySelectorAll(sel)].some((t) => t.offsetParent), tabSel('Echo')))
 			return {got, want}
 		})
-		drops('hidden selected tab: dropped on a saved window, the copies are the three on screen', async () => {
+		drops('selected non-matching tab: dropped on a tab, all four selected tabs move, the stack says 4', async () => {
+			const [, w2] = await fixture(layout)
+			const p = await openPopup()
+			await shownSelected(p, SEARCH, [tabSel('Bravo')])
+			const stacks = await watchStacks(p)
+			await drag(p, tabSel('Alpha'), {selector: tabSel('Delta'), fx: 0.1, fy: 0.1})
+			const want = [['Alpha', 'Bravo', 'Charlie', 'Delta', 'Echo', 'Foxtrot'], stackIs(4, 'Alpha')]
+			const got = [await settle(async () => sorted(await titlesOf(w2)), want[0])]
+			got.push(await stackOf(stacks))
+			return {got, want}
+		})
+		drops('selected non-matching tab: dropped on a saved window, the copies are all four', async () => {
 			const [w1] = await fixture(layout)
 			const p = await openPopup()
 			// (Hotel matches too, so the saved window stays on screen to be dropped on)
-			await hiddenSelected(p, SEARCH + ' OR Hotel', [tabSel('Bravo')])
+			await shownSelected(p, SEARCH + ' OR Hotel', [tabSel('Bravo')])
 			const stacks = await watchStacks(p)
 			await drag(p, tabSel('Alpha'), '#session-s1 h3.windowTitle')
-			const want = [['Alpha', 'Charlie', 'Delta', 'Hotel', 'India', 'Juliett', 'Kilo'], ['Alpha', 'Bravo', 'Charlie'], ['Bravo'], stackIs(3, 'Alpha')]
+			const want = [['Alpha', 'Bravo', 'Charlie', 'Delta', 'Hotel', 'India', 'Juliett', 'Kilo'], ['Alpha', 'Bravo', 'Charlie'], stackIs(4, 'Alpha')]
 			const got = [await settle(async () => sorted((await savedTitles()).s1), want[0])]
 			got.push(sorted(await titlesOf(w1)))
 			got.push(await stackOf(stacks))
-			got.splice(2, 0, await revealed(p, '.window:not(.session)'))
 			return {got, want}
 		})
 		// Enter, the other way tabs move to a new window
-		drops('hidden selected tab: Enter moves the three on screen to a new window, the hidden one stays', async () => {
-			const [w1] = await fixture(layout)
+		drops('selected non-matching tab: Enter moves all four to a new window', async () => {
+			const [, w2] = await fixture(layout)
 			const p = await openPopup()
 			const known = await windowsNow()
-			await hiddenSelected(p, SEARCH, [tabSel('Bravo')])
+			await shownSelected(p, SEARCH, [tabSel('Bravo')])
 			await p.focus('.searchBoxInput')
 			await p.keyboard.press('Enter')
-			const want = [[['Alpha', 'Charlie', 'Delta']], ['Bravo'], true]
+			const want = [[['Alpha', 'Bravo', 'Charlie', 'Delta']], ['Echo', 'Foxtrot']]
 			const got = [await newWindows(known, want[0])]
-			got.push(await settle(() => titlesOf(w1), want[1]))
-			await new Promise((r) => setTimeout(r, 500))
-			got.push((await revealed(p, '.window:not(.session)')).includes('Bravo'))
+			got.push(await settle(() => titlesOf(w2), want[1]))
 			return {got, want}
 		})
-		drops('only hidden tabs selected: Enter moves nothing, no empty window, the notice says why', async () => {
+		drops('selected non-matching tab alone: stays on screen, Enter switches to it, no window opens', async () => {
 			const [w1] = await fixture(layout)
 			const p = await openPopup()
 			const known = await windowsNow()
 			// Alpha is the only match (selected); Bravo is added, Alpha deselected again
-			await hiddenSelected(p, 'Alpha', [tabSel('Bravo')])
+			await shownSelected(p, 'Alpha', [tabSel('Bravo')], tabSel('Charlie'))
 			await ctrlClick(p, tabSel('Alpha'))
+			const shown = sorted(await shownIn(p, WINDOWS))
 			await p.focus('.searchBoxInput')
 			await p.keyboard.press('Enter')
-			const want = [['Nothing moved: the selected tabs are hidden by the search'], [], ['Alpha', 'Bravo', 'Charlie'], ['Bravo']]
-			const got = [await settle(() => noticesOf(p), want[0])]
 			await new Promise((r) => setTimeout(r, 600))
-			got.push(await newWindows(known, []))
-			got.push(sorted(await titlesOf(w1)))
-			got.push(await revealed(p, '.window:not(.session)'))
+			const want = [['Alpha', 'Bravo'], [], ['Alpha', 'Bravo', 'Charlie'], []]
+			const got = [shown, await newWindows(known, []), sorted(await titlesOf(w1)), await noticesOf(p)]
 			return {got, want}
 		})
-		// the saved side of the same rule: a saved tab the search hides stays too
-		drops('hidden selected saved tab: dragged out, only the two on screen open, the hidden one stays in its window and selected', async () => {
+		// a new search replaces the open-tab selection with its matches: the tab
+		// that was kept on screen is deselected and hides with the filter
+		drops('selected non-matching tab: a new search replaces the selection, the tab hides again', async () => {
+			await fixture(layout)
+			const p = await openPopup()
+			await shownSelected(p, SEARCH, [tabSel('Bravo')])
+			await p.focus('.searchBoxInput')
+			await p.keyboard.press('End')
+			await p.keyboard.type(' OR Echo')
+			const want = [['Alpha', 'Charlie', 'Delta', 'Echo'], ['Alpha', 'Charlie', 'Delta', 'Echo']]
+			const got = [await settle(async () => sorted(await shownIn(p, WINDOWS)), want[0])]
+			got.push(await selectedIn(p, WINDOWS))
+			return {got, want}
+		})
+		// the saved side of the same rule
+		drops('selected non-matching saved tab: dragged out with the others, all three open, the saved window is unchanged', async () => {
 			const [, w2] = await fixture(layout)
 			const p = await openPopup()
-			// Hotel and India match (and Delta, the target), Kilo does not: Ctrl+clicked, then hidden
-			await hiddenSelected(p, 'Hotel OR India OR Delta', [savedSel('Hotel'), savedSel('India'), savedSel('Kilo')])
-			await p.waitForFunction((sel) => [...document.querySelectorAll(sel)].every((t) => !t.offsetParent), {timeout: 3000}, savedSel('Kilo'))
+			// Hotel and India match (and Delta, the target), Kilo does not: Ctrl+clicked, then shown anyway
+			await shownSelected(p, 'Hotel OR India OR Delta', [savedSel('Hotel'), savedSel('India'), savedSel('Kilo')], savedSel('Juliett'))
+			const shown = sorted(await shownIn(p, '.session'))
 			const stacks = await watchStacks(p)
 			await drag(p, savedSel('Hotel'), {selector: tabSel('Delta'), fx: 0.1, fy: 0.1})
-			const want = [['Hotel', 'India', 'Delta', 'Echo', 'Foxtrot'], ['Kilo'], SAVED, stackIs(2, 'Hotel')]
-			const got = [await settle(() => titlesOf(w2), want[0])]
+			const want = [['Hotel', 'India', 'Kilo'], ['Delta', 'Echo', 'Foxtrot', 'Hotel', 'India', 'Kilo'], SAVED, stackIs(3, 'Hotel')]
+			const got = [shown]
+			got.push(await settle(async () => sorted(await titlesOf(w2)), want[1]))
 			got.push(await savedTitles())
 			got.push(await stackOf(stacks))
-			got.splice(1, 0, await revealed(p, '.session'))
 			return {got, want}
 		})
-		// Enter on saved tabs follows the same rule: the hidden one stays
-		drops('hidden selected saved tab: Enter opens only the two on screen, the hidden one stays selected', async () => {
+		// Enter on saved tabs follows the same rule
+		drops('selected non-matching saved tab: Enter opens all three', async () => {
 			await fixture(layout)
 			const p = await openPopup()
 			const known = await windowsNow()
-			await hiddenSelected(p, 'Hotel OR India OR Delta', [savedSel('Hotel'), savedSel('India'), savedSel('Kilo')])
-			await p.waitForFunction((sel) => [...document.querySelectorAll(sel)].every((t) => !t.offsetParent), {timeout: 3000}, savedSel('Kilo'))
+			await shownSelected(p, 'Hotel OR India OR Delta', [savedSel('Hotel'), savedSel('India'), savedSel('Kilo')], savedSel('Juliett'))
 			await p.focus('.searchBoxInput')
 			await p.keyboard.press('Enter')
-			const want = [[['Hotel', 'India']], SAVED, ['Kilo']]
+			const want = [[['Hotel', 'India', 'Kilo']], SAVED]
 			const got = [await newWindows(known, want[0])]
 			got.push(await savedTitles())
-			got.push(await revealed(p, '.session'))
 			return {got, want}
 		})
-		drops('only hidden saved tabs selected: Enter opens nothing, the notice says why', async () => {
+		drops('only a non-matching saved tab selected: it stays on screen with its saved window, Enter opens it', async () => {
 			await fixture(layout)
 			const p = await openPopup()
 			const known = await windowsNow()
-			await hiddenSelected(p, 'Hotel OR India OR Delta', [savedSel('Kilo')])
-			await p.waitForFunction((sel) => [...document.querySelectorAll(sel)].every((t) => !t.offsetParent), {timeout: 3000}, savedSel('Kilo'))
+			await shownSelected(p, 'Hotel OR India OR Delta', [savedSel('Kilo')], savedSel('Juliett'))
+			// "Taxes" has no match and no selected tab: gone; "Reading" stays with Hotel, India and Kilo
+			const want = [['Hotel', 'India', 'Kilo'], [['Kilo']], SAVED, []]
+			const got = [sorted(await shownIn(p, '.session'))]
 			await p.focus('.searchBoxInput')
 			await p.keyboard.press('Enter')
-			const want = [['Nothing moved: the selected tabs are hidden by the search'], [], ['Kilo']]
-			const got = [await settle(() => noticesOf(p), want[0])]
-			await new Promise((r) => setTimeout(r, 600))
-			got.push(await newWindows(known, []))
-			got.push(await revealed(p, '.session'))
+			got.push(await newWindows(known, want[1]))
+			got.push(await savedTitles())
+			got.push(await noticesOf(p))
 			return {got, want}
 		})
 

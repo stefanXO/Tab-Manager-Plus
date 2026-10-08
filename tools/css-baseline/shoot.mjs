@@ -443,6 +443,24 @@ const STATES = [
 	{name: 'search-saved-hide', layouts: LAYOUTS, scaleLayouts: [], widths: ['800x600', '380x900'], apply: {search: 'react', store: {'filter-tabs': true}, scrollEnd: true}},
 	// hide on, nothing saved matches: the "Saved windows" divider goes too
 	{name: 'search-saved-none', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {search: 'github', store: {'filter-tabs': true}, scrollEnd: true}},
+	// selected tabs are always shown (src/popup/selectedShown.ts): "github" matches
+	// three tabs of "Work"; Ctrl+click the MDN and Notion tabs of "Work" and the
+	// Lofi tab of "Life" (all faded), then turn "Hide non-matching tabs" on. The
+	// three stay on screen, faded and selected, "Life" with them; "Research" (no
+	// selected tab) goes. Before this rule they hid with the filter. The clicks
+	// skip what is set already, so the second theme (same page) starts the same.
+	// dpr 1, blocks + List, 800x600 and 380x900
+	{name: 'showsel', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {
+		search: 'github', store: {'filter-tabs': false},
+		clicks: [{sel: '#tab-3:not(.selected)', ctrl: true, optional: true}, {sel: '#tab-6:not(.selected)', ctrl: true, optional: true},
+			{sel: '#tab-11:not(.selected)', ctrl: true, optional: true}, {sel: '.icon.windowaction.filter:not(.enabled)', optional: true}]}},
+	// the same on saved windows: "react" matches one tab of "Conference reading";
+	// the Wikipedia tab of it and the Gmail tab of "Tax 2029" (which the filter
+	// would hide whole) are selected, then the filter goes on
+	{name: 'showsel-saved', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {
+		search: 'react', store: {'filter-tabs': false}, scrollEnd: true,
+		clicks: [{sel: '#sessiontab_s1_1:not(.selected)', ctrl: true, optional: true}, {sel: '#sessiontab_s2_1:not(.selected)', ctrl: true, optional: true},
+			{sel: '.icon.windowaction.filter:not(.enabled)', optional: true}]}},
 	// Highlight Duplicates with saved windows around: they are not part of it
 	{name: 'dup-saved', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {dup: true, scrollEnd: true}},
 	// s: searches saved windows only (src/popup/search.ts): "s:google" fades every

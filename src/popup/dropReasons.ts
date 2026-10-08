@@ -3,8 +3,6 @@
 // Drops that do nothing, or only part of what was dragged, and why. Three
 // things live here, all pure (unit tested in tests/dropReasons.test.ts):
 //
-// - which selected open tabs move at all: the ones a search hides ("Hide
-//   non-matching tabs") never do, in any move (`movableOpen`);
 // - what a drop on saved windows takes of what was dragged and what it leaves
 //   out (`planMove`, `planAdd`, `splitByKind`, ./savedDrag.ts for the saved
 //   tabs that open in an open window), each left-out tab with its reason;
@@ -16,7 +14,7 @@
 
 import type {SavedTabRef} from "./sessionKeys.ts";
 import type {MovableWindow, SavedDropTarget} from "./savedMove.ts";
-import {draggedOpen, savedCopy} from "./savedAdd.ts";
+import {savedCopy} from "./savedAdd.ts";
 import type {AddableTab} from "./savedAdd.ts";
 
 // Why tabs were left out of a drop
@@ -48,16 +46,6 @@ export interface Left {
 	reason : LeftReason;
 	// how many tabs (the places that are gone count what they take with them)
 	n : number;
-}
-
-// ---- hidden tabs never move ----
-
-// The selected open tabs a move takes: without the ones the search hides
-// (`hidden`: their ids, only given while "Hide non-matching tabs" is on), "if
-// we can't see them, we can't move them". `dragged`: the tab being dragged,
-// which is on screen and always goes.
-export function movableOpen<T extends {id? : number}>(tabs : readonly T[], hidden? : ReadonlySet<number>, dragged? : number) : T[] {
-	return draggedOpen(tabs, dragged, hidden);
 }
 
 // ---- private and normal ----

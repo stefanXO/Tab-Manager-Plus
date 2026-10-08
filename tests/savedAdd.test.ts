@@ -5,7 +5,7 @@
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { addOpenTabs, savedCopy, addedText, isOpenTabDrag, OPEN_TAB_DRAG, draggedOpen } from "../src/popup/savedAdd.ts";
+import { addOpenTabs, savedCopy, addedText, isOpenTabDrag, OPEN_TAB_DRAG } from "../src/popup/savedAdd.ts";
 import type { AddableTab } from "../src/popup/savedAdd.ts";
 import { remapSavedKeys, renumberedIndex } from "../src/popup/savedMove.ts";
 import { SavedTabKeys } from "../src/popup/sessionKeys.ts";
@@ -176,30 +176,5 @@ describe("addedText / isOpenTabDrag", () => {
 		assert.equal(isOpenTabDrag([OPEN_TAB_DRAG, "Text"]), true);
 		assert.equal(isOpenTabDrag(["Text", "text/uri-list"]), false);
 		assert.equal(isOpenTabDrag(null), false);
-	});
-});
-
-describe("draggedOpen", () => {
-	const tabs = [{ id: 1, url: "a" }, { id: 2, url: "b" }, { id: 3, url: "c" }];
-
-	test("without the filter: every selected tab", () => {
-		assert.deepEqual(draggedOpen(tabs, 2).map((t) => t.id), [1, 2, 3]);
-	});
-
-	test("with \"Hide non-matching tabs\" on: not the ones the search hides, but always the dragged one", () => {
-		assert.deepEqual(draggedOpen(tabs, 2, new Set([1, 2])).map((t) => t.id), [2, 3]);
-		assert.deepEqual(draggedOpen(tabs, 2, new Set()).map((t) => t.id), [1, 2, 3]);
-	});
-
-	test("without a dragged tab (Enter's move): the hidden ones are simply left out", () => {
-		assert.deepEqual(draggedOpen(tabs, undefined, new Set([1, 2])).map((t) => t.id), [3]);
-		assert.deepEqual(draggedOpen(tabs, undefined, new Set([1, 2, 3])).map((t) => t.id), []);
-		assert.deepEqual(draggedOpen(tabs, undefined).map((t) => t.id), [1, 2, 3]);
-	});
-
-	test("never changes the list it gets", () => {
-		const out = draggedOpen(tabs, 1);
-		assert.notEqual(out, tabs);
-		assert.equal(tabs.length, 3);
 	});
 });

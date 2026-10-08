@@ -17,6 +17,7 @@ import {isSavedWindowDrag} from '../sessionOrder';
 import {isSavedTabDrag} from '../savedDrag';
 import {isOpenTabDrag} from '../savedAdd';
 import {readTabDrag} from '../dragPayload';
+import {tabShow, isHiddenTab, hidesWholeWindow} from '../selectedShown';
 
 export class Window extends React.Component<IWindow, IWindowState> {
 	static contextType = ManagerContext;
@@ -52,15 +53,16 @@ export class Window extends React.Component<IWindow, IWindowState> {
 	}
 
 	// Whether the window has nothing to show: no tab, or (with "Hide
-	// non-matching tabs" on) every tab hidden by the search
+	// non-matching tabs" on) every tab hidden by the search. A selected tab is
+	// never hidden (../selectedShown.ts), so it keeps its window on screen.
 	private hidesAll() : boolean {
-		return this.props.tabs.every((tab) => this.props.hiddenTabs.has(tab.id) && this.props.filterTabs);
+		return hidesWholeWindow(this.props.tabs.map((tab) => tab.id), this.props.hiddenTabs, this.props.filterTabs, this.props.selection);
 	}
 
 	async componentDidUpdate(prevProps : IWindow) {
 		// Tabs hidden by the search come back when the search ends or the filter
-		// goes off, not only when the tabs change: a window whose visible tabs
-		// moved away (hidden selected tabs stay behind) must show again then
+		// goes off, not only when the tabs change: a window whose shown tabs
+		// moved away or were closed must show again then
 		const hide = this.hidesAll();
 		if (hide !== this.state.hidden) this.setState({ hidden: hide });
 		const sig = this.signature(this.props.tabs);
@@ -132,9 +134,11 @@ export class Window extends React.Component<IWindow, IWindowState> {
 		let hideWindow = true;
 		let titleAdded = false;
 		let tabs = this.props.tabs.map((tab) => {
-			const isHidden : boolean = this.props.hiddenTabs.has(tab.id) && this.props.filterTabs;
+			// a selected tab is never hidden: it fades like any non-match
+			const show = tabShow(tab.id, this.props.hiddenTabs, this.props.filterTabs, this.props.selection);
+			const isHidden : boolean = show === "hidden";
 			let isSelected : boolean = this.props.selection.has(tab.id);
-			let isFaded : boolean = this.props.hiddenTabs.has(tab.id) && !this.props.filterTabs;
+			let isFaded : boolean = show === "faded";
 			if (!isHidden) hideWindow = false;
 
 			let tabRef = this.state.tabrefs.get(tab.id) || React.createRef<Tab>();
@@ -258,7 +262,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 					children.push(tabs[j]);
 					continue;
 				}
-				let isHidden = !!tab.id && this.props.hiddenTabs.has(tab.id) && this.props.filterTabs;
+				let isHidden = !!tab.id && isHiddenTab(tab.id, this.props.hiddenTabs, this.props.filterTabs, this.props.selection);
 				if (isHidden) continue;
 				tiles.push(tabs[j]);
 			}

@@ -28,12 +28,13 @@ import {PendingDeletes, PendingItem, withoutItems, visibleSessions, noticeText, 
 import {savedDeleteItems} from "../savedDelete";
 import {editSession, shownSavedName, SessionEdit} from "../sessionEdit";
 import {searchSaved, searchSummary, SavedSearch, SummaryKind} from "../searchSaved";
+import {isHiddenTab, savedSelectionSignature, shownWithSelection} from "../selectedShown";
 import {draggedSaved, openableSaved, openedText} from "../savedDrag";
 import {moveSession, reorderShown} from "../sessionOrder";
 import {tidyStored, listSessions, addSessions, importSessions} from "../sessionStore";
 import {moveSavedTabs, remapSavedKeys, movedText, SavedTabMove, SavedDropTarget} from "../savedMove";
 import {addOpenTabs, addedText, SavedAddResult} from "../savedAdd";
-import {movableOpen, splitByKind, planMove, planAdd, whyUnsavable, dropErrorText, Left, MovePlan, AddPlan} from "../dropReasons";
+import {splitByKind, planMove, planAdd, whyUnsavable, dropErrorText, Left, MovePlan, AddPlan} from "../dropReasons";
 import {SavedWrites, SavedChange} from "../savedWrites";
 import {stampUpdated} from "../savedUpdated";
 import {moveUndoRecord, undoMove, emptiedText, undoneText, UndoOffers, MoveUndo} from "../moveUndo";
@@ -51,9 +52,6 @@ function refsOf(keys : readonly number[]) : SavedTabRef[] {
 function tabIds(tabs : readonly browser.Tabs.Tab[]) : number[] {
 	return tabs.map((tab) => tab.id).filter((id) : id is number => typeof id === "number");
 }
-
-// Enter (or the new window button) with only tabs the search hides selected
-const HIDDEN_STAY_TEXT = "Nothing moved: the selected tabs are hidden by the search";
 
 // what a drop on a saved tab or card does: moves (or adds) something, is
 // refused for a reason that gets an error notice, or changes nothing
@@ -423,15 +421,19 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	};
 	// What the search (or Highlight Duplicates / recent) does to the saved
 	// windows, worked out again only when its inputs change (render runs on
-	// every header hover).
-	private savedMemo : { sessions : ISavedSession[], query : unknown, openOnly : boolean, result : SavedSearch } | null = null;
+	// every header hover). A saved window holding a selected tab stays on
+	// screen (`shown`): selected tabs are never hidden (../selectedShown.ts).
+	// `hidden` stays the tabs that do not match, which fade or hide.
+	private savedMemo : { sessions : ISavedSession[], query : unknown, openOnly : boolean, selected : string, result : SavedSearch } | null = null;
 	savedSearch(sessions : ISavedSession[]) : SavedSearch {
 		const query = this.state.query;
 		const openOnly = this.state.dupTabs || this.state.recentLevel > 0;
+		const selected = savedSelectionSignature(this.state.selection);
 		const m = this.savedMemo;
-		if (m && m.sessions.length === sessions.length && m.sessions.every((s, i) => s === sessions[i]) && m.query === query && m.openOnly === openOnly) return m.result;
-		const result = searchSaved(sessions, query, openOnly);
-		this.savedMemo = { sessions, query, openOnly, result };
+		if (m && m.sessions.length === sessions.length && m.sessions.every((s, i) => s === sessions[i]) && m.query === query && m.openOnly === openOnly && m.selected === selected) return m.result;
+		const found = searchSaved(sessions, query, openOnly);
+		const result = selected ? { ...found, shown: shownWithSelection(found.shown, this.state.selection) } : found;
+		this.savedMemo = { sessions, query, openOnly, selected, result };
 		return result;
 	}
 	hoverIcon = (text : string, hold = false) => {
@@ -493,8 +495,6 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		let haveSess = false;
 		// only saved tabs selected: the open-tab actions below have nothing to act on
 		const savedSel = onlySavedSelected(this.state.selection);
-		// the selected open tabs a move takes (not the ones the search hides)
-		const movable = savedSel ? 0 : movableOpen(this.selectedTabs(), this.hiddenOpen()).length;
 		const savedSelTitle = "Saved tabs are selected\nSelect open tabs to use this";
 		const savedSelStyle : React.CSSProperties = { opacity: 0.25 };
 
@@ -771,9 +771,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 										style={savedSel ? savedSelStyle : {}}
 										title={
 											savedSel ? savedSelTitle : this.state.selection.size > 0
-												? (movable > 0
-													? "Move tabs to new window\nWill move " + maybePluralize(movable, 'selected tab') + " to it"
-													: "Selected tabs are hidden by the search\nThey stay where they are")
+												? "Move tabs to new window\nWill move " + maybePluralize(this.state.selection.size, 'selected tab') + " to it"
 												: "Open new empty window"
 										}
 										onClick={this.addWindow}
@@ -1015,15 +1013,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	private restoring = false;
 	async openSelectedSaved() {
 		if (this.restoring) return;
-		// Selected saved tabs the search hides stay in their saved windows and
-		// stay selected, as for a drag: "if we can't see them, we can't move them"
 		const sessions = this.visibleSessions();
-		const hidden = this.state.filterTabs ? this.savedSearch(sessions).hidden : null;
-		const keys = [...this.state.selection].filter((key) => isSavedTabKey(key) && !(hidden && hidden.has(key)));
-		if (keys.length === 0) {
-			if (this.state.selection.size > 0) this.board.error(HIDDEN_STAY_TEXT);
-			return;
-		}
+		const keys = [...this.state.selection].filter((key) => isSavedTabKey(key));
+		if (keys.length === 0) return;
 		const session = savedWindowFor(keys, sessions);
 		if (!session) return;
 		this.restoring = true;
@@ -1052,7 +1044,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			this.board.error(failure ? refusedText("open the saved tabs", failure) : openFailedText(session.tabs.length, 0));
 			return;
 		}
-		// the opened ones are done with; hidden selected ones stay selected
+		// the opened ones are done with
 		this.leaveSelection(keys);
 		if (!!window.inPopup) {
 			window.close();
@@ -1116,7 +1108,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		const out : Record<string, ISavedSession> = {};
 		for (const s of sessions) {
 			if (!shown.has(s.id)) continue;
-			const tabs = filter ? s.tabs.filter((tab) => !saved.hidden.has(savedTabKeys.key(s.id, tab.index))) : s.tabs;
+			// a selected tab is shown, whatever the search says
+			const tabs = filter ? s.tabs.filter((tab) => !isHiddenTab(savedTabKeys.key(s.id, tab.index), saved.hidden, true, this.state.selection)) : s.tabs;
 			out[s.id] = tabs.length === s.tabs.length ? s : { ...s, tabs };
 		}
 		return out;
@@ -1294,8 +1287,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			if (seen.nothing && seen.plan) this.leftOut("added", "tab", asked, 0, [...gone, ...seen.plan.left]);
 			return;
 		}
-		// the tabs that went in are done with; selected ones left out (and
-		// the ones the search hides) stay selected
+		// the tabs that went in are done with; selected ones left out stay selected
 		if (seen.plan) this.leaveSelection(seen.plan.go.filter((tab) => !whyUnsavable(tab, IS_FIREFOX)).map((tab) => tab.id));
 		const name = this.storedName(added.stored, target.sessionId);
 		this.setState({ ...addedText(added.count, name, asked), dirty: true });
@@ -1527,15 +1519,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	addWindow = async () => {
 		// only saved tabs selected: no new empty window either (Enter lands here too)
 		if (onlySavedSelected(this.state.selection)) return;
-		// Selected tabs the search hides stay where they are and stay selected:
-		// "if we can't see them, we can't move them" (../dropReasons.ts)
-		const selected = this.selectedTabs();
-		const tabs = movableOpen(selected, this.hiddenOpen());
+		const tabs = this.selectedTabs();
 		const count = tabs.length;
-		if (selected.length > 0 && count === 0) {
-			this.board.error(HIDDEN_STAY_TEXT);
-			return;
-		}
 
 		const incognito_tabs = tabs.filter(function(tab) {
 			return tab.incognito;
@@ -2403,15 +2388,10 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	drag(e : React.DragEvent<HTMLDivElement>, id : number) : string {
 		// a tab drag: no saved window card is being dragged
 		this.draggingSession = null;
-		// With "Hide non-matching tabs" on, selected tabs the search hides stay
-		// where they are when dropped on a saved window or (saved tabs) an open
-		// one: the drag takes what is on screen, as the drop marker's check
-		// does, and the header after the drop counts that.
-		const filter = this.state.filterTabs;
 		// a saved tab: it and, when it is selected, the other selected saved
 		// tabs; it is opened, not moved, so the selection stays as it is
 		if (isSavedTabKey(id)) {
-			const keys = draggedSaved(id, this.state.selection, filter ? this.savedSearch(this.visibleSessions()).hidden : undefined);
+			const keys = draggedSaved(id, this.state.selection);
 			this.draggingSaved = keys;
 			this.draggingOpen = null;
 			this.stackImage(e, id, keys);
@@ -2426,10 +2406,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			});
 		}
 		// What a drop takes, on a saved window (copies) as on an open window
-		// (moved): the selected open tabs without the ones the search hides, "if
-		// we can't see them, we can't move them" (../dropReasons.ts). The drag
-		// image counts the same tabs.
-		this.draggingOpen = movableOpen(this.selectedTabs(), this.hiddenOpen(), id);
+		// (moved): the selected open tabs, all on screen (../selectedShown.ts).
+		// The drag image counts the same tabs.
+		this.draggingOpen = this.selectedTabs();
 		const ids = tabIds(this.draggingOpen);
 		this.stackImage(e, id, ids);
 		return encodeIds(ids);
@@ -2498,8 +2477,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	// tabs go only to a private window and normal tabs to a normal one: the
 	// others stay where they are, as does every tab the browser refuses, and the
 	// error notice says how many and why (../dropReasons.ts). The tabs that
-	// moved leave the selection; selected tabs that did not move (hidden by the
-	// search, left out) stay selected.
+	// moved leave the selection; selected tabs that did not move (left out)
+	// stay selected.
 	private async moveOpen(tabs : browser.Tabs.Tab[], asked : number, windowId : number, index : number | undefined) {
 		const target = this.state.windowsbyid.get(windowId);
 		if (!target) {
@@ -2543,7 +2522,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		this.update();
 	}
 	// The tabs a drop took are done with: they leave the selection. Selected
-	// tabs it did not take (hidden by the search, left out) stay selected.
+	// tabs it did not take (left out) stay selected.
 	private leaveSelection(ids : Iterable<number>) {
 		let changed = false;
 		for (const id of ids) if (this.state.selection.delete(id)) changed = true;
@@ -2558,20 +2537,14 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		if (text) this.board.error(text);
 	}
 	// The open tabs a drop on an open window or tab moves: the ones the drop
-	// carries (dragstart took the selected open tabs the search does not hide);
-	// without that, what the popup remembers of the drag, else the selection
-	// without the tabs the search hides. This also covers a drag that started
+	// carries (dragstart took the selected open tabs); without that, what the
+	// popup remembers of the drag, else the selection. This also covers a drag that started
 	// in another Tab Manager page, whose tabs are not this page's selection.
 	// `asked`: how many were dragged; the ones closed since are not in `tabs`.
 	private movedTabs(dragged? : TabDrag | null) : { tabs : browser.Tabs.Tab[], asked : number } {
 		if (dragged && dragged.kind === "open") return { tabs: this.openTabsById(dragged.ids), asked: dragged.ids.length };
-		const tabs = this.draggingOpen ?? movableOpen(this.selectedTabs(), this.hiddenOpen());
+		const tabs = this.draggingOpen ?? this.selectedTabs();
 		return { tabs, asked: tabs.length };
-	}
-	// the ids of the open tabs the search hides ("Hide non-matching tabs" on);
-	// none while it is off, then the tabs are all on screen
-	private hiddenOpen() : ReadonlySet<number> | undefined {
-		return this.state.filterTabs ? this.state.hiddenTabs : undefined;
 	}
 	// the saved tab keys a drop on an open window opens: the ones the drop
 	// carries, else the ones the popup remembers; null for any other drop

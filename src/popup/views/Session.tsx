@@ -22,6 +22,7 @@ import {isSavedTabDrag} from "../savedDrag";
 import {isOpenTabDrag} from "../savedAdd";
 import {readTabDrag} from "../dragPayload";
 import {savedLabel, savedHover} from "../savedUpdated";
+import {tabShow} from "../selectedShown";
 
 interface ISessionState {
 	// this card is being dragged (it fades)
@@ -56,9 +57,11 @@ export class Session extends React.Component<ISession, ISessionState> {
 		// session is never changed by rendering; restoring still sends the index.
 		const sessionTabs = this.props.tabs.map((tab) => Object.assign({}, tab, {id: savedTabKeys.key(this.props.session.id, tab.index)}));
 		let tabs = sessionTabs.map((tab) => {
-			let isHidden = this.props.hiddenTabs.has(tab.id) && this.props.filterTabs;
+			// a selected tab is never hidden: it fades like any non-match
+			const show = tabShow(tab.id, this.props.hiddenTabs, this.props.filterTabs, this.props.selection);
+			let isHidden = show === "hidden";
 			let isSelected = this.props.selection.has(tab.id);
-			let isFaded: boolean = this.props.hiddenTabs.has(tab.id) && !this.props.filterTabs;
+			let isFaded: boolean = show === "faded";
 			if (!isHidden) hideWindow = false;
 			return (
 				<Tab
