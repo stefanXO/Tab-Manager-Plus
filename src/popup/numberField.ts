@@ -48,6 +48,15 @@ export function finiteOr(value : unknown, fallback : number) : number {
 	return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 }
 
+// A stored number setting as readSettings takes it: finiteOr, except that a
+// whole number written as text is that number. 5.x stored the fields as
+// JSON.stringify(input.value) ('"650"'), which the move to storage.local
+// (../helpers/migrate.ts) parsed into the text "650"; 6.0.0 used it as is.
+export function storedNumber(value : unknown, fallback : number) : number {
+	if (typeof value === "string" && /^\s*-?\d+\s*$/.test(value)) return finiteOr(parseInt(value, 10), fallback);
+	return finiteOr(value, fallback);
+}
+
 // The bounds an input's min / max attributes give, for settledNumber
 export function boundsOf(min? : string, max? : string) : NumberBounds {
 	const bounds : NumberBounds = {};

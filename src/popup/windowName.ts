@@ -595,7 +595,7 @@ function isIp(host: string): boolean {
 }
 
 function titleSegments(title: string | undefined): string[] {
-	const clean = (title || "").replace(/^\(\d+\+?\)\s*/, "").trim();
+	const clean = (typeof title === "string" ? title : "").replace(/^\(\d+\+?\)\s*/, "").trim();
 	if (!clean) return [];
 	return clean.split(SEPARATORS).map((s) => s.trim()).filter(Boolean);
 }

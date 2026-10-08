@@ -6,7 +6,7 @@
 
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { typedInBounds, typedNumber, settledNumber, finiteOr, boundsOf } from "../src/popup/numberField.ts";
+import { typedInBounds, typedNumber, settledNumber, finiteOr, storedNumber, boundsOf } from "../src/popup/numberField.ts";
 
 describe("typedNumber: only a whole number reaches the setting", () => {
 	test("numbers, with spaces around, negative too", () => {
@@ -47,6 +47,17 @@ describe("finiteOr and boundsOf", () => {
 		assert.equal(finiteOr(null, 800), 800);
 		assert.equal(finiteOr("600", 800), 800);
 		assert.equal(finiteOr(undefined, 600), 600);
+	});
+	test("storedNumber: a whole number as text (5.x) is that number, anything else as finiteOr", () => {
+		assert.equal(storedNumber("650", 800), 650);
+		assert.equal(storedNumber(" 5 ", 0), 5);
+		assert.equal(storedNumber(450, 600), 450);
+		assert.equal(storedNumber(null, 800), 800);
+		assert.equal(storedNumber("", 800), 800);
+		assert.equal(storedNumber("6.5", 800), 800);
+		assert.equal(storedNumber("abc", 800), 800);
+		assert.equal(storedNumber("NaN", 0), 0);
+		assert.equal(storedNumber("1".repeat(400), 0), 0);
 	});
 	test("bounds from the input attributes", () => {
 		assert.deepEqual(boundsOf("450", "800"), { min: 450, max: 800 });

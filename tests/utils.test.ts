@@ -7,7 +7,20 @@ import {
 	is_in_bounds,
 	stringHashcode,
 	toBoolean,
+	parseJsonOr,
 } from "../src/helpers/utils.ts";
+
+describe("parseJsonOr", () => {
+	test("JSON is parsed", () => {
+		assert.equal(parseJsonOr("5"), 5);
+		assert.equal(parseJsonOr('"650"'), "650");
+		assert.deepEqual(parseJsonOr('{"12":"Work"}'), { "12": "Work" });
+		assert.equal(parseJsonOr("null"), null);
+	});
+	test("anything else is undefined, never a throw", () => {
+		for (const text of ["undefined", "", "{", "NaN", "abc"]) assert.equal(parseJsonOr(text), undefined);
+	});
+});
 
 // ---------------------------------------------------------------------------
 // timeAgo

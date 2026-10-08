@@ -1,5 +1,5 @@
 ﻿"use strict";
-import { toBoolean } from "./utils.js";
+import { toBoolean, parseJsonOr } from "./utils.js";
 import * as S from "@strings";
 import * as browser from 'webextension-polyfill';
 import {ISavedSession} from "@types";
@@ -82,8 +82,12 @@ export const migrated : Promise<void> = (async function () {
 			if (!!localStorage[key]) keyValue[key] = toBoolean(localStorage[key]);
 		}
 
+		// a value that is not JSON is left out (the default takes its place):
+		// throwing here kept every 5.x saved window from being moved, on every open
 		for (const key of jsonkeys) {
-			if (!!localStorage[key]) keyValue[key] = JSON.parse(localStorage[key]);
+			if (!localStorage[key]) continue;
+			const value = parseJsonOr(localStorage[key]);
+			if (value !== undefined) keyValue[key] = value;
 		}
 
 		// write the consolidated data BEFORE removing anything, so an

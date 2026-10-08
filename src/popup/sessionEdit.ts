@@ -21,7 +21,7 @@ interface EditableSession {
 // The name field as it opens: the name the user gave, empty when the window
 // still carries its automatic one (shown as the placeholder instead).
 export function editableName(s : Pick<EditableSession, "name" | "customName">) : string {
-	return s.customName ? s.name || "" : "";
+	return s.customName && typeof s.name === "string" ? s.name : "";
 }
 
 // The name a saved window shows (its title, hover card, notices): the name the
@@ -30,9 +30,12 @@ export function editableName(s : Pick<EditableSession, "name" | "customName">) :
 // stored when it was saved. A window without custom name and without usable
 // tabs falls back to the stored name.
 export function shownSavedName(s : Pick<EditableSession, "name" | "customName" | "tabs">, compact : boolean) : string {
-	if (s.customName && s.name) return s.name;
+	// an imported file may hold anything there: only text is a name (React
+	// throws on an object, which blanked the whole popup)
+	const stored = typeof s.name === "string" ? s.name : "";
+	if (s.customName && stored) return stored;
 	const auto = windowName(s.tabs);
-	if (!auto) return s.name || "";
+	if (!auto) return stored;
 	return compact ? compactName(auto) : auto;
 }
 

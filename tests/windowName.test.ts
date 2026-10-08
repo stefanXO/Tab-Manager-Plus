@@ -8,6 +8,15 @@ import assert from "node:assert/strict";
 import { windowName, compactName, tabsKey, siteOf, publicSuffix } from "../src/popup/windowName.ts";
 import type { NameTab } from "../src/popup/windowName.ts";
 
+describe("a title that is not text (an imported file)", () => {
+	test("is no title", () => {
+		for (const title of [42, {}, ["a"], null] as any[]) {
+			assert.doesNotThrow(() => windowName([{ url: "https://example.com/", title }]));
+			assert.equal(typeof windowName([{ url: "https://example.com/", title }]), "string");
+		}
+	});
+});
+
 const t = (url: string, title = "", extra: Partial<NameTab> = {}): NameTab => ({ url, title, ...extra });
 const many = (n: number, mk: (i: number) => NameTab): NameTab[] => Array.from({ length: n }, (_, i) => mk(i));
 

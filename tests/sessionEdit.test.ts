@@ -77,6 +77,20 @@ describe("editableName", () => {
 	});
 });
 
+describe("names that are not text (an imported file)", () => {
+	const tabs = [{ url: "https://github.com/a", title: 42 as any }];
+	test("shownSavedName is always text", () => {
+		for (const name of [{ text: "Work" }, ["a"], 42, null, undefined] as any[]) {
+			assert.equal(typeof shownSavedName({ name, customName: true, tabs }, false), "string");
+			assert.equal(typeof shownSavedName({ name, customName: true, tabs: [] }, false), "string");
+		}
+		assert.equal(shownSavedName({ name: { text: "Work" } as any, customName: true, tabs }, false), "GitHub");
+	});
+	test("editableName is always text", () => {
+		assert.equal(editableName({ name: { text: "Work" } as any, customName: true }), "");
+	});
+});
+
 describe("shownSavedName", () => {
 	const five = [
 		{ url: "https://github.com/a" }, { url: "https://github.com/b" }, { url: "https://github.com/c" },

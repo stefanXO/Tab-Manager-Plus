@@ -4,7 +4,7 @@ import * as browser from 'webextension-polyfill';
 import {readShowMonitors, resolveShowMonitors, ShowMonitors} from "./monitors";
 import {readTheme, Theme} from "./theme";
 import {mayHoldOldSessionsDefault, upgradeSessionsFeature} from "./sessionsUpgrade";
-import {finiteOr} from "../popup/numberField";
+import {storedNumber} from "../popup/numberField";
 
 // The four layouts, by their storage value. The user-facing names live in
 // TabManager.readablelayout().
@@ -88,8 +88,9 @@ export async function readSettings(version : string) : Promise<Settings> {
 	await browser.storage.local.set(missing);
 	const settings = { ...SETTING_DEFAULTS, ...stored, ...missing } as Settings;
 	settings.theme = readTheme(settings.theme);
-	// a number field emptied in 6.x stored NaN, which comes back as null
-	for (const key of ["tabLimit", "tabWidth", "tabHeight"] as const) settings[key] = finiteOr(settings[key], SETTING_DEFAULTS[key]);
+	// a number field emptied in 6.x stored NaN, which comes back as null; 5.x
+	// stored them as text ("650")
+	for (const key of ["tabLimit", "tabWidth", "tabHeight"] as const) settings[key] = storedNumber(settings[key], SETTING_DEFAULTS[key]);
 	return settings;
 }
 

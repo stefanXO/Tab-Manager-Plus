@@ -64,6 +64,16 @@ export function maybePluralize(count, noun, suffix = 's') {
 	return `${count} ${noun}${count !== 1 ? suffix : ''}`;
 }
 
+// JSON.parse, or undefined when the text is not JSON (an old value that went
+// bad must not stop the rest of a migration)
+export function parseJsonOr(text : string) : unknown {
+	try {
+		return JSON.parse(text);
+	} catch (e) {
+		return undefined;
+	}
+}
+
 export function toBoolean(str) {
 	if (typeof str === "undefined" || str === null) {
 		return false;
