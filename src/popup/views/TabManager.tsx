@@ -20,7 +20,8 @@ import {attachMasonry, Masonry} from "../masonry";
 import {sizePopup, popupScreen} from "@helpers/popup_size";
 import {applyTheme} from "@helpers/theme";
 import {StatsLayer, StatsSource} from "./StatsLayer";
-import {UndoNotice} from "./UndoNotice";
+import {Notice} from "./Notice";
+import {NoticeBoard, isMacPlatform, isUndoKey, undoKeyCaps, undoKeyForField, refusedText, openFailedText} from "../notices";
 import {PendingDeletes, PendingItem, withoutItems, visibleSessions, noticeText, goneUrls} from "../pendingDelete";
 import {savedDeleteItems} from "../savedDelete";
 import {editSession, shownSavedName, SessionEdit} from "../sessionEdit";
@@ -78,8 +79,23 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	// saved windows deleted and not yet removed from storage (the Undo notice)
 	private readonly pending = new PendingDeletes({
 		commit: (items, sync) => this.commitDeletes(items, sync),
+		onChange: () => { if (!this.unmounted) this.forceUpdate(); },
+		onError: (err) => this.board.error(refusedText("delete the saved windows", err))
+	});
+	// the error and info notices (the Undo notice is `pending`'s)
+	private readonly board = new NoticeBoard({
 		onChange: () => { if (!this.unmounted) this.forceUpdate(); }
 	});
+	// Ctrl+Z (Cmd+Z on a Mac) while an Undo notice is up
+	private readonly mac = isMacPlatform((navigator as any).userAgentData?.platform || navigator.platform);
+	private readonly onUndoKey = (e : KeyboardEvent) => {
+		if (!this.pending.items.length || !isUndoKey(e, this.mac)) return;
+		const el = e.target instanceof HTMLElement ? e.target : null;
+		if (!undoKeyForField(el && { tag: el.tagName, type: (el as HTMLInputElement).type, value: (el as HTMLInputElement).value, contentEditable: el.isContentEditable })) return;
+		e.preventDefault();
+		e.stopPropagation();
+		this.undoDelete();
+	};
 	// leaving the popup writes the deletes that are still counting down
 	private readonly flushPending = () => this.pending.flush(true);
 	private readonly flushPendingHidden = () => { if (document.visibilityState === "hidden") this.pending.flush(true); };
@@ -233,6 +249,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			sessionSync: () => this.sessionSync(),
 			addSavedWindows: (sessions) => this.addSavedWindows(sessions),
 			deleteSession: (session) => this.deleteSession(session),
+			showError: (text) => { this.board.error(text); },
+			showInfo: (text) => { this.board.info(text); },
+			closeNotices: () => this.closeNotices(),
 			reload: () => this.setState({ dirty: true }),
 			rerender: () => this.forceUpdate()
 		};
@@ -269,11 +288,13 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 
 		window.removeEventListener("pagehide", this.flushPending);
 		document.removeEventListener("visibilitychange", this.flushPendingHidden);
+		document.removeEventListener("keydown", this.onUndoKey, true);
 		document.removeEventListener("dragend", this.dragDone);
 		document.removeEventListener("drop", this.dragDone);
 		// written from the copy; the component is going, its state stays
 		this.unmounted = true;
 		this.pending.flush(true);
+		this.board.closeAll();
 	}
 
 	syncMasonry() {
@@ -463,8 +484,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 					" " +
 					(this.state.windowTitles ? "windowTitles" : "no-windowTitles") +
 					(this.state.supportLinks ? "" : " no-supportLinks") +
-					(this.pending.items.length ? " undo-showing" : "")
+					(this.noticeCount() ? " notices-showing" : "")
 				}
+				style={this.noticeCount() ? {"--notice-count": this.noticeCount()} as React.CSSProperties : undefined}
 				onKeyDown={this.checkKey}
 				onMouseOver={this.hoverOver}
 				tabIndex={0}
@@ -739,12 +761,28 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 					</table>
 				</div>}
 				<div className="window placeholder" />
-				{this.pending.items.length > 0 && <UndoNotice
-					text={noticeText(this.pending.items)}
-					deadline={this.pending.deadline}
-					countdown={this.pending.countdown}
-					onUndo={this.undoDelete}
-				/>}
+				{this.noticeCount() > 0 && <div className="notices">
+					{this.board.items.map((n) => <Notice
+						key={n.id}
+						kind={n.kind}
+						text={n.text}
+						countdown={n.ms}
+						run={this.board.runs(n.id)}
+						onClose={() => this.board.close(n.id)}
+						onHold={(held) => this.board.hold(n.id, held)}
+					/>)}
+					{this.pending.items.length > 0 && <Notice
+						key="undo"
+						kind="undo"
+						text={noticeText(this.pending.items)}
+						countdown={this.pending.countdown}
+						run={this.pending.runs}
+						onUndo={this.undoDelete}
+						keys={undoKeyCaps(this.mac)}
+						onClose={this.commitNow}
+						onHold={(held) => this.pending.hold(held)}
+					/>}
+				</div>}
 				<StatsLayer source={this.statsSource} version={this.listVersion} />
 			</div>
 			</ManagerContext.Provider>
@@ -794,6 +832,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 
 		window.addEventListener("pagehide", this.flushPending);
 		document.addEventListener("visibilitychange", this.flushPendingHidden);
+		// first (capturing), before a text field takes Ctrl+Z for its own undo
+		document.addEventListener("keydown", this.onUndoKey, true);
 		// after the cards' and tabs' own handlers (bubbling, on the document)
 		document.addEventListener("dragend", this.dragDone);
 		document.addEventListener("drop", this.dragDone);
@@ -957,7 +997,12 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	// Renames / recolours a saved window (./sessionEdit.ts). The card changes
 	// at once; storage.onChanged then brings every other popup along.
 	async editSession(id : string, edit : SessionEdit) {
-		await this.mutateSessions((stored) => editSession(stored, id, edit));
+		try {
+			await this.mutateSessions((stored) => editSession(stored, id, edit));
+		} catch (err) {
+			console.error(err);
+			this.board.error(refusedText("save the name and colour", err));
+		}
 	}
 	// The ids of the saved window cards on screen, in order: not the ones a
 	// pending delete hides, nor (with "Hide non-matching tabs") the ones
@@ -984,7 +1029,12 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		this.draggingSession = null;
 		if (!dragged) return;
 		const shown = this.shownSessionIds();
-		await this.mutateSessions((stored) => reorderShown(stored, shown, dragged, target, before));
+		try {
+			await this.mutateSessions((stored) => reorderShown(stored, shown, dragged, target, before));
+		} catch (err) {
+			console.error(err);
+			this.board.error(refusedText("move the saved window", err));
+		}
 	}
 	// The saved windows as they are on screen, as a stored object: no pending
 	// deletes, and with "Hide non-matching tabs" no saved window without a
@@ -1057,7 +1107,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		const refs = dragged ? (dragged.kind === "saved" ? dragged.refs : []) : this.draggedRefs();
 		this.draggingSaved = null;
 		if (refs.length === 0 || !moveSavedTabs(this.shownSavedStore(), refs, target)) return;
-		const moved = await this.renumberingChange((stored) => moveSavedTabs(stored, refs, target));
+		const moved = await this.renumberingChange("move the saved tabs", (stored) => moveSavedTabs(stored, refs, target));
 		if (!moved) return;
 		const name = this.storedName(moved.stored, sessionId);
 		this.setState({ ...movedText(moved.count, name, moved.emptied.length) });
@@ -1073,7 +1123,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	// tabs. The saved window's tabs are numbered anew, as after a move.
 	async addOpenTabs(target : SavedDropTarget, tabs : browser.Tabs.Tab[]) {
 		if (tabs.length === 0 || !this.addOpen(this.shownSavedStore(), tabs, target)) return;
-		const added = await this.renumberingChange((stored) => this.addOpen(stored, tabs, target));
+		const added = await this.renumberingChange("add the tabs to the saved window", (stored) => this.addOpen(stored, tabs, target));
 		if (!added) return;
 		if (tabs.some((tab) => this.state.selection.has(tab.id))) this.clearSelection();
 		const name = this.storedName(added.stored, target.sessionId);
@@ -1084,7 +1134,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	// (showSessions) and the pending deletes follow the tabs to their new
 	// numbers. Resolves with the change's result; null when it changed nothing
 	// or the browser refused the write.
-	private async renumberingChange<R extends { stored : Record<string, ISavedSession>, moves : SavedTabMove[] }>(change : (stored : Record<string, ISavedSession>) => R | null) : Promise<R | null> {
+	private async renumberingChange<R extends { stored : Record<string, ISavedSession>, moves : SavedTabMove[] }>(what : string, change : (stored : Record<string, ISavedSession>) => R | null) : Promise<R | null> {
 		let done : R | null = null;
 		try {
 			await this.mutateSessions((stored) => {
@@ -1105,12 +1155,26 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			});
 		} catch (e) {
 			console.error(e);
+			this.board.error(refusedText(what, e));
 			return null;
 		}
 		return done;
 	}
 	undoDelete = () => {
 		this.pending.undo();
+	}
+	// the close button of the Undo notice: the delete stands, written now
+	private readonly commitNow = () => {
+		this.pending.flush();
+	}
+	private noticeCount() : number {
+		return this.board.items.length + (this.pending.items.length ? 1 : 0);
+	}
+	// Starting an import: the notices go, what is pending is written first (the
+	// import's own write is queued after it, savedWrites.ts)
+	closeNotices() {
+		this.pending.flush();
+		this.board.closeAll();
 	}
 	// Removes saved windows (or some of their tabs) from storage. The state
 	// changes before the promise resolves (the ids stop being hidden right
@@ -1315,6 +1379,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			await this.addSavedWindows(saved);
 		} catch (err) {
 			console.error("could not save the window", err);
+			this.board.error(refusedText(saved.length === 1 ? "save the window" : "save the windows", err));
 			return;
 		}
 		this.clearSelection();
@@ -2197,7 +2262,12 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		}
 		if (keys.some((key) => this.state.selection.has(key))) this.clearSelection();
 		const name = this.state.windowrefs.get(windowId)?.current?.shownName() || "";
-		this.setState({ ...openedText(typeof opened === "number" ? opened : tabs.length, name), dirty: true });
+		const count = typeof opened === "number" ? opened : tabs.length;
+		// none opened, or only some: an error notice says so, not the header
+		const failed = openFailedText(tabs.length, count);
+		if (failed) this.board.error(failed);
+		if (count > 0) this.setState({ ...openedText(count, name), dirty: true });
+		else this.setState({ dirty: true });
 	}
 	toggleFilterMismatchedTabs = async () => {
 		var _filter_tabs = !this.state.filterTabs;

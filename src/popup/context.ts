@@ -57,6 +57,16 @@ export interface ITabManagerActions {
 	addSavedWindows(sessions : ISavedSession[]) : Promise<void>;
 	// delete a saved window, with an Undo countdown before it leaves storage
 	deleteSession(session : ISavedSession) : void;
+	// An error notice (red edge and tint, closes by itself after a while or
+	// with its close button): for what the user asked and did not happen, a
+	// refused write or a failure. The text says what, e.g. refusedText() in
+	// ./notices.ts.
+	showError(text : string) : void;
+	// a neutral notice of the same kind, for what an action did (an import)
+	showInfo(text : string) : void;
+	// closes every notice and writes what an Undo notice still holds (an
+	// import starts: nothing may be pending under it)
+	closeNotices() : void;
 	// browser state changed (windows/tabs/sessions): refetch and re-render
 	reload() : void;
 	// only in-place mutated state (selection, hiddenTabs) changed: re-render without refetch

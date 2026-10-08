@@ -6,12 +6,6 @@ export interface ITabOptionsState {
 	incognitoAllowed? : boolean;
 	// "Copy to clipboard" of the debug export was just done (shows "Copied" for a moment)
 	debugCopied? : boolean;
-	// why the debug export / copy just failed (shown under the buttons)
-	debugError? : string;
-	// why the last backup import failed (shown under the file picker)
-	importError? : string;
-	// what the last backup import restored and skipped (shown under the file picker)
-	importNote? : string;
 	// Chrome: "Show all monitors" is on (setting not "off" and the optional
 	// system.display permission granted), and the setting itself
 	monitorAccess? : boolean;

@@ -17,6 +17,10 @@
 // (withoutItems): a tab goes only when its address is still the one deleted.
 
 import { maybePluralize } from "../helpers/utils.ts";
+import { Countdown, realTimers } from "./countdown.ts";
+import type { Timers } from "./countdown.ts";
+
+export type { Timers };
 
 export const UNDO_MS = 8000;
 
@@ -59,25 +63,14 @@ function setGone(item : PendingItem, list : Gone[]) : void {
 	else delete item.urls;
 }
 
-// the clock and timers, injectable so the tests need no real waiting
-export interface Timers {
-	now() : number;
-	setTimeout(fn : () => void, ms : number) : unknown;
-	clearTimeout(handle : unknown) : void;
-}
-
-const realTimers : Timers = {
-	now: () => Date.now(),
-	setTimeout: (fn, ms) => setTimeout(fn, ms),
-	clearTimeout: (handle) => clearTimeout(handle as ReturnType<typeof setTimeout>)
-};
-
 export interface PendingOptions {
 	// removes the items from storage. `sync` when the popup is closing: start
 	// the write without reading first (a read would not finish in time)
 	commit(items : PendingItem[], sync : boolean) : Promise<unknown> | void;
 	// the pending list or the deadline changed: render again
 	onChange() : void;
+	// a write failed (the browser refused it): the windows show again
+	onError?(err : unknown, items : PendingItem[]) : void;
 	delay? : number;
 	timers? : Timers;
 }
@@ -90,8 +83,8 @@ export class PendingDeletes {
 	// write may wait behind other changes
 	private started = new Set<PendingItem>();
 	private changes = 0;
-	private handle : unknown = null;
-	private until = 0;
+	// the countdown: it ends in a flush, and the mouse over the notice holds it
+	private readonly clock : Countdown;
 	private readonly delay : number;
 	private readonly timers : Timers;
 	private readonly options : PendingOptions;
@@ -100,6 +93,7 @@ export class PendingDeletes {
 		this.options = options;
 		this.delay = options.delay ?? UNDO_MS;
 		this.timers = options.timers ?? realTimers;
+		this.clock = new Countdown(this.timers, () => this.flush());
 	}
 
 	// the items Undo would bring back, oldest first
@@ -107,9 +101,21 @@ export class PendingDeletes {
 		return this.pending;
 	}
 
-	// when the countdown ends (ms, the timers' clock); 0 when nothing is pending
+	// when the countdown ends if it runs on (ms, the timers' clock); 0 when
+	// nothing is pending. Moves on while the countdown is held.
 	get deadline() : number {
-		return this.pending.length ? this.until : 0;
+		return this.pending.length ? this.timers.now() + this.clock.left : 0;
+	}
+
+	// How often the countdown was (re)started: the notice's bar runs again when
+	// this changes.
+	get runs() : number {
+		return this.clock.runs;
+	}
+
+	// The mouse is over the notice (or left it): the countdown waits.
+	hold(held : boolean) : void {
+		if (this.pending.length) this.clock.hold(held);
 	}
 
 	get countdown() : number {
@@ -157,7 +163,7 @@ export class PendingDeletes {
 	// brings every pending item back; the ones already being written are gone
 	undo() : PendingItem[] {
 		const items = this.pending;
-		this.stop();
+		this.clock.stop();
 		this.pending = [];
 		if (items.length) this.changed();
 		return items;
@@ -202,7 +208,7 @@ export class PendingDeletes {
 		if (!this.pending.length && !waiting.length) return;
 		const fresh = this.pending;
 		const items = [...waiting, ...fresh];
-		this.stop();
+		this.clock.stop();
 		this.pending = [];
 		this.committing.push(...fresh);
 		const done = () => {
@@ -214,12 +220,12 @@ export class PendingDeletes {
 		try {
 			result = this.options.commit(items, sync);
 		} catch (err) {
-			console.error(err);
+			this.failed(err, items);
 			done();
 			return;
 		}
 		// a failed write leaves the saved window in storage: it shows again
-		Promise.resolve(result).then(done, (err) => { console.error(err); done(); });
+		Promise.resolve(result).then(done, (err) => { this.failed(err, items); done(); });
 		// the notice goes now, the windows stay hidden until the write is done
 		this.changed();
 	}
@@ -229,15 +235,17 @@ export class PendingDeletes {
 		this.options.onChange();
 	}
 
-	private restart() {
-		this.stop();
-		this.until = this.timers.now() + this.delay;
-		this.handle = this.timers.setTimeout(() => this.flush(), this.delay);
+	private failed(err : unknown, items : PendingItem[]) {
+		console.error(err);
+		try {
+			this.options.onError?.(err, items);
+		} catch (e) {
+			console.error(e);
+		}
 	}
 
-	private stop() {
-		if (this.handle !== null) this.timers.clearTimeout(this.handle);
-		this.handle = null;
+	private restart() {
+		this.clock.start(this.delay);
 	}
 }
 
@@ -346,15 +354,4 @@ export function noticeText(items : readonly PendingItem[]) : string {
 	if (tabs > 0) parts.push(maybePluralize(tabs, "saved tab"));
 	if (windows > 0) parts.push(maybePluralize(windows, "saved window"));
 	return "Deleted " + parts.join(" and ");
-}
-
-// whole seconds left, rounded up, never negative
-export function secondsLeft(deadline : number, now : number) : number {
-	return Math.max(0, Math.ceil((deadline - now) / 1000));
-}
-
-// how much of the countdown is left, 0 to 1
-export function fractionLeft(deadline : number, now : number, delay : number) : number {
-	if (delay <= 0) return 0;
-	return Math.min(1, Math.max(0, (deadline - now) / delay));
 }

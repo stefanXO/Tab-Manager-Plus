@@ -245,7 +245,24 @@ const STATES = [
 		freezeClock: true, scrollEnd: true}},
 	// tabs deleted, then Undo clicked: everything is back
 	{name: 'saved-tabs-undo', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {
-		clicks: [{sel: '#sessiontab_s1_1', ctrl: true}, {sel: '.icon.windowaction.trash'}, {sel: '.undo-button', optional: true}], scrollInto: '#session-s1'}},
+		clicks: [{sel: '#sessiontab_s1_1', ctrl: true}, {sel: '.icon.windowaction.trash'}, {sel: '.notice-undo', optional: true}], scrollInto: '#session-s1'}},
+	// the notices (src/popup/views/Notice.tsx, src/popup/notices.ts). The clock
+	// and the bars are held still, `barAt` of the way drained: the Undo notice
+	// with its key caps and close button, half way, and with the mouse over it
+	// (the countdown waits); an error from a refused write (the fake storage
+	// throws a quota error, from step 0 on) over the Undo notice, and one from a name typed into the saved window's name screen (its write is refused); a long error in the narrow popup;
+	// Ctrl+Z after a delete (everything is back, no notice). dpr 1
+	{name: 'notice-undo-half', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {
+		clicks: [{sel: '#session-s1 .icon.tabaction.delete'}], freezeClock: true, barAt: 0.5, scrollEnd: true}},
+	{name: 'notice-undo-hover', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {
+		clicks: [{sel: '#session-s1 .icon.tabaction.delete'}], freezeClock: true, barAt: 0.3, noticeHover: true, scrollEnd: true}},
+	{name: 'notice-error-save', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {quota: true,
+		clicks: [{sel: '#window-101 .icon.save'}], freezeClock: true, barAt: 0.4, scrollEnd: true}},
+	{name: 'notice-error-undo', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {quota: true,
+		clicks: [{sel: '#session-s1 .icon.tabaction.delete'}, {sel: '#window-101 .icon.save'}], freezeClock: true, barAt: 0.25, scrollEnd: true}},
+	{name: 'notice-error-rename', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {quota: true, overlay: 'session-colors', typeName: 'Q3 conference notes', freezeClock: true, barAt: 0.1}},
+	{name: 'notice-undo-key', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {
+		clicks: [{sel: '#session-s1 .icon.tabaction.delete'}, {keydown: 'z', ctrl: true}], scrollEnd: true}},
 	// saving selected open tabs as a saved window (src/helpers/sessions.ts):
 	// Ctrl+click three tabs of "Work" and one of "Life", so the bottom bar shows
 	// its "Save selected tabs" button lit. dpr 1, blocks + List, 800x600 and 380x900
@@ -481,14 +498,17 @@ async function settle(page) {
 }
 
 /** Applies a popup state absolutely: the result never depends on what came before. */
-async function apply(page, {layout, dark, search = '', dup = false, recent = 0, overlay = null, scrollTo = null, store = {}, granted = true, savedFocused = null, clicks = [], scrollInto = null, importFile = null, freezeClock = false, scrollEnd = false, typeName = null, pickColor = null, savedInfo = null, freshSessions = false, savedAuto = null, afterWait = 0}) {
+async function apply(page, {layout, dark, search = '', dup = false, recent = 0, overlay = null, scrollTo = null, store = {}, granted = true, savedFocused = null, clicks = [], scrollInto = null, importFile = null, freezeClock = false, scrollEnd = false, typeName = null, pickColor = null, savedInfo = null, freshSessions = false, savedAuto = null, afterWait = 0, quota = false, barAt = 0, noticeHover = false}) {
 	await page.evaluate(async (s) => {
 		const q = (sel) => document.querySelector(sel)
 		const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
 
-		// 0. an Undo notice from the state before: unfreeze the clock, take it back
+		// 0. notices from the state before: unfreeze the clock, no more refused
+		// writes, take an Undo back and close the errors
 		if (window.__realNow) { Date.now = window.__realNow; window.__realNow = null }
-		q('.undo-notice .undo-button')?.click()
+		window.__fakeQuota = !!s.quota
+		q('.notice.undo .notice-undo')?.click()
+		for (const x of document.querySelectorAll('.notice .notice-close')) x.click()
 		await frame()
 
 		// 1. close whatever overlay is up, so the window container is reachable
@@ -581,6 +601,12 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 		// 8. clicks with modifiers, as the user makes them: a left click is a
 		// click event, any other button a mousedown (Tab.tsx onMouseDown)
 		for (const c of s.clicks) {
+			if (c.keydown) {
+				// a key typed anywhere on the page (Ctrl+Z reaches the document)
+				document.body.dispatchEvent(new KeyboardEvent('keydown', {bubbles: true, cancelable: true, key: c.keydown, ctrlKey: !!c.ctrl, metaKey: !!c.meta}))
+				for (let i = 0; i < 4; i++) await frame()
+				continue
+			}
 			if (c.key) {
 				// a key press on the list, as the root's onKeyDown sees it
 				q('#root').dispatchEvent(new KeyboardEvent('keydown', {bubbles: true, cancelable: true, keyCode: c.key, which: c.key}))
@@ -655,13 +681,24 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 			window.__realNow = Date.now
 			Date.now = () => t
 			await frame()
+			// the mouse over a notice (React sees it as a mouseover)
+			if (s.noticeHover) {
+				for (const n of document.querySelectorAll('.notice')) n.dispatchEvent(new MouseEvent('mouseover', {bubbles: true, relatedTarget: document.body}))
+				await frame()
+			}
+			// the notices' bars stand still, `barAt` of the way drained
+			for (const a of document.getAnimations()) {
+				if (a.animationName !== 'notice-drain') continue
+				a.pause()
+				a.currentTime = s.barAt * Number(a.effect.getTiming().duration)
+			}
 		}
 		if (s.scrollInto) q(s.scrollInto)?.scrollIntoView({block: 'nearest', inline: 'nearest'})
 		// the app's own timers (the scroll back to an edited saved window)
 		if (s.afterWait) await new Promise((r) => setTimeout(r, s.afterWait))
 		// the list scrolled to its very end: the padding the notice makes room with shows
 		if (s.scrollEnd) { const c = q('.window-container'); if (c) c.scrollTop = c.scrollHeight }
-	}, {layout, dark, search, dup, recent, overlay, store, granted, savedFocused, clicks, scrollInto, importFile, freezeClock, scrollEnd, typeName, pickColor, savedInfo, freshSessions, savedAuto, afterWait})
+	}, {layout, dark, search, dup, recent, overlay, store, granted, savedFocused, clicks, scrollInto, importFile, freezeClock, scrollEnd, typeName, pickColor, savedInfo, freshSessions, savedAuto, afterWait, quota, barAt, noticeHover})
 	await settle(page)
 	// 7. scroll the options box headed `scrollTo` to the top of its scroller
 	if (scrollTo) {

@@ -148,6 +148,8 @@ export const storage = {
 			return out;
 		},
 		async set(obj) {
+			// a shot can make the browser refuse the saved windows (shoot.mjs, `quota`)
+			if (globalThis.__fakeQuota && "sessions" in obj) throw new Error("QUOTA_BYTES quota exceeded");
 			const changes = {};
 			for (const [k, v] of Object.entries(obj)) { changes[k] = { oldValue: store[k], newValue: clone(v) }; store[k] = clone(v); }
 			for (const l of listeners) l(changes, "local");

@@ -41,6 +41,8 @@
 		--toast-text: var(--dk-text);
 		--toast-accent: var(--dk-select);
 		--toast-track: rgba(255, 255, 255, 0.18);
+		--toast-error-bg: #55302f;
+		--toast-error-edge: #ff8379;
 
 		--minimized-opacity: 0.85;
 

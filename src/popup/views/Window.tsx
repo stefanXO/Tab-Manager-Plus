@@ -11,6 +11,7 @@ import {IWindow, IWindowState, ISavedSession} from '@types';
 import {ManagerContext, ITabManagerActions} from '../context';
 import {windowName, compactName, tabsKey} from '../windowName';
 import {sendAndWait} from '../messaging';
+import {refusedText} from '../notices';
 import {buildSavedWindow, newSessionId} from '@helpers/sessions';
 import {isSavedWindowDrag} from '../sessionOrder';
 import {isSavedTabDrag} from '../savedDrag';
@@ -433,6 +434,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 			await this.context.addSavedWindows([session]);
 		} catch (err) {
 			console.error("could not save the window", err);
+			this.context.showError(refusedText("save the window", err));
 			return;
 		}
 		this.context.reload();

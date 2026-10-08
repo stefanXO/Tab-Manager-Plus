@@ -10,6 +10,7 @@ import * as S from "@strings";
 import {popupScreen} from "@helpers/popup_size";
 import {ManagerContext, ITabManagerActions} from '../context';
 import {savedTabKeys} from '../sessionKeys';
+import {refusedText} from '../notices';
 import {savedTileRef} from '../savedTiles';
 import {windowName} from '../windowName';
 import {shownSavedName} from '../sessionEdit';
@@ -279,13 +280,21 @@ export class Session extends React.Component<ISession, ISessionState> {
 		e.stopPropagation();
 
 		// the worker answers with the id of the window it created
-		const windowId : number | undefined = await browser.runtime.sendMessage<ICommand, number | undefined>({
-			command: S.create_window_with_session_tabs,
-			session: this.props.session,
-			tab_id: tabId,
-			// the worker has no screen; this is the display the popup is on
-			screen: popupScreen()
-		});
+		let windowId : number | undefined;
+		try {
+			windowId = await browser.runtime.sendMessage<ICommand, number | undefined>({
+				command: S.create_window_with_session_tabs,
+				session: this.props.session,
+				tab_id: tabId,
+				// the worker has no screen; this is the display the popup is on
+				screen: popupScreen()
+			});
+		} catch (err) {
+			// the worker did not take it: the popup stays open to say so
+			console.error(err);
+			this.context.showError(refusedText(tabId === null ? "restore the saved window" : "restore the saved tab", err));
+			return;
+		}
 
 		if (!!window.inPopup) {
 			window.close();

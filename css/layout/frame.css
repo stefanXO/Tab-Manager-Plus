@@ -113,11 +113,12 @@ html, body {
 .window-container.blocks-big, .window-container.blocks {
 	padding: 0.5rem 0;
 }
-/* room under the last row while the Undo notice (components/session.css)
-   covers the foot of the list. The id outranks the per-view paddings above and
-   in view-*.css, which sit in this same layer. */
-#root.undo-showing .window-container {
-	padding-bottom: 3.4rem;
+/* room under the last row while the notices (components/session.css) cover the
+   foot of the list: a row's worth for each (--notice-count, set on #root). The
+   id outranks the per-view paddings above and in view-*.css, which sit in this
+   same layer. */
+#root.notices-showing .window-container {
+	padding-bottom: calc(1.2rem + 2.2rem * var(--notice-count, 1));
 }
 .window-container.vertical {
 	min-height: 0;

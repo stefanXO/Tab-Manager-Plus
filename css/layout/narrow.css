@@ -23,7 +23,7 @@
 	.window-container {
 		bottom: var(--searchbox-height);
 	}
-	.undo-notice {
+	.notices {
 		bottom: calc(var(--searchbox-height) + 0.6rem);
 	}
 	.window.searchbox table,

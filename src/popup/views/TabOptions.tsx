@@ -288,8 +288,6 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 							description="Allows you to restore saved windows from a sessions file (or from a debug file, which holds them too). The restored windows will be added to your current saved windows."
 							notes={[
 								...(importBlocked ? ["Due to a Firefox bug session import does not work in the popup. Please use the options screen or open Tab Manager Plus in its own tab"] : []),
-								...(this.state.importError ? [this.state.importError] : []),
-								...(this.state.importNote ? [this.state.importNote] : [])
 							]}
 						>
 							<input
@@ -429,7 +427,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 						</div>
 						<Description
 							text="Writes every open window and tab (title, url, last used, pinned, active), the automatic name Tab Manager Plus gave each window, your saved windows and your settings to a JSON file (everything-date-time.json, which Import Sessions can also read). Nothing is sent anywhere. Attach it to a bug report when a window name or a search result looks wrong."
-							notes={[debugExportNote(p.windowCount, p.tabCount), ...(this.state.debugError ? [this.state.debugError] : [])]}
+							notes={[debugExportNote(p.windowCount, p.tabCount)]}
 						/>
 					</div>
 				</OptionsBox>
@@ -572,7 +570,6 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		return { json: JSON.stringify(data, null, 2), date };
 	}
 	exportDebug = async () => {
-		this.setState({ debugError: undefined });
 		try {
 			const { json, date } = await this.debugJson();
 			const url = URL.createObjectURL(new Blob([json], { type: "application/json" }));
@@ -584,12 +581,11 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 			a.remove();
 			setTimeout(() => URL.revokeObjectURL(url), 1000);
 		} catch (e) {
-			this.setState({ debugError: "The debug file could not be saved: " + (e instanceof Error ? e.message : e) });
+			this.context.showError("The debug file could not be saved: " + (e instanceof Error ? e.message : e));
 		}
 	}
 	private debugCopiedTimer? : ReturnType<typeof setTimeout>;
 	copyDebug = async () => {
-		this.setState({ debugError: undefined });
 		try {
 			const { json } = await this.debugJson();
 			try {
@@ -610,7 +606,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 			clearTimeout(this.debugCopiedTimer);
 			this.debugCopiedTimer = setTimeout(() => this.setState({ debugCopied: false }), 1500);
 		} catch (e) {
-			this.setState({ debugError: "Could not copy to the clipboard: " + (e instanceof Error ? e.message : e) });
+			this.context.showError("Could not copy to the clipboard: " + (e instanceof Error ? e.message : e));
 		}
 	}
 	exportSessions = () => {
@@ -641,13 +637,14 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 	importSessions = (evt : React.ChangeEvent<HTMLInputElement>) => {
 		// the file picker is disabled then, with the reason as its note
 		if (this.importBlocked()) return;
-		this.setState({ importError: undefined, importNote: undefined });
+		// the notices of whatever came before go, and a delete still counting
+		// down is written first: the import adds to what is stored after it
+		this.context.closeNotices();
 		try {
 			let inputField = evt.target; // #session_import
 			let files = evt.target.files;
 			if (!files.length) {
-				this.setState({ importError: "No file selected!" });
-				this.context.setBottomText("Error: Could not read the sessions file!");
+				this.context.showError("No file selected!");
 				return;
 			}
 			let file = files[0];
@@ -660,8 +657,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 					backupFile = JSON.parse(event.target.result.toString());
 				} catch (err) {
 					console.error(err);
-					this.setState({ importError: "Could not read the sessions file: " + (err instanceof Error ? err.message : err) });
-					this.context.setBottomText("Error: Could not read the sessions file!");
+					this.context.showError("Could not read the sessions file: " + (err instanceof Error ? err.message : err));
 					inputField.value = "";
 					return;
 				}
@@ -677,19 +673,15 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 					failed = plan.valid.length;
 				}
 				const summary = importSummary(plan, failed);
-				if (plan.valid.length - failed > 0) {
-					this.setState({ importNote: summary });
-					this.context.setBottomText(summary);
-				} else {
-					this.setState({ importError: summary });
-					this.context.setBottomText("Error: " + summary);
-				}
+				// nothing restored, or the browser refused some: an error
+				if (plan.valid.length - failed > 0 && failed === 0) this.context.showInfo(summary);
+				else this.context.showError(summary);
 				inputField.value = "";
 			};
 			reader.readAsText(file);
 		} catch (err) {
 			console.error(err);
-			this.setState({ importError: "Could not import the sessions file: " + (err instanceof Error ? err.message : err) });
+			this.context.showError("Could not import the sessions file: " + (err instanceof Error ? err.message : err));
 		}
 		this.showHelp("importSessions");
 		this.context.reload();

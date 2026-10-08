@@ -112,22 +112,34 @@
 	font-size: 12px; background-color: var(--divider-label-bg); color: var(--divider-label-text); padding: 0 10px;
 }
 
-/* The Undo notice after a saved window was deleted (src/popup/views/UndoNotice.tsx):
-   a bar over the bottom bar, the text, the seconds left, Undo, and a line along
-   its foot that drains with the countdown. layout/narrow.css lifts it over the
-   taller bottom bar there. */
-.undo-notice {
+/* The notices over the bottom bar (src/popup/views/Notice.tsx): the Undo notice
+   after a delete, errors (red edge and tint) and what an import did. They stack
+   in .notices, the newest error on top and Undo at the bottom. Each has its text,
+   Undo with its key caps, a close button and a line along its foot that drains
+   over the countdown: a CSS animation, so it is smooth, and the mouse over the
+   notice (.held) pauses it together with the countdown itself.
+   layout/narrow.css lifts the stack over the taller bottom bar there. */
+.notices {
 	position: fixed;
 	left: 50%;
 	transform: translateX(-50%);
 	bottom: calc(3.2rem + 0.6rem);
-	z-index: 999998;
+	/* over the name / colour screen (components/colors.css), where a refused write shows too */
+	z-index: 10000000;
 	box-sizing: border-box;
+	width: max-content;
 	max-width: calc(100% - 1rem);
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+}
+.notice {
+	position: relative;
+	box-sizing: border-box;
 	display: flex;
 	align-items: center;
 	gap: 0.6rem;
-	padding: 0.45rem 0.6rem 0.55rem 0.8rem;
+	padding: 0.45rem 0.35rem 0.55rem 0.8rem;
 	border-radius: 0.4rem;
 	overflow: hidden;
 	background: var(--toast-bg);
@@ -135,22 +147,19 @@
 	box-shadow: var(--shadow-popover);
 	font-size: 0.8rem;
 }
-.undo-notice .undo-text {
+.notice .notice-text {
+	flex: 1 1 auto;
 	min-width: 0;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
-.undo-notice .undo-seconds {
+.notice .notice-undo {
 	flex: none;
-	min-width: 1.6em;
-	text-align: right;
-	opacity: 0.7;
-	font-variant-numeric: tabular-nums;
-}
-.undo-notice .undo-button {
-	flex: none;
-	padding: 0.15rem 0.6rem;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.15rem 0.5rem 0.15rem 0.6rem;
 	border: 1px solid var(--toast-accent);
 	border-radius: 0.3rem;
 	background: transparent;
@@ -159,15 +168,70 @@
 	font-weight: bold;
 	cursor: pointer;
 }
-.undo-notice .undo-button:hover {
+.notice .notice-undo:hover {
 	background: var(--toast-accent);
 	color: var(--toast-bg);
 }
-.undo-notice .undo-button:focus-visible {
+.notice .notice-keys {
+	display: inline-flex;
+	gap: 0.2rem;
+}
+.notice .notice-keys kbd {
+	display: inline-block;
+	min-width: 1.1em;
+	padding: 0 0.3em;
+	border: 1px solid currentColor;
+	border-bottom-width: 2px;
+	border-radius: 0.25rem;
+	font: inherit;
+	font-size: 0.7rem;
+	font-weight: normal;
+	line-height: 1.3;
+	text-align: center;
+	opacity: 0.8;
+}
+.notice .notice-undo:hover .notice-keys kbd {
+	opacity: 1;
+}
+.notice .notice-close {
+	flex: none;
+	width: 1.5rem;
+	height: 1.5rem;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	font-size: 1.1rem;
+	line-height: 1;
+	opacity: 0.7;
+	cursor: pointer;
+}
+.notice .notice-close:hover {
+	opacity: 1;
+	background: var(--toast-track);
+}
+.notice .notice-undo:focus-visible,
+.notice .notice-close:focus-visible {
 	outline: 2px solid var(--toast-accent);
 	outline-offset: 2px;
 }
-.undo-notice .undo-bar {
+/* an error: a red edge, a red tint and a red line. It says what went wrong, so
+   it may take more than one line. */
+.notice.error {
+	background: var(--toast-error-bg);
+	border-left: 0.3rem solid var(--toast-error-edge);
+	padding-left: 0.6rem;
+}
+.notice.error .notice-text {
+	white-space: normal;
+	overflow-wrap: anywhere;
+}
+.notice.error .notice-bar-fill {
+	background: var(--toast-error-edge);
+}
+.notice .notice-bar {
 	position: absolute;
 	left: 0;
 	right: 0;
@@ -175,7 +239,17 @@
 	height: 3px;
 	background: var(--toast-track);
 }
-.undo-notice .undo-bar-fill {
+.notice .notice-bar-fill {
 	height: 100%;
 	background: var(--toast-accent);
+	transform-origin: left center;
+	/* the length is set on the element (the notice's countdown) */
+	animation: notice-drain linear forwards;
+}
+.notice.held .notice-bar-fill {
+	animation-play-state: paused;
+}
+@keyframes notice-drain {
+	from { transform: scaleX(1); }
+	to { transform: scaleX(0); }
 }

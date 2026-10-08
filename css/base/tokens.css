@@ -218,6 +218,9 @@
 	--toast-text: var(--white);
 	--toast-accent: var(--yellow-soft);
 	--toast-track: rgba(255, 255, 255, 0.22);
+	/* the same bar for an error: a red tint and a red edge */
+	--toast-error-bg: #55231f;
+	--toast-error-edge: #ff6b5e;
 
 	/* the search box's help panel */
 	--popover-border: rgba(0, 0, 0, 0.15);
