@@ -28,7 +28,7 @@ describe("buildDebugExport", () => {
 	const out = buildDebugExport(windows, settings, meta);
 
 	test("shape", () => {
-		assert.equal(out.format, "tab-manager-plus-debug");
+		assert.equal(out.format, "tab-manager-plus-export");
 		assert.equal(out.version, 1);
 		assert.equal(out.extension, "7.0.0");
 		assert.equal(out.browser, "UA/1.0");

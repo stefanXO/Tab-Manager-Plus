@@ -25,6 +25,16 @@ describe("readSessionsFile", () => {
 	test("everything export (extra keys ignored)", () => {
 		assert.deepEqual(readSessionsFile({ format: "tab-manager-plus-debug", windows: [], settings: {}, sessions: list }), list);
 	});
+	test("format key", () => {
+		assert.equal(buildSessionsFile(list).format, "tab-manager-plus-export");
+		assert.deepEqual(readSessionsFile({ format: "tab-manager-plus-export", version: 1, windows: [], sessions: list }), list);
+	});
+	test("test-build tags still read", () => {
+		for (const format of ["tab-manager-plus-sessions", "tab-manager-plus-debug"]) {
+			assert.deepEqual(readSessionsFile({ format, version: 1, sessions: list }), list);
+		}
+	});
+	test("unknown format tag", () => assert.equal(readSessionsFile({ format: "other", sessions: list }), undefined));
 	test("anything else", () => {
 		for (const v of [null, 5, "x", {}, { sessions: 1 }, { windows: [] }]) assert.equal(readSessionsFile(v), undefined);
 	});

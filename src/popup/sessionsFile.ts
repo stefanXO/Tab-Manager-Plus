@@ -3,21 +3,23 @@
 // The saved windows file: the name of the downloads and the format reader.
 // Pure (no browser APIs), unit tested in tests/sessionsFile.test.ts.
 //
-// Session export: { format: "tab-manager-plus-sessions", version: 1, sessions: [...] }
-// Debug export ("everything"): the same plus the debug keys (see debugExport.ts),
+// Session export: { format: "tab-manager-plus-export", version: 1, sessions: [...] }
+// Everything export: the same format plus the debug keys (see debugExport.ts),
 // so importing it restores its saved windows too.
-// Older exports are a bare list of saved windows; the reader accepts all three.
+// The reader also accepts a bare list of saved windows and the tags written by
+// test builds ("tab-manager-plus-sessions", "tab-manager-plus-debug").
 
-export const SESSIONS_FORMAT = "tab-manager-plus-sessions";
+export const EXPORT_FORMAT = "tab-manager-plus-export";
+const LEGACY_FORMATS = ["tab-manager-plus-sessions", "tab-manager-plus-debug"];
 
 export interface SessionsFile<T = unknown> {
-	format : typeof SESSIONS_FORMAT;
+	format : typeof EXPORT_FORMAT;
 	version : 1;
 	sessions : T[];
 }
 
 export function buildSessionsFile<T>(sessions : T[]) : SessionsFile<T> {
-	return { format: SESSIONS_FORMAT, version: 1, sessions };
+	return { format: EXPORT_FORMAT, version: 1, sessions };
 }
 
 function stamp(date : Date) : string {
@@ -41,6 +43,8 @@ export function everythingFileName(date : Date) : string {
 export function readSessionsFile(parsed : unknown) : unknown[] | undefined {
 	if (Array.isArray(parsed)) return parsed;
 	if (parsed && typeof parsed === "object" && Array.isArray((parsed as { sessions? : unknown }).sessions)) {
+		const format = (parsed as { format? : unknown }).format;
+		if (format !== undefined && format !== EXPORT_FORMAT && !LEGACY_FORMATS.includes(format as string)) return undefined;
 		return (parsed as { sessions : unknown[] }).sessions;
 	}
 	return undefined;
