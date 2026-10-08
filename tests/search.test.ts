@@ -800,3 +800,104 @@ describe("titleHits", () => {
 		assert.deepEqual(hits("İstanbul github", "github"), []);
 	});
 });
+
+// ---------------------------------------------------------------------------
+// s: saved windows only. The same tab is an open tab or a saved one; only the
+// saved one can match s:.
+// ---------------------------------------------------------------------------
+
+describe("s: saved windows only", () => {
+	const tab = (title : string, url : string, saved : boolean) => searchable(title, url, saved);
+	const open = (q : string, title = "Tax return 2029", url = "https://example.com/tax") => matchTab(tab(title, url, false), parseQuery(q));
+	const saved = (q : string, title = "Tax return 2029", url = "https://example.com/tax") => matchTab(tab(title, url, true), parseQuery(q));
+
+	test("matches a saved tab by title or url, never an open one", () => {
+		assert.equal(saved("s:tax"), true);
+		assert.equal(saved("s:example.com"), true);
+		assert.equal(saved("s:TAX"), true);
+		assert.equal(saved("s:reddit"), false);
+		assert.equal(open("s:tax"), false);
+		assert.equal(open("s:example.com"), false);
+	});
+
+	test("the prefix is case-insensitive", () => {
+		assert.equal(saved("S:tax"), true);
+		assert.equal(open("S:tax"), false);
+	});
+
+	test("bare s: is every saved tab and no open tab", () => {
+		assert.equal(parseQuery("s:").empty, false);
+		assert.equal(saved("s:"), true);
+		assert.equal(saved("s:", "", ""), true);
+		assert.equal(open("s:"), false);
+		assert.equal(open("S:"), false);
+	});
+
+	test("combines with plain words, t:, u: and exclusion", () => {
+		assert.equal(saved("s: tax"), true);
+		assert.equal(saved("s: reddit"), false);
+		assert.equal(open("s: tax"), false);
+		assert.equal(saved("s:tax t:return"), true);
+		assert.equal(saved("s:tax t:example"), false);
+		assert.equal(saved("s:tax u:example.com"), true);
+		assert.equal(saved("s:tax u:return"), false);
+		assert.equal(saved("s:tax -u:example.com"), false);
+		assert.equal(saved("s:tax -reddit"), true);
+		assert.equal(saved("s: -tax"), false);
+		assert.equal(saved("s: -reddit"), true);
+	});
+
+	test("combines with a phrase and a regular expression", () => {
+		assert.equal(saved('s:"tax return"'), true);
+		assert.equal(open('s:"tax return"'), false);
+		assert.equal(saved('s:"return tax"'), false);
+		assert.equal(saved("s:/\\d{4}/"), true);
+		assert.equal(saved("s:/^\\d{4}$/"), false);
+		assert.equal(open("s:/\\d{4}/"), false);
+		// the url as well as the title
+		assert.equal(saved("s:/tax$/"), true);
+		// an invalid pattern is a substring, as everywhere
+		assert.equal(saved("s:/(tax/", "a (tax b", "https://x.test"), true);
+	});
+
+	test("OR: saved tabs with the word, or any tab with the other", () => {
+		assert.equal(saved("s:tax OR reddit"), true);
+		assert.equal(open("s:tax OR reddit"), false);
+		assert.equal(open("s:tax OR return"), true);
+		assert.equal(saved("s:reddit OR return"), true);
+		// bare s: with OR: every saved tab, plus the open ones with the word
+		assert.equal(saved("s: OR reddit"), true);
+		assert.equal(open("s: OR reddit"), false);
+		assert.equal(open("s: OR tax"), true);
+	});
+
+	test("-s:word leaves out saved tabs that match; -s: leaves out every saved tab", () => {
+		assert.equal(saved("-s:tax"), false);
+		assert.equal(saved("-s:reddit"), true);
+		assert.equal(open("-s:tax"), true);
+		assert.equal(saved("-s:"), false);
+		assert.equal(open("-s:"), true);
+		assert.equal(open("-s: tax"), true);
+		assert.equal(open("-s: reddit"), false);
+	});
+
+	test("a quoted token that starts with s: is a plain word", () => {
+		assert.equal(open('"s:tax"', "about s:tax syntax", "https://example.com"), true);
+		assert.equal(saved('"s:tax"', "about s:tax syntax", "https://example.com"), true);
+		// and a word that only contains s: somewhere inside is one too
+		assert.equal(open("tabs:tax", "tabs:tax", "https://example.com"), true);
+	});
+
+	test("a tab that is not marked saved is an open tab", () => {
+		const plain = searchable("Tax", "https://example.com");
+		assert.equal(plain.saved, undefined);
+		assert.equal(matchTab(plain, parseQuery("s:tax")), false);
+		assert.equal(matchTab(searchable("Tax", "https://example.com", true), parseQuery("s:tax")), true);
+	});
+
+	test("title hits: s:word marks the word in a saved title, bare s: nothing", () => {
+		assert.deepEqual(titleHits("Tax return", parseQuery("s:tax")), [[0, 3]]);
+		assert.deepEqual(titleHits("Tax return", parseQuery("s:")), []);
+		assert.deepEqual(titleHits("Tax return", parseQuery("-s:tax")), []);
+	});
+});

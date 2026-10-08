@@ -51,7 +51,7 @@ export function searchSaved(
 	for (const s of sessions) {
 		let matches = 0;
 		for (const tab of s.tabs) {
-			const hit = !openOnly && matchTab(searchable(tab.title, tab.url || tab.pendingUrl), query as SearchQuery);
+			const hit = !openOnly && matchTab(searchable(tab.title, tab.url || tab.pendingUrl, true), query as SearchQuery);
 			if (hit) matches++;
 			else out.hidden.add(keys.key(s.id, tab.index));
 		}

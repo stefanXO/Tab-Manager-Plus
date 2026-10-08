@@ -131,3 +131,52 @@ describe("searchSummary", () => {
 		assert.equal(searchSummary("tax", 0, { tabs: 4, windows: 2 }).top, "4 matches for 'tax' in 2 saved windows");
 	});
 });
+
+describe("searchSaved with s:", () => {
+	test("s:word keeps the saved tabs with the word, like a plain word", () => {
+		const keys = new SavedTabKeys();
+		const r = searchSaved(SESSIONS, parseQuery("s:google"), false, keys);
+		assert.deepEqual([...r.shown], ["s2"]);
+		assert.equal(r.tabs, 2);
+		assert.equal(r.windows, 1);
+		assert.equal(r.hidden.size, 3);
+	});
+
+	test("bare s: keeps every saved tab", () => {
+		const r = searchSaved(SESSIONS, parseQuery("s:"), false, new SavedTabKeys());
+		assert.equal(r.active, true);
+		assert.deepEqual([...r.shown], ["s1", "s2"]);
+		assert.equal(r.tabs, 5);
+		assert.equal(r.windows, 2);
+		assert.equal(r.hidden.size, 0);
+	});
+
+	test("combined with t:, u:, a minus, a phrase and a pattern", () => {
+		const q = (text : string) => searchSaved(SESSIONS, parseQuery(text), false, new SavedTabKeys());
+		assert.equal(q("s: t:inbox").tabs, 1);
+		assert.equal(q("s: u:google.com").tabs, 2);
+		assert.equal(q("s: google -u:mail").tabs, 1);
+		assert.equal(q('s:"react - npm"').tabs, 1);
+		assert.equal(q("s:/lofi|hacker/").tabs, 2);
+		assert.equal(q("s: -google").tabs, 3);
+		assert.equal(q("s:nothinglikethis").tabs, 0);
+	});
+
+	test("-s: leaves out every saved tab: all of them hide", () => {
+		const r = searchSaved(SESSIONS, parseQuery("-s:"), false, new SavedTabKeys());
+		assert.equal(r.tabs, 0);
+		assert.equal(r.shown.size, 0);
+		assert.equal(r.hidden.size, 5);
+	});
+
+	test("Highlight Duplicates still beats it: no saved tab belongs to what it picked", () => {
+		const r = searchSaved(SESSIONS, parseQuery("s:"), true, new SavedTabKeys());
+		assert.equal(r.tabs, 0);
+		assert.equal(r.hidden.size, 5);
+	});
+
+	test("the header for a bare s:", () => {
+		const r = searchSaved(SESSIONS, parseQuery("s:"), false, new SavedTabKeys());
+		assert.equal(searchSummary("s:", 0, r).top, "5 matches for 's:' in 2 saved windows");
+	});
+});

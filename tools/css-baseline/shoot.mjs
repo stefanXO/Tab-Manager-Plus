@@ -355,6 +355,16 @@ const STATES = [
 	{name: 'search-saved-none', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {search: 'github', store: {'filter-tabs': true}, scrollEnd: true}},
 	// Highlight Duplicates with saved windows around: they are not part of it
 	{name: 'dup-saved', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {dup: true, scrollEnd: true}},
+	// s: searches saved windows only (src/popup/search.ts): "s:google" fades every
+	// open tab and the saved tabs without the word; with hide on, the open
+	// windows hide too; a bare "s:" keeps every saved tab and hides all open ones
+	{name: 'ssearch', layouts: LAYOUTS, scaleLayouts: [], widths: ['800x600', '380x900'], apply: {search: 's:google', scrollEnd: true}},
+	{name: 'ssearch-hide', layouts: LAYOUTS, scaleLayouts: [], widths: ['800x600', '380x900'], apply: {search: 's:react', store: {'filter-tabs': true}, scrollEnd: true}},
+	{name: 'ssearch-bare', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {search: 's:', store: {'filter-tabs': true}, scrollEnd: true}},
+	// combined with a minus: every saved tab without "google"
+	{name: 'ssearch-combo', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {search: 's: -google', store: {'filter-tabs': true}, scrollEnd: true}},
+	// the search syntax help (hover the search box) with its s: rows
+	{name: 'search-help', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {}, searchHelp: true},
 ]
 
 /**
@@ -652,6 +662,20 @@ async function hoverOption(page, label) {
 	await page.evaluate(() => { if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur() })
 }
 
+/** Moves the real mouse onto the search box and waits for its help panel (css/components/search.css). */
+async function hoverSearchHelp(page) {
+	const at = await page.evaluate(() => {
+		const r = document.querySelector('.searchBoxInput').getBoundingClientRect()
+		return {x: r.left + r.width / 2, y: r.top + r.height / 2}
+	})
+	await page.mouse.move(1, 1)
+	await page.mouse.move(at.x, at.y, {steps: 4})
+	await page.waitForFunction(() => getComputedStyle(document.querySelector('.search-help')).visibility === 'visible', {timeout: 5000})
+	await settle(page)
+	await new Promise((r) => setTimeout(r, 300))
+	await page.evaluate(() => { if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur() })
+}
+
 /**
  * Moves the real mouse onto `selector` and keeps it there until the stats card
  * is open (and its async zoom line, for a tab, has arrived). False when the
@@ -782,6 +806,7 @@ function shootPopup(scale, sizes, layoutsOf) {
 						if (state.apply.overlay === 'session-colors' && !state.apply.pickColor && !(await page.$('.window-colors'))) { skipped.push(name + ' (saved window colour screen did not open)'); continue }
 						if (state.apply.overlay === 'colors' && !(await page.$('.window-colors'))) { skipped.push(name + ' (window colour screen did not open)'); continue }
 						if (state.hover) await hoverOption(page, state.hover)
+						if (state.searchHelp) await hoverSearchHelp(page)
 						if (state.stats && !(await hoverStats(page, state.stats))) { skipped.push(name + ' (' + state.stats + ' not shown)'); continue }
 						await shoot(page, name)
 					}

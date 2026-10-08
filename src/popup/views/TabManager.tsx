@@ -636,6 +636,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 												<tr><td><code>github OR reddit</code></td><td>either word matches</td></tr>
 												<tr><td><code>t:release</code></td><td>title only</td></tr>
 												<tr><td><code>u:youtube</code></td><td>url only</td></tr>
+												<tr><td><code>s:tax</code></td><td>saved windows only</td></tr>
+												<tr><td><code>s:</code></td><td>show only saved windows</td></tr>
 												<tr><td><code>-reddit</code></td><td>leave out matching tabs</td></tr>
 												<tr><td><code>-u:old.reddit</code></td><td>leave out by url</td></tr>
 												<tr><td><code>"pull request"</code></td><td>exact phrase</td></tr>
@@ -2135,6 +2137,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			"You can type to search right away",
 			"Search for either of two things: google OR yahoo",
 			"Search titles only with t:news, urls only with u:github",
+			"Search saved windows only with s:tax, or type s: to see just those",
 			"Exclude with a minus: reddit -u:old.reddit",
 			"Put a phrase in quotes: \"pull request\"",
 			"Find tabs with an unread count, like \"Inbox (3)\": /\\(\\d+\\)/",

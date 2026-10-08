@@ -58,6 +58,7 @@ Windows And Sessions
 - Resting the mouse on a tab of a saved window shows a card like an open tab's: when it was saved, its place in the saved window, and the windows it is open in right now; an open tab's card lists the saved windows that also hold it
 - Resting the mouse on a saved window shows a card like an open window's: its tabs and sites, when it was saved, the size and state it was saved with, and a map of the monitors showing where it would land if restored now
 - Search finds tabs in saved windows too: matching saved tabs stay clear while the others fade (or hide, with Hide non-matching tabs on, together with saved windows that have no match, instead of all saved windows disappearing), and the header counts them; they are never selected, so Enter and Delete still only act on open tabs
+- Search only saved windows with `s:word`: open tabs never match it, and with Hide non-matching tabs on, the open windows hide; a bare `s:` shows the saved windows alone. It combines with the rest of the syntax (`s:tax t:2029`, `s:tax -u:old`, `s:"pull request"`, `s:/\.pdf$/`), and `-s:word` leaves saved tabs out; it is listed in the search help
 - The window order no longer resets on its own; the current window is always listed first and marked, also as a popup
 - Clicking the icon while Tab Manager Plus is already open in a tab switches to that tab
 - The "switch to previous tab" shortcut works again (#37, #108, #238)
