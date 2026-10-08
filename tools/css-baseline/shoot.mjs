@@ -226,6 +226,18 @@ const STATES = [
 	// tabs deleted, then Undo clicked: everything is back
 	{name: 'saved-tabs-undo', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {
 		clicks: [{sel: '#sessiontab_s1_1', ctrl: true}, {sel: '.icon.windowaction.trash'}, {sel: '.undo-button', optional: true}], scrollInto: '#session-s1'}},
+	// saving selected open tabs as a saved window (src/helpers/sessions.ts):
+	// Ctrl+click three tabs of "Work" and one of "Life", so the bottom bar shows
+	// its "Save selected tabs" button lit. dpr 1, blocks + List, 800x600 and 380x900
+	{name: 'save-sel', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {
+		clicks: [{sel: '#tab-2', ctrl: true}, {sel: '#tab-4', ctrl: true}, {sel: '#tab-6', ctrl: true}, {sel: '#tab-11', ctrl: true}]}},
+	// the same, then the button clicked: a new saved window named from its sites
+	// is in the saved windows (scrolled to the end), the selection is cleared
+	{name: 'save-sel-done', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {
+		clicks: [{sel: '#tab-2', ctrl: true}, {sel: '#tab-4', ctrl: true}, {sel: '#tab-6', ctrl: true}, {sel: '#tab-11', ctrl: true}, {sel: '.icon.windowaction.save-tabs', optional: true}],
+		scrollEnd: true}},
+	// nothing selected: the button is dimmed
+	{name: 'save-sel-none', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {}},
 	// a saved window that was the focused window when it was saved (its stored
 	// windowsInfo says focused, with the id of the focused open window "Work"):
 	// it must not look like the active window. dpr 1, blocks + List, 800x600

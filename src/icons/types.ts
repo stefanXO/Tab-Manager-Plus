@@ -6,7 +6,7 @@
 
 export const ACTION_ICONS = [
 	"save", "restore", "delete", "add", "close", "minimize", "maximize", "colors",
-	"new", "trash", "discard", "pin", "duplicates", "filter", "options", "rate",
+	"new", "save-tabs", "trash", "discard", "pin", "duplicates", "filter", "options", "rate",
 	"view-big-blocks", "view-blocks", "view-horizontal", "view-vertical", "favicon", "recent",
 ] as const;
 

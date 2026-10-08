@@ -8,7 +8,7 @@ import { iconSvg } from "./svg.ts";
 // fallback in tab.css, below).
 export const ICON_CLASSES : Partial<Record<ActionIconName, string>> = {
 	save: "save", restore: "restore", delete: "delete", add: "add", close: "close",
-	minimize: "minimize", maximize: "maximize", colors: "colors", new: "new", trash: "trash",
+	minimize: "minimize", maximize: "maximize", colors: "colors", new: "new", "save-tabs": "save-tabs", trash: "trash",
 	discard: "discard", pin: "pin", duplicates: "duplicates", filter: "filter", options: "options",
 	rate: "rate", "view-big-blocks": "blocks-big-view", "view-blocks": "blocks-view",
 	"view-horizontal": "horizontal-view", "view-vertical": "vertical-view",

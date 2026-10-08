@@ -11,10 +11,11 @@
 	width: 100%;
 }
 
-/* exactly the eight toolbar icons (2rem + --bar-gap each) and the inset;
-   narrow.css makes them a grid at 450px and below */
+/* exactly the toolbar icons (2rem + --bar-gap each: eight, nine with the
+   save-selected-tabs button, which TabManager.tsx says in --bar-count) and
+   the inset; narrow.css makes them a row at 450px and below */
 .window.searchbox td.two {
-	width: calc(8 * (2rem + var(--bar-gap)));
+	width: calc(var(--bar-count, 8) * (2rem + var(--bar-gap)));
 }
 
 .window.searchbox td.one {

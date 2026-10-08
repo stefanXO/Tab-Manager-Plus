@@ -298,6 +298,12 @@ export const family : IconFamily = {
 			ink(WIN), ink("M1.5 5.5H14.5", 0.8),
 			fill(circ(11.8, 11.8, 3.4), "lime-dark"), line("M11.8 10V13.6M10 11.8H13.6", "white", 1.6), ink(circ(11.8, 11.8, 3.4)),
 		] },
+		"save-tabs": { parts: [
+			// the selected tabs saved as a window: a window with its tab lines, the gold star of "save" as a badge
+			...win(1.5, 2, 12, 10.5, 3, "blue-soft", "white", 1.2),
+			line("M3.8 7H10M3.8 9.4H7", "grey", 1),
+			fill(star(11.2, 11.3, 4.5), "amber"), ink(star(11.2, 11.3, 4.5), 0.9),
+		] },
 		"trash": { parts: [
 			fill(BIN, "slate"), fill("M4.6 6.5H6.2L6.6 14.5H5.3a1 1 0 0 1 -1 -.8z", "steel", 0.45),
 			line("M7 8.5V12.5M10 8.5V12.5", "steel", 1),

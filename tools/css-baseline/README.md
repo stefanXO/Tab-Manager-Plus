@@ -182,6 +182,10 @@ currently on disk — there is no stale copy to forget about.
   tab of "Tax 2029", so the window goes whole; `-two` takes tabs of both saved windows;
   `-undo` clicks Undo (`optional: true`: skipped when there is no such button, as before
   the step). The `-undo` shot equals the plain list
+- `save-sel` (+ `-done`, `-none`): saving selected open tabs as a saved window
+  (`src/helpers/sessions.ts`): Ctrl+click three tabs of "Work" and one of "Life", so the
+  bottom bar's save-tabs button is lit; `-done` also clicks it (`optional: true`), so the new
+  saved window is at the end of the list; `-none` has nothing selected (the button is dimmed)
 - `fresh` / `fresh-compact`: the List view's freshness bars (`src/popup/freshness.ts`, drawn at the end of every List row from the fixture's `lastAccessed`, 0 min .. 14 days: all five levels) — `fresh` as `plain`, `fresh-compact` with the `compact` setting on. `vertical` × 2 themes × `800x600`, dpr 1 only
 - `page-options-na-<theme>-<width>`: `options.html` standalone, 2 × 3 = 6
 - `page-changelog-na-<theme>-<width>`: `changelog.html` standalone, 2 × 3 = 6.

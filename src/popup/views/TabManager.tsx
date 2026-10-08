@@ -1,6 +1,7 @@
 import {getLocalStorage, setLocalStorage, getLocalStorageMap} from "@helpers/storage";
 import {readSettings, writeBootCache, SETTING_DEFAULTS, Settings, Layout, LAYOUT, getSetting, saveSetting} from "@helpers/settings";
 import {sortWindows} from "@helpers/windows";
+import {groupSelection, buildSavedWindow, newSessionId, savedText} from "@helpers/sessions";
 import {parseQuery, matchTab, searchable} from "../search";
 import {duplicatesTitle, findDuplicates} from "../duplicates";
 import {recentTabs, recentText, recentTitle, RecentTabs, RECENT_LEVELS} from "../recent";
@@ -593,7 +594,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 										</table>
 									</div>
 								</td>
-								<td className="two">
+								{/* --bar-count: the number of icons in this bar, 8 + the Save selected tabs one; update it when an icon is added or removed */}
+								<td className="two" style={{"--bar-count": this.state.sessionsFeature ? 9 : 8} as React.CSSProperties}>
 									<div
 										className={"icon windowaction " + this.state.layout + "-view"}
 										title={this.readablelayout(this.state.layout) + " View is active\nChange to " + this.readablelayout(this.nextlayout()) + " View"}
@@ -647,6 +649,16 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 										}
 										onClick={this.toggleFilterMismatchedTabs}
 									/>
+									{this.state.sessionsFeature && <div
+										className="icon windowaction save-tabs"
+										style={this.state.selection.size > 0 && !savedSel ? {} : { opacity: 0.25 }}
+										title={
+											savedSel ? savedSelTitle : this.state.selection.size > 0
+												? "Save selected tabs\nWill save " + maybePluralize(this.state.selection.size, 'selected tab') + " as a new saved window. Please note : The saved tabs will lose their history."
+												: "Select tabs to save them together as a new saved window"
+										}
+										onClick={this.saveSelected}
+									/>}
 									<div
 										className="icon windowaction new"
 										style={savedSel ? savedSelStyle : {}}
@@ -983,6 +995,54 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			}
 		}
 		if (!!window.inPopup) window.close();
+	}
+	// Saves the selected open tabs as a new saved window (../../helpers/sessions.ts),
+	// or two when private and normal tabs are mixed; the open tabs stay open.
+	saveSelected = async () => {
+		if (onlySavedSelected(this.state.selection)) return;
+		const ids = new Set(this.selectedTabs().map((tab) => tab.id));
+		if (ids.size === 0) return;
+		// read the tabs again, as saving a window does: the popup's copies may be behind
+		const open = (await browser.tabs.query({})).filter((tab) => ids.has(tab.id));
+		const groups = groupSelection(open, this.state.windows.map((w) => w.id));
+		const saved : ISavedSession[] = [];
+		const now = Date.now();
+		for (const group of groups) {
+			// the size, place and state of the window that holds most of the tabs.
+			// Without a window id (or a window that is gone and not known to the
+			// popup) this is an empty windowsInfo: such a record still lists, and a
+			// restore / the landing preview then use the browser's default placement.
+			const info = await browser.windows.get(group.windowId).catch(() => {
+				const {tabs, ...rest} = this.state.windowsbyid.get(group.windowId) || {} as browser.Windows.Window;
+				return rest as browser.Windows.Window;
+			});
+			const session : ISavedSession = buildSavedWindow({
+				id: newSessionId(),
+				now: now,
+				tabs: group.tabs,
+				windowsInfo: info,
+				name: "",
+				incognito: group.incognito,
+				firefox: IS_FIREFOX
+			});
+			// nothing Firefox can restore in it
+			if (session.tabs.length === 0) continue;
+			saved.push(session);
+		}
+		if (saved.length === 0) return;
+		// Every await on windows.get is done: read and write with nothing in
+		// between, from the copy sessionSync keeps when there is one and onto it
+		// at once (as editSession does). A delete or an edit written meanwhile
+		// then neither comes back nor loses the new windows.
+		const base : Record<string, ISavedSession> = this.storedSessions || await getLocalStorage(S.sessions, {});
+		const next : Record<string, ISavedSession> = {...base};
+		for (const session of saved) next[session.id] = session;
+		this.storedSessions = next;
+		await setLocalStorage(S.sessions, next);
+		this.clearSelection();
+		this.setState({ topText: savedText(saved), bottomText: " ", dirty: true });
+		await this.sessionSync();
+		setTimeout(() => this.scrollTo("session", saved[0].id), 150);
 	}
 	pinTabs = async () => {
 		if (onlySavedSelected(this.state.selection)) return;

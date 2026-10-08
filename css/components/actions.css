@@ -5,7 +5,7 @@
 
 /* sizes and places in the header and the bottom bar: both rows are 2rem
    squares --bar-gap apart, --bar-inset from the right edge (layout/frame.css),
-   so the header's three line up with the bottom bar's eight */
+   so the header's three line up with the bottom bar's eight or nine */
 .window.searchbox .icon {
 	height: 2rem;
 	width: 2rem;

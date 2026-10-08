@@ -11,6 +11,7 @@ import {IWindow, IWindowState, ISavedSession} from '@types';
 import {ManagerContext, ITabManagerActions} from '../context';
 import {windowName, compactName, tabsKey} from '../windowName';
 import {sendAndWait} from '../messaging';
+import {buildSavedWindow, newSessionId} from '@helpers/sessions';
 
 export class Window extends React.Component<IWindow, IWindowState> {
 	static contextType = ManagerContext;
@@ -392,29 +393,8 @@ export class Window extends React.Component<IWindow, IWindowState> {
 		this.stopProp(e);
 		await browser.windows.remove(this.props.window.id);
 	}
-	uuidv4() {
-		return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
-			let r = (Math.random() * 16) | 0,
-				v = c === "x" ? r : (r & 0x3) | 0x8;
-			return v.toString(16);
-		});
-	}
 	save = async (e) => {
 		this.stopProp(e);
-
-		let sessionColor = this.state.color || "default";
-
-		let session : ISavedSession = {
-			tabs: [],
-			windowsInfo: null,
-			name: "",
-			customName: !!this.state.name,
-			color: sessionColor,
-			date: Date.now(),
-			sessionStartTime: Date.now(),
-			incognito: this.props.window.incognito,
-			id: this.uuidv4()
-		};
 
 		let queryInfo : browser.Tabs.QueryQueryInfoType = {
 			windowId: this.props.window.id
@@ -422,18 +402,20 @@ export class Window extends React.Component<IWindow, IWindowState> {
 		//queryInfo.currentWindow = true;
 
 		let tabs : browser.Tabs.Tab[] = await browser.tabs.query(queryInfo);
-		session.name = this.state.name || this.state.auto_name || windowName(tabs);
-		for (let tabkey in tabs) {
-			if (IS_FIREFOX) {
-				let newTab = tabs[tabkey];
-				if (!!newTab.url && newTab.url.search("about:") > -1) {
-					continue;
-				}
-			}
-			session.tabs.push(tabs[tabkey]);
-		}
+		const windowsInfo = await browser.windows.get(this.props.window.id);
+		// the saved window is built in ../../helpers/sessions.ts (the selection's save uses it too)
+		let session : ISavedSession = buildSavedWindow({
+			id: newSessionId(),
+			now: Date.now(),
+			tabs: tabs,
+			windowsInfo: windowsInfo,
+			name: this.state.name,
+			autoName: this.state.auto_name,
+			color: this.state.color,
+			incognito: this.props.window.incognito,
+			firefox: IS_FIREFOX
+		});
 		console.log(session.tabs);
-		session.windowsInfo = await browser.windows.get(this.props.window.id);
 
 		console.log(session);
 
