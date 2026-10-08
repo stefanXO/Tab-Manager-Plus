@@ -59,3 +59,12 @@ export function openedText(count : number, windowName : string) : { topText : st
 		bottomText: "The saved window keeps " + (count === 1 ? "it" : "them")
 	};
 }
+
+// The drag data type a saved tab's drag carries (beside its address): saved
+// tabs and saved window cards take a drop only from a drag carrying it
+// (./savedMove.ts). Open windows and tabs take it too, and open the tabs.
+export const SAVED_TAB_DRAG = "application/x-tab-manager-saved-tab";
+
+export function isSavedTabDrag(types : ArrayLike<string> | null | undefined) : boolean {
+	return !!types && Array.from(types).includes(SAVED_TAB_DRAG);
+}

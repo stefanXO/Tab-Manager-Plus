@@ -72,6 +72,14 @@
 	bottom: -3px;
 }
 
+/* saved tabs held over the card, not over one of its tabs
+   (src/popup/savedMove.ts): they go at its end. Its dashed edge turns into a
+   solid one in the drop marker's colour. */
+.window.session.drop-into {
+	outline: 2px solid var(--drop-marker);
+	outline-offset: -2px;
+}
+
 .saved-mark {
 	display: inline-flex;
 	vertical-align: -2px;

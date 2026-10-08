@@ -10,6 +10,7 @@ import {tabFreshness} from "../freshness";
 import {titleHits} from "../search";
 import {sendAndWait} from "../messaging";
 import {isSavedWindowDrag} from "../sessionOrder";
+import {SAVED_TAB_DRAG, isSavedTabDrag} from "../savedDrag";
 
 export class Tab extends React.Component<ITab, ITabState> {
 	static contextType = ManagerContext;
@@ -155,9 +156,14 @@ export class Tab extends React.Component<ITab, ITabState> {
 			tabDom.draggable = "true";
 		} else if (!!this.props.onOpen) {
 			// a saved tab: dropped on an open window or tab it opens there
-			// (TabManager.drop); not a drop target itself
+			// (TabManager.drop); dropped on a saved tab it moves there
+			// (../savedMove.ts), and saved tabs take no other drop
 			tabDom.onDragStart = this.dragStart;
 			tabDom.onDragEnd = this.dragEnd;
+			tabDom.onDragEnter = this.savedDragOver;
+			tabDom.onDragOver = this.savedDragOver;
+			tabDom.onDragLeave = this.savedDragOut;
+			tabDom.onDrop = this.savedDrop;
 			tabDom.draggable = "true";
 		}
 
@@ -247,10 +253,12 @@ export class Tab extends React.Component<ITab, ITabState> {
 		});
 		this.context.dragFavicon(this.state.favIcon);
 		if (saved) {
-			// a saved tab's key means nothing outside the popup: its address, and
-			// it is copied (opened), never moved out of the saved window
+			// a saved tab's key means nothing outside the popup: its address. It
+			// is copied (opened) into an open window, linked by the browser's tab
+			// strip, and moved only among saved windows (the drag type says so)
 			e.dataTransfer.setData("Text", this.props.tab.url || "");
-			e.dataTransfer.effectAllowed = "copyLink";
+			e.dataTransfer.setData(SAVED_TAB_DRAG, this.props.tab.id.toString());
+			e.dataTransfer.effectAllowed = "all";
 		} else {
 			e.dataTransfer.setData("Text", this.props.tab.id.toString());
 		}
@@ -310,6 +318,39 @@ export class Tab extends React.Component<ITab, ITabState> {
 		this.context.drop(this.props.tab.id, before);
 		this.forceUpdate();
 		this.props.onDragChange?.();
+	}
+	// A saved tab dragged over this saved tab: the drop marker on the side it
+	// would go, when a drop there moves anything (TabManager.savedDropMoves).
+	// Not stopped here: the saved window card sees the event too, and clears
+	// its own marker while the pointer is over a tab.
+	savedDragOver = (e : React.DragEvent<HTMLDivElement>) => {
+		if (!isSavedTabDrag(e.dataTransfer?.types) || !this.props.session) return;
+		const rect = e.currentTarget.getBoundingClientRect();
+		const list = this.props.layout === LAYOUT.list;
+		const before = list ? e.clientY < rect.top + rect.height / 2 : e.clientX < rect.left + rect.width / 2;
+		if (!this.context.savedDropMoves(this.props.session.id, this.props.tab.index, before)) {
+			if (this.state.draggingOver) this.setState({ draggingOver: "" });
+			return;
+		}
+		e.preventDefault();
+		e.dataTransfer.dropEffect = "move";
+		const side = list ? (before ? "top" : "bottom") : (before ? "left" : "right");
+		if (side !== this.state.draggingOver) this.setState({ draggingOver: side });
+	}
+	savedDragOut = (e : React.DragEvent<HTMLDivElement>) => {
+		// moving onto a part of this tab is no leaving
+		if (e.relatedTarget instanceof Node && e.currentTarget.contains(e.relatedTarget)) return;
+		if (this.state.draggingOver) this.setState({ draggingOver: "" });
+	}
+	savedDrop = (e : React.DragEvent<HTMLDivElement>) => {
+		if (!isSavedTabDrag(e.dataTransfer?.types) || !this.props.session) return;
+		const side = this.state.draggingOver;
+		this.setState({ draggingOver: "" });
+		if (!side) return;
+		// the card under it takes no drop of its own then
+		e.preventDefault();
+		e.stopPropagation();
+		this.context.dropSaved(this.props.session.id, this.props.tab.index, side === "left" || side === "top");
 	}
 	selectTo(tabId : number) {
 		if (!!tabId && !!this.props.tabs) this.context.selectTo(tabId, this.props.tabs);

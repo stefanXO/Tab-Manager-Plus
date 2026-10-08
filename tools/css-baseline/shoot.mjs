@@ -267,6 +267,39 @@ const STATES = [
 	// it already is (right before it): no marker, a drop would change nothing
 	{name: 'saved-order-noop', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {
 		clicks: [{drag: '#session-s1', over: '#session-s2', side: 'before'}], scrollEnd: true}},
+	// reordering saved tabs (src/popup/savedMove.ts). The tabs are picked by
+	// their title (data-hover), not by id: an id carries the stored index, which
+	// a move renumbers, and the drop states run once per theme and layout on one
+	// page (the second run drops a tab where it already is: no change).
+	// "Lofi beats" held over the left / top quarter of "Tab (interface)" in the
+	// same saved window: the drop marker shows before it. dpr 1, blocks + List,
+	// 800x600 and 380x900
+	{name: 'saved-reorder-over', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {
+		clicks: [{drag: '#session-s1 .tab[data-hover^="Lofi"]', over: '#session-s1 .tab[data-hover^="Tab (interface)"]', side: 'before'}], scrollInto: '#session-s1'}},
+	// the same, dropped: "Conference reading" reads Hacker News, Lofi beats,
+	// Tab (interface), react - npm
+	{name: 'saved-reorder-drop', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {
+		clicks: [{drag: '#session-s1 .tab[data-hover^="Lofi"]', over: '#session-s1 .tab[data-hover^="Tab (interface)"]', side: 'before', drop: true}], scrollInto: '#session-s1'}},
+	// "Inbox (3)" of "Tax 2029" held over the left / top quarter of "react -
+	// npm" in "Conference reading": the marker shows there
+	{name: 'saved-move-over', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {
+		clicks: [{drag: '.session .tab[data-hover^="Inbox"]', over: '#session-s1 .tab[data-hover^="react - npm"]', side: 'before'}], scrollEnd: true}},
+	// the same, dropped: it moves out of "Tax 2029" (two tabs left) into
+	// "Conference reading" (five tabs), before "react - npm"
+	{name: 'saved-move-drop', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {
+		clicks: [{drag: '.session .tab[data-hover^="Inbox"]', over: '#session-s1 .tab[data-hover^="react - npm"]', side: 'before', drop: true}], scrollEnd: true}},
+	// "Hacker News" held over the title of "Tax 2029" (the card, not a tab):
+	// the card is outlined, the tab would go at its end
+	{name: 'saved-move-card-over', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {
+		clicks: [{drag: '.session .tab[data-hover^="Hacker News"]', over: '#session-s2 h3.windowTitle'}], scrollEnd: true}},
+	{name: 'saved-move-card-drop', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {
+		clicks: [{drag: '.session .tab[data-hover^="Hacker News"]', over: '#session-s2 h3.windowTitle', drop: true}], scrollEnd: true}},
+	// two saved tabs selected (Escape first: the page keeps the selection from
+	// the run before), the second dragged onto "Tax 2029": both move to its end,
+	// in their order, and stay selected there
+	{name: 'saved-move-sel', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {
+		clicks: [{key: 27}, {sel: '.session .tab[data-hover^="Tab (interface)"]', ctrl: true}, {sel: '.session .tab[data-hover^="react - npm"]', ctrl: true},
+			{drag: '.session .tab[data-hover^="react - npm"]', over: '#session-s2 h3.windowTitle', drop: true}], scrollEnd: true}},
 	// a saved window that was the focused window when it was saved (its stored
 	// windowsInfo says focused, with the id of the focused open window "Work"):
 	// it must not look like the active window. dpr 1, blocks + List, 800x600

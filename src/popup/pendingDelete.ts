@@ -120,6 +120,26 @@ export class PendingDeletes {
 		return items;
 	}
 
+	// The tabs of some saved windows were numbered anew (saved tabs moved,
+	// ./savedMove.ts): `to` gives the new index of each tab. The tabs these
+	// items hide stay hidden under their new numbers; the countdown goes on.
+	// The ones being written are renumbered too: their write may still wait
+	// behind the move (TabManager.mutateSessions) and reads the items only
+	// when it runs. So each item changes in place, never swapped for a copy:
+	// flush() handed those very objects to commit(). One whose write already
+	// landed is not touched: its tabs are gone, so no move names them.
+	renumber(to : (id : string, index : number) => number) : void {
+		let changed = false;
+		for (const item of [...this.pending, ...this.committing]) {
+			if (!partial(item)) continue;
+			const indexes = [...new Set(item.indexes!.map((index) => to(item.id, index)))].sort((a, b) => a - b);
+			if (indexes.length === item.indexes!.length && indexes.every((index, i) => index === item.indexes![i])) continue;
+			changed = true;
+			item.indexes = indexes;
+		}
+		if (changed) this.changed();
+	}
+
 	// writes the pending deletes now (the countdown ran out, or the popup closes)
 	flush(sync = false) : void {
 		if (!this.pending.length) return;

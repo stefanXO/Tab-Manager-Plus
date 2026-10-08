@@ -204,6 +204,17 @@ currently on disk — there is no stale copy to forget about.
   and 380x900); `-drop` drops it, so "Tax 2029" is listed first (the order is stored, so the
   page's later shots drop it where it already is); `-noop` holds "Conference reading" right
   before "Tax 2029", where it already is: no marker
+- `saved-reorder-over` (+ `-drop`) and `saved-move-over` (+ `-drop`, `saved-move-card-over`,
+  `saved-move-card-drop`, `saved-move-sel`): moving saved tabs (`src/popup/savedMove.ts`) with
+  the same `{drag, over, side, drop}` entry. The tabs are picked by title
+  (`.tab[data-hover^="…"]`), since a move renumbers the indexes the ids carry; the later
+  shots on a page drop a tab where it already is (no change). `saved-reorder-*`: "Lofi beats"
+  before "Tab (interface)" in "Conference reading" (blocks + List, 800x600 and 380x900);
+  `saved-move-*`: "Inbox (3)" from "Tax 2029" before "react - npm" in "Conference reading"
+  (same matrix); `-card-*`: "Hacker News" held over / dropped on the title of "Tax 2029"
+  (the card is outlined; it goes at the end); `-sel`: Escape (clears what the run before
+  left selected), Ctrl+click "Tab (interface)" and "react - npm", drop the second on "Tax
+  2029": both move to its end and stay selected
 - `fresh` / `fresh-compact`: the List view's freshness bars (`src/popup/freshness.ts`, drawn at the end of every List row from the fixture's `lastAccessed`, 0 min .. 14 days: all five levels) — `fresh` as `plain`, `fresh-compact` with the `compact` setting on. `vertical` × 2 themes × `800x600`, dpr 1 only
 - `page-options-na-<theme>-<width>`: `options.html` standalone, 2 × 3 = 6
 - `page-changelog-na-<theme>-<width>`: `changelog.html` standalone, 2 × 3 = 6.
