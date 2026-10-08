@@ -13,6 +13,7 @@ import {savedTile} from "./savedTiles";
 import {shownSavedName} from "./sessionEdit";
 import {hoverKey, hoverAction, isWarm, parseKey, arrowsMoveCard, ACTION_SELECTOR, STATS_KEYBOARD_DELAY} from "./statsHoverLogic";
 import {actionCard} from "./actionHelp";
+import {isMacPlatform} from "./notices";
 import type {IStatsFavicon, IStatsCardContent} from "./views/StatsCard";
 
 // how many site favicons the window card shows
@@ -26,7 +27,7 @@ const STATS_MAP_HEIGHT = 90;
 const LANDING_ID = -2;
 
 // what the open card is for, and where it opened: at the pointer (it then
-// follows it) or next to an element (the keyboard's selected row)
+// follows it) or next to an element (the keyboard cursor's row)
 export interface IStatsTarget {
 	// "saved": a tab of a saved window, id is its selection key (sessionKeys.ts);
 	// "session": a saved window, `session` is its id (and id is -1);
@@ -45,7 +46,7 @@ export interface IStatsTarget {
 // the manager's data the cards are built from, read when a card opens
 export type StatsState = Pick<ITabManagerState,
 	"tabsbyid" | "windowsbyid" | "windows" | "windowrefs" | "lastActive" | "lastOpenWindow" |
-	"selection" | "layout" | "optionsActive" | "colorsActive" | "colorsSession" | "compact">;
+	"selection" | "keyCursor" | "layout" | "optionsActive" | "colorsActive" | "colorsSession" | "compact">;
 export interface StatsSource {
 	state() : StatsState;
 	searchBox() : HTMLInputElement | null;
@@ -84,6 +85,8 @@ export class StatsHover {
 	// the last pointer position over the popup: a card opens next to the
 	// pointer (which may have moved since mouseover) and then follows it
 	private readonly pointer = { x: 0, y: 0 };
+	// Option+arrow and Cmd+arrow edit text on a Mac (statsHoverLogic.arrowsMoveCard)
+	private readonly mac = typeof navigator === "undefined" ? false : isMacPlatform((navigator as any).userAgentData?.platform || navigator.platform);
 	// the button of the open action card: its help changes with a click
 	// (the theme button's help names the new theme), and the card with it
 	private readonly helpWatch = typeof MutationObserver === "undefined" ? null : new MutationObserver(() => this.view.refresh());
@@ -211,7 +214,7 @@ export class StatsHover {
 		const st = this.source.state();
 		const search = this.source.searchBox();
 		const caret = !!search && document.activeElement === search && !!search.value;
-		if (arrowsMoveCard(e.keyCode, st.layout === LAYOUT.list, onMainScreen(st), caret)) this.keyboard();
+		if (arrowsMoveCard(e.keyCode, st.layout === LAYOUT.list, onMainScreen(st), {shift: e.shiftKey, ctrl: e.ctrlKey, alt: e.altKey, meta: e.metaKey}, caret, this.mac)) this.keyboard();
 	}
 
 	// the list scrolled under the keyboard's card: keep it next to its row
@@ -231,15 +234,16 @@ export class StatsHover {
 
 	// ---- opening and closing ----
 
-	// the arrows moved the selection in the list view: the card follows it,
-	// once the keys have rested (TabManager has moved the selection by then)
+	// the arrows moved the keyboard cursor in the list view: the card follows
+	// the cursor tab (not the selection, which a plain arrow leaves alone),
+	// once the keys have rested (TabManager has moved the cursor by then)
 	private keyboard() {
 		this.close();
 		this.key = "key";
 		this.timer = window.setTimeout(() => {
-			const selection = this.source.state().selection;
-			if (selection.size !== 1) return;
-			this.show("tab", [...selection][0], true);
+			const cursor = this.source.state().keyCursor;
+			if (!cursor) return;
+			this.show("tab", cursor, true);
 		}, STATS_KEYBOARD_DELAY);
 	}
 
@@ -250,7 +254,7 @@ export class StatsHover {
 		this.view.close();
 	}
 
-	// the keyboard's card sits next to the selected row
+	// the keyboard's card sits next to the cursor's row
 	private anchor(id : number) : Rect | null {
 		const el = document.getElementById("tab-" + id);
 		// hidden by the search filter

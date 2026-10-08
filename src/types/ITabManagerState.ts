@@ -37,6 +37,13 @@ export interface ITabManagerState {
 	windowrefs: Map<number, React.RefObject<Window>>,
 
 	lastSelect: number,
+	// the keyboard cursor: the open tab the arrow keys are on, or the one last
+	// clicked (ringed, see css/components/tab.css .key-cursor), or 0. Not the
+	// selection: Space selects it, Enter with nothing selected switches to it
+	keyCursor: number,
+	// the cursor's ring is drawn: an arrow key moved it (a click sets the cursor
+	// and hides the ring, so the mouse alone never shows it)
+	keyCursorShown: boolean,
 	searchLen: number,
 	query: SearchQuery | null,
 	height: number,
@@ -44,7 +51,6 @@ export interface ITabManagerState {
 	focusUpdates: number,
 	topText: string,
 	bottomText: string,
-	lastDirection: string,
 	optionsActive: boolean,
 	dupTabs: boolean,
 	// "Highlight recently active tabs": 0 off, else its level (see popup/recent)

@@ -57,6 +57,8 @@
 		--active-border: rgba(255, 255, 255, 0.8);
 		--active-ring: rgba(255, 255, 255, 0.25);
 
+		--key-cursor: #4fc3f7;
+
 		/* tiles are a lighter panel with a hairline, in every state */
 		--tile-bg: var(--dk-tile);
 		--tile-hover: var(--dk-tile-hover);

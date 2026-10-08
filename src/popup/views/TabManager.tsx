@@ -7,7 +7,9 @@ import {SAVED_SEARCH_TIP, searchHelpIntro, searchHelpRows, searchTips} from "../
 import {duplicatesTitle, findDuplicates} from "../duplicates";
 import {recentTabs, recentText, recentTitle, RecentTabs, RECENT_LEVELS} from "../recent";
 import {onMainScreen} from "../screen";
-import {selectionKeyAction, deleteKeyName} from "../selectionKeys";
+import {selectionKeyAction, deleteKeyName, arrowNavigates, keyTarget} from "../selectionKeys";
+import {arrowWalk, walkStart, arrowStep, cursorStep} from "../arrowWalk";
+import type {ArrowWalk} from "../arrowWalk";
 import {savedWindowFor} from "../savedRestore";
 import {isSavedTabKey, tabKind, keepKind, onlySavedSelected, dropMissingSaved, savedTabKeys} from "../sessionKeys";
 import {debounce, maybePluralize} from "@helpers/utils";
@@ -102,6 +104,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	// `moveOffers`'). They keep to their own cap (MAX_NOTICES) and stay out
 	// of `order`: an error never makes an Undo notice go, so the stack Ctrl+Z
 	// takes back stays whole.
+	// With three Undo notices up it shows two at most (the limit), so the
+	// stack stays short.
 	private readonly board = new NoticeBoard({
 		onChange: () => { if (!this.unmounted) this.forceUpdate(); },
 		limit: () => this.undoNotices().length >= MAX_NOTICES ? MAX_NOTICES - 1 : MAX_NOTICES
@@ -242,6 +246,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			sessions: [],
 			selection: new Set(),
 			lastSelect: 0,
+			keyCursor: 0,
+			keyCursorShown: false,
 			hiddenTabs: new Set(),
 			tabsbyid: new Map(),
 			windowsbyid: new Map(),
@@ -252,7 +258,6 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			focusUpdates: 0,
 			topText: "",
 			bottomText: "",
-			lastDirection: "",
 			optionsActive: !!this.props.optionsActive,
 			filterTabs: filterTabs,
 			dupTabs: false,
@@ -279,6 +284,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		this.actions = {
 			select: (id) => this.select(id),
 			selectTo: (id, tabs) => this.selectTo(id, tabs),
+			cursorTo: (id) => this.setState({keyCursor: id, keyCursorShown: false}),
 			deleteTab: (id) => this.deleteTab(id),
 			drag: (e, id) => this.drag(e, id),
 			drop: (id, before, dragged) => { this.drop(id, before, dragged); },
@@ -610,6 +616,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 								incognito={window.incognito}
 								layout={this.state.layout}
 								selection={this.state.selection}
+								keyCursor={this.state.keyCursorShown ? this.state.keyCursor : 0}
 								searchActive={this.state.searchLen > 0}
 								query={this.state.query}
 								sessionsFeature={this.state.sessionsFeature}
@@ -647,6 +654,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 								incognito={window.incognito}
 								layout={this.state.layout}
 								selection={this.state.selection}
+								keyCursor={this.state.keyCursorShown ? this.state.keyCursor : 0}
 								searchActive={this.state.searchLen > 0}
 								query={this.state.query}
 								sessionsFeature={this.state.sessionsFeature}
@@ -1622,6 +1630,13 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				this.setState({lastSelect: id});
 			}
 		}
+		// the cursor tab went (closed, moved to a window the popup does not
+		// show), and with it the header's "Press enter to switch to the tab"
+		if (this.state.keyCursor && !this.state.tabsbyid.has(this.state.keyCursor)) {
+			const cursorText = this.state.bottomText === this.selectionText().bottomText;
+			this.setState({keyCursor: 0, keyCursorShown: false});
+			if (cursorText) this.setState(this.selectionText(0));
+		}
 		this.setState({ ...patch, lastActive: lastActive });
 	}
 	// Fills the id maps from a sorted window list and returns the state that
@@ -1699,11 +1714,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		if (count === 0) {
 			await browser.windows.create({});
 		} else if (count === 1) {
-			if (IS_FIREFOX) {
-				await browser.runtime.sendMessage<ICommand>({command: S.focus_on_tab_and_window_delayed, tab: tabs[0]});
-			}else{
-				await browser.runtime.sendMessage<ICommand>({command: S.focus_on_tab_and_window, tab: tabs[0]});
-			}
+			await this.switchTo(tabs[0]);
+			return;
 		} else {
 			if (normal_tabs.length > 0) {
 				await browser.runtime.sendMessage<ICommand>({command: S.create_window_with_tabs, tabs: normal_tabs, incognito: false});
@@ -1909,6 +1921,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		// see src/popup/search.ts for the grammar; s: and -s: are syntax only
 		// while the saved windows feature is on
 		const parsed = parseQuery(searchQuery, this.state.sessionsFeature);
+		// the search picks the tabs now: the arrows start again from there
+		if (this.state.keyCursor) this.setState({keyCursor: 0});
 
 		if (!searchLen) {
 			// what the search selected leaves; the tabs selected by hand stay
@@ -2021,7 +2035,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		this.state.selection.clear();
 		this.searchPicks.clear();
 		this.setState({
-			lastSelect: 0
+			lastSelect: 0,
+			keyCursor: 0,
+			keyCursorShown: false
 		});
 	}
 	// A selection by right-click or a modifier click (whose mousedown is
@@ -2036,17 +2052,25 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	checkKey = async (e) => {
 		// enter: only on the window list. On the options screen or the window
 		// name / colour overlay it must not open or move to a window.
-		// Ctrl/Cmd+Delete / Backspace and Enter with a selection (../selectionKeys.ts).
-		// Plain Delete / Backspace are typing and fall through to the typed keys below
+		// Ctrl/Cmd+Delete / Backspace and Enter with a selection, Space and Enter
+		// with the keyboard cursor (../selectionKeys.ts). Plain Delete / Backspace
+		// are typing and fall through to the typed keys below
 		const search = this.searchBoxRef.current;
 		const searchFocused = !!search && document.activeElement === search;
+		const focused = document.activeElement as HTMLElement | null;
+		const target = keyTarget(focused ? {tagName: focused.tagName, role: focused.getAttribute("role"), editable: focused.isContentEditable} : null);
 		const action = selectionKeyAction({
 			keyCode: e.keyCode,
 			cmd: (e.ctrlKey || e.metaKey) && !e.altKey,
 			mainScreen: onMainScreen(this.state),
 			searchFocused: searchFocused,
 			searchHasText: searchFocused && !!search.value,
-			selection: this.state.selection
+			selection: this.state.selection,
+			cursor: this.state.keyCursor,
+			cursorShown: this.state.keyCursorShown,
+			listFocused: target === "list",
+			onButton: target === "button",
+			alt: e.altKey
 		});
 		// a held key (auto-repeat) acts once: only the first press counts
 		if (action === "open-saved") {
@@ -2059,6 +2083,20 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			e.preventDefault();
 			if (e.repeat) return;
 			this.deleteSavedTabs();
+			return;
+		}
+		if (action === "toggle-cursor") {
+			// (and the page does not scroll by a screen, Space's default)
+			e.preventDefault();
+			if (e.repeat) return;
+			this.select(this.state.keyCursor, true);
+			return;
+		}
+		if (action === "switch-cursor") {
+			e.preventDefault();
+			if (e.repeat) return;
+			const tab = this.state.tabsbyid.get(this.state.keyCursor);
+			if (!!tab) await this.switchTo(tab);
 			return;
 		}
 		if (action === "close-open") {
@@ -2134,206 +2172,26 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			}
 			return;
 		}
-		// arrow keys
-		/*
-			left arrow  37
-			up arrow  38
-			right arrow 39
-			down arrow  40
-		*/
+		// arrow keys (37 left, 38 up, 39 right, 40 down): they move the keyboard
+		// cursor (moveCursor, ../arrowWalk.ts)
 		if (e.keyCode >= 37 && e.keyCode <= 40) {
 			// off the window list the arrows scroll the page as usual
 			if (!onMainScreen(this.state)) return;
-			// the arrows select: the focus goes to the window list, unless they
-			// move the caret in a search box that holds text (an empty box
-			// gives the focus up too, so Ctrl/Cmd+Delete then closes the selection)
-			if (document.activeElement !== this.windowContainerRef.current && (document.activeElement !== this.searchBoxRef.current || !this.searchBoxRef.current?.value)) {
-				this.windowContainerRef.current?.focus();
-			}
-
-			if (document.activeElement !== this.searchBoxRef.current || !this.searchBoxRef.current?.value) {
-				let goLeft = e.keyCode === 37;
-				let goRight = e.keyCode === 39;
-				let goUp = e.keyCode === 38;
-				let goDown = e.keyCode === 40;
-				if (this.state.layout === LAYOUT.list) {
-					goLeft = e.keyCode === 38;
-					goRight = e.keyCode === 40;
-					goUp = e.keyCode === 37;
-					goDown = e.keyCode === 39;
-				}
-				if (goLeft || goRight || goUp || goDown) {
-					e.nativeEvent.preventDefault();
-					e.nativeEvent.stopPropagation();
-				}
-				const altKey = e.nativeEvent.metaKey || e.nativeEvent.altKey || e.nativeEvent.shiftKey || e.nativeEvent.ctrlKey;
-				if (goLeft || goRight) {
-					let selectedTabs = [...this.state.selection.keys()];
-					if (!altKey && selectedTabs.length > 1) {
-					} else {
-						let found = false;
-						let selectedNext = false;
-						let selectedTab = 0;
-						let first = 0;
-						let prev = 0;
-						let last = 0;
-						if (selectedTabs.length === 1) {
-							selectedTab = selectedTabs[0];
-							// console.log("one tab", selectedTab);
-						} else if (selectedTabs.length > 1) {
-							if (!!this.state.lastSelect) {
-								selectedTab = this.state.lastSelect;
-								// console.log("more tabs, last", selectedTab);
-							} else {
-								selectedTab = selectedTabs[0];
-								// console.log("more tabs, first", selectedTab);
-							}
-						} else if (selectedTabs.length === 0 && !!this.state.lastSelect) {
-							selectedTab = this.state.lastSelect;
-							// console.log("no tabs, last", selectedTab);
-						}
-						if (!!this.state.lastDirection) {
-							if (goRight && this.state.lastDirection === "goRight") {
-							} else if (goLeft && this.state.lastDirection === "goLeft") {
-							} else if (selectedTabs.length > 1) {
-								// console.log("turned back, last", this.state.lastSelect, selectedTab);
-								this.select(this.state.lastSelect);
-								this.setState({
-									lastDirection: ""
-								});
-								found = true;
-							} else {
-								this.setState({
-									lastDirection: ""
-								});
-							}
-						}
-						if (!this.state.lastDirection) {
-							if (goRight) this.setState({ lastDirection: "goRight" });
-							if (goLeft) this.setState({ lastDirection: "goLeft" });
-						}
-
-						for (const _w of this.state.windows) {
-							let _window = this.state.windowrefs.get(_w.id)?.current;
-							if (!_window) continue;
-							if (_window.state.hidden) continue;
-							if (found) break;
-							for (const _t of _w.tabs) {
-								// the arrows walk the matches, and the selected
-								// tabs, which are on screen whatever they match
-								if (this.offArrowPath(_t.id)) continue;
-								last = _t.id;
-								if (!first) first = _t.id;
-								if (!selectedTab) {
-									if (!altKey) this.state.selection.clear();
-									this.select(_t.id);
-									found = true;
-									break;
-								} else if (selectedTab === _t.id) {
-									// console.log("select next one", selectedNext);
-									if (goRight) {
-										selectedNext = true;
-									} else if (!!prev) {
-										if (!altKey) this.state.selection.clear();
-										this.select(prev);
-										found = true;
-										break;
-									}
-								} else if (selectedNext) {
-									if (!altKey) this.state.selection.clear();
-									this.select(_t.id);
-									found = true;
-									break;
-								}
-								prev = _t.id;
-								// console.log(_t, _t.id === selectedTab);
-							}
-						}
-						if (!found && goRight && !!first) {
-							if (!altKey) this.state.selection.clear();
-							this.select(first);
-							found = true;
-						}
-						if (!found && goLeft && !!last) {
-							if (!altKey) this.state.selection.clear();
-							this.select(last);
-							found = true;
-						}
-					}
-				}
-				if (goUp || goDown) {
-					let selectedTabs = [...this.state.selection.keys()];
-					if (selectedTabs.length > 1) {
-					} else {
-						let found = false;
-						let selectedNext = false;
-						let selectedTab = -1;
-						let first = 0;
-						let prev = 0;
-						let last = 0;
-						let tabPosition = -1;
-						let i = -1;
-						if (selectedTabs.length === 1) {
-							selectedTab = selectedTabs[0];
-							// console.log(selectedTab);
-						}
-
-						for (const _w of this.state.windows) {
-							let _window = this.state.windowrefs.get(_w.id)?.current;
-							if (!_window) continue;
-							if (_window.state.hidden) continue;
-							i = 0;
-							if (found) break;
-							if (!first) first = _w.id;
-							for (const _t of _w.tabs) {
-								if (this.offArrowPath(_t.id)) continue;
-								i++;
-								last = _w.id;
-								if (!selectedTab) {
-									this.selectWindowTab(_w.id, tabPosition);
-									found = true;
-									break;
-								} else if (selectedTab === _t.id) {
-									tabPosition = i;
-										// console.log("found tab", _w.id, _t.id, selectedTab, i);
-									if (goDown) {
-										// console.log("select next window ", selectedNext, tabPosition);
-										selectedNext = true;
-										break;
-									} else if (!!prev) {
-										// console.log("select prev window ", prev, tabPosition);
-										this.selectWindowTab(prev, tabPosition);
-										found = true;
-										break;
-									}
-								} else if (selectedNext) {
-									// console.log("selecting next window ", _w.id, tabPosition);
-									this.selectWindowTab(_w.id, tabPosition);
-									found = true;
-									break;
-								}
-								// console.log(_t, _t.id === selectedTab);
-							}
-							prev = _w.id;
-						}
-						// console.log(found, goDown, first);
-						if (!found && goDown && !!first) {
-							// console.log("go first", first);
-							this.state.selection.clear();
-							this.selectWindowTab(first, tabPosition);
-							found = true;
-						}
-						// console.log(found, goUp, last);
-						if (!found && goUp && !!last) {
-							// console.log("go last", last);
-							this.state.selection.clear();
-							this.selectWindowTab(last, tabPosition);
-							found = true;
-						}
-					}
-				}
-				// (the list view: the selection is the keyboard focus, StatsLayer
-				// shows its card, see statsHoverLogic.arrowsMoveCard)
+			// the arrows walk the tabs (the focus goes to the window list, so
+			// Space and Ctrl/Cmd+Delete then act there); in a search box that
+			// holds text only Ctrl+arrow (Alt+arrow off a Mac) does, the plain
+			// arrows and Shift keep editing the text (../selectionKeys.ts arrowNavigates)
+			const searchCaret = document.activeElement === this.searchBoxRef.current && !!this.searchBoxRef.current?.value;
+			const mods = {shift: e.nativeEvent.shiftKey, ctrl: e.nativeEvent.ctrlKey, alt: e.nativeEvent.altKey, meta: e.nativeEvent.metaKey};
+			if (arrowNavigates(e.keyCode, mods, true, searchCaret, this.mac)) {
+				if (document.activeElement !== this.windowContainerRef.current) this.windowContainerRef.current?.focus();
+				e.nativeEvent.preventDefault();
+				e.nativeEvent.stopPropagation();
+				// Shift+arrow selects as it goes; Ctrl/Alt+arrow walk like a plain
+				// arrow (they are what gets the arrows out of a search box with text)
+				this.moveCursor(arrowWalk(e.keyCode, this.state.layout === LAYOUT.list), e.nativeEvent.shiftKey);
+				// (the list view: StatsLayer shows the cursor tab's card, see
+				// statsHoverLogic.arrowsMoveCard)
 			}
 			return;
 		}
@@ -2351,23 +2209,53 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	private offArrowPath(id : number) : boolean {
 		return isHiddenTab(id, this.state.hiddenTabs, true, this.state.selection);
 	}
-	selectWindowTab(windowId : number, tabPosition : number) {
-		if (!tabPosition || tabPosition < 1) tabPosition = 1;
-		let _w = this.state.windowsbyid.get(windowId);
-
-		let i = 0;
-
-		// the tabs the arrows walk (offArrowPath)
-		let filteredTabs = _w.tabs.filter(tab => !this.offArrowPath(tab.id));
-
-		for (let _t of filteredTabs) {
-			i++;
-			if ((filteredTabs.length >= tabPosition && tabPosition === i) || (filteredTabs.length < tabPosition && filteredTabs.length === i)) {
-				this.state.selection.clear();
-				this.select(_t.id);
-				return;
-			}
+	// the tabs the arrows visit, window by window in screen order (a window the
+	// search hides as a whole is not on screen)
+	private arrowPath() : number[][] {
+		const path : number[][] = [];
+		for (const w of this.state.windows) {
+			const ref = this.state.windowrefs.get(w.id)?.current;
+			if (!ref || ref.state.hidden) continue;
+			path.push(w.tabs.filter((tab) => !this.offArrowPath(tab.id)).map((tab) => tab.id));
 		}
+		return path;
+	}
+	// the active tab of the current window, or 0
+	private activeTabId() : number {
+		const tab = this.state.windowsbyid.get(this.state.lastOpenWindow)?.tabs?.find((t) => t.active);
+		return tab ? tab.id : 0;
+	}
+	// One arrow step. The cursor is not the selection: it moves on from the
+	// cursor tab (else the last selected tab, else the current window's active
+	// tab) and a plain arrow leaves the selection as it is; with Shift the tab it
+	// lands on is added, and the one it started from too when nothing was
+	// selected yet (../arrowWalk.ts).
+	private moveCursor(walk : ArrowWalk, shift : boolean) {
+		const path = this.arrowPath();
+		const from = walkStart(path, [this.state.keyCursor, this.state.lastSelect, this.activeTabId()]);
+		const to = arrowStep(path, from, walk);
+		if (!to) return;
+		// the arrows walk open tabs: selected saved tabs give way to them (keepKind)
+		const noOpenSelected = ![...this.state.selection].some((id) => !isSavedTabKey(id));
+		for (const id of cursorStep(noOpenSelected, from, to, shift)) {
+			// selected by hand (../searchPicks.ts)
+			this.searchPicks.touch(id);
+			if (this.state.selection.has(id)) continue;
+			keepKind(this.state.selection, tabKind(id));
+			this.state.selection.add(id);
+			this.setState({lastSelect: id});
+		}
+		this.setState({keyCursor: to, keyCursorShown: true, ...this.selectionText(to)});
+		this.scrollTo('tab', to.toString());
+	}
+	// Switches to an open tab (and its window), as a click on it does; the popup closes
+	switchTo = async (tab : browser.Tabs.Tab) => {
+		if (IS_FIREFOX) {
+			await browser.runtime.sendMessage<ICommand>({command: S.focus_on_tab_and_window_delayed, tab: tab});
+		} else {
+			await browser.runtime.sendMessage<ICommand>({command: S.focus_on_tab_and_window, tab: tab});
+		}
+		if (!!window.inPopup) window.close();
 	}
 	scrollTo = (what : string, id : string) => {
 		var els = document.getElementById(what + "-" + id);
@@ -2424,7 +2312,12 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		}
 		return tabs;
 	}
-	select(id : number) {
+	// A tab selected or deselected by hand (a click, Space) gets the keyboard
+	// cursor, so Space and the arrows go on from there. The cursor is on open
+	// tabs only: the arrows walk those, and Enter switches to it. Its ring is
+	// drawn only once a key moved it (keyCursorShown): a click hides it, so a
+	// mouse user never sees it; `byKey` (Space) leaves the ring as it is.
+	select(id : number, byKey = false) {
 		// selected or deselected by hand: a new search leaves it as it is now
 		this.searchPicks.touch(id);
 		if (this.state.selection.has(id)) {
@@ -2440,13 +2333,19 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				lastSelect: id
 			});
 		}
+		const cursor = isSavedTabKey(id) ? 0 : id;
+		const shown = byKey && this.state.keyCursorShown;
+		this.setState({keyCursor: cursor, keyCursorShown: shown});
 		this.scrollTo('tab', id.toString());
-		this.setState(this.selectionText());
+		this.setState(this.selectionText(shown ? cursor : 0));
 	}
-	// the header while tabs are being selected
-	selectionText() : Pick<ITabManagerState, "topText" | "bottomText"> {
+	// the header while tabs are being selected; `cursor`: the keyboard cursor's
+	// tab when its ring is on screen (only then Enter switches to it), passed
+	// when it was just set (the state may not have it yet)
+	selectionText(cursor = this.state.keyCursorShown ? this.state.keyCursor : 0) : Pick<ITabManagerState, "topText" | "bottomText"> {
 		const selected = this.state.selection.size;
-		if (selected === 0) return { topText: "No tabs selected", bottomText: " " };
+		// with nothing selected Enter switches to the cursor tab (../selectionKeys.ts)
+		if (selected === 0) return { topText: "No tabs selected", bottomText: cursor ? "Press enter to switch to the tab" : " " };
 		// saved tabs (all of one kind, see select): Ctrl+Delete removes them, Enter opens them
 		if (onlySavedSelected(this.state.selection)) return { topText: "Selected " + maybePluralize(selected, "saved tab"), bottomText: "Press enter to open " + (selected === 1 ? "it" : "them") + " in a new window, " + deleteKeyName(this.mac) + " to remove " + (selected === 1 ? "it" : "them") };
 		if (selected === 1) return { topText: "Selected " + selected + " tab", bottomText: "Press enter to switch to it" };
@@ -2555,8 +2454,11 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			}
 		}
 
+		// the cursor goes to the clicked tab, as on a click (select)
 		this.setState({
-			lastSelect: tabs[rangeIndex2].id
+			lastSelect: tabs[rangeIndex2].id,
+			keyCursor: isSavedTabKey(id) ? 0 : id,
+			keyCursorShown: false
 		});
 		if (rangeIndex2 < rangeIndex1) {
 			let r1 = rangeIndex2;

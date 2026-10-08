@@ -145,6 +145,15 @@
 	border-color: var(--active-border);
 	box-shadow: 0 0 0 1px var(--active-ring);
 }
+/* where the arrow keys are: the tile lifts, a little larger with a thin ring
+   in the cursor colour and a soft shadow, above its neighbours (z-index). A
+   list row cannot grow: it gets the ring inside and its left edge coloured
+   instead (layout/view-list.css) */
+.tab.key-cursor {
+	transform: scale(1.14);
+	box-shadow: 0 0 0 1.5px var(--key-cursor), 0 6px 14px rgba(0, 0, 0, 0.35);
+	z-index: 95000;
+}
 .tab.selected:hover {
 	background-color: var(--selection-hover);
 }

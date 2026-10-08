@@ -14,15 +14,19 @@ node tools/drag-check/check.mjs --only "saved tab -> open"
 It exits 1 when any check fails (and 2 when `build/chrome` is missing). Run it in the gate
 of every step that touches drag code.
 
-Forty-two more checks (`--only keys`, own tab, blocks and vertical) press keys with the browser's own
+Fifty-two more checks (`--only keys`, own tab, blocks and vertical) press keys with the browser's own
 key events (`page.keyboard`) after a ctrl+click: Ctrl+Delete (Cmd on a Mac) deletes selected saved tabs
 from their saved windows, Ctrl+Backspace closes selected open tabs, plain Delete and Backspace close and
 delete nothing (the search box takes the key, as in 6.x), nothing closes while the search box is focused
 and empty and gets plain keys, Ctrl+Backspace in the focused box with text edits the text and closes
 nothing, Ctrl+Delete in the focused, empty box closes the selection, and holding, repeating or tapping
 Ctrl or Cmd alone leaves the focus where it is. Ctrl+Delete also closes the selection after a search plus
-a right-click select (text in the box, focus moved out by the popup) and after an arrow-key select
-started in the empty, focused search box. Enter opens the selected saved tabs in one new window in the
+a right-click select (text in the box, focus moved out by the popup), and after an arrow from the
+empty, focused search box it closes the selection, not the tab the arrow went to. The keyboard cursor
+(7.0): plain arrows move the ring (`.key-cursor`) and leave the selection alone, Shift+arrow twice from
+a tab with nothing selected selects three tabs, arrow, arrow, Space selects only the third, and Enter
+after an arrow with nothing selected switches to the cursor tab (its window's active tab, read with
+`chrome.tabs.query`) and opens no window. Enter opens the selected saved tabs in one new window in the
 shown order, Enter with open tabs still moves them; a double press and a held Enter still open one
 window; Enter after an `s:` search (which selects no open tab) opens no window. Ten of them
 (`--only undo`) press Ctrl+Z (Cmd+Z on a Mac): with an Undo notice up and text in the focused search box
@@ -39,7 +43,7 @@ of the four selected tabs onto an open tab, onto a saved window, and Enter, move
 "4 tabs"); one selected non-matching tab alone is switched to by Enter and opens no window; a new search keeps the tab
 selected by hand (selected and on screen, though it matches neither search) and takes back only what the last search
 selected (Charlie leaves and hides); a range (Shift+right-click) with the hiding on skips the hidden tab between its ends;
-the arrow keys go on from a selected non-matching tab to the next match; an unselected open tab dragged while a saved tab
+the arrow keys go on from a selected non-matching tab to the next match (the cursor ring moves, the selection stays); an unselected open tab dragged while a saved tab
 is selected moves alone, and the saved tab stays selected and on screen with its saved window, also during the drag; the
 same for saved tabs (a non-matching Kilo selected with two
 matches is dragged out and opened with them by a drag and by Enter, and alone by Enter, the saved window unchanged). Drops that do nothing or only part say why in the red notice:

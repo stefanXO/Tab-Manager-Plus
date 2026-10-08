@@ -158,6 +158,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 					layout={this.props.layout}
 					tab={tab}
 					selected={isSelected}
+					keyCursor={this.props.keyCursor === tab.id}
 					hidden={isHidden}
 					faded={isFaded}
 					searchActive={this.props.searchActive}

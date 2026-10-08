@@ -16,6 +16,8 @@ export interface IWindow {
 	sessionsFeature?: boolean,
 	hiddenTabs: Set<number>,
 	selection: Set<number>,
+	// the tab the arrow keys are on, or 0
+	keyCursor?: number,
 	filterTabs: boolean,
 	lastOpenWindow: number,
 	incognito: boolean,

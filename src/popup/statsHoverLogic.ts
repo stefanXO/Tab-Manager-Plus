@@ -4,6 +4,8 @@
 // hover controller (./statsHover.ts). No DOM, no browser APIs, so the rules
 // can be unit tested (tests/statsHover.test.ts).
 
+import {arrowNavigates, type ArrowMods} from "./selectionKeys.ts";
+
 // ---- the timings (experiments, flip them here) ----
 // the tab card has no delay of its own: it opens once the pointer has settled
 export const STATS_TAB_DELAY = 0;
@@ -137,9 +139,10 @@ export function hoverAction(key : string, prev : string, open : boolean, warm : 
 	return { kind: "show", key, delay };
 }
 
-// An arrow key in the list view moves the selection (TabManager.checkKey),
-// and the card follows it; not off the main screen, not while the arrows move
-// the caret in a search box that has text.
-export function arrowsMoveCard(keyCode : number, listLayout : boolean, mainScreen : boolean, searchHasCaret : boolean) : boolean {
-	return keyCode >= 37 && keyCode <= 40 && listLayout && mainScreen && !searchHasCaret;
+// An arrow key in the list view moves the keyboard cursor (TabManager.checkKey),
+// and the card follows it; the same rule as the walk (../selectionKeys.ts
+// arrowNavigates): not off the main screen, and in a search box that has text
+// only with Ctrl (or Alt off a Mac).
+export function arrowsMoveCard(keyCode : number, listLayout : boolean, mainScreen : boolean, mods : ArrowMods, searchHasText : boolean, mac : boolean) : boolean {
+	return listLayout && arrowNavigates(keyCode, mods, mainScreen, searchHasText, mac);
 }

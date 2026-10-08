@@ -129,6 +129,9 @@
 	--active-border: rgba(102, 51, 153, 0.55);
 	--active-ring: rgba(102, 51, 153, 0.2);
 
+	/* the tab the arrow keys are on */
+	--key-cursor: #0b57d0;
+
 	/* a tab that plays sound */
 	--playing: var(--blue);
 

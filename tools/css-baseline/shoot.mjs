@@ -513,6 +513,20 @@ const STATES = [
 	{name: 'ssearch-open', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {search: '-s:google', store: {'filter-tabs': true}, scrollEnd: true}},
 	// with saved windows switched off s: is plain text: "s:google" finds the text, saved windows are gone
 	{name: 'ssearch-off', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {search: 's:google', store: {sessionsFeature: false}, scrollEnd: true}},
+	// the arrows after a search: focus in the search box (which holds text), then
+	// ArrowRight / ArrowDown twice; they walk the tabs and the one they are on has
+	// the key-cursor ring (css/components/tab.css)
+	{name: 'arrows-search', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {search: 'github', clicks: [{focus: '.searchBoxInput'}, {key: 39, ctrl: true}, {key: 39, ctrl: true}, {key: 40, ctrl: true}, {key: 40, ctrl: true}]}},
+	// the keyboard cursor is not the selection (7.0, src/popup/arrowWalk.ts):
+	// after the search the focus goes to the list, Right twice moves the ring
+	// (the matches stay selected as the search left them), Space takes the
+	// cursor tab out of the selection; Shift+Right twice from the active tab
+	// selects it and the two tabs it lands on. In List Down instead of Right
+	// (`listKey`), the key that walks the tabs there.
+	// `escape`: each starts from no selection and no cursor, whatever the shot
+	// before left
+	{name: 'arrows-space', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {escape: true, search: 'github', clicks: [{focus: '.window-container'}, {key: 39, listKey: 40}, {key: 39, listKey: 40}, {key: 32}]}},
+	{name: 'arrows-shift', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {escape: true, clicks: [{focus: '.window-container'}, {key: 39, listKey: 40, shift: true}, {key: 39, listKey: 40, shift: true}]}},
 	// the search syntax help (hover the search box) with its s: rows; with saved windows
 	// switched off the s: rows are not listed
 	{name: 'search-help', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {}, searchHelp: true},
@@ -664,7 +678,7 @@ async function settle(page) {
 }
 
 /** Applies a popup state absolutely: the result never depends on what came before. */
-async function apply(page, {layout, dark, search = '', dup = false, recent = 0, overlay = null, scrollTo = null, store = {}, granted = true, savedFocused = null, clicks = [], scrollInto = null, importFile = null, importInput = '#session_import', freezeClock = false, scrollEnd = false, typeName = null, pickColor = null, savedInfo = null, freshSessions = false, savedAuto = null, savedLong = false, afterWait = 0, quota = false, keepNotices = false, barAt = 0, noticeHover = false, savedUpdated = null, incognito = [], savedPrivate = null, themeSetting = null}) {
+async function apply(page, {layout, dark, search = '', dup = false, recent = 0, overlay = null, scrollTo = null, store = {}, granted = true, savedFocused = null, clicks = [], scrollInto = null, importFile = null, importInput = '#session_import', freezeClock = false, scrollEnd = false, typeName = null, pickColor = null, savedInfo = null, freshSessions = false, savedAuto = null, savedLong = false, afterWait = 0, quota = false, keepNotices = false, barAt = 0, noticeHover = false, savedUpdated = null, incognito = [], savedPrivate = null, themeSetting = null, escape = false}) {
 	await page.evaluate(async (s) => {
 		const q = (sel) => document.querySelector(sel)
 		const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
@@ -688,6 +702,17 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 		window.__fakeGranted = s.granted
 		await window.__fake.storage.local.set({...s.store, layout: s.layout, dark: s.dark, theme: s.themeSetting || (s.dark ? 'dark' : 'light'), animations: false})
 		await frame()
+
+		// 2b. `escape`: the selection and the keyboard cursor are live state the
+		// shot before (another layout or theme on the same page) leaves behind:
+		// Escape clears them with the search, which step 3 then types again. Twice:
+		// a hover card left open takes the first one
+		if (s.escape) {
+			for (let i = 0; i < 2; i++) {
+				q('#root').dispatchEvent(new KeyboardEvent('keydown', {bubbles: true, cancelable: true, keyCode: 27, which: 27}))
+				await frame()
+			}
+		}
 
 		// 3. search text, through a real input event
 		const input = q('.searchBoxInput')
@@ -814,9 +839,17 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 				for (let i = 0; i < 4; i++) await frame()
 				continue
 			}
+			if (c.focus) {
+				// the keyboard focus goes to an element (the search box, as after typing)
+				q(c.focus).focus()
+				continue
+			}
 			if (c.key) {
-				// a key press on the list, as the root's onKeyDown sees it
-				q('#root').dispatchEvent(new KeyboardEvent('keydown', {bubbles: true, cancelable: true, keyCode: c.key, which: c.key, ctrlKey: !!c.ctrl, metaKey: !!c.meta}))
+				// a key press on the list, as the root's onKeyDown sees it;
+				// `listKey`: the key pressed instead in the List layout (vertical),
+				// whose tabs run down the page (Down where the others take Right)
+				const code = s.layout === 'vertical' && c.listKey ? c.listKey : c.key
+				q('#root').dispatchEvent(new KeyboardEvent('keydown', {bubbles: true, cancelable: true, keyCode: code, which: code, ctrlKey: !!c.ctrl, metaKey: !!c.meta, shiftKey: !!c.shift}))
 				await frame()
 				continue
 			}
@@ -917,7 +950,7 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 		if (s.afterWait) await new Promise((r) => setTimeout(r, s.afterWait))
 		// the list scrolled to its very end: the padding the notice makes room with shows
 		if (s.scrollEnd) { const c = q('.window-container'); if (c) c.scrollTop = c.scrollHeight }
-	}, {layout, dark, search, dup, recent, overlay, store, granted, savedFocused, clicks, scrollInto, importFile, importInput, freezeClock, scrollEnd, typeName, pickColor, savedInfo, freshSessions, savedAuto, savedLong, afterWait, quota, keepNotices, barAt, noticeHover, savedUpdated, incognito, savedPrivate, themeSetting})
+	}, {layout, dark, search, dup, recent, overlay, store, granted, savedFocused, clicks, scrollInto, importFile, importInput, freezeClock, scrollEnd, typeName, pickColor, savedInfo, freshSessions, savedAuto, savedLong, afterWait, quota, keepNotices, barAt, noticeHover, savedUpdated, incognito, savedPrivate, themeSetting, escape})
 	await settle(page)
 	// 7. scroll the options box headed `scrollTo` to the top of its scroller
 	if (scrollTo) {

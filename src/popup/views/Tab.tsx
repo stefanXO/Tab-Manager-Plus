@@ -121,6 +121,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 			className:
 				"icon tab " +
 				(this.props.selected ? "selected " : "") +
+				(this.props.keyCursor ? "key-cursor " : "") +
 				(this.props.tab.pinned ? "pinned " : "") +
 				(this.props.tab.highlighted ? "highlighted " : "") +
 				(this.props.hidden ? "hidden " : "") +
@@ -233,6 +234,8 @@ export class Tab extends React.Component<ITab, ITabState> {
 				return false;
 			} else {
 				let windowId = this.props.window.id;
+				// (in its own tab the popup stays open: Space then selects this tab)
+				this.context.cursorTo(tabId);
 
 				if (IS_FIREFOX) {
 					await sendAndWait({

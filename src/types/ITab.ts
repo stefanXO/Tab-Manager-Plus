@@ -9,6 +9,8 @@ export interface ITab {
 	window?: browser.Windows.Window,
 	session?: ISavedSession,
 	selected: boolean,
+	// the arrow keys are on this tab
+	keyCursor?: boolean,
 	hidden: boolean,
 	faded: boolean,
 	id: string,

@@ -16,6 +16,9 @@ export type ISettings = Pick<ITabManagerState,
 export interface ITabManagerActions {
 	select(id : number) : void;
 	selectTo(id : number, tabs : browser.Tabs.Tab[]) : void;
+	// a plain click on an open tab: the keyboard cursor goes there (TabManager.select
+	// does the same for a modifier or right-click), so Space can select it
+	cursorTo(id : number) : void;
 	deleteTab(id : number) : void;
 	// a tab drag starts: its drag data, the tabs it takes (./dragPayload.ts)
 	drag(e : React.DragEvent<HTMLDivElement>, id : number) : string;

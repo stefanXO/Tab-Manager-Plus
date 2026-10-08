@@ -644,6 +644,18 @@ try {
 			await p.keyboard.press(name)
 			await p.keyboard.up(MOD)
 		}
+		// the arrow that walks to the next tab (the list view's run down the list)
+		const NEXT = layout === 'vertical' ? 'ArrowDown' : 'ArrowRight'
+		// the open tabs the popup shows selected, and the one with the cursor ring
+		const titlesWith = (p, cls) => p.evaluate((cls) => [...document.querySelectorAll('.window:not(.session) .tab.' + cls)]
+			.map((t) => (t.getAttribute('data-hover') || '').split('\n')[0]).sort(), cls)
+		const selectedOf = (p) => titlesWith(p, 'selected')
+		const ringed = (p) => titlesWith(p, 'key-cursor')
+		// the title of a window's active tab
+		const activeOf = (windowId) => api(async (id) => {
+			const [t] = await chrome.tabs.query({windowId: id, active: true})
+			return t ? t.title : null
+		}, windowId)
 		// where the keyboard focus is, as the page names it
 		const focusAt = (p) => p.evaluate(() => {
 			const a = document.activeElement
@@ -760,16 +772,68 @@ try {
 			const want = [['Charlie'], 'Bravo']
 			return {got: [await settle(() => titlesOf(w1), want[0]), await p.$eval('.searchBoxInput', (i) => i.value)], want}
 		})
-		key('Ctrl+Delete after an arrow select from the empty search box: it closes', async () => {
+		// 7.0: the arrows move the cursor, not the selection: Ctrl+Delete closes
+		// what is selected (Alpha), not the tab the arrow went to (Bravo)
+		key('Ctrl+Delete after an arrow from the empty search box: it closes the selection, not the cursor tab', async () => {
 			const [w1] = await fixture(layout)
 			const p = await openPopup()
 			await ctrlClick(p, tabSel('Alpha'))
 			await p.focus('.searchBoxInput')
 			// the next tab: Bravo (the list view's arrows run down the list)
-			await p.keyboard.press(layout === 'vertical' ? 'ArrowDown' : 'ArrowRight')
+			await p.keyboard.press(NEXT)
 			await withMod(p, 'Delete')
-			const want = ['Alpha', 'Charlie']
+			const want = ['Bravo', 'Charlie']
 			return {got: await settle(() => titlesOf(w1), want), want}
+		})
+		// The keyboard cursor (7.0, src/popup/arrowWalk.ts): a plain arrow moves
+		// the ring and leaves the selection; Shift+arrow selects as it goes; Space
+		// selects the cursor tab; Enter with nothing selected switches to it. A
+		// Ctrl+click twice on Alpha leaves the cursor there and nothing selected.
+		key('plain arrows move the ring and leave the selection alone', async () => {
+			await fixture(layout)
+			const p = await openPopup()
+			await ctrlClick(p, tabSel('Alpha'))
+			await p.keyboard.press(NEXT)
+			await p.keyboard.press(NEXT)
+			const want = [['Charlie'], ['Alpha']]
+			return {got: [await settle(() => ringed(p), want[0]), await selectedOf(p)], want}
+		})
+		key('Shift+arrow twice from a tab with nothing selected selects three tabs', async () => {
+			await fixture(layout)
+			const p = await openPopup()
+			await ctrlClick(p, tabSel('Alpha'))
+			await ctrlClick(p, tabSel('Alpha'))
+			const before = await selectedOf(p)
+			await p.keyboard.down('Shift')
+			await p.keyboard.press(NEXT)
+			await p.keyboard.press(NEXT)
+			await p.keyboard.up('Shift')
+			const want = [[], ['Alpha', 'Bravo', 'Charlie'], ['Charlie']]
+			return {got: [before, await settle(() => selectedOf(p), want[1]), await ringed(p)], want}
+		})
+		key('arrow, arrow, Space selects only the third tab', async () => {
+			await fixture(layout)
+			const p = await openPopup()
+			await ctrlClick(p, tabSel('Alpha'))
+			await ctrlClick(p, tabSel('Alpha'))
+			await p.keyboard.press(NEXT)
+			await p.keyboard.press(NEXT)
+			await p.keyboard.press('Space')
+			const want = [['Charlie'], ['Charlie'], '']
+			return {got: [await settle(() => selectedOf(p), want[0]), await ringed(p), await p.$eval('.searchBoxInput', (i) => i.value)], want}
+		})
+		key('Enter after an arrow with nothing selected switches to the cursor tab, no window opens', async () => {
+			const [w1] = await fixture(layout)
+			const p = await openPopup()
+			const before = await windowsNow()
+			const activeBefore = await activeOf(w1)
+			await ctrlClick(p, tabSel('Alpha'))
+			await ctrlClick(p, tabSel('Alpha'))
+			await p.keyboard.press(NEXT)
+			await p.keyboard.press('Enter')
+			await new Promise((r) => setTimeout(r, 600))
+			const want = ['Alpha', 'Bravo', []]
+			return {got: [activeBefore, await settle(() => activeOf(w1), want[1]), await newWindow(before, [])], want}
 		})
 		key('Enter, saved tabs selected: one new window, in the order shown', async () => {
 			await fixture(layout)
@@ -1090,15 +1154,17 @@ try {
 			return {got: [sorted(await shownIn(p, WINDOWS)), await selectedIn(p, WINDOWS)], want}
 		})
 		// the arrows go on from a selected tab that does not match (it is on
-		// screen): from Bravo to Charlie, not back to the first match
+		// screen): the cursor (the Ctrl+click left it on Bravo) goes to Charlie, not
+		// back to the first match, and the selection stays as it is (7.0)
 		drops('the arrow keys go on from a selected non-matching tab to the next match', async () => {
 			await fixture(layout)
 			const p = await openPopup()
-			await shownSelected(p, 'Alpha OR Charlie', [tabSel('Bravo'), tabSel('Alpha'), tabSel('Charlie')], tabSel('Delta'))
+			await shownSelected(p, 'Alpha OR Charlie', [tabSel('Alpha'), tabSel('Charlie'), tabSel('Bravo')], tabSel('Delta'))
 			const before = await selectedIn(p, WINDOWS)
 			await p.keyboard.press(layout === 'vertical' ? 'ArrowDown' : 'ArrowRight')
-			const want = [['Bravo'], ['Charlie']]
-			return {got: [before, await settle(() => selectedIn(p, WINDOWS), want[1])], want}
+			const ring = () => p.evaluate(() => [...document.querySelectorAll('.window:not(.session) .tab.key-cursor')].map((t) => (t.getAttribute('data-hover') || '').split('\n')[0]))
+			const want = [['Bravo'], ['Charlie'], ['Bravo']]
+			return {got: [before, await settle(ring, want[1]), await selectedIn(p, WINDOWS)], want}
 		})
 		// an open tab dragged while saved tabs are selected goes alone: the saved
 		// selection, and the saved window it keeps on screen, stay

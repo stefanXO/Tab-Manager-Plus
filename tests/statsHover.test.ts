@@ -140,15 +140,22 @@ describe("hoverAction: action buttons", () => {
 	});
 });
 
+const none = {shift: false, ctrl: false, alt: false, meta: false};
+const ctrl = {...none, ctrl: true};
+
 describe("arrowsMoveCard", () => {
 	test("arrows in the list view on the main screen", () => {
-		for (const k of [37, 38, 39, 40]) assert.equal(arrowsMoveCard(k, true, true, false), true);
+		for (const k of [37, 38, 39, 40]) assert.equal(arrowsMoveCard(k, true, true, none, false, false), true);
 	});
-	test("not other keys, other layouts, other screens, or a search box caret", () => {
-		assert.equal(arrowsMoveCard(36, true, true, false), false);
-		assert.equal(arrowsMoveCard(41, true, true, false), false);
-		assert.equal(arrowsMoveCard(40, false, true, false), false);
-		assert.equal(arrowsMoveCard(40, true, false, false), false);
-		assert.equal(arrowsMoveCard(40, true, true, true), false);
+	test("from a search box with text only with Ctrl: the plain arrows move the caret", () => {
+		assert.equal(arrowsMoveCard(40, true, true, none, true, false), false);
+		assert.equal(arrowsMoveCard(40, true, true, ctrl, true, false), true);
+		assert.equal(arrowsMoveCard(40, true, true, ctrl, true, true), true);
+	});
+	test("not other keys, other layouts or other screens", () => {
+		assert.equal(arrowsMoveCard(36, true, true, none, false, false), false);
+		assert.equal(arrowsMoveCard(41, true, true, none, false, false), false);
+		assert.equal(arrowsMoveCard(40, false, true, none, false, false), false);
+		assert.equal(arrowsMoveCard(40, true, false, none, false, false), false);
 	});
 });

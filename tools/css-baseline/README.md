@@ -294,6 +294,12 @@ currently on disk — there is no stale copy to forget about.
   `help-saved-delete`: buttons without a key. `help-keys-trash` and `help-window-close` also at `380x900` (the header's
   buttons are hidden there). A build without the hovered button (the theme button before it existed) is shot without
   the hover
+- `arrows-search` / `arrows-space` / `arrows-shift`: the keyboard cursor (`src/popup/arrowWalk.ts`), blocks + List,
+  800x600. `arrows-search`: search `github`, Ctrl+Right twice and Ctrl+Down twice from the search box; `arrows-space`:
+  search `github`, the focus on the list, Right, Right, Space (the ring moves, the matches stay selected, Space takes
+  the cursor tab out); `arrows-shift`: Shift+Right twice from the active tab, three tabs selected. In List both press
+  Down instead of Right (`listKey` on a `key` click: the key that walks the tabs there). `arrows-space` and `arrows-shift` set `apply.escape`: two Escape presses before the search, so the
+  selection and the cursor the shot before left on the page (another layout or theme) are gone
 - `page-options-na-<theme>-<width>`: `options.html` standalone, 2 × 3 = 6
 - `page-changelog-na-<theme>-<width>`: `changelog.html` standalone, 2 × 3 = 6.
   Unlike `page-options` (whose theme the harness forces onto `<html>`), the
