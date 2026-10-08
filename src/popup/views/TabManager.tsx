@@ -45,6 +45,7 @@ import {moveUndoRecord, undoMove, emptiedText, undoneText, UndoOffers, MoveUndo}
 import type {SavedTabRef} from "../sessionKeys";
 import {stackTiles, stackKind, encodeSaved, encodeIds, TabDrag} from "../dragPayload";
 import {setStackImage, StackTile} from "../dragImage";
+import {ACTION_BUTTON} from "../buttonKeys";
 
 // the saved window and stored index of each of these saved tab keys; keys
 // the popup no longer knows are left out
@@ -715,6 +716,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 					{this.state.supportLinks && <div
 						className="icon windowaction donate"
 						role="button"
+						{...ACTION_BUTTON}
 						aria-label="Donate a Coffee"
 						{...actionHelp("Donate a Coffee\nOpens PayPal in a new tab")}
 						onClick={this.donate}
@@ -722,6 +724,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 					{this.state.supportLinks && <div
 						className="icon windowaction rate"
 						role="button"
+						{...ACTION_BUTTON}
 						aria-label="Rate Tab Manager Plus"
 						{...actionHelp("Rate Tab Manager Plus\nOpens its page in the " + (IS_FIREFOX ? "Firefox Add-ons site" : "Chrome Web Store") + " in a new tab")}
 						onClick={this.rateExtension}
@@ -730,6 +733,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 						className="icon windowaction theme"
 						data-choice={this.state.theme}
 						role="button"
+						{...ACTION_BUTTON}
 						aria-label={themeLabel(this.state.theme)}
 						{...actionHelp(themeHelp(this.state.theme))}
 						onClick={this.cycleTheme}
@@ -737,6 +741,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 					<div
 						className="icon windowaction options"
 						role="button"
+						{...ACTION_BUTTON}
 						aria-label="Options"
 						{...actionHelp(this.optionsHelp(this.state.optionsActive))}
 						onClick={this.toggleOptions}
@@ -773,6 +778,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 									<div
 										className={"icon windowaction " + this.state.layout + "-view"}
 										role="button"
+										{...ACTION_BUTTON}
 										aria-label={"Change to " + this.readablelayout(this.nextlayout()) + " View"}
 										{...actionHelp(this.readablelayout(this.state.layout) + " View is active\nChange to " + this.readablelayout(this.nextlayout()) + " View")}
 										onClick={this.changelayout}
@@ -780,6 +786,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 									<div
 										className="icon windowaction trash"
 										role="button"
+										{...ACTION_BUTTON}
 										aria-label={savedSel ? "Delete selected saved tabs" : this.state.selection.size > 0 ? "Close selected tabs" : "Close current Tab"}
 										{...actionHelp(
 											savedSel
@@ -794,6 +801,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 									<div
 										className="icon windowaction discard"
 										role="button"
+										{...ACTION_BUTTON}
 										aria-label="Discard selected tabs"
 										{...actionHelp(
 											savedSel ? savedSelTitle : this.state.selection.size > 0
@@ -811,6 +819,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 										className="icon windowaction pin"
 										style={savedSel ? savedSelStyle : {}}
 										role="button"
+										{...ACTION_BUTTON}
 										aria-label={this.state.selection.size > 0 ? "Pin selected tabs" : "Pin current Tab"}
 										{...actionHelp(
 											savedSel ? savedSelTitle : this.state.selection.size > 0
@@ -822,6 +831,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 									<div
 										className={"icon windowaction filter" + (this.state.filterTabs ? " enabled" : "")}
 										role="button"
+										{...ACTION_BUTTON}
 										aria-label="Hide tabs that do not match search"
 										aria-pressed={this.state.filterTabs}
 										{...actionHelp(
@@ -839,6 +849,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 										className="icon windowaction save-tabs"
 										style={this.state.selection.size > 0 && !savedSel ? {} : { opacity: 0.25 }}
 										role="button"
+										{...ACTION_BUTTON}
 										aria-label="Save selected tabs"
 										{...actionHelp(
 											savedSel ? savedSelTitle : this.state.selection.size > 0
@@ -851,6 +862,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 										className="icon windowaction new"
 										style={savedSel ? savedSelStyle : {}}
 										role="button"
+										{...ACTION_BUTTON}
 										aria-label={newWindowLabel(this.state.selection.size)}
 										{...actionHelp(
 											savedSel ? savedSelTitle : newWindowHelp(this.state.selection.size),
@@ -861,6 +873,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 									<div
 										className={"icon windowaction duplicates" + (this.state.dupTabs ? " enabled" : "")}
 										role="button"
+										{...ACTION_BUTTON}
 										aria-label="Highlight duplicates"
 										aria-pressed={!!this.state.dupTabs}
 										{...actionHelp(duplicatesTitle(this.getDuplicates(), !!this.state.dupTabs))}
@@ -870,6 +883,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 										className={"icon windowaction recent" + (this.state.recentLevel ? " enabled" : "")}
 										data-level={this.state.recentLevel}
 										role="button"
+										{...ACTION_BUTTON}
 										aria-label="Highlight recently active tabs"
 										aria-pressed={this.state.recentLevel > 0}
 										{...actionHelp(recentTitle(this.state.tabsbyid.values(), Date.now(), this.state.recentLevel))}

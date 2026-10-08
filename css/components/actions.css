@@ -38,6 +38,14 @@
 	right: calc(var(--bar-inset) + 3 * (2rem + var(--bar-gap)));
 }
 
+/* the buttons take the Tab key (src/popup/buttonKeys.ts): a ring for the
+   keyboard only, a mouse click shows none. Drawn outside the square, in the
+   focus color of the options' switches (light and dark in the tokens) */
+.icon[role="button"]:focus-visible {
+	outline: 2px solid var(--focus-ring);
+	outline-offset: 1px;
+}
+
 .windowaction {
 	float: right;
 }

@@ -24,6 +24,7 @@ import {readTabDrag} from "../dragPayload";
 import {savedLabel, savedHover} from "../savedUpdated";
 import {tabShow} from "../selectedShown";
 import {actionHelp} from "../actionHelp";
+import {ACTION_BUTTON} from "../buttonKeys";
 
 interface ISessionState {
 	// this card is being dragged (it fades)
@@ -98,6 +99,7 @@ export class Session extends React.Component<ISession, ISessionState> {
 						<div
 							className={"icon tabaction restore " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
 							role="button"
+							{...ACTION_BUTTON}
 							aria-label="Restore this saved window"
 							{...actionHelp("Restore this saved window\nWill restore " + maybePluralize(this.props.tabs.length, "tab") + ". Please note : The tabs will be restored without their history.")}
 							onClick={this.windowClick}
@@ -105,6 +107,7 @@ export class Session extends React.Component<ISession, ISessionState> {
 						<div
 							className={"icon tabaction colors " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
 							role="button"
+							{...ACTION_BUTTON}
 							aria-label="Change the name or color of this saved window"
 							{...actionHelp("Change the name or color of this saved window")}
 							onClick={this.openOptions}
@@ -112,6 +115,7 @@ export class Session extends React.Component<ISession, ISessionState> {
 						<div
 							className={"icon tabaction delete " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
 							role="button"
+							{...ACTION_BUTTON}
 							aria-label="Delete this saved window"
 							{...actionHelp("Delete this saved window\nWill delete " + maybePluralize(this.props.tabs.length, "tab") + ". Undo is possible for a few seconds")}
 							onClick={this.close}

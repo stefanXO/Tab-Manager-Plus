@@ -89,6 +89,7 @@ Smaller fixes
 - Firefox-based browsers (LibreWolf, Zen, Waterfox) are detected as Firefox
 - The popup warns once, with a red notice, when the background part of the extension is older than the popup (a rebuilt extension that was not reloaded) and says where to reload it (chrome://extensions, in Firefox about:debugging); it compares a fingerprint of the background code, so a rebuild that leaves that code unchanged raises no warning
 - The header icons (Donate, Rate, theme and options) stay in a narrow popup and in the sidebar; at 450 px and less they were hidden, which left no way into the options
+- The buttons in the bottom bar, at the top and on windows and saved windows can be reached with the Tab key: Enter or Space presses the focused one, and a ring shows which has the focus (for the keyboard only)
 - With one tab selected, the new window button says it switches to that tab; it never moved a single tab, but its help said so
 
 Tab And Window Info

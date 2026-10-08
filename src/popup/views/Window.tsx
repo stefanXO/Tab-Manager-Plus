@@ -20,6 +20,7 @@ import {readTabDrag} from '../dragPayload';
 import {tabShow, isHiddenTab, hidesWholeWindow} from '../selectedShown';
 import {tabDropBefore} from '../tabDropSide';
 import {actionHelp} from '../actionHelp';
+import {ACTION_BUTTON} from '../buttonKeys';
 
 export class Window extends React.Component<IWindow, IWindowState> {
 	static contextType = ManagerContext;
@@ -187,6 +188,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 							<div
 								className={"icon tabaction save " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
 								role="button"
+								{...ACTION_BUTTON}
 								aria-label="Save this window for later"
 								{...actionHelp(
 									"Save this window for later\nWill save " +
@@ -199,6 +201,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 						<div
 							className={"icon tabaction add " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
 							role="button"
+							{...ACTION_BUTTON}
 							aria-label="Open a new tab"
 							{...actionHelp("Open a new tab")}
 							onClick={this.addTab}
@@ -206,6 +209,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 						<div
 							className={"icon tabaction colors " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
 							role="button"
+							{...ACTION_BUTTON}
 							aria-label="Change window name or color"
 							{...actionHelp("Change window name or color")}
 							onClick={this.openOptions}
@@ -214,6 +218,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 							<div
 								className={"icon tabaction maximize " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
 								role="button"
+								{...ACTION_BUTTON}
 								aria-label="Maximize this window"
 								{...actionHelp("Maximize this window\nWill maximize " + maybePluralize(this.props.tabs.length, "tab"))}
 								onClick={this.maximize}
@@ -222,6 +227,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 							<div
 								className={"icon tabaction minimize " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
 								role="button"
+								{...ACTION_BUTTON}
 								aria-label="Minimize this window"
 								{...actionHelp("Minimize this window\nWill minimize " + maybePluralize(this.props.tabs.length, "tab"))}
 								onClick={this.minimize}
@@ -230,6 +236,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 						<div
 							className={"icon tabaction close " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
 							role="button"
+							{...ACTION_BUTTON}
 							aria-label="Close this window"
 							{...actionHelp("Close this window\nWill close " + maybePluralize(this.props.tabs.length, "tab"))}
 							onClick={this.close}
