@@ -35,6 +35,10 @@ export interface NoticeBoardOptions {
 	onChange() : void;
 	// notice `id` came up, or came up again (the same text): it is the newest
 	onShown?(id : number) : void;
+	// how many errors and infos may be on screen now (at most MAX_NOTICES):
+	// the popup lowers it to 2 while three Undo notices are up, so the
+	// stack of notices does not grow past the bottom bar
+	limit?() : number;
 	timers? : Timers;
 }
 
@@ -68,7 +72,7 @@ export class NoticeBoard {
 			this.options.onShown?.(again.id);
 			return again.id;
 		}
-		while (this.list.length >= MAX_NOTICES) this.drop(this.list[0].id);
+		while (this.list.length >= this.cap()) this.drop(this.list[0].id);
 		const id = this.next++;
 		this.list.push({ id, kind, text, ms: length });
 		const clock = new Countdown(this.timers, () => this.close(id));
@@ -77,6 +81,18 @@ export class NoticeBoard {
 		this.options.onChange();
 		this.options.onShown?.(id);
 		return id;
+	}
+
+	// the limit may have dropped (a third Undo notice came up): the oldest
+	// errors and infos go until the rest fit
+	trim() : void {
+		const before = this.list.length;
+		while (this.list.length > this.cap() && this.list.length > 0) this.drop(this.list[0].id);
+		if (this.list.length !== before) this.options.onChange();
+	}
+
+	private cap() : number {
+		return Math.max(1, Math.min(MAX_NOTICES, this.options.limit?.() ?? MAX_NOTICES));
 	}
 
 	error(text : string, ms? : number) : number {

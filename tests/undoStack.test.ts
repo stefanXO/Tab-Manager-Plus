@@ -280,8 +280,9 @@ class Popup {
 	readonly offers : UndoOffers<MoveUndo<W>>;
 	readonly order : NoticeOrder;
 	// the errors and infos: their own cap of MAX_NOTICES, outside the order,
-	// so they never make an Undo notice go (as in TabManager)
-	readonly board = new NoticeBoard({ onChange: () => {}, timers: this.t });
+	// so they never make an Undo notice go (as in TabManager); with three
+	// Undo notices up they show two at most
+	readonly board = new NoticeBoard({ onChange: () => {}, timers: this.t, limit: () => this.undos().length >= MAX_NOTICES ? MAX_NOTICES - 1 : MAX_NOTICES });
 
 	constructor(stored : Record<string, W>) {
 		this.stored = stored;
@@ -317,6 +318,7 @@ class Popup {
 			if (old.source === "delete") this.pending.flush(false, old.key);
 			else this.offers.clear(old.key);
 		}
+		this.board.trim();
 	}
 	deleteWindow(id : string) {
 		const w = this.stored[id];
@@ -420,6 +422,19 @@ describe("stacked Undo notices", () => {
 		assert.equal(u.offers.items.length, 1);
 	});
 
+	test("a third Undo notice trims the board to two; with fewer Undo notices it holds three", () => {
+		const u = new Popup(start());
+		u.deleteTabs("A", ["a1"]);
+		u.move("B", ["b1", "b2"], { sessionId: "C", before: false });
+		u.board.error("one");
+		u.board.error("two");
+		u.board.error("three");
+		assert.equal(u.board.items.length, MAX_NOTICES, "two Undo notices: three errors fit");
+		u.deleteTabs("A", ["a2"]);
+		assert.equal(u.notices().length, 3);
+		assert.deepEqual(u.board.items.map((n) => n.text), ["two", "three"], "the third Undo notice made the oldest error go");
+	});
+
 	test("errors and infos never make an Undo notice go: Ctrl+Z still has the whole stack", () => {
 		const u = new Popup(start());
 		u.deleteTabs("A", ["a1"]);
@@ -431,7 +446,8 @@ describe("stacked Undo notices", () => {
 		u.board.error("Could not open the saved tab");
 		assert.deepEqual(u.commits, [], "no delete is written");
 		assert.deepEqual(u.notices(), ["delete A:0", "move", "delete A:1"]);
-		assert.equal(u.board.items.length, MAX_NOTICES, "the board keeps to its own cap");
+		assert.equal(u.board.items.length, MAX_NOTICES - 1, "with three Undo notices up the board keeps two");
+		assert.deepEqual(u.board.items.map((n) => n.text), ["Imported 2 saved windows", "Could not open the saved tab"], "the oldest went");
 		u.undo();
 		u.undo();
 		u.undo();

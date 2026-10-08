@@ -93,6 +93,23 @@ describe("NoticeBoard", () => {
 		assert.equal(board.items.length, 0);
 	});
 
+	test("limit lowers the cap, and trim drops the oldest down to it", () => {
+		let limit = 3;
+		const board = new NoticeBoard({ onChange: () => {}, limit: () => limit, timers: fakeTimers() });
+		board.error("a");
+		board.info("b");
+		board.error("c");
+		assert.equal(board.items.length, 3);
+		limit = 2;
+		board.trim();
+		assert.deepEqual(board.items.map((n) => n.text), ["b", "c"]);
+		board.error("d");
+		assert.deepEqual(board.items.map((n) => n.text), ["c", "d"], "a new one makes the oldest go at the lower cap");
+		limit = 3;
+		board.info("e");
+		assert.equal(board.items.length, 3);
+	});
+
 	test("closeAll takes every notice and every timer", () => {
 		const { t, board, changes } = setup();
 		board.error("a");

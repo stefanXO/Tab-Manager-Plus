@@ -25,7 +25,7 @@ import {applyTheme, nextTheme} from "@helpers/theme";
 import {actionHelp, trashKeys, newWindowKeys, themeHelp, themeLabel} from "../actionHelp";
 import {StatsLayer, StatsSource} from "./StatsLayer";
 import {Notice} from "./Notice";
-import {NoticeBoard, NoticeOrder, NoticeRef, isMacPlatform, isUndoKey, undoKeyCaps, undoKeyForField, refusedText, openFailedText} from "../notices";
+import {MAX_NOTICES, NoticeBoard, NoticeOrder, NoticeRef, isMacPlatform, isUndoKey, undoKeyCaps, undoKeyForField, refusedText, openFailedText} from "../notices";
 import {PendingDeletes, PendingItem, withoutItems, visibleSessions, noticeText, goneUrls, UNDO_MS} from "../pendingDelete";
 import {savedDeleteItems} from "../savedDelete";
 import {editSession, shownSavedName, SessionEdit} from "../sessionEdit";
@@ -101,7 +101,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	// of `order`: an error never makes an Undo notice go, so the stack Ctrl+Z
 	// takes back stays whole.
 	private readonly board = new NoticeBoard({
-		onChange: () => { if (!this.unmounted) this.forceUpdate(); }
+		onChange: () => { if (!this.unmounted) this.forceUpdate(); },
+		limit: () => this.undoNotices().length >= MAX_NOTICES ? MAX_NOTICES - 1 : MAX_NOTICES
 	});
 	// cancels the pending "is the service worker the one this popup was built
 	// for" check (../workerCheck.ts); it runs once, a moment after mounting
@@ -1492,6 +1493,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	// makes the oldest go, as its close button would
 	private noticeShown(ref : NoticeRef) {
 		for (const old of this.order.push(ref)) this.endNotice(old);
+		this.board.trim();
 	}
 	// The Undo of an Undo notice (its button, or Ctrl+Z on the newest)
 	private undoNotice(ref : NoticeRef) {

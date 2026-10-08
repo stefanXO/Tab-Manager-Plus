@@ -170,11 +170,12 @@
 								mouse is over the notice, its close button removes the window for good at once,
 								and it is also removed when the countdown ends or the popup closes. Undo notices
 								stack (a delete's, a move's), at most three Undo notices at a time (a fourth
-								makes the oldest go, and its change stands; error notices never push one out);
-								Ctrl+Z (Cmd+Z on a Mac, shown as key caps on the newest) undoes the newest
-								first, then the next, one per press (holding the keys undoes one), also while
-								the search box has the focus and holds text, and each Undo puts back only what
-								its own change did</li>
+								makes the oldest go, and its change stands; error notices never push one out,
+								and while three Undo notices are up at most two error or information notices
+								show); Ctrl+Z (Cmd+Z on a Mac, shown as key caps on the newest) undoes the
+								newest first, then the next, one per press (holding the keys undoes one), also
+								while the search box has the focus and holds text, and each Undo puts back only
+								what its own change did</li>
 							<li>Errors show in the same kind of notice, with a red edge, for 8 seconds
 								(information notes such as an import summary for 5): a save or rename the
 								browser refused (full browser storage), a sessions file that could not be read
