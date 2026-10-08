@@ -11,6 +11,8 @@
 // saved tabs that were selected and deleted. Those go by their stored `index`,
 // which a delete leaves alone in the tabs that stay.
 
+import { maybePluralize } from "../helpers/utils.ts";
+
 export const UNDO_MS = 8000;
 
 export interface PendingItem {
@@ -83,14 +85,6 @@ export class PendingDeletes {
 	// bumps with every change to what is hidden (a cache key for the callers)
 	get version() : number {
 		return this.changes;
-	}
-
-	// ids of the saved windows that must not be shown at all: pending ones and
-	// the ones being written
-	hidden() : Set<string> {
-		const ids = new Set<string>();
-		for (const item of this.hiding()) if (!partial(item)) ids.add(item.id);
-		return ids;
 	}
 
 	// everything that must not be shown, the tabs of a window that stays
@@ -168,13 +162,6 @@ export class PendingDeletes {
 	}
 }
 
-// storage.local's `sessions` object without the given ids; never changes `values`
-export function withoutSessions<T>(values : Record<string, T>, ids : readonly string[]) : Record<string, T> {
-	const out : Record<string, T> = {};
-	for (const key of Object.keys(values)) if (!ids.includes(key)) out[key] = values[key];
-	return out;
-}
-
 interface HasTabs {
 	tabs : { index? : number }[];
 }
@@ -209,10 +196,6 @@ export function visibleSessions<T extends HasTabs & { id : string }>(sessions : 
 	return sessions.filter((s) => kept[s.id]).map((s) => kept[s.id]);
 }
 
-function count(n : number, word : string) : string {
-	return n + " " + word + (n === 1 ? "" : "s");
-}
-
 // the notice's text: "Deleted "Tax 2029" (3 tabs)", "Deleted 2 tabs from
 // "Tax 2029"", "Deleted 3 saved windows" or, mixed, "Deleted 2 saved tabs and
 // 1 saved window"
@@ -221,14 +204,14 @@ export function noticeText(items : readonly PendingItem[]) : string {
 	if (items.length === 1) {
 		const [item] = items;
 		const name = "“" + (item.name || "saved window") + "”";
-		if (partial(item)) return "Deleted " + count(item.tabs, "tab") + " from " + name;
-		return "Deleted " + name + " (" + count(item.tabs, "tab") + ")";
+		if (partial(item)) return "Deleted " + maybePluralize(item.tabs, "tab") + " from " + name;
+		return "Deleted " + name + " (" + maybePluralize(item.tabs, "tab") + ")";
 	}
 	const windows = items.filter((item) => !partial(item)).length;
 	const tabs = items.filter(partial).reduce((sum, item) => sum + item.tabs, 0);
 	const parts : string[] = [];
-	if (tabs > 0) parts.push(count(tabs, "saved tab"));
-	if (windows > 0) parts.push(count(windows, "saved window"));
+	if (tabs > 0) parts.push(maybePluralize(tabs, "saved tab"));
+	if (windows > 0) parts.push(maybePluralize(windows, "saved window"));
 	return "Deleted " + parts.join(" and ");
 }
 

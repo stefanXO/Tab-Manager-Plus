@@ -147,4 +147,34 @@ describe("dropMissingSaved", () => {
 		assert.equal(dropMissingSaved(sel, sessions, keys), true);
 		assert.equal(sel.size, 0);
 	});
+
+	test("with the old list: drops a tab whose index now names another tab (renumbered)", () => {
+		const keys = new SavedTabKeys();
+		const before = [{ id: "s1", tabs: [{ index: 0, url: "https://a/" }, { index: 1, url: "https://b/" }, { index: 2, url: "https://c/" }] }];
+		// a removed, the rest numbered anew: b is 0, c is 1
+		const after = [{ id: "s1", tabs: [{ index: 0, url: "https://b/" }, { index: 1, url: "https://c/" }] }];
+		const was1 = keys.key("s1", 1), was2 = keys.key("s1", 2);
+		const sel = new Set([was1, was2, 5]);
+		assert.equal(dropMissingSaved(sel, after, keys, before), true);
+		assert.deepEqual([...sel], [5]);
+	});
+
+	test("with the old list: keeps tabs that are still the same, also in a changed window", () => {
+		const keys = new SavedTabKeys();
+		const tabs = [{ index: 0, url: "https://a/", title: "A" }, { index: 1, url: "https://b/", title: "B" }];
+		const before = [{ id: "s1", tabs }, { id: "s2", tabs: [{ index: 0, url: "https://x/" }] }];
+		// s1 untouched (the same array), s2 rewritten with its tab unchanged and one more
+		const after = [{ id: "s1", tabs }, { id: "s2", tabs: [{ index: 0, url: "https://x/" }, { index: 1, url: "https://y/" }] }];
+		const sel = new Set([keys.key("s1", 1), keys.key("s2", 0)]);
+		assert.equal(dropMissingSaved(sel, after, keys, before), false);
+		assert.equal(sel.size, 2);
+	});
+
+	test("with the old list: a retitled tab at the same index counts as another tab", () => {
+		const keys = new SavedTabKeys();
+		const before = [{ id: "s1", tabs: [{ index: 0, url: "https://a/", title: "A" }] }];
+		const after = [{ id: "s1", tabs: [{ index: 0, url: "https://a/", title: "Other" }] }];
+		const sel = new Set([keys.key("s1", 0)]);
+		assert.equal(dropMissingSaved(sel, after, keys, before), true);
+	});
 });

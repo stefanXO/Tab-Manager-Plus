@@ -18,7 +18,7 @@ export interface SavedTabRef {
 // the shape of a saved window this module needs (ISavedSession has more)
 export interface SavedWindowLike {
 	id : string;
-	tabs : { index? : number }[];
+	tabs : { index? : number, url? : string, title? : string }[];
 }
 
 export class SavedTabKeys {
@@ -83,15 +83,25 @@ export function onlySavedSelected(selection : Set<number>) : boolean {
 }
 
 // Drops the selected saved tabs whose saved window or index no longer exists
-// (the saved window was deleted, or changed in another popup). True when
-// something was dropped.
-export function dropMissingSaved(selection : Set<number>, sessions : SavedWindowLike[], keys : SavedTabKeys = savedTabKeys) : boolean {
+// (the saved window was deleted, or changed in another popup). With `before`
+// (the saved windows as they were), also the ones whose index now names
+// another tab: a saved window rewritten with its tabs numbered anew (imported
+// over, changed elsewhere, its indexes fixed) would otherwise select whatever
+// tab took the number. True when something was dropped.
+export function dropMissingSaved(selection : Set<number>, sessions : readonly SavedWindowLike[], keys : SavedTabKeys = savedTabKeys, before? : readonly SavedWindowLike[]) : boolean {
 	let dropped = false;
 	for (const id of [...selection]) {
 		if (!isSavedTabKey(id)) continue;
 		const ref = keys.ref(id);
 		const session = ref && sessions.find((s) => s.id === ref.sessionId);
-		if (!session || !session.tabs.some((t) => t.index === ref.index)) {
+		const tab = session && session.tabs.find((t) => t.index === ref.index);
+		let gone = !tab;
+		if (tab && before) {
+			const old = before.find((s) => s.id === ref!.sessionId);
+			const was = old && old.tabs !== session!.tabs ? old.tabs.find((t) => t.index === ref!.index) : undefined;
+			if (was && (was.url !== tab.url || was.title !== tab.title)) gone = true;
+		}
+		if (gone) {
 			selection.delete(id);
 			dropped = true;
 		}

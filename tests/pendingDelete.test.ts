@@ -5,8 +5,11 @@
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { PendingDeletes, withoutSessions, noticeText, secondsLeft, fractionLeft, UNDO_MS } from "../src/popup/pendingDelete.ts";
+import { PendingDeletes, noticeText, secondsLeft, fractionLeft, UNDO_MS } from "../src/popup/pendingDelete.ts";
 import type { PendingItem } from "../src/popup/pendingDelete.ts";
+
+// the saved windows hidden whole (pending or being written)
+const hiddenWindows = (p : PendingDeletes) => p.hiding().filter((i) => i.indexes === undefined).map((i) => i.id);
 
 // a clock and timers the test moves by hand
 function fakeTimers() {
@@ -43,7 +46,7 @@ describe("PendingDeletes", () => {
 	test("hides at once, writes only when the countdown ends", () => {
 		const { t, p, commits } = setup();
 		p.add(item("a"));
-		assert.deepEqual([...p.hidden()], ["a"]);
+		assert.deepEqual(hiddenWindows(p), ["a"]);
 		assert.equal(p.deadline, 1000 + UNDO_MS);
 		t.advance(UNDO_MS - 1);
 		assert.equal(commits.length, 0);
@@ -58,7 +61,7 @@ describe("PendingDeletes", () => {
 		p.add(item("a"));
 		const back = p.undo();
 		assert.deepEqual(back.map((b) => b.id), ["a"]);
-		assert.equal(p.hidden().size, 0);
+		assert.equal(hiddenWindows(p).length, 0);
 		assert.equal(t.active(), 0);
 		t.advance(UNDO_MS * 2);
 		assert.equal(commits.length, 0);
@@ -98,12 +101,12 @@ describe("PendingDeletes", () => {
 		assert.deepEqual(commits, [{ ids: ["a"], sync: true }]);
 		assert.equal(t.active(), 0);
 		assert.equal(p.items.length, 0);
-		assert.deepEqual([...p.hidden()], ["a"]);
+		assert.deepEqual(hiddenWindows(p), ["a"]);
 		assert.equal(p.undo().length, 0);
 		finish();
 		await Promise.resolve();
 		await Promise.resolve();
-		assert.equal(p.hidden().size, 0);
+		assert.equal(hiddenWindows(p).length, 0);
 	});
 
 	test("a failed write shows the window again", async () => {
@@ -117,21 +120,13 @@ describe("PendingDeletes", () => {
 		} finally {
 			console.error = log;
 		}
-		assert.equal(p.hidden().size, 0);
+		assert.equal(hiddenWindows(p).length, 0);
 	});
 
 	test("flush with nothing pending does nothing", () => {
 		const { p, commits } = setup();
 		p.flush(true);
 		assert.equal(commits.length, 0);
-	});
-});
-
-describe("withoutSessions", () => {
-	test("drops the ids and leaves the input alone", () => {
-		const values = { a: 1, b: 2, c: 3 };
-		assert.deepEqual(withoutSessions(values, ["a", "c"]), { b: 2 });
-		assert.deepEqual(values, { a: 1, b: 2, c: 3 });
 	});
 });
 

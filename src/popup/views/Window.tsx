@@ -1,6 +1,6 @@
 "use strict";
 
-import {getLocalStorage, setLocalStorage, getLocalStorageMap} from "@helpers/storage";
+import {getLocalStorageMap} from "@helpers/storage";
 import {Tab} from "@views";
 import * as S from "@strings";
 import {LAYOUT, isBlockLayout} from "@helpers/settings";
@@ -12,7 +12,7 @@ import {ManagerContext, ITabManagerActions} from '../context';
 import {windowName, compactName, tabsKey} from '../windowName';
 import {sendAndWait} from '../messaging';
 import {buildSavedWindow, newSessionId} from '@helpers/sessions';
-import {firstOrders, isSavedWindowDrag} from '../sessionOrder';
+import {isSavedWindowDrag} from '../sessionOrder';
 
 export class Window extends React.Component<IWindow, IWindowState> {
 	static contextType = ManagerContext;
@@ -418,21 +418,15 @@ export class Window extends React.Component<IWindow, IWindowState> {
 			incognito: this.props.window.incognito,
 			firefox: IS_FIREFOX
 		});
-		console.log(session.tabs);
-
-		console.log(session);
-
-		let sessions = await getLocalStorage(S.sessions, {});
-		// listed first among the saved windows (../sessionOrder.ts)
-		session.order = firstOrders(sessions, 1)[0];
-		sessions[session.id] = session;
-
-		let value = await setLocalStorage(S.sessions, sessions).catch(function(err) {
-			console.log(err);
-			console.error(err.message);
-		});
+		// listed first among the saved windows, written by the manager after
+		// any other change to them (../sessionStore.ts)
+		try {
+			await this.context.addSavedWindows([session]);
+		} catch (err) {
+			console.error("could not save the window", err);
+			return;
+		}
 		this.context.reload();
-		console.log("Value is set to " + value);
 
 		setTimeout(() => {
 			this.context.scrollTo("session", session.id);

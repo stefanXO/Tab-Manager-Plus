@@ -380,7 +380,7 @@ export class StatsHover {
 				now,
 				savedAt: saved.session.date,
 				windowName: this.savedName(saved.session),
-				windowTabCount: saved.session.tabs.length,
+				windowTabs: saved.session.tabs,
 				allTabs: st.tabsbyid.values(),
 				openWindowName: (id) => this.windowName(id)
 			});

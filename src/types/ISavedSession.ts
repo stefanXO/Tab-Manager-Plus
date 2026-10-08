@@ -11,6 +11,6 @@ export interface ISavedSession {
 	customName: boolean,
 	incognito: boolean,
 	// where it is listed among the saved windows, lowest first; saved windows
-	// without one come after (src/popup/sessionOrder.ts)
+	// without one come after, newest first (src/popup/sessionOrder.ts)
 	order?: number
 }

@@ -2,24 +2,31 @@
 
 // The order of the saved windows. Each saved window may carry an `order`
 // number (ISavedSession.order): the ones with one come first, lowest first;
-// the ones without (saved before this existed, or imported from an older
-// backup) keep the order storage lists them in, after the ordered ones.
-// Dragging a card renumbers every saved window 0, 1, 2…; a new saved window
-// gets a number below all of them, so it is listed first. Pure, unit tested in
+// the ones without (saved before this existed) come after them, newest first,
+// as a new save is listed first. Dragging a card renumbers every saved window
+// 0, 1, 2…; a new saved window (and an imported one) gets a number below all
+// of them, so it is listed first. Pure, unit tested in
 // tests/sessionOrder.test.ts.
 
 // the part of a saved window the order reads
 export interface Orderable {
 	id : string;
 	order? : number;
+	// when it was saved (ms)
+	date? : number;
 }
 
 function ordered(s : Orderable) : boolean {
 	return typeof s.order === "number" && Number.isFinite(s.order);
 }
 
+// when it was saved; without a usable date, older than any
+function dateOf(s : Orderable) : number {
+	return typeof s.date === "number" && Number.isFinite(s.date) ? s.date : -Infinity;
+}
+
 // The saved windows in the order they are listed. Stable: equal numbers, and
-// the ones without a number, keep the order they come in.
+// the ones without a number saved at the same time, keep the order they come in.
 export function sortSessions<T extends Orderable>(sessions : readonly T[]) : T[] {
 	return sessions
 		.map((s, at) => ({ s, at }))
@@ -27,6 +34,8 @@ export function sortSessions<T extends Orderable>(sessions : readonly T[]) : T[]
 			const oa = ordered(a.s), ob = ordered(b.s);
 			if (oa && ob) return (a.s.order! - b.s.order!) || (a.at - b.at);
 			if (oa !== ob) return oa ? -1 : 1;
+			const da = dateOf(a.s), db = dateOf(b.s);
+			if (da !== db) return db > da ? 1 : -1;
 			return a.at - b.at;
 		})
 		.map((e) => e.s);
@@ -52,7 +61,7 @@ export function moveSession(ids : readonly string[], dragged : string, target : 
 // are left as they are.
 export function reorderSessions<T extends Orderable>(stored : Readonly<Record<string, T>>, dragged : string, target : string, before : boolean) : Record<string, T> | null {
 	const keys = Object.keys(stored).filter((key) => isSaved(stored[key]));
-	const list = sortSessions(keys.map((key) => ({ key, id: stored[key].id, order: stored[key].order })));
+	const list = sortSessions(keys.map((key) => ({ key, id: stored[key].id, order: stored[key].order, date: stored[key].date })));
 	const ids = list.map((e) => e.id);
 	const next = moveSession(ids, dragged, target, before);
 	if (!next) return null;
@@ -63,6 +72,16 @@ export function reorderSessions<T extends Orderable>(stored : Readonly<Record<st
 		out[key] = isSaved(s) && place.has(s.id) ? { ...s, order: place.get(s.id)! } : s;
 	}
 	return out;
+}
+
+// The same, for a drag among the cards on screen (`shown`: their ids, in
+// order; a pending delete or a search can hide some): null when the drop
+// changes nothing there, even if it would move the dragged card past hidden
+// ones. Otherwise it lands right before / after `target` in the stored order,
+// and the hidden ones keep their places around it.
+export function reorderShown<T extends Orderable>(stored : Readonly<Record<string, T>>, shown : readonly string[], dragged : string, target : string, before : boolean) : Record<string, T> | null {
+	if (moveSession(shown, dragged, target, before) === null) return null;
+	return reorderSessions(stored, dragged, target, before);
 }
 
 function isSaved(s : unknown) : s is Orderable {

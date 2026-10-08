@@ -12,6 +12,9 @@ import { SavedTabKeys } from "../src/popup/sessionKeys.ts";
 import { PendingDeletes, withoutItems, visibleSessions, noticeText, UNDO_MS } from "../src/popup/pendingDelete.ts";
 import type { PendingItem } from "../src/popup/pendingDelete.ts";
 
+// the saved windows hidden whole (pending or being written)
+const hiddenWindows = (p : PendingDeletes) => p.hiding().filter((i) => i.indexes === undefined).map((i) => i.id);
+
 const win = (id : string, indexes : number[]) => ({ id, name: "Window " + id, tabs: indexes.map((index) => ({ index })) });
 const some = (id : string, indexes : number[]) : PendingItem => ({ id, name: "Window " + id, tabs: indexes.length, indexes });
 const whole = (id : string, tabs = 3) : PendingItem => ({ id, name: "Window " + id, tabs });
@@ -105,7 +108,7 @@ describe("PendingDeletes with saved tabs", () => {
 	test("tabs of a window do not hide the window, but are listed as hiding", () => {
 		const { p } = setup();
 		p.add(some("a", [1]));
-		assert.equal(p.hidden().size, 0);
+		assert.equal(hiddenWindows(p).length, 0);
 		assert.deepEqual(p.hiding(), [some("a", [1])]);
 	});
 
@@ -124,7 +127,7 @@ describe("PendingDeletes with saved tabs", () => {
 		p.add(whole("a"));
 		assert.equal(p.items.length, 1);
 		assert.equal(p.items[0].indexes, undefined);
-		assert.deepEqual([...p.hidden()], ["a"]);
+		assert.deepEqual(hiddenWindows(p), ["a"]);
 		p.add(some("a", [0]));
 		assert.equal(p.items[0].indexes, undefined);
 	});

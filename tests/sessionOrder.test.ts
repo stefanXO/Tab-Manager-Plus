@@ -7,7 +7,7 @@
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { sortSessions, moveSession, reorderSessions, firstOrders, dropSide, isSavedWindowDrag, SAVED_WINDOW_DRAG } from "../src/popup/sessionOrder.ts";
+import { sortSessions, moveSession, reorderSessions, reorderShown, firstOrders, dropSide, isSavedWindowDrag, SAVED_WINDOW_DRAG } from "../src/popup/sessionOrder.ts";
 
 const s = (id : string, order? : number, extra : Record<string, unknown> = {}) => (order === undefined ? { id, ...extra } : { id, order, ...extra });
 const ids = (list : { id : string }[]) => list.map((e) => e.id);
@@ -19,6 +19,16 @@ describe("sortSessions", () => {
 
 	test("numbered ones first, lowest first; the others after, as they came", () => {
 		assert.deepEqual(ids(sortSessions([s("a"), s("b", 2), s("c"), s("d", -1), s("e", 0)])), ["d", "e", "b", "a", "c"]);
+	});
+
+	test("the ones without a number: newest first, after the numbered ones", () => {
+		const list = [s("old", undefined, { date: 100 }), s("new", undefined, { date: 300 }), s("n", 5), s("mid", undefined, { date: 200 })];
+		assert.deepEqual(ids(sortSessions(list)), ["n", "new", "mid", "old"]);
+	});
+
+	test("without a number: no usable date goes last, the same date keeps the order they come in", () => {
+		const list = [s("a"), s("b", undefined, { date: 5 }), s("c", undefined, { date: NaN }), s("d", undefined, { date: 5 })];
+		assert.deepEqual(ids(sortSessions(list)), ["b", "d", "a", "c"]);
 	});
 
 	test("equal numbers keep the order they come in", () => {
@@ -115,6 +125,37 @@ describe("reorderSessions", () => {
 		assert.equal(next.bad, junk);
 		assert.deepEqual(Object.keys(next), ["a", "bad", "b"]);
 		assert.deepEqual([next.b.order, next.a.order], [0, 1]);
+	});
+});
+
+describe("reorderSessions with dates", () => {
+	test("starts from the listed order: unnumbered ones newest first", () => {
+		const stored = { old: s("old", undefined, { date: 1 }), mid: s("mid", undefined, { date: 2 }), new: s("new", undefined, { date: 3 }) };
+		// listed: new, mid, old; old dragged before new
+		const next = reorderSessions(stored, "old", "new", true)!;
+		assert.deepEqual(ids(sortSessions(Object.values(next))), ["old", "new", "mid"]);
+	});
+});
+
+describe("reorderShown", () => {
+	// listed a, h, b, c; h is hidden (pending delete, or no search match)
+	const stored = { a: s("a", 0), h: s("h", 1), b: s("b", 2), c: s("c", 3) };
+	const shown = ["a", "b", "c"];
+
+	test("no change among the shown cards: null, though it would pass a hidden one", () => {
+		assert.equal(reorderShown(stored, shown, "a", "b", true), null);
+		assert.equal(reorderShown(stored, shown, "b", "a", false), null);
+	});
+
+	test("a move among the shown cards lands right next to the target; the hidden one keeps its place", () => {
+		const next = reorderShown(stored, shown, "c", "b", true)!;
+		assert.deepEqual(ids(sortSessions(Object.values(next))), ["a", "h", "c", "b"]);
+		const up = reorderShown(stored, shown, "c", "a", false)!;
+		assert.deepEqual(ids(sortSessions(Object.values(up))), ["a", "c", "h", "b"]);
+	});
+
+	test("a target that is not shown: null", () => {
+		assert.equal(reorderShown(stored, shown, "c", "h", true), null);
 	});
 });
 

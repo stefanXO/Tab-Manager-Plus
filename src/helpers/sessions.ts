@@ -8,6 +8,7 @@
 import { windowName } from "../popup/windowName.ts";
 import type { NameTab } from "../popup/windowName.ts";
 import { maybePluralize } from "./utils.ts";
+import { firefoxCanOpen } from "./aboutPages.ts";
 
 // a random version 4 uuid, the id of a saved window
 export function newSessionId(random : () => number = Math.random) : string {
@@ -43,7 +44,7 @@ export interface SaveInput<T, W> {
 	autoName? : string;
 	color? : string;
 	incognito : boolean;
-	// Firefox cannot restore about: pages: they are left out
+	// Firefox cannot restore its about: pages (./aboutPages.ts): they are left out
 	firefox : boolean;
 }
 
@@ -51,7 +52,7 @@ export interface SaveInput<T, W> {
 // the tabs) is its name, and only a given name is a custom one that restoring
 // carries over to the new window.
 export function buildSavedWindow<T extends NameTab, W>(input : SaveInput<T, W>) : NewSavedWindow<T, W> {
-	const kept = input.tabs.filter((tab) => !(input.firefox && !!tab.url && tab.url.search("about:") > -1));
+	const kept = input.tabs.filter((tab) => !input.firefox || firefoxCanOpen(tab.url));
 	return {
 		tabs: kept,
 		windowsInfo: input.windowsInfo,

@@ -39,6 +39,10 @@ export interface ITabManagerActions {
 	setSetting<K extends keyof ISettings>(key : K, value : ISettings[K]) : void;
 	setBottomText(text : string) : void;
 	sessionSync() : Promise<void>;
+	// add saved windows (a save, an import), listed first; every change to the
+	// stored saved windows goes through the manager, one after the other.
+	// Rejects when the browser refused the write.
+	addSavedWindows(sessions : ISavedSession[]) : Promise<void>;
 	// delete a saved window, with an Undo countdown before it leaves storage
 	deleteSession(session : ISavedSession) : void;
 	// browser state changed (windows/tabs/sessions): refetch and re-render

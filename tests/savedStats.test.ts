@@ -21,7 +21,8 @@ const openName = (id : number) => NAMES.get(id);
 const saved = (index : number, url : string, extra : Partial<StatsTab> = {}) : StatsTab => ({ index, url, title: "Saved " + index, ...extra });
 
 describe("savedTabStats", () => {
-	const base = { now: NOW, savedAt: NOW - 2 * DAY, windowName: "Conference reading", windowTabCount: 5, allTabs: [] as StatsTab[], openWindowName: openName };
+	const five = [0, 1, 2, 3, 4].map((i) => ({ index: i }));
+	const base = { now: NOW, savedAt: NOW - 2 * DAY, windowName: "Conference reading", windowTabs: five, allTabs: [] as StatsTab[], openWindowName: openName };
 
 	test("title, saved how long ago, position in the saved window", () => {
 		const card = savedTabStats(saved(2, "https://a.test/"), base);
@@ -29,6 +30,23 @@ describe("savedTabStats", () => {
 		assert.deepEqual(card.lines.map((l) => l.key), ["saved", "position"]);
 		assert.equal(keyed(card.lines, "saved"), "saved 2 days ago");
 		assert.equal(keyed(card.lines, "position"), "tab 3 of 5 in Conference reading");
+	});
+
+	test("the position counts the listed tabs, not the stored index (gaps after deletes or a Firefox save)", () => {
+		const tabs = [saved(0, "https://a.test/"), saved(3, "https://b.test/"), saved(7, "https://c.test/"), saved(9, "https://d.test/")];
+		const card = savedTabStats(tabs[2], { ...base, windowTabs: tabs });
+		assert.equal(keyed(card.lines, "position"), "tab 3 of 4 in Conference reading");
+	});
+
+	test("the position matches a copy of the tab by its index", () => {
+		const tabs = [saved(2, "https://a.test/"), saved(5, "https://b.test/")];
+		const card = savedTabStats(saved(5, "https://b.test/"), { ...base, windowTabs: tabs });
+		assert.equal(keyed(card.lines, "position"), "tab 2 of 2 in Conference reading");
+	});
+
+	test("a tab no longer listed (its delete is pending): no position", () => {
+		const card = savedTabStats(saved(4, "https://a.test/"), { ...base, windowTabs: [saved(0, "https://b.test/")] });
+		assert.equal(keyed(card.lines, "position"), undefined);
 	});
 
 	test("title falls back to the url, then to a placeholder", () => {

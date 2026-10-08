@@ -84,9 +84,12 @@ export interface SavedTabStatsContext {
 	now : number;
 	// when the saved window was saved
 	savedAt : number;
-	// the saved window's display name and how many tabs it holds
+	// the saved window's display name and its tabs as the popup lists them
+	// (without the ones a pending delete hides): "tab N of M" counts these, as
+	// the stored indexes can have gaps (deleted saved tabs, about: pages left
+	// out of a Firefox save)
 	windowName : string;
-	windowTabCount : number;
+	windowTabs : readonly { index? : number }[];
 	// every open tab, for "open now in"
 	allTabs : Iterable<StatsTab>;
 	// an open window's display name ("" / undefined: leave it out)
@@ -240,8 +243,10 @@ export function savedTabStats(tab : StatsTab, ctx : SavedTabStatsContext) : Stat
 	add("saved", "saved " + timeAgo(ctx.savedAt, ctx.now), "saved");
 	if (tab.pinned) lines.push(itemsLine("state", [{ icon: "pinned", text: "pinned" }]));
 
-	if (typeof tab.index === "number" && ctx.windowTabCount > 0) {
-		add("position", "tab " + (tab.index + 1) + " of " + ctx.windowTabCount + (ctx.windowName ? " in " + ctx.windowName : ""), "position");
+	let at = ctx.windowTabs.indexOf(tab);
+	if (at < 0 && typeof tab.index === "number") at = ctx.windowTabs.findIndex((t) => t.index === tab.index);
+	if (at >= 0) {
+		add("position", "tab " + (at + 1) + " of " + ctx.windowTabs.length + (ctx.windowName ? " in " + ctx.windowName : ""), "position");
 	}
 
 	const open = openTabsWith(tab.url, ctx.allTabs, ctx.openWindowName);

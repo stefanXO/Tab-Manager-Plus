@@ -4,7 +4,7 @@ import * as React from "react";
 import * as browser from 'webextension-polyfill';
 import { ICommand, ISavedSession, ITabOptions, ITabOptionsState } from "@types";
 import {ManagerContext, ITabManagerActions, ISettings} from "../context";
-import {getLocalStorage, getLocalStorageMap, setLocalStorage} from "@helpers/storage";
+import {getLocalStorageMap} from "@helpers/storage";
 import {currentShowMonitors, saveSetting, Settings, SETTING_DEFAULTS} from "@helpers/settings";
 import {buildDebugExport, debugFileName} from "../debugExport";
 import {importSummary, planImport} from "../importCount";
@@ -676,14 +676,15 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 					return;
 				}
 				const plan = planImport<ISavedSession>(backupFile);
+				// One write through the manager, after any other change to the
+				// saved windows; listed first, with new order numbers and their
+				// tab indexes fixed (../sessionStore.ts). Refused: none is stored.
 				let failed = 0;
-				for (const newSession of plan.valid) {
-					let sessions = await getLocalStorage(S.sessions, {});
-					sessions[newSession.id] = newSession;
-					await setLocalStorage(S.sessions, sessions).catch(function(err) {
-						console.error(err.message);
-						failed++;
-					});
+				try {
+					await this.context.addSavedWindows(plan.valid);
+				} catch (err) {
+					console.error(err);
+					failed = plan.valid.length;
 				}
 				const summary = importSummary(plan, failed);
 				if (plan.valid.length - failed > 0) {
@@ -694,7 +695,6 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 					this.context.setBottomText("Error: " + summary);
 				}
 				inputField.value = "";
-				await this.context.sessionSync();
 			};
 			reader.readAsText(file);
 		} catch (err) {

@@ -4,6 +4,7 @@ import {cleanupDebounce} from "@background/tracking";
 import {getLocalStorage, getLocalStorageMap, setLocalStorage, setLocalStorageMap, serialized} from "@helpers/storage";
 import {restoreCreate, knownDisplayList, windowsToMinimize} from "@helpers/geometry";
 import {hashcode} from "@helpers/windows";
+import {firefoxCanOpen} from "@helpers/aboutPages";
 import {setWindowColor, setWindowName} from "@background/actions";
 import * as S from "@strings";
 import * as browser from 'webextension-polyfill';
@@ -124,11 +125,10 @@ export async function createWindowWithSessionTabs(session: ISavedSession, tabId:
 		}
 		fTab.windowId = newWindow.id;
 
-		if (IS_FIREFOX) {
-			if (!!fTab.url && fTab.url.search("about:") > -1) {
-				console.log("filtered by about: url", fTab.url);
-				fTab.url = "";
-			}
+		// Firefox refuses its about: pages (helpers/aboutPages.ts): a new tab instead
+		if (IS_FIREFOX && !firefoxCanOpen(fTab.url)) {
+			console.log("filtered by about: url", fTab.url);
+			fTab.url = "";
 		}
 		try {
 			await browser.tabs.create(fTab).catch(function (error) {

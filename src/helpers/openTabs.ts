@@ -6,6 +6,8 @@
 // them one after the other with tabs.create. The saved window is not changed.
 // No browser calls in here: the worker passes tabs.create in, the tests a fake.
 
+import { firefoxCanOpen } from "./aboutPages.ts";
+
 // one saved tab to open: what the popup sends the worker
 export interface ISavedTabOpen {
 	url : string;
@@ -30,12 +32,12 @@ export interface IOpenCreated {
 // What tabs.create gets for one saved tab. Opened in the background: the
 // popup stays open over the window it was dropped on and shows the new tabs
 // (activating a tab in the popup's own window would close it). Firefox
-// refuses about: pages other than about:blank, as when a saved window is
+// refuses its about: pages (./aboutPages.ts), as when a saved window is
 // restored (background/windows.ts); such a tab opens as a new tab instead.
 export function createData(tab : ISavedTabOpen, windowId : number, index : number | undefined, firefox : boolean) : IOpenCreate {
 	const data : IOpenCreate = { windowId, pinned: !!tab.pinned, active: false };
 	if (index !== undefined) data.index = index;
-	if (tab.url && !(firefox && tab.url.startsWith("about:") && tab.url !== "about:blank")) data.url = tab.url;
+	if (tab.url && (!firefox || firefoxCanOpen(tab.url))) data.url = tab.url;
 	return data;
 }
 

@@ -53,6 +53,10 @@ describe("buildSavedWindow", () => {
 		assert.deepEqual(buildSavedWindow({ ...base, tabs: mixed, firefox: true }).tabs.map((t) => t.index), [1]);
 		assert.equal(buildSavedWindow({ ...base, tabs: mixed, firefox: false }).tabs.length, 3);
 	});
+	test("Firefox keeps about:blank (it opens it) and pages that only mention about:", () => {
+		const t = [tab(1, 0, "about:blank"), tab(1, 1, "https://example.com/?from=about:newtab")];
+		assert.equal(buildSavedWindow({ ...base, tabs: t, firefox: true }).tabs.length, 2);
+	});
 	test("a tab without a url is kept", () => {
 		const t = [{ index: 0 }];
 		assert.equal(buildSavedWindow({ ...base, tabs: t, firefox: true }).tabs.length, 1);
