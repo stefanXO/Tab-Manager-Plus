@@ -63,8 +63,8 @@
 		width: 26px;
 		flex: none;
 	}
-	/* the header keeps only its text: donate, rate and options go */
-	.donate.icon, .rate.icon, .options.icon {
+	/* the header keeps only its text: donate, rate, theme and options go */
+	.donate.icon, .rate.icon, .theme.icon, .options.icon {
 		display: none;
 	}
 	.window.top input, .no-supportLinks .window.top input {

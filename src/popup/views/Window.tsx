@@ -19,6 +19,7 @@ import {isOpenTabDrag} from '../savedAdd';
 import {readTabDrag} from '../dragPayload';
 import {tabShow, isHiddenTab, hidesWholeWindow} from '../selectedShown';
 import {tabDropBefore} from '../tabDropSide';
+import {actionHelp} from '../actionHelp';
 
 export class Window extends React.Component<IWindow, IWindowState> {
 	static contextType = ManagerContext;
@@ -185,40 +186,52 @@ export class Window extends React.Component<IWindow, IWindowState> {
 						{this.props.sessionsFeature ? (
 							<div
 								className={"icon tabaction save " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
-								data-hover={
+								role="button"
+								aria-label="Save this window for later"
+								{...actionHelp(
 									"Save this window for later\nWill save " +
 									maybePluralize(this.props.tabs.length, "tab") +
 									" with this window for later. Please note : The saved tabs will lose their history."
-								}
+								)}
 								onClick={this.save}
 							/>
 						) : false}
 						<div
 							className={"icon tabaction add " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
-							data-hover="Open a new tab"
+							role="button"
+							aria-label="Open a new tab"
+							{...actionHelp("Open a new tab")}
 							onClick={this.addTab}
 						/>
 						<div
 							className={"icon tabaction colors " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
-							data-hover="Change window name or color"
+							role="button"
+							aria-label="Change window name or color"
+							{...actionHelp("Change window name or color")}
 							onClick={this.openOptions}
 						/>
 						{this.props.window.state === "minimized" ? (
 							<div
 								className={"icon tabaction maximize " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
-								data-hover={"Maximize this window\nWill maximize " + maybePluralize(this.props.tabs.length, "tab")}
+								role="button"
+								aria-label="Maximize this window"
+								{...actionHelp("Maximize this window\nWill maximize " + maybePluralize(this.props.tabs.length, "tab"))}
 								onClick={this.maximize}
 							/>
 						) : (
 							<div
 								className={"icon tabaction minimize " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
-								data-hover={"Minimize this window\nWill minimize " + maybePluralize(this.props.tabs.length, "tab")}
+								role="button"
+								aria-label="Minimize this window"
+								{...actionHelp("Minimize this window\nWill minimize " + maybePluralize(this.props.tabs.length, "tab"))}
 								onClick={this.minimize}
 							/>
 						)}
 						<div
 							className={"icon tabaction close " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
-							data-hover={"Close this window\nWill close " + maybePluralize(this.props.tabs.length, "tab")}
+							role="button"
+							aria-label="Close this window"
+							{...actionHelp("Close this window\nWill close " + maybePluralize(this.props.tabs.length, "tab"))}
 							onClick={this.close}
 						/>
 					</div>

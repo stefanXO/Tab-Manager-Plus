@@ -11,7 +11,8 @@ import {restoreDisplays} from "./restoreDisplays";
 import {savedTabKeys} from "./sessionKeys";
 import {savedTile} from "./savedTiles";
 import {shownSavedName} from "./sessionEdit";
-import {hoverKey, hoverAction, isWarm, parseKey, arrowsMoveCard, STATS_KEYBOARD_DELAY} from "./statsHoverLogic";
+import {hoverKey, hoverAction, isWarm, parseKey, arrowsMoveCard, ACTION_SELECTOR, STATS_KEYBOARD_DELAY} from "./statsHoverLogic";
+import {actionCard} from "./actionHelp";
 import type {IStatsFavicon, IStatsCardContent} from "./views/StatsCard";
 
 // how many site favicons the window card shows
@@ -28,12 +29,17 @@ const LANDING_ID = -2;
 // follows it) or next to an element (the keyboard's selected row)
 export interface IStatsTarget {
 	// "saved": a tab of a saved window, id is its selection key (sessionKeys.ts);
-	// "session": a saved window, `session` is its id (and id is -1)
-	kind : "tab" | "window" | "saved" | "session";
+	// "session": a saved window, `session` is its id (and id is -1);
+	// "action": an action button's help (./actionHelp.ts), `element` is the
+	// button (and id is -1)
+	kind : "tab" | "window" | "saved" | "session" | "action";
 	id : number;
 	session? : string;
+	element? : HTMLElement;
 	pointer? : { x : number, y : number };
 	anchor? : Rect;
+	// an action card stays clear of its button (stats.ts placeAtPointer)
+	avoid? : Rect;
 }
 
 // the manager's data the cards are built from, read when a card opens
@@ -78,6 +84,9 @@ export class StatsHover {
 	// the last pointer position over the popup: a card opens next to the
 	// pointer (which may have moved since mouseover) and then follows it
 	private readonly pointer = { x: 0, y: 0 };
+	// the button of the open action card: its help changes with a click
+	// (the theme button's help names the new theme), and the card with it
+	private readonly helpWatch = typeof MutationObserver === "undefined" ? null : new MutationObserver(() => this.view.refresh());
 	// tabs.getZoom answers, per tab, for this popup's life
 	private readonly zoomCache = new Map<number, number>();
 	// the monitors for the window card's map, and the ones a restore knows
@@ -95,7 +104,7 @@ export class StatsHover {
 		root.addEventListener("mouseover", this.onOver);
 		root.addEventListener("mousemove", this.onMove);
 		root.addEventListener("mouseleave", this.close);
-		root.addEventListener("mousedown", this.close, true);
+		root.addEventListener("mousedown", this.onDown, true);
 		root.addEventListener("scroll", this.onScroll, true);
 		root.addEventListener("keydown", this.onKey);
 		// the monitors, once, off the first render
@@ -115,7 +124,8 @@ export class StatsHover {
 		root.removeEventListener("mouseover", this.onOver);
 		root.removeEventListener("mousemove", this.onMove);
 		root.removeEventListener("mouseleave", this.close);
-		root.removeEventListener("mousedown", this.close, true);
+		root.removeEventListener("mousedown", this.onDown, true);
+		this.helpWatch?.disconnect();
 		root.removeEventListener("scroll", this.onScroll, true);
 		root.removeEventListener("keydown", this.onKey);
 		if (!IS_FIREFOX) {
@@ -134,13 +144,30 @@ export class StatsHover {
 		if (action.kind === "none") return;
 		clearTimeout(this.timer);
 		if (action.kind === "close") {
-			if (action.left) this.leftAt = Date.now();
-			this.close();
+			if (!action.delay) {
+				if (action.left) this.leftAt = Date.now();
+				this.close();
+				return;
+			}
+			// off a button into the gap before the next one: the card stays a
+			// moment, so the next button swaps it in place
+			this.key = "";
+			this.timer = window.setTimeout(() => {
+				this.leftAt = Date.now();
+				this.close();
+			}, action.delay);
 			return;
 		}
 		this.key = key;
 		const parsed = parseKey(key);
 		if (!parsed) return;
+		if (parsed.kind === "action") {
+			const button = (e.target as Element).closest<HTMLElement>(ACTION_SELECTOR);
+			if (!button) return;
+			if (action.delay === 0) this.showAction(button);
+			else this.timer = window.setTimeout(() => this.showAction(button), action.delay);
+			return;
+		}
 		// a saved tab goes by the selection key its tile was given, a saved
 		// window by its id
 		const kind = parsed.kind;
@@ -162,6 +189,14 @@ export class StatsHover {
 		this.view.follow(e.clientX, e.clientY);
 	}
 
+	// a press closes the card, except on the button an action card is for:
+	// its help changes with what the click does, in place (helpWatch)
+	private readonly onDown = (e : MouseEvent) => {
+		const t = this.view.current();
+		if (t && t.element && t.element.contains(e.target as Node)) return;
+		this.close();
+	}
+
 	private readonly onKey = (e : KeyboardEvent) => {
 		if (e.keyCode === 27) {
 			if (this.view.isOpen()) {
@@ -181,8 +216,13 @@ export class StatsHover {
 
 	// the list scrolled under the keyboard's card: keep it next to its row
 	// (a card at the pointer stays with the pointer)
+	// (a window's buttons scroll away from under an action card: it closes)
 	private readonly onScroll = () => {
 		const t = this.view.current();
+		if (t && t.kind === "action") {
+			this.close();
+			return;
+		}
 		if (!t || !t.anchor) return;
 		const anchor = this.anchor(t.id);
 		if (!anchor) this.close();
@@ -206,6 +246,7 @@ export class StatsHover {
 	readonly close = () => {
 		clearTimeout(this.timer);
 		this.key = "";
+		this.helpWatch?.disconnect();
 		this.view.close();
 	}
 
@@ -217,7 +258,20 @@ export class StatsHover {
 		return el.getBoundingClientRect();
 	}
 
+	// An action button's card, on any screen (the header's buttons are on the
+	// options screen too): at the pointer, clear of the button, and built
+	// again whenever its help changes
+	private showAction(button : HTMLElement) {
+		if (!button.isConnected || !button.dataset.help) return;
+		this.view.show({ kind: "action", id: -1, element: button, pointer: { ...this.pointer }, avoid: button.getBoundingClientRect() }, undefined);
+		if (this.helpWatch) {
+			this.helpWatch.disconnect();
+			this.helpWatch.observe(button, { attributes: true, attributeFilter: ["data-help", "data-help-keys"] });
+		}
+	}
+
 	private show(kind : IStatsTarget["kind"], id : number, keyboard = false, session? : string) {
+		this.helpWatch?.disconnect();
 		const st = this.source.state();
 		if (!onMainScreen(st)) return;
 		const exists = kind === "saved" ? !!this.savedTab(id)
@@ -363,6 +417,11 @@ export class StatsHover {
 
 	// the card of a target, from the manager's data; null: nothing to show
 	resolve(t : IStatsTarget, zoom : number | undefined) : IStatsCardContent | null {
+		if (t.kind === "action") {
+			const el = t.element;
+			const help = el && el.isConnected ? actionCard(el.dataset.help, el.dataset.helpKeys) : null;
+			return help ? { ...help, action: true } : null;
+		}
 		const st = this.source.state();
 		if (!onMainScreen(st)) return null;
 		const now = Date.now();

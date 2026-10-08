@@ -20,8 +20,8 @@ export const OPTION_ICONS = [
 ] as const;
 
 // Optional variants of another icon: the recent button's three levels, the
-// filter button switched on, the light and dark theme choices (css.ts, the
-// options screen). No family has to draw them; without one the plain icon
+// filter button switched on, the light and dark theme choices (the options
+// screen, and the header's theme button through css.ts). No family has to draw them; without one the plain icon
 // (recent, filter) or no icon (theme-light, theme-dark) shows.
 export const STATE_ICONS = ["recent-1", "recent-2", "recent-3", "filter-on", "theme-light", "theme-dark"] as const;
 

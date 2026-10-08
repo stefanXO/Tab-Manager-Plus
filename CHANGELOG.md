@@ -4,6 +4,7 @@ A Brand New Look!
 - Every layout redesigned: Block view is a grid, List view (was Vertical) shows one tab per line, Rows view (was Horizontal) one window per row (#264)
 - Dark theme rebuilt with consistent colors; window colors show as a colored edge; scrollbars and controls are dark too; the active tab has a clear outline (#45, #67, #99, #147, #151, #241)
 - Theme: System, Light or Dark. System is the new default and follows your operating system's dark mode, also while the popup is open; if you had dark mode on, it stays dark (#84, #182)
+- A theme button at the top, between Rate and the options: each click switches System, Light, Dark, the same setting as in the options, applied at once; its icon shows the theme (half sun half moon for System, a sun, a moon). It stays when Donate and Rate are turned off
 - New window color palette, with a matching set for the dark theme
 - New icons: every toolbar, window and options icon redrawn, crisp at any zoom in light and dark, with an icon for each setting, a recent-tabs clock whose three steps light up as it reaches further back, and an eye that shows when non-matching tabs are hidden
 - Favicons: white icons stay visible in the light theme, and icons refresh when a tab finishes loading (#220, #251)
@@ -73,6 +74,7 @@ Smaller fixes
 - Closing, discarding or moving selected tabs works even when one of them was closed in the meantime
 - Window names and colors changed in the background refresh in the popup
 - Hover texts: restored when moving from a tab back to its window, sessions have one too, tab counts and plurals are right (#121, #183)
+- The buttons in the bottom bar, at the top and on windows and saved windows show their help in the hover card, the one tabs and windows have, instead of a browser tooltip: what the button does, and the key that does the same as key caps: Ctrl+Delete (Cmd+Delete on a Mac) on the trash button with tabs selected, Enter on the new window button. The card stays clear of the button, follows the mouse, changes with a click (the theme button) and switches straight to a tab's or window's card
 - The drop indicator when dragging a tab fits every layout and shows in the dark theme; the color picker lists colors in order (#97)
 - A tab dragged from one Tab Manager tab or sidebar into another moves that tab, instead of the tabs selected in the other one
 - A window whose tabs were all hidden by Hide non-matching tabs shows again when the search ends or the hiding is turned off, also when its tabs changed meanwhile

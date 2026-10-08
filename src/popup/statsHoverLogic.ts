@@ -41,13 +41,34 @@ export interface HoverNode {
 	closest(selector : string) : HoverNode | null;
 }
 
-// The card target under the pointer: "t<tab id>", "s<saved window id>_<index>"
+// An action button (the toolbar, the header's icons, a window's or a saved
+// window's actions) has its help in the card: an element with data-help
+// (./actionHelp.ts). Its key is "a<n>", n a number given to that element
+// the first time the pointer is on it (several buttons may have the same
+// text, and a click changes the text: neither may make them the same target
+// or a new one)
+export const ACTION_SELECTOR = "[data-help]";
+const actionNumbers = new WeakMap<object, number>();
+let nextActionNumber = 1;
+export function actionKey(button : object) : string {
+	let n = actionNumbers.get(button);
+	if (n === undefined) {
+		n = nextActionNumber++;
+		actionNumbers.set(button, n);
+	}
+	return "a" + n;
+}
+
+// The card target under the pointer: an action button's "a<n>" (actionKey),
+// "t<tab id>", "s<saved window id>_<index>"
 // (a tab of a saved window; its element id is "sessiontab_<that>"),
 // "w<window id>", "S<saved window id>" (its element id is "session-<that>"),
-// or "" for none. A tab tile wins; else the window card (open or saved)
-// around the pointer, except over its action buttons (the card would sit over
-// the row about to be clicked).
+// or "" for none. A button wins (a window's buttons are on its card), then
+// a tab tile; else the window card (open or saved) around the pointer, except
+// between its action buttons.
 export function hoverKey(target : HoverNode, windowAnywhere = STATS_WINDOW_ANYWHERE) : string {
+	const action = target.closest(ACTION_SELECTOR);
+	if (action) return actionKey(action);
 	const tab = target.closest(".window-container .tab[id^='tab-']");
 	if (tab) return "t" + tab.id.slice(4);
 	const saved = target.closest(".window-container .tab[id^='sessiontab_']");
@@ -63,10 +84,12 @@ export function hoverKey(target : HoverNode, windowAnywhere = STATS_WINDOW_ANYWH
 export type ParsedKey =
 	| { kind : "tab" | "window", id : number }
 	| { kind : "saved", sessionId : string, index : number }
-	| { kind : "session", sessionId : string };
+	| { kind : "session", sessionId : string }
+	| { kind : "action" };
 
 export function parseKey(key : string) : ParsedKey | null {
 	if (key.length < 2) return null;
+	if (key[0] === "a") return /^a\d+$/.test(key) ? { kind: "action" } : null;
 	if (key[0] === "S") return { kind: "session", sessionId: key.slice(1) };
 	if (key[0] === "s") {
 		// the index is what follows the last "_" (a saved window's id may hold one)
@@ -87,9 +110,9 @@ export function isWarm(open : boolean, now : number, leftAt : number, grace = ST
 export type HoverAction =
 	// same target as before (moving inside one tile): nothing changes
 	| { kind : "none" }
-	// off every target: close the card now (`left`: one was open, so chaining
-	// starts counting from now)
-	| { kind : "close", left : boolean }
+	// off every target: close the card now, or after `delay` ms when given
+	// (`left`: one was open, so chaining starts counting from then)
+	| { kind : "close", left : boolean, delay? : number }
 	// open / swap to `key`, after `delay` ms (0: right now, in this event)
 	| { kind : "show", key : string, delay : number };
 
@@ -99,10 +122,15 @@ export type HoverAction =
 // it off and on. Warm onto a tab: swap right away. Warm onto a window (open
 // or saved): settle
 // first, so crossing that gap does not flash the window card in between.
-// Cold: settle, or the target's own delay if that is longer.
+// Cold: settle, or the target's own delay if that is longer. An action
+// button is a target like a tab: warm onto one swaps right away, and from one
+// to a tab too. Its buttons have gaps between them where nothing is under the
+// pointer (the bars, a window's actions): off a button's open card, the close
+// waits the settle, so crossing a gap to the next button swaps the card
+// instead of closing and fading it in again.
 export function hoverAction(key : string, prev : string, open : boolean, warm : boolean, t : StatsTimings = STATS_TIMINGS) : HoverAction {
 	if (key === prev) return { kind: "none" };
-	if (!key) return { kind: "close", left: open };
+	if (!key) return open && prev[0] === "a" ? { kind: "close", left: true, delay: t.settle } : { kind: "close", left: open };
 	const isWindow = key[0] === "w" || key[0] === "S";
 	if (warm && !isWindow) return { kind: "show", key, delay: 0 };
 	const delay = warm ? t.settle : Math.max(t.settle, isWindow ? t.windowDelay : t.tabDelay);

@@ -10,8 +10,8 @@
 //   "light"  - always light
 //   "dark"   - always dark
 // It replaced the boolean `dark` setting (6.x): dark on -> "dark", anything
-// else -> "system". readTheme() and resolveTheme() are pure, so the rules are
-// unit tested (tests/theme.test.ts).
+// else -> "system". readTheme(), resolveTheme() and nextTheme() are pure, so
+// the rules are unit tested (tests/theme.test.ts).
 
 export type Theme = "system" | "light" | "dark";
 
@@ -25,6 +25,13 @@ export function readTheme(value : unknown, legacyDark? : unknown) : Theme {
 export function resolveTheme(theme : Theme, systemDark : boolean) : "light" | "dark" {
 	if (theme === "system") return systemDark ? "dark" : "light";
 	return theme;
+}
+
+// the header's theme button: System -> Light -> Dark -> System
+export function nextTheme(theme : Theme) : Theme {
+	if (theme === "system") return "light";
+	if (theme === "light") return "dark";
+	return "system";
 }
 
 let current : Theme = "system";

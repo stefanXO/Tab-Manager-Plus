@@ -1,6 +1,6 @@
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { readTheme, resolveTheme } from "../src/helpers/theme.ts";
+import { readTheme, resolveTheme, nextTheme } from "../src/helpers/theme.ts";
 
 // ---------------------------------------------------------------------------
 // readTheme: the stored value, or the 6.x `dark` boolean when there is none
@@ -45,5 +45,19 @@ describe("resolveTheme", () => {
 		assert.equal(resolveTheme("light", false), "light");
 		assert.equal(resolveTheme("dark", true), "dark");
 		assert.equal(resolveTheme("dark", false), "dark");
+	});
+});
+
+// ---------------------------------------------------------------------------
+// nextTheme: the header's theme button, System -> Light -> Dark -> System
+// ---------------------------------------------------------------------------
+describe("nextTheme", () => {
+	test("each click the next one", () => {
+		assert.equal(nextTheme("system"), "light");
+		assert.equal(nextTheme("light"), "dark");
+		assert.equal(nextTheme("dark"), "system");
+	});
+	test("three clicks come back", () => {
+		for (const t of ["system", "light", "dark"] as const) assert.equal(nextTheme(nextTheme(nextTheme(t))), t);
 	});
 });

@@ -420,6 +420,38 @@ describe("placeAtPointer", () => {
 	});
 });
 
+// an action button's card stays clear of the button it describes
+describe("placeAtPointer, clear of a button", () => {
+	const VIEW = { width: 800, height: 600 };
+	const CARD = { width: 200, height: 60 };
+
+	test("the header's buttons (top right): below the button, left of the pointer", () => {
+		const button = { left: 760, top: 6, right: 792, bottom: 38 };
+		const p = placeAtPointer(776, 22, CARD, VIEW, button);
+		assert.deepEqual(p, { left: 564, top: 44 });
+		assert.ok(p.top >= button.bottom);
+	});
+	test("the bottom bar's buttons: above the button", () => {
+		const button = { left: 500, top: 560, right: 532, bottom: 592 };
+		const p = placeAtPointer(516, 590, CARD, VIEW, button);
+		assert.deepEqual(p, { left: 528, top: 494 });
+		assert.ok(p.top + CARD.height <= button.top);
+	});
+	test("pointer near the button's top edge: still the pointer's offset when that is further", () => {
+		const button = { left: 100, top: 200, right: 132, bottom: 232 };
+		assert.deepEqual(placeAtPointer(110, 230, CARD, VIEW, button), { left: 122, top: 242 });
+		assert.deepEqual(placeAtPointer(110, 201, CARD, VIEW, button), { left: 122, top: 238 });
+	});
+	test("no room on either side of the button: as without one", () => {
+		const tall = { width: 200, height: 560 };
+		const button = { left: 100, top: 280, right: 132, bottom: 312 };
+		assert.deepEqual(placeAtPointer(110, 300, tall, VIEW, button), placeAtPointer(110, 300, tall, VIEW));
+	});
+	test("no button: unchanged", () => {
+		assert.deepEqual(placeAtPointer(100, 100, CARD, VIEW, null), placeAtPointer(100, 100, CARD, VIEW));
+	});
+});
+
 // ---------------------------------------------------------------------------
 // monitorMap
 // ---------------------------------------------------------------------------

@@ -281,6 +281,19 @@ currently on disk — there is no stale copy to forget about.
   `dragend` after every `drop: true` drag. They come last in the list and leave the private
   windows set until a state sets them again. blocks + List, 800x600 and 380x900
 - `fresh` / `fresh-compact`: the List view's freshness bars (`src/popup/freshness.ts`, drawn at the end of every List row from the fixture's `lastAccessed`, 0 min .. 14 days: all five levels) — `fresh` as `plain`, `fresh-compact` with the `compact` setting on. `vertical` × 2 themes × `800x600`, dpr 1 only
+- `header-theme-*` / `help-*`: the header's theme button and the action buttons' help in the hover card with
+  its key caps (`src/popup/actionHelp.ts`), `blocks` × 2 themes × `800x600`, dpr 1 only. `header-theme-system` stores the
+  System theme (`apply.themeSetting: 'system'`) and emulates `prefers-color-scheme` as the theme axis says, so the
+  System icon shows on a light and a dark page; `-hover` / `-system-hover`: the real mouse on the theme button
+  (`hoverSel`), the card with its help (waited for, as `tab-stats` waits for its card); `-click`: then clicked with
+  the real mouse (`click: true`): Light turns Dark, Dark turns System, the card's text changes in place (waited for),
+  the file name keeps the theme before the click; `-nolinks`: Donate and Rate off (`supportLinks: false`), the theme
+  button stays. `help-keys-trash` (+ `-mac`, `-saved`), `help-keys-new` (+ `-empty`): two tabs Ctrl+clicked (`-saved`:
+  two saved tabs; `-empty`: none), the mouse on the trash / new window button: Ctrl Del, ⌘ ⌫ (`mac: true` makes the
+  page report a Mac) or Enter as key caps next to the card's title; `help-nokeys-trash`, `help-window-close`,
+  `help-saved-delete`: buttons without a key. `help-keys-trash` and `help-window-close` also at `380x900` (the header's
+  buttons are hidden there). A build without the hovered button (the theme button before it existed) is shot without
+  the hover
 - `page-options-na-<theme>-<width>`: `options.html` standalone, 2 × 3 = 6
 - `page-changelog-na-<theme>-<width>`: `changelog.html` standalone, 2 × 3 = 6.
   Unlike `page-options` (whose theme the harness forces onto `<html>`), the

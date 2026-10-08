@@ -1,11 +1,11 @@
 /* Square action buttons (.icon + an action class): the window card's action
-   row (.windowaction / .tabaction), the header's donate / rate / options, and
+   row (.windowaction / .tabaction), the header's donate / rate / theme / options, and
    the bottom bar's toolbar. Each action class's image is in icons.css
    (generated, see the end of this file); donate keeps its PayPal image here. */
 
 /* sizes and places in the header and the bottom bar: both rows are 2rem
    squares --bar-gap apart, --bar-inset from the right edge (layout/frame.css),
-   so the header's three line up with the bottom bar's eight or nine */
+   so the header's four line up with the bottom bar's eight or nine */
 .window.searchbox .icon {
 	height: 2rem;
 	width: 2rem;
@@ -14,8 +14,10 @@
 .window.searchbox td.two {
 	padding-right: var(--bar-inset);
 }
-/* the header's three, right to left; centred in its 2.8rem */
+/* the header's four, right to left: options, theme, rate, donate; centred in
+   its 2.8rem. Without donate and rate (supportLinks) theme stays where it is */
 .options.icon, .compact .options.icon,
+.theme.icon, .compact .theme.icon,
 .donate.icon, .compact .donate.icon,
 .rate.icon, .compact .rate.icon {
 	height: 2rem;
@@ -26,11 +28,14 @@
 	top: 0.4rem;
 	right: var(--bar-inset);
 }
-.rate.icon, .compact .rate.icon {
+.theme.icon, .compact .theme.icon {
 	right: calc(var(--bar-inset) + 2rem + var(--bar-gap));
 }
-.donate.icon, .compact .donate.icon {
+.rate.icon, .compact .rate.icon {
 	right: calc(var(--bar-inset) + 2 * (2rem + var(--bar-gap)));
+}
+.donate.icon, .compact .donate.icon {
+	right: calc(var(--bar-inset) + 3 * (2rem + var(--bar-gap)));
 }
 
 .windowaction {
@@ -55,7 +60,7 @@
 .close:hover {
 	background-color: var(--action-close-hover);
 }
-.rate, .options {
+.rate, .theme, .options {
 	float: right;
 }
 /* the one image that is not drawn by the icon set: PayPal's mark */

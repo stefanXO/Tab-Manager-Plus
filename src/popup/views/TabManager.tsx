@@ -21,7 +21,8 @@ import {attachMasonry, Masonry} from "../masonry";
 import {sizePopup, popupScreen} from "@helpers/popup_size";
 import {restoreDisplays} from "../restoreDisplays";
 import {scheduleWorkerCheck, requiredWorkerVersion, staleWorkerText} from "../workerCheck";
-import {applyTheme} from "@helpers/theme";
+import {applyTheme, nextTheme} from "@helpers/theme";
+import {actionHelp, trashKeys, newWindowKeys, themeHelp, themeLabel} from "../actionHelp";
 import {StatsLayer, StatsSource} from "./StatsLayer";
 import {Notice} from "./Notice";
 import {NoticeBoard, NoticeOrder, NoticeRef, isMacPlatform, isUndoKey, undoKeyCaps, undoKeyForField, refusedText, openFailedText} from "../notices";
@@ -410,11 +411,25 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		});
 	}
 	hoverOver = (e : React.MouseEvent<HTMLDivElement>) => {
-		const el = (e.target as HTMLElement).closest<HTMLElement>("[data-hover], [title]");
+		const target = e.target as HTMLElement;
+		// an action button's help is in the hover card (data-help,
+		// ../actionHelp.ts, ../statsHover.ts): the header has none for it, not
+		// even the hover text of the window card around it
+		const el = target.closest("[data-help]") ? null : target.closest<HTMLElement>("[data-hover], [title]");
 		// data-hover-hold (an options section's help text): no idle clear, the
 		// text stays while the pointer is anywhere inside the section and goes
 		// once it moves onto something without a hover text
 		this.hoverIcon(el ? (el.dataset.hover ?? el.title) : "", !!el && el.dataset.hoverHold !== undefined);
+	}
+	// the pointer left the popup: no mouseover follows, so a held help text
+	// (an option's) would stay; it goes as on leaving it (not a text something
+	// else put there since, e.g. a button's result; read from the pending
+	// state, the hover may not have rendered yet)
+	leaveRoot = () => {
+		const held = this.helpHeld;
+		if (held === null) return;
+		this.helpHeld = null;
+		this.headerOnly(() => this.setState((prev) => prev.topText === held ? { topText: "", bottomText: " " } : null));
 	}
 
 	// The saved windows as shown: without the ones deleted and the tabs of the
@@ -455,6 +470,9 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		this.savedMemo = { sessions, query, openOnly, selected, result };
 		return result;
 	}
+	// the first line of the held help text hoverIcon showed last, null when
+	// the last one was not held
+	private helpHeld : string | null = null;
 	hoverIcon = (text : string, hold = false) => {
 		let bottom = " ";
 		if (text.indexOf("\n") > -1) {
@@ -462,6 +480,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			text = a[0];
 			bottom = a[1];
 		}
+		this.helpHeld = hold ? text : null;
 		if (text === this.state.topText && bottom === this.state.bottomText) {
 			// still over the same held help text: no idle clear pending
 			if (hold) clearTimeout(this.state.resetTimeout);
@@ -553,6 +572,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				style={this.noticeCount() ? {"--notice-count": this.noticeCount()} as React.CSSProperties : undefined}
 				onKeyDown={this.checkKey}
 				onMouseOver={this.hoverOver}
+				onMouseLeave={this.leaveRoot}
 				tabIndex={0}
 				ref={this.rootRef}
 			>
@@ -688,13 +708,37 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 					/>
 				</div>}
 				<div className="window top" ref={this.topHoverRef}>
-					{this.state.supportLinks && <div className="icon windowaction donate" title="Donate a Coffee" onClick={this.donate} />}
+					{/* right to left: options, theme, rate, donate (actions.css); the
+					    supportLinks setting hides only donate and rate */}
+					{this.state.supportLinks && <div
+						className="icon windowaction donate"
+						role="button"
+						aria-label="Donate a Coffee"
+						{...actionHelp("Donate a Coffee\nOpens PayPal in a new tab")}
+						onClick={this.donate}
+					/>}
 					{this.state.supportLinks && <div
 						className="icon windowaction rate"
-						title="Rate Tab Manager Plus"
+						role="button"
+						aria-label="Rate Tab Manager Plus"
+						{...actionHelp("Rate Tab Manager Plus\nOpens its page in the " + (IS_FIREFOX ? "Firefox Add-ons site" : "Chrome Web Store") + " in a new tab")}
 						onClick={this.rateExtension}
 					/>}
-					<div className="icon windowaction options" title="Options" onClick={this.toggleOptions} />
+					<div
+						className="icon windowaction theme"
+						data-choice={this.state.theme}
+						role="button"
+						aria-label={themeLabel(this.state.theme)}
+						{...actionHelp(themeHelp(this.state.theme))}
+						onClick={this.cycleTheme}
+					/>
+					<div
+						className="icon windowaction options"
+						role="button"
+						aria-label="Options"
+						{...actionHelp(this.optionsHelp(this.state.optionsActive))}
+						onClick={this.toggleOptions}
+					/>
 					<input
 						type="text"
 						disabled={true}
@@ -722,29 +766,38 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 								</td>
 								{/* --bar-count: the number of icons in this bar, 8 + the Save selected tabs one; update it when an icon is added or removed */}
 								<td className="two" style={{"--bar-count": this.state.sessionsFeature ? 9 : 8} as React.CSSProperties}>
+									{/* each button's help shows in the hover card (actionHelp), with
+									    the key caps of a key that does the same (../actionHelp.ts) */}
 									<div
 										className={"icon windowaction " + this.state.layout + "-view"}
-										title={this.readablelayout(this.state.layout) + " View is active\nChange to " + this.readablelayout(this.nextlayout()) + " View"}
+										role="button"
+										aria-label={"Change to " + this.readablelayout(this.nextlayout()) + " View"}
+										{...actionHelp(this.readablelayout(this.state.layout) + " View is active\nChange to " + this.readablelayout(this.nextlayout()) + " View")}
 										onClick={this.changelayout}
 									/>
 									<div
 										className="icon windowaction trash"
-										title={
+										role="button"
+										aria-label={savedSel ? "Delete selected saved tabs" : this.state.selection.size > 0 ? "Close selected tabs" : "Close current Tab"}
+										{...actionHelp(
 											savedSel
 												? "Delete selected saved tabs\nWill delete " + maybePluralize(this.state.selection.size, "saved tab") + " from their saved windows. Undo is possible for a few seconds"
 												: this.state.selection.size > 0
 												? "Close selected tabs\nWill close " + maybePluralize(this.state.selection.size, 'tab')
-												: "Close current Tab"
-										}
+												: "Close current Tab",
+											trashKeys(this.state.selection.size, this.mac)
+										)}
 										onClick={this.deleteTabs}
 									/>
 									<div
 										className="icon windowaction discard"
-										title={
+										role="button"
+										aria-label="Discard selected tabs"
+										{...actionHelp(
 											savedSel ? savedSelTitle : this.state.selection.size > 0
 												? "Discard selected tabs\nWill put " + maybePluralize(this.state.selection.size, 'tab') + " to sleep - freeing memory"
 												: "Select tabs to put them to sleep and free up memory"
-										}
+										)}
 										style={
 											this.state.selection.size > 0 && !savedSel
 												? {}
@@ -755,16 +808,21 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 									<div
 										className="icon windowaction pin"
 										style={savedSel ? savedSelStyle : {}}
-										title={
+										role="button"
+										aria-label={this.state.selection.size > 0 ? "Pin selected tabs" : "Pin current Tab"}
+										{...actionHelp(
 											savedSel ? savedSelTitle : this.state.selection.size > 0
 												? "Pin selected tabs\nWill pin " + maybePluralize(this.state.selection.size, 'tab')
 												: "Pin current Tab"
-										}
+										)}
 										onClick={this.pinTabs}
 									/>
 									<div
 										className={"icon windowaction filter" + (this.state.filterTabs ? " enabled" : "")}
-										title={
+										role="button"
+										aria-label="Hide tabs that do not match search"
+										aria-pressed={this.state.filterTabs}
+										{...actionHelp(
 											(this.state.filterTabs ? "Turn off hiding of" : "Hide") +
 											" tabs that do not match search" +
 											(this.state.searchLen > 0
@@ -772,38 +830,49 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 													(this.state.filterTabs ? "Will reveal " : "Will hide ") +
 													maybePluralize((this.state.tabsbyid.size - this.state.selection.size), 'tab')
 												: "")
-										}
+										)}
 										onClick={this.toggleFilterMismatchedTabs}
 									/>
 									{this.state.sessionsFeature && <div
 										className="icon windowaction save-tabs"
 										style={this.state.selection.size > 0 && !savedSel ? {} : { opacity: 0.25 }}
-										title={
+										role="button"
+										aria-label="Save selected tabs"
+										{...actionHelp(
 											savedSel ? savedSelTitle : this.state.selection.size > 0
 												? "Save selected tabs\nWill save " + maybePluralize(this.state.selection.size, 'selected tab') + " as a new saved window. Please note : The saved tabs will lose their history."
 												: "Select tabs to save them together as a new saved window"
-										}
+										)}
 										onClick={this.saveSelected}
 									/>}
 									<div
 										className="icon windowaction new"
 										style={savedSel ? savedSelStyle : {}}
-										title={
+										role="button"
+										aria-label={this.state.selection.size > 0 ? "Move tabs to new window" : "Open new empty window"}
+										{...actionHelp(
 											savedSel ? savedSelTitle : this.state.selection.size > 0
 												? "Move tabs to new window\nWill move " + maybePluralize(this.state.selection.size, 'selected tab') + " to it"
-												: "Open new empty window"
-										}
+												: "Open new empty window",
+											newWindowKeys(this.state.selection.size, savedSel, this.state.searchLen > 0)
+										)}
 										onClick={this.addWindow}
 									/>
 									<div
 										className={"icon windowaction duplicates" + (this.state.dupTabs ? " enabled" : "")}
-										title={duplicatesTitle(this.getDuplicates(), !!this.state.dupTabs)}
+										role="button"
+										aria-label="Highlight duplicates"
+										aria-pressed={!!this.state.dupTabs}
+										{...actionHelp(duplicatesTitle(this.getDuplicates(), !!this.state.dupTabs))}
 										onClick={this.highlightDuplicates}
 									/>
 									<div
 										className={"icon windowaction recent" + (this.state.recentLevel ? " enabled" : "")}
 										data-level={this.state.recentLevel}
-										title={recentTitle(this.state.tabsbyid.values(), Date.now(), this.state.recentLevel)}
+										role="button"
+										aria-label="Highlight recently active tabs"
+										aria-pressed={this.state.recentLevel > 0}
+										{...actionHelp(recentTitle(this.state.tabsbyid.values(), Date.now(), this.state.recentLevel))}
 										onClick={this.highlightRecent}
 									/>
 								</td>
@@ -1510,6 +1579,18 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			optionsActive: !this.state.optionsActive,
 			dirty: true
 		});
+	}
+	// the options button's help (its hover card changes with a click)
+	optionsHelp(optionsActive : boolean) : string {
+		return optionsActive ? "Close the options\nBack to your tabs" : "Options\nThe settings of Tab Manager Plus";
+	}
+	// The header's theme button: System -> Light -> Dark, the same setting as
+	// the options' Theme choice (TabOptions.changeTheme), applied at once
+	cycleTheme = async () => {
+		const theme = nextTheme(this.state.theme);
+		applyTheme(theme);
+		this.setSetting("theme", theme);
+		await saveSetting("theme", theme);
 	}
 	update = async () => {
 		const [windows, sort_windows, lastActive] = await Promise.all([

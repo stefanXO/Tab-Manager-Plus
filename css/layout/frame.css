@@ -56,13 +56,13 @@ html, body {
 	z-index: 999999;
 }
 /* the text starts on the bars' inset, the cards' left edge, and stops
-   short of the three icons (narrow.css: no icons there) */
+   short of the four icons (narrow.css: no icons there) */
 .window.top input {
 	width: 100%;
 	border: 0;
 	height: 1.4rem;
 	padding-left: var(--bar-inset);
-	padding-right: calc(3 * (2rem + var(--bar-gap)) + var(--bar-inset));
+	padding-right: calc(4 * (2rem + var(--bar-gap)) + var(--bar-inset));
 	margin: 0;
 	font-size: 0.9rem;
 	padding-top: 0.25rem;
@@ -71,9 +71,9 @@ html, body {
 	border-radius: 0;
 	color: var(--text);
 }
-/* Donate and Rate turned off in the options: only the options button */
+/* Donate and Rate turned off in the options: only the theme and options buttons */
 .no-supportLinks .window.top input {
-	padding-right: calc(2rem + var(--bar-gap) + var(--bar-inset));
+	padding-right: calc(2 * (2rem + var(--bar-gap)) + var(--bar-inset));
 }
 .window.top .taburl {
 	width: 100%;

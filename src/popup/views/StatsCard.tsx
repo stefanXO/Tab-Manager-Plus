@@ -23,6 +23,10 @@ export interface IStatsCardContent {
 	// a saved window's card: the saved drawing as its title icon, and the map's
 	// window is where it would land if restored now (drawn dashed)
 	saved? : boolean;
+	// an action button's card (../actionHelp.ts): no icon, its lines wrap, and
+	// the key caps of a key that does the same next to the title (null: none)
+	action? : boolean;
+	keys? : string[] | null;
 }
 
 interface IStatsCardProps {
@@ -34,6 +38,8 @@ interface IStatsCardProps {
 	// next to an element (the keyboard's selected row), viewport coordinates
 	pointer? : { x : number, y : number };
 	anchor? : Rect;
+	// the button an action card describes: the card stays clear of it
+	avoid? : Rect;
 }
 
 // where a hidden card waits: far off screen, so it never covers anything
@@ -122,8 +128,10 @@ function Line({line} : {line : StatsLine}) {
 	);
 }
 
-// The hover card for a tab or a window (text: ../stats.ts). Mounted once,
-// with the popup, and never unmounted: hidden it is parked off screen
+// The hover card for a tab or a window (text: ../stats.ts), and for an
+// action button (its help, ../actionHelp.ts; placed clear of the button,
+// `avoid`). Mounted once, with the popup, and never unmounted: hidden it is
+// parked off screen
 // (visibility: hidden, no pointer events, in its own contained layer, see
 // StatsLayer, which is display: none meanwhile). Showing = render the new
 // content (this subtree only) and switch it visible; moving = a transform written on the element straight
@@ -211,7 +219,7 @@ export class StatsCard extends React.Component<IStatsCardProps> {
 	place() {
 		const el = this.ref.current;
 		if (!el) return;
-		const pos = this.at ? placeAtPointer(this.at.x, this.at.y, this.size, this.view) : this.props.anchor ? placeCard(this.props.anchor, this.size, this.view) : { left: 0, top: 0 };
+		const pos = this.at ? placeAtPointer(this.at.x, this.at.y, this.size, this.view, this.props.avoid) : this.props.anchor ? placeCard(this.props.anchor, this.size, this.view) : { left: 0, top: 0 };
 		el.style.transform = "translate3d(" + pos.left + "px, " + pos.top + "px, 0)";
 	}
 
@@ -220,16 +228,17 @@ export class StatsCard extends React.Component<IStatsCardProps> {
 		// "shown" is switched on the element by sync() / hide(); rendered here
 		// too, so a className React rewrites (with-icon changed) keeps it
 		// a window card (no url) has a window drawing where a tab has its favicon
-		const isWindow = !!c && c.url === undefined;
-		const cls = "stats-card" + (c && (c.icon || isWindow) ? " with-icon" : "") + (this.visible ? " shown" : "");
+		const isWindow = !!c && c.url === undefined && !c.action;
+		const cls = "stats-card" + (c && (c.icon || isWindow) ? " with-icon" : "") + (c && c.action ? " action" : "") + (this.visible ? " shown" : "");
 		if (!c) return <div className={cls} role="tooltip" aria-hidden="true" ref={this.ref} />;
-		const {card, icon, url, sites, map, saved} = c;
+		const {card, icon, url, sites, map, saved, keys} = c;
 		const parts = url !== undefined ? splitUrl(url) : null;
 		return (
 			<div className={cls} role="tooltip" ref={this.ref}>
 				<div className="stats-card-head">
 					{icon ? <Favicon icon={icon} /> : saved ? SAVED_HEAD : isWindow ? WINDOW_HEAD : null}
 					<div className="stats-card-title">{card.title}</div>
+					{keys && keys.length > 0 && <span className="stats-keys" aria-hidden="true">{keys.map((k) => <kbd key={k}>{k}</kbd>)}</span>}
 					{sites && sites.length > 0 && (
 						<div className="stats-site-icons">
 							{sites.map((site, i) => <Favicon key={i} icon={site} />)}
@@ -246,7 +255,9 @@ export class StatsCard extends React.Component<IStatsCardProps> {
 						</span>
 					</div>
 				)}
-				{card.lines.map((line) => <Line key={line.key} line={line} />)}
+				{c.action
+					? card.lines.map((line) => <div key={line.key} className={"stats-action-line stats-line-" + line.key}>{line.text}</div>)
+					: card.lines.map((line) => <Line key={line.key} line={line} />)}
 				{map && <MapSvg map={map} landing={saved} />}
 			</div>
 		);

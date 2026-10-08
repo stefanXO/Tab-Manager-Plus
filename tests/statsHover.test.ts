@@ -5,7 +5,7 @@
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { hoverKey, hoverAction, isWarm, parseKey, arrowsMoveCard, STATS_TIMINGS, STATS_SETTLE, STATS_WARM_GRACE, STATS_WINDOW_DELAY } from "../src/popup/statsHoverLogic.ts";
+import { hoverKey, hoverAction, isWarm, parseKey, arrowsMoveCard, actionKey, ACTION_SELECTOR, STATS_TIMINGS, STATS_SETTLE, STATS_WARM_GRACE, STATS_WINDOW_DELAY } from "../src/popup/statsHoverLogic.ts";
 import type { HoverNode } from "../src/popup/statsHoverLogic.ts";
 
 // a fake element: its own id and the ancestors (itself included) that match
@@ -42,6 +42,28 @@ describe("hoverKey (target resolution)", () => {
 	test("window card only on the age label when not 'anywhere'", () => {
 		assert.equal(hoverKey(node({ [WIN]: el("window-7") }), false), "");
 		assert.equal(hoverKey(node({ [AGE]: el(""), [WIN]: el("window-7") }), false), "w7");
+	});
+});
+
+describe("hoverKey: action buttons (their help in the card)", () => {
+	test("a button with data-help is a target, also on a window card's action row", () => {
+		const button = el("");
+		const key = hoverKey(node({ [ACTION_SELECTOR]: button, [ACTIONS]: el(""), [WIN]: el("window-7") }));
+		assert.match(key, /^a\d+$/);
+		assert.deepEqual(parseKey(key), { kind: "action" });
+	});
+	test("the gap between a window's buttons is still no target", () => {
+		assert.equal(hoverKey(node({ [ACTIONS]: el(""), [WIN]: el("window-7") })), "");
+	});
+	test("one key per button, kept for its life (a click changes its text, not the key)", () => {
+		const a = el(""), b = el("");
+		assert.equal(actionKey(a), actionKey(a));
+		assert.notEqual(actionKey(a), actionKey(b));
+		assert.equal(hoverKey(node({ [ACTION_SELECTOR]: a })), actionKey(a));
+	});
+	test("not other keys starting with a", () => {
+		assert.equal(parseKey("ab"), null);
+		assert.equal(parseKey("a"), null);
 	});
 });
 
@@ -91,6 +113,30 @@ describe("hoverAction (warm / cold, delay)", () => {
 	});
 	test("from the keyboard's card to a tab under the pointer: a new target", () => {
 		assert.deepEqual(hoverAction("t5", "key", true, true), { kind: "show", key: "t5", delay: 0 });
+	});
+});
+
+describe("hoverAction: action buttons", () => {
+	test("cold onto a button: after the settle, as a tab", () => {
+		assert.deepEqual(hoverAction("a1", "", false, false), { kind: "show", key: "a1", delay: STATS_SETTLE });
+	});
+	test("warm: button to button, button to tab, tab to button swap right away", () => {
+		assert.deepEqual(hoverAction("a2", "a1", true, true), { kind: "show", key: "a2", delay: 0 });
+		assert.deepEqual(hoverAction("t5", "a1", true, true), { kind: "show", key: "t5", delay: 0 });
+		assert.deepEqual(hoverAction("a1", "t5", true, true), { kind: "show", key: "a1", delay: 0 });
+	});
+	test("button to a window: settle first, as from a tab", () => {
+		assert.deepEqual(hoverAction("w1", "a1", true, true), { kind: "show", key: "w1", delay: STATS_SETTLE });
+	});
+	test("off a button's open card: the close waits the settle (the gap to the next button)", () => {
+		assert.deepEqual(hoverAction("", "a1", true, true), { kind: "close", left: true, delay: STATS_SETTLE });
+	});
+	test("off a button with no card up yet, or off a tab: closes at once", () => {
+		assert.deepEqual(hoverAction("", "a1", false, false), { kind: "close", left: false });
+		assert.deepEqual(hoverAction("", "t1", true, true), { kind: "close", left: true });
+	});
+	test("still the same button: nothing", () => {
+		assert.deepEqual(hoverAction("a1", "a1", true, true), { kind: "none" });
 	});
 });
 

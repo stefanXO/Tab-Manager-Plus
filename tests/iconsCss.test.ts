@@ -7,6 +7,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { familyCss, ICON_CLASSES, STATS_CLASSES } from "../src/icons/css.ts";
 import { ICON_NAMES, type IconFamily } from "../src/icons/types.ts";
+import { family } from "../src/icons/families/muted.ts";
 
 const def = { parts: [{ d: "M4 4l8 8", kind: "stroke" as const, color: "ink" as const }] };
 const fam = { id: "muted", label: "F", icons: Object.fromEntries(ICON_NAMES.map((n) => [n, def])) } as IconFamily;
@@ -120,4 +121,34 @@ test("the stats card's page icon for a tab without a favicon: the plain favicon 
 	const image = line.slice(line.indexOf("url("), line.lastIndexOf(";"));
 	assert.ok(rule(css, ".iconoverlay").includes("var(--fav, " + image + ")"));
 	assert.ok(!familyCss({ id: "muted", label: "F", icons: { save: def } } as IconFamily).includes(".stats-favicon-generic"));
+});
+
+test("the header's theme button: one image per setting, the theme icon for System", () => {
+	const half = { parts: [{ d: "M8 3V13", kind: "stroke" as const, color: "ink" as const }] };
+	const sun = { parts: [{ d: "M3 8H13", kind: "stroke" as const, color: "amber" as const }] };
+	const moon = { parts: [{ d: "M3 3L13 13", kind: "stroke" as const, color: "slate" as const }] };
+	const css = familyCss({ id: "muted", label: "F", icons: { theme: half, "theme-light": sun, "theme-dark": moon } } as IconFamily);
+	const sel = (choice : string) => '.icon.theme[data-choice="' + choice + '"]';
+	for (const choice of ["system", "light", "dark"]) assert.ok(rule(css, sel(choice)), choice);
+	// System is the options' System choice icon, the half sun half moon
+	assert.equal(value(rule(css, sel("system"))), value(rule(familyCss({ id: "muted", label: "F", icons: { theme: half } } as IconFamily), sel("system"))));
+	assert.notEqual(value(rule(css, sel("light"))), value(rule(css, sel("system"))));
+	assert.notEqual(value(rule(css, sel("dark"))), value(rule(css, sel("light"))));
+});
+
+test("no sun or moon: the theme icon for every setting; no theme icon: no theme rules", () => {
+	const half = { parts: [{ d: "M8 3V13", kind: "stroke" as const, color: "ink" as const }] };
+	const css = familyCss({ id: "muted", label: "F", icons: { theme: half } } as IconFamily);
+	const values = ["system", "light", "dark"].map((c) => value(rule(css, '.icon.theme[data-choice="' + c + '"]')));
+	assert.ok(values[0]);
+	assert.equal(values[1], values[0]);
+	assert.equal(values[2], values[0]);
+	assert.ok(!familyCss({ id: "muted", label: "F", icons: { save: def } } as IconFamily).includes(".icon.theme"));
+});
+
+test("the real family draws a sun and a moon for the header's Light and Dark", () => {
+	const css = familyCss(family);
+	const at = (c : string) => value(rule(css, '.icon.theme[data-choice="' + c + '"]'));
+	assert.ok(at("system") && at("light") && at("dark"));
+	assert.equal(new Set([at("system"), at("light"), at("dark")]).size, 3);
 });

@@ -517,6 +517,36 @@ const STATES = [
 	// switched off the s: rows are not listed
 	{name: 'search-help', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {}, searchHelp: true},
 	{name: 'search-help-off', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {store: {sessionsFeature: false}}, searchHelp: true},
+	// the header's theme button (System -> Light -> Dark) and the action buttons'
+	// help in the hover card with its key caps (src/popup/actionHelp.ts). `themeSetting:
+	// 'system'` stores the System theme and emulates prefers-color-scheme as the
+	// theme axis says, so the System icon shows on a light and a dark page;
+	// `hoverSel` moves the real mouse onto a button (scrolled into view), keeps
+	// it there and waits for the card (hoverAt); `click: true` then clicks it
+	// with the real mouse and waits for the card's new text (the file name's
+	// theme is the one before the click); `mac` makes the page report a Mac
+	// (navigator.platform, userAgentData), for the Mac key caps. A button the
+	// build lacks (the theme button before it existed), or one the width hides
+	// (the header's at 380x900), is left out: the shot is taken without the
+	// hover. dpr 1, blocks, 800x600; a bottom bar button (help-keys-trash) and a
+	// window's (help-window-close) at 380x900 too
+	{name: 'header-theme-system', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {themeSetting: 'system'}},
+	{name: 'header-theme-hover', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {}, hoverSel: '.icon.windowaction.theme'},
+	{name: 'header-theme-system-hover', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {themeSetting: 'system'}, hoverSel: '.icon.windowaction.theme'},
+	{name: 'header-theme-click', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {}, hoverSel: '.icon.windowaction.theme', click: true},
+	{name: 'header-theme-nolinks', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {store: {supportLinks: false}}, hoverSel: '.icon.windowaction.theme'},
+	{name: 'help-keys-trash', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {
+		clicks: [{key: 27}, {sel: '#tab-2', ctrl: true}, {sel: '#tab-4', ctrl: true}]}, hoverSel: '.icon.windowaction.trash'},
+	{name: 'help-keys-trash-mac', mac: true, layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {
+		clicks: [{key: 27}, {sel: '#tab-2', ctrl: true}, {sel: '#tab-4', ctrl: true}]}, hoverSel: '.icon.windowaction.trash'},
+	{name: 'help-keys-trash-saved', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {
+		clicks: [{key: 27}, {sel: '#sessiontab_s1_1', ctrl: true}, {sel: '#sessiontab_s1_3', ctrl: true}]}, hoverSel: '.icon.windowaction.trash'},
+	{name: 'help-keys-new', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {
+		clicks: [{key: 27}, {sel: '#tab-2', ctrl: true}, {sel: '#tab-4', ctrl: true}]}, hoverSel: '.icon.windowaction.new'},
+	{name: 'help-keys-new-empty', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {clicks: [{key: 27}]}, hoverSel: '.icon.windowaction.new'},
+	{name: 'help-nokeys-trash', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {clicks: [{key: 27}]}, hoverSel: '.icon.windowaction.trash'},
+	{name: 'help-window-close', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {clicks: [{key: 27}]}, hoverSel: '#window-101 .icon.tabaction.close'},
+	{name: 'help-saved-delete', layouts: ['blocks'], scaleLayouts: [], widths: ['800x600'], apply: {clicks: [{key: 27}]}, hoverSel: '#session-s1 .icon.tabaction.delete'},
 	// refused drops show the browser's not-allowed cursor and no drop marker
 	// (the cursor is the browser's own and cannot be shot; the marker can). The
 	// window "Research" is made private (`incognito`), and "Information overload"
@@ -634,7 +664,7 @@ async function settle(page) {
 }
 
 /** Applies a popup state absolutely: the result never depends on what came before. */
-async function apply(page, {layout, dark, search = '', dup = false, recent = 0, overlay = null, scrollTo = null, store = {}, granted = true, savedFocused = null, clicks = [], scrollInto = null, importFile = null, importInput = '#session_import', freezeClock = false, scrollEnd = false, typeName = null, pickColor = null, savedInfo = null, freshSessions = false, savedAuto = null, savedLong = false, afterWait = 0, quota = false, keepNotices = false, barAt = 0, noticeHover = false, savedUpdated = null, incognito = [], savedPrivate = null}) {
+async function apply(page, {layout, dark, search = '', dup = false, recent = 0, overlay = null, scrollTo = null, store = {}, granted = true, savedFocused = null, clicks = [], scrollInto = null, importFile = null, importInput = '#session_import', freezeClock = false, scrollEnd = false, typeName = null, pickColor = null, savedInfo = null, freshSessions = false, savedAuto = null, savedLong = false, afterWait = 0, quota = false, keepNotices = false, barAt = 0, noticeHover = false, savedUpdated = null, incognito = [], savedPrivate = null, themeSetting = null}) {
 	await page.evaluate(async (s) => {
 		const q = (sel) => document.querySelector(sel)
 		const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
@@ -656,7 +686,7 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 		// 2. layout + theme (+ a state's own settings) through the same storage
 		// the app reads; the fake system.display permission
 		window.__fakeGranted = s.granted
-		await window.__fake.storage.local.set({...s.store, layout: s.layout, dark: s.dark, theme: s.dark ? 'dark' : 'light', animations: false})
+		await window.__fake.storage.local.set({...s.store, layout: s.layout, dark: s.dark, theme: s.themeSetting || (s.dark ? 'dark' : 'light'), animations: false})
 		await frame()
 
 		// 3. search text, through a real input event
@@ -887,7 +917,7 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 		if (s.afterWait) await new Promise((r) => setTimeout(r, s.afterWait))
 		// the list scrolled to its very end: the padding the notice makes room with shows
 		if (s.scrollEnd) { const c = q('.window-container'); if (c) c.scrollTop = c.scrollHeight }
-	}, {layout, dark, search, dup, recent, overlay, store, granted, savedFocused, clicks, scrollInto, importFile, importInput, freezeClock, scrollEnd, typeName, pickColor, savedInfo, freshSessions, savedAuto, savedLong, afterWait, quota, keepNotices, barAt, noticeHover, savedUpdated, incognito, savedPrivate})
+	}, {layout, dark, search, dup, recent, overlay, store, granted, savedFocused, clicks, scrollInto, importFile, importInput, freezeClock, scrollEnd, typeName, pickColor, savedInfo, freshSessions, savedAuto, savedLong, afterWait, quota, keepNotices, barAt, noticeHover, savedUpdated, incognito, savedPrivate, themeSetting})
 	await settle(page)
 	// 7. scroll the options box headed `scrollTo` to the top of its scroller
 	if (scrollTo) {
@@ -920,6 +950,41 @@ async function hoverOption(page, label) {
 	await page.mouse.move(at.desc.x + at.desc.w / 4, at.desc.y - at.desc.h / 4, {steps: 8})
 	await settle(page)
 	await page.evaluate(() => { if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur() })
+}
+
+/**
+ * Moves the real mouse onto the action button `selector` (scrolled into view)
+ * and keeps it there: the hover card opens with the button's help
+ * (src/popup/actionHelp.ts), as for a tab in hoverStats. With `click`, then
+ * clicks it with the real mouse: the card stays and its text changes in place
+ * (waited for). False when there is no such button on screen (a build without
+ * it, or a width that hides it); a build whose buttons have no card (the help
+ * was in the header then) is shot without waiting for one.
+ */
+async function hoverAt(page, selector, click = false) {
+	const at = await page.evaluate((sel) => {
+		const el = document.querySelector(sel)
+		if (!el || el.offsetParent === null) return null
+		el.scrollIntoView({block: 'nearest', inline: 'nearest'})
+		const r = el.getBoundingClientRect()
+		return {x: r.left + r.width / 2, y: r.top + r.height / 2, card: el.hasAttribute('data-help')}
+	}, selector)
+	if (!at) return false
+	await page.mouse.move(1, 1)
+	await page.waitForFunction(() => !document.querySelector('.stats-card.shown'), {timeout: 5000})
+	await page.mouse.move(at.x, at.y, {steps: 4})
+	if (at.card) await page.waitForSelector('.stats-card.action.shown', {timeout: 5000})
+	if (click) {
+		const before = await page.evaluate(() => document.querySelector('.stats-card.action')?.textContent || '')
+		await page.mouse.click(at.x, at.y)
+		if (at.card) await page.waitForFunction((b) => {
+			const card = document.querySelector('.stats-card.action.shown')
+			return card && card.textContent !== b
+		}, {timeout: 5000}, before)
+	}
+	await settle(page)
+	await page.evaluate(() => { if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur() })
+	return true
 }
 
 /** Moves the real mouse onto the search box and waits for its help panel (css/components/search.css). */
@@ -976,7 +1041,7 @@ let shot = 0, skipped = []
 const want = (name) => !only || name.includes(only)
 
 /** A fresh page in its own browser context; dispose of it with closePage(). */
-async function newPage(size, scale = DPR1, seed = null, staleWorker = false) {
+async function newPage(size, scale = DPR1, seed = null, staleWorker = false, mac = false) {
 	const context = await browser.createBrowserContext()
 	const page = await context.newPage()
 	page.on('pageerror', (e) => console.log('  pageerror:', e.message))
@@ -1000,6 +1065,11 @@ async function newPage(size, scale = DPR1, seed = null, staleWorker = false) {
 	}, KILL_CARET, extCss ? EXT_CSS : '')
 	// the fake worker (fake-browser.js) answers worker_version with this instead of the version the popup requires
 	if (staleWorker) await page.evaluateOnNewDocument(() => { window.__fakeWorkerVersion = 'built-before-the-worker-changed' })
+	// a Mac, as the popup's isMacPlatform reads it (the key caps)
+	if (mac) await page.evaluateOnNewDocument(() => {
+		Object.defineProperty(Navigator.prototype, 'platform', {get: () => 'MacIntel'})
+		Object.defineProperty(Navigator.prototype, 'userAgentData', {get: () => ({platform: 'macOS'})})
+	})
 	if (seed) await page.evaluateOnNewDocument((s) => {
 		window.__fakeSeed = s
 		try { localStorage.setItem('tmpBootCache', JSON.stringify(s)) } catch {}
@@ -1052,7 +1122,7 @@ function shootPopup(scale, sizes, layoutsOf) {
 			// a state that needs its notice from a fresh load (staleWorker) gets one page per shot
 			const groups = (state.staleWorker ? names.map((n) => [n]) : [names]).filter((g) => g.some(([, , n]) => want(n)))
 			for (const group of groups) tasks.push(async () => {
-				const page = await newPage(size, scale, null, !!state.staleWorker)
+				const page = await newPage(size, scale, null, !!state.staleWorker, !!state.mac)
 				try {
 					await page.goto(origin + '/popup.html', {waitUntil: 'load'})
 					await page.waitForFunction(() => document.querySelector('.searchBoxInput') && document.querySelectorAll('.window').length >= 3, {timeout: 20000})
@@ -1065,6 +1135,8 @@ function shootPopup(scale, sizes, layoutsOf) {
 
 					for (const [theme, layout, name] of group) {
 						if (!want(name)) continue
+						// the System theme follows the emulated preference
+						if (state.apply.themeSetting === 'system') await page.emulateMediaFeatures([{name: 'prefers-reduced-motion', value: 'reduce'}, {name: 'prefers-color-scheme', value: theme}])
 						await apply(page, {layout, dark: theme === 'dark', ...state.apply})
 						// sanity: the overlay states must really be open, else skip
 						if (state.apply.overlay === 'options' && !(await page.$('.options-window'))) { skipped.push(name + ' (options screen did not open)'); continue }
@@ -1075,7 +1147,14 @@ function shootPopup(scale, sizes, layoutsOf) {
 						if (state.hover) await hoverOption(page, state.hover)
 						if (state.searchHelp) await hoverSearchHelp(page)
 						if (state.stats && !(await hoverStats(page, state.stats))) { skipped.push(name + ' (' + state.stats + ' not shown)'); continue }
+						if (state.hoverSel && !(await hoverAt(page, state.hoverSel, !!state.click))) console.log('  ' + name + ': no ' + state.hoverSel + ', shot without the hover')
 						await shoot(page, name)
+						// the card closed again before the next theme's apply: an open card takes
+						// its Escape (which then would not clear the selection the clicks make)
+						if (state.hoverSel) {
+							await page.mouse.move(1, 1)
+							await page.waitForFunction(() => !document.querySelector('.stats-card.shown'), {timeout: 5000})
+						}
 					}
 				} finally {
 					await closePage(page)

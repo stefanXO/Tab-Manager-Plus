@@ -51,6 +51,14 @@ export class StatsLayer extends React.Component<IStatsLayerProps, IStatsLayerSta
 		this.hover.detach();
 	}
 
+	// the data changed under an action button's card: a click may have taken
+	// the button away (a window closed, Minimize swapped for Maximize), which
+	// only shows once the popup's new DOM is in, as now
+	componentDidUpdate() {
+		const t = this.state.target;
+		if (this.open && t && t.element && !t.element.isConnected) this.hover.close();
+	}
+
 	// only its own state, or the data behind an open card
 	shouldComponentUpdate(next : IStatsLayerProps, nextState : IStatsLayerState) : boolean {
 		return nextState !== this.state || (this.open && next.version !== this.props.version);
@@ -109,7 +117,7 @@ export class StatsLayer extends React.Component<IStatsLayerProps, IStatsLayerSta
 		// popup again (40-80 ms with ~200 tiles)
 		return (
 			<div className="stats-layer" ref={this.layerRef}>
-				<StatsCard ref={this.cardRef} content={content} shown={this.open} pointer={t ? t.pointer : undefined} anchor={t ? t.anchor : undefined} />
+				<StatsCard ref={this.cardRef} content={content} shown={this.open} pointer={t ? t.pointer : undefined} anchor={t ? t.anchor : undefined} avoid={t ? t.avoid : undefined} />
 			</div>
 		);
 	}

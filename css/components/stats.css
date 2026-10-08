@@ -1,7 +1,8 @@
-/* The stats card: a tab's (pointer resting on the tile) or a window's
-   (pointer on its "last active" label). Positioned by StatsCard.tsx in
-   viewport coordinates; the look is the search help's (search.css). It takes
-   no pointer events, so the tiles under it keep their hover and clicks. */
+/* The stats card: a tab's (pointer resting on the tile), a window's
+   (pointer on its "last active" label) or an action button's (its help).
+   Positioned by StatsCard.tsx in viewport coordinates; the look is the search
+   help's (search.css). It takes no pointer events, so the tiles under it keep
+   their hover and clicks. */
 /* the layer the card lives in (StatsLayer.tsx), there for the popup's whole
    life: the viewport, fully contained, so a change inside (the card follows
    the pointer from tab to tab) lays out and paints only in here, never the
@@ -185,6 +186,39 @@
    lines start where the title does and only real badges show */
 .stats-card:not(.with-icon) .stats-card-line > .stats-icon:not([class*="stats-icon-"]) {
 	display: none;
+}
+
+/* an action button's card (src/popup/actionHelp.ts): its name, the key caps
+   of a key that does the same next to it, and what it does under it, wrapped
+   (no icon column, no badges) */
+.stats-card.action {
+	max-width: min(20rem, calc(100vw - 16px));
+}
+.stats-action-line {
+	white-space: normal;
+}
+/* the caps drawn as the Undo notice's (components/session.css), in the
+   card's text colour */
+.stats-keys {
+	flex: none;
+	display: inline-flex;
+	gap: 0.2rem;
+	margin-left: 0.6rem;
+	margin-top: 1px;
+}
+.stats-keys kbd {
+	display: inline-block;
+	min-width: 1.1em;
+	padding: 0 0.3em;
+	border: 1px solid currentColor;
+	border-bottom-width: 2px;
+	border-radius: 0.25rem;
+	font: inherit;
+	font-size: 0.7rem;
+	font-weight: normal;
+	line-height: 1.3;
+	text-align: center;
+	opacity: 0.8;
 }
 
 /* the list view's state chip badges (layout/view-list.css); the toolbar

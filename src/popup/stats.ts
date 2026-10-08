@@ -411,8 +411,20 @@ function along(p : number, size : number, room : number) : number {
 	return Math.max(MARGIN, Math.min(p + OFFSET, room - MARGIN - size));
 }
 
-export function placeAtPointer(x : number, y : number, card : Size, view : Size) : { left : number; top : number } {
-	return { left: along(x, card.width, view.width), top: along(y, card.height, view.height) };
+// `avoid`: the button the card describes (an action button's help,
+// ./actionHelp.ts). The card stays clear of it: below it, or above it when
+// there is no room (the bottom bar), still beside the pointer; so it never
+// sits on the button about to be clicked (the header's at the top right, the
+// bottom bar's, a window's). Where it fits on neither side: as without.
+export function placeAtPointer(x : number, y : number, card : Size, view : Size, avoid? : Rect | null) : { left : number; top : number } {
+	const left = along(x, card.width, view.width);
+	if (avoid) {
+		const below = Math.max(y + OFFSET, avoid.bottom + GAP);
+		if (below + card.height <= view.height - MARGIN) return { left, top: below };
+		const above = Math.min(y - OFFSET, avoid.top - GAP) - card.height;
+		if (above >= MARGIN) return { left, top: above };
+	}
+	return { left, top: along(y, card.height, view.height) };
 }
 
 // ---- the window card's monitor map ----
