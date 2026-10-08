@@ -729,6 +729,19 @@ try {
 			const want = [['Alpha', 'Bravo', 'Charlie'], '']
 			return {got: [await titlesOf(w1), await p.$eval('.searchBoxInput', (i) => i.value)], want}
 		})
+		// the audit's trap: Ctrl+Backspace once too often after deleting the
+		// search word lands in the empty, focused box: it edits text, nothing closes
+		key('Ctrl+Backspace in the focused, empty search box closes nothing', async () => {
+			const [w1] = await fixture(layout)
+			const p = await openPopup()
+			await ctrlClick(p, tabSel('Alpha'))
+			await ctrlClick(p, tabSel('Bravo'))
+			await p.focus('.searchBoxInput')
+			await withMod(p, 'Backspace')
+			await new Promise((r) => setTimeout(r, 600))
+			const want = [['Alpha', 'Bravo', 'Charlie'], ['Alpha', 'Bravo']]
+			return {got: [await titlesOf(w1), await selectedOf(p)], want}
+		})
 		key('Ctrl+Delete in the focused, empty search box closes the selection', async () => {
 			const [w1] = await fixture(layout)
 			const p = await openPopup()

@@ -45,11 +45,6 @@ describe("selectionKeyAction: Ctrl/Cmd+Delete and Ctrl/Cmd+Backspace", () => {
 			assert.equal(selectionKeyAction(ctx({ keyCode, searchFocused: true, searchHasText: true, selection: new Set(SAVED) })), null);
 		});
 
-		test(name + " in the focused but empty search box still acts", () => {
-			assert.equal(selectionKeyAction(ctx({ keyCode, searchFocused: true })), "close-open");
-			assert.equal(selectionKeyAction(ctx({ keyCode, searchFocused: true, selection: new Set(SAVED) })), "delete-saved");
-		});
-
 		test(name + " acts while the search box holds text, as long as it is not focused (search, right-click, " + name + ")", () => {
 			assert.equal(selectionKeyAction(ctx({ keyCode, searchHasText: true })), "close-open");
 			assert.equal(selectionKeyAction(ctx({ keyCode, searchHasText: true, selection: new Set(SAVED) })), "delete-saved");
@@ -63,6 +58,16 @@ describe("selectionKeyAction: Ctrl/Cmd+Delete and Ctrl/Cmd+Backspace", () => {
 			assert.equal(selectionKeyAction(ctx({ keyCode, mainScreen: false })), null);
 		});
 	}
+
+	test("Ctrl+Delete in the focused but empty search box still acts (search, select results, Ctrl+Delete)", () => {
+		assert.equal(selectionKeyAction(ctx({ keyCode: KEY_DELETE, searchFocused: true })), "close-open");
+		assert.equal(selectionKeyAction(ctx({ keyCode: KEY_DELETE, searchFocused: true, selection: new Set(SAVED) })), "delete-saved");
+	});
+
+	test("Ctrl+Backspace in the focused but empty search box is text editing: nothing closes (a second press after deleting the word)", () => {
+		assert.equal(selectionKeyAction(ctx({ keyCode: KEY_BACKSPACE, searchFocused: true })), null);
+		assert.equal(selectionKeyAction(ctx({ keyCode: KEY_BACKSPACE, searchFocused: true, selection: new Set(SAVED) })), null);
+	});
 
 	for (const keyCode of [KEY_DELETE, KEY_BACKSPACE]) {
 		const name = keyCode === KEY_DELETE ? "Delete" : "Backspace";

@@ -7,11 +7,13 @@
 // Ctrl+Delete and Ctrl+Backspace (Cmd on a Mac) close the selection (saved
 // tabs: remove them from their saved windows, with Undo). Plain Delete and
 // Backspace never act on the selection: they are typing, as in 6.x, and go to
-// the search box. The one exception to the shortcut is a search box that has
-// the focus and holds text: there the shortcut keeps its text meaning (delete
-// a word), because typing a search selects the matching open tabs. Selecting
-// with a right-click, a modifier click or the arrows moves the focus out of
-// the box (TabManager.leaveSearchBox), so "search, right-click results,
+// the search box. The exception is a search box that has the focus: there
+// Ctrl+Backspace is always text editing (delete a word; in an empty box a
+// harmless no-op), so pressing it once too often after clearing a search
+// closes nothing, and Ctrl+Delete only acts when the box is empty (with text
+// it deletes a word), because typing a search selects the matching open tabs.
+// Selecting with a right-click, a modifier click or the arrows moves the focus
+// out of the box (TabManager.leaveSearchBox), so "search, right-click results,
 // Ctrl+Delete" works; typing moves it back in. Enter opens the selected saved
 // tabs in one new window; with open tabs selected it keeps its old meaning
 // (TabManager.addWindow).
@@ -73,7 +75,8 @@ export interface SelectionKeyContext {
 	mainScreen : boolean;
 	// the search box has the keyboard focus ...
 	searchFocused : boolean;
-	// ... and holds text: the shortcut then deletes a word in it
+	// ... and holds text: the shortcut then deletes a word in it (Ctrl+Backspace
+	// in the focused box is text editing even when it is empty)
 	searchHasText : boolean;
 	// the selection keys (open tab ids and saved tab keys, ./sessionKeys.ts)
 	selection : ReadonlySet<number>;
@@ -119,7 +122,7 @@ export function selectionKeyAction(c : SelectionKeyContext) : SelectionKeyAction
 	if (c.keyCode === KEY_ENTER) return saved ? "open-saved" : null;
 	if (c.keyCode === KEY_DELETE || c.keyCode === KEY_BACKSPACE) {
 		if (!c.cmd) return null;
-		if (c.searchFocused && c.searchHasText) return null;
+		if (c.searchFocused && (c.searchHasText || c.keyCode === KEY_BACKSPACE)) return null;
 		return saved ? "delete-saved" : "close-open";
 	}
 	return null;

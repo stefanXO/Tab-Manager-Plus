@@ -14,12 +14,13 @@ node tools/drag-check/check.mjs --only "saved tab -> open"
 It exits 1 when any check fails (and 2 when `build/chrome` is missing). Run it in the gate
 of every step that touches drag code.
 
-Fifty-two more checks (`--only keys`, own tab, blocks and vertical) press keys with the browser's own
+Fifty-four more checks (`--only keys`, own tab, blocks and vertical) press keys with the browser's own
 key events (`page.keyboard`) after a ctrl+click: Ctrl+Delete (Cmd on a Mac) deletes selected saved tabs
 from their saved windows, Ctrl+Backspace closes selected open tabs, plain Delete and Backspace close and
 delete nothing (the search box takes the key, as in 6.x), nothing closes while the search box is focused
 and empty and gets plain keys, Ctrl+Backspace in the focused box with text edits the text and closes
-nothing, Ctrl+Delete in the focused, empty box closes the selection, and holding, repeating or tapping
+nothing, Ctrl+Backspace in the focused, empty box closes nothing either, Ctrl+Delete in the focused,
+empty box closes the selection, and holding, repeating or tapping
 Ctrl or Cmd alone leaves the focus where it is. Ctrl+Delete also closes the selection after a search plus
 a right-click select (text in the box, focus moved out by the popup), and after an arrow from the
 empty, focused search box it closes the selection, not the tab the arrow went to. The keyboard cursor

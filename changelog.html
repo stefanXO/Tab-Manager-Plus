@@ -164,7 +164,8 @@
 								has the focus, but only while you use the keyboard, so that it never gets in the
 								way when you use the mouse</li>
 							<li>Ctrl+Delete and Ctrl+Backspace (Cmd on a Mac) close the selected tabs, whether
-								they are open tabs or saved tabs. Ctrl+Z undoes a change to a saved window, as
+								they are open tabs or saved tabs. Ctrl+Backspace in the search box never closes
+								tabs, even when the box is empty. Ctrl+Z undoes a change to a saved window, as
 								the Saved Windows section below describes</li>
 							<li>New installs get new default keys, because the browser took over the old ones.
 								Alt+Shift+M opens Tab Manager Plus, and Alt+Shift+, switches to the previous tab</li>
@@ -250,10 +251,10 @@
 								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/180" target="_blank" rel="noopener">#180</a>)
 							</li>
 							<li>Plain Delete and Backspace are kept for typing and go to the search box. While
-								you type a search, Ctrl+Backspace and Ctrl+Delete delete a word as usual and
-								close nothing, so to close search results, first right-click a result or use the
-								arrow keys. Selecting moves the focus out of the search box, and typing moves it
-								back</li>
+								the search box has the focus, Ctrl+Backspace only deletes a word and closes
+								nothing, even when the box is empty. Ctrl+Delete deletes a word while the box
+								has text. To close search results, first right-click a result or use the arrow
+								keys. Selecting moves the focus out of the search box, and typing moves it back</li>
 							<li>Ctrl+click or right-click on a saved tab now selects that tab, instead of an
 								unrelated open tab that Ctrl+Delete would then close. Enter with saved tabs
 								selected opens them in one new window in the order shown, and Enter after a
