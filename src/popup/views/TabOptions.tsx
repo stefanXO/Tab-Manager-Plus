@@ -2,11 +2,12 @@
 
 import * as React from "react";
 import * as browser from 'webextension-polyfill';
-import { ICommand, ITabOptions, ITabOptionsState } from "@types";
+import { ICommand, ISavedSession, ITabOptions, ITabOptionsState } from "@types";
 import {ManagerContext, ITabManagerActions, ISettings} from "../context";
 import {getLocalStorage, getLocalStorageMap, setLocalStorage} from "@helpers/storage";
 import {currentShowMonitors, saveSetting, Settings, SETTING_DEFAULTS} from "@helpers/settings";
 import {buildDebugExport, debugFileName} from "../debugExport";
+import {importSummary, planImport} from "../importCount";
 import {debugExportNote, sessionsExportNote} from "../exportNotes";
 import {switchShowMonitors} from "@helpers/monitors";
 import {sizePopup} from "@helpers/popup_size";
@@ -286,7 +287,8 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 							description="Allows you to restore your backup from an external file. The restored windows will be added to your current saved windows."
 							notes={[
 								...(importBlocked ? ["Due to a Firefox bug session import does not work in the popup. Please use the options screen or open Tab Manager Plus in its own tab"] : []),
-								...(this.state.importError ? [this.state.importError] : [])
+								...(this.state.importError ? [this.state.importError] : []),
+								...(this.state.importNote ? [this.state.importNote] : [])
 							]}
 						>
 							<input
@@ -649,7 +651,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 	importSessions = (evt : React.ChangeEvent<HTMLInputElement>) => {
 		// the file picker is disabled then, with the reason as its note
 		if (this.importBlocked()) return;
-		this.setState({ importError: undefined });
+		this.setState({ importError: undefined, importNote: undefined });
 		try {
 			let inputField = evt.target; // #session_import
 			let files = evt.target.files;
@@ -673,26 +675,23 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 					inputField.value = "";
 					return;
 				}
-				if (!!backupFile && backupFile.length > 0) {
-					var success = backupFile.length;
-					for (let i = 0; i < backupFile.length; i++) {
-						var newSession = backupFile[i];
-						if (newSession.windowsInfo && newSession.tabs && newSession.id) {
-							let sessions = await getLocalStorage(S.sessions, {});
-							sessions[newSession.id] = newSession;
-							//this.props.sessions.push(obj);
-
-							await setLocalStorage(S.sessions, sessions).catch(function(err) {
-								console.log(err);
-								console.error(err.message);
-								success--;
-							});
-							//console.log(value);
-						}
-					}
-					this.context.setBottomText(success + " windows successfully restored!");
+				const plan = planImport<ISavedSession>(backupFile);
+				let failed = 0;
+				for (const newSession of plan.valid) {
+					let sessions = await getLocalStorage(S.sessions, {});
+					sessions[newSession.id] = newSession;
+					await setLocalStorage(S.sessions, sessions).catch(function(err) {
+						console.error(err.message);
+						failed++;
+					});
+				}
+				const summary = importSummary(plan, failed);
+				if (plan.valid.length - failed > 0) {
+					this.setState({ importNote: summary });
+					this.context.setBottomText(summary);
 				} else {
-					this.context.setBottomText("Error: Could not restore any windows from the backup file!");
+					this.setState({ importError: summary });
+					this.context.setBottomText("Error: " + summary);
 				}
 				inputField.value = "";
 				await this.context.sessionSync();

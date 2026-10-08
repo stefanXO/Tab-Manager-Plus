@@ -135,6 +135,13 @@ const STATES = [
 	{name: 'options-sessions', layouts: ['blocks'], scaleLayouts: [], apply: {overlay: 'options', scrollTo: 'Session Management'}},
 	// no saved windows: Export/Backup Sessions is disabled, its note says why
 	{name: 'options-sessions-empty', layouts: ['blocks'], scaleLayouts: [], apply: {overlay: 'options', scrollTo: 'Session Management', store: {sessions: {}}}},
+	// importing a backup with one good window, one without tabs and one without
+	// an id: the note under the picker says what was restored and skipped
+	{name: 'options-sessions-imported', layouts: ['blocks'], scaleLayouts: [], apply: {overlay: 'options', scrollTo: 'Session Management', importFile: JSON.stringify([
+		{id: 'imp1', name: 'Imported', color: '#888', date: 1, sessionStartTime: 1, customName: false, incognito: false, windowsInfo: {id: 1}, tabs: [{id: 1, index: 0, url: 'https://example.com', title: 'Example'}]},
+		{id: 'imp2', windowsInfo: {id: 2}, tabs: []},
+		{windowsInfo: {id: 3}, tabs: [{id: 1, index: 0, url: 'https://example.org'}]}])}},
+	{name: 'options-sessions-badimport', layouts: ['blocks'], scaleLayouts: [], apply: {overlay: 'options', scrollTo: 'Session Management', importFile: '{"a":1}'}},
 	{name: 'options-debug', layouts: ['blocks'], scaleLayouts: [], apply: {overlay: 'options', scrollTo: 'Export tabs for debugging'}},
 	// the window colour/name screen does take the layout as a prop
 	{name: 'windowopts', layouts: ['blocks', 'vertical'], scaleLayouts: ['blocks'], apply: {overlay: 'colors'}},
@@ -262,7 +269,7 @@ async function settle(page) {
 }
 
 /** Applies a popup state absolutely: the result never depends on what came before. */
-async function apply(page, {layout, dark, search = '', dup = false, recent = 0, overlay = null, scrollTo = null, store = {}, granted = true, savedFocused = null, clicks = [], scrollInto = null}) {
+async function apply(page, {layout, dark, search = '', dup = false, recent = 0, overlay = null, scrollTo = null, store = {}, granted = true, savedFocused = null, clicks = [], scrollInto = null, importFile = null}) {
 	await page.evaluate(async (s) => {
 		const q = (sel) => document.querySelector(sel)
 		const frame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
@@ -321,8 +328,18 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 			el.dispatchEvent(new MouseEvent(c.button ? 'mousedown' : 'click', init))
 			await frame()
 		}
+		// 9. a backup file chosen in the options' session import (needs overlay options)
+		if (s.importFile) {
+			const input = q('#session_import')
+			if (!input) throw new Error('no #session_import')
+			const dt = new DataTransfer()
+			dt.items.add(new File([s.importFile], 'backup.json', {type: 'application/json'}))
+			input.files = dt.files
+			input.dispatchEvent(new Event('change', {bubbles: true}))
+			for (let i = 0; i < 20; i++) await frame()
+		}
 		if (s.scrollInto) q(s.scrollInto)?.scrollIntoView({block: 'nearest', inline: 'nearest'})
-	}, {layout, dark, search, dup, recent, overlay, store, granted, savedFocused, clicks, scrollInto})
+	}, {layout, dark, search, dup, recent, overlay, store, granted, savedFocused, clicks, scrollInto, importFile})
 	await settle(page)
 	// 7. scroll the options box headed `scrollTo` to the top of its scroller
 	if (scrollTo) {
