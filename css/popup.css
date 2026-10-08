@@ -7,7 +7,8 @@
    Layers, lowest to highest precedence:
      base        normalize, design tokens, type and element defaults
      components  the pieces in isolation: window card, tab tile, actions,
-                 sessions, colour screen, search, options, controls, changelog
+                 sessions, colour screen, search, hover cards, drag image,
+                 options, controls, changelog
      layout      the frame (header, container, bottom bar), the three views
                  (blocks grid, rows, list) and the width breakpoints. It sits
                  above components because it arranges them: the header and
@@ -43,6 +44,7 @@
 @import "components/colors.css" layer(components);
 @import "components/search.css" layer(components);
 @import "components/stats.css" layer(components);
+@import "components/drag.css" layer(components);
 @import "components/options.css" layer(components);
 @import "components/controls.css" layer(components);
 @import "components/changelog.css" layer(components);

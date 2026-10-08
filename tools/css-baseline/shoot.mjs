@@ -252,6 +252,16 @@ const STATES = [
 	// "Browser extension": both open there, in their saved order
 	{name: 'saved-drag-sel', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {
 		clicks: [{sel: '#sessiontab_s1_1', ctrl: true}, {sel: '#sessiontab_s1_3', ctrl: true}, {drag: '#sessiontab_s1_3', over: '#tab-22', side: 'before', drop: true}]}},
+	// the drag image of a several-tab drag (src/popup/dragImage.ts), shown
+	// where the pointer is (`image`): two saved tabs selected, the second held
+	// over the third tab of "Work": two stacked tiles, "Lofi beats" in front,
+	// and "2 tabs" under them. dpr 1, blocks + List, 800x600 and 380x900
+	{name: 'drag-stack-saved', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {
+		clicks: [{key: 27}, {sel: '#sessiontab_s1_1', ctrl: true}, {sel: '#sessiontab_s1_3', ctrl: true}, {drag: '#sessiontab_s1_3', over: '#tab-4', side: 'before', image: true}]}},
+	// three open tabs selected (two windows), the last held over the title of
+	// "Tax 2029": three stacked tiles, "Browser extension" in front, "3 tabs"
+	{name: 'drag-stack-open', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600', '380x900'], apply: {
+		clicks: [{key: 27}, {sel: '#tab-2', ctrl: true}, {sel: '#tab-6', ctrl: true}, {sel: '#tab-22', ctrl: true}, {drag: '#tab-22', over: '#session-s2 h3.windowTitle', image: true}], scrollEnd: true}},
 	// reordering saved windows (src/popup/sessionOrder.ts): the card of "Tax 2029"
 	// dragged by its edge (not by a tab or an icon) and held over the left / top
 	// quarter of "Conference reading": the dragged card fades, the drop marker
@@ -545,6 +555,14 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 				if (!src || !dst) throw new Error('nothing to drag at ' + c.drag + ' / ' + c.over)
 				const dt = new DataTransfer()
 				const ev = (type, xy = {}) => new DragEvent(type, {bubbles: true, cancelable: true, dataTransfer: dt, ...xy})
+				// `image`: the drag image the page hands setDragImage (it lives off
+				// screen for a moment, the browser draws it under the pointer) is
+				// copied and shown where the pointer is, held at the same point
+				let image = null
+				if (c.image) {
+					for (const old of document.querySelectorAll('.harness-drag-image')) old.remove()
+					dt.setDragImage = (el, x, y) => { image = {el: el.cloneNode(true), x, y} }
+				}
 				src.dispatchEvent(ev('dragstart'))
 				await frame()
 				// measured after dragstart: its re-render may move things
@@ -554,6 +572,13 @@ async function apply(page, {layout, dark, search = '', dup = false, recent = 0, 
 				const at = {clientX: r.left + r.width * f, clientY: r.top + r.height * f}
 				dst.dispatchEvent(ev('dragenter', at))
 				dst.dispatchEvent(ev('dragover', at))
+				if (c.image) {
+					if (!image) throw new Error('no drag image set for ' + c.drag)
+					image.el.classList.add('harness-drag-image')
+					image.el.style.left = (at.clientX - image.x) + 'px'
+					image.el.style.top = (at.clientY - image.y) + 'px'
+					document.body.append(image.el)
+				}
 				await frame()
 				if (c.drop) {
 					dst.dispatchEvent(ev('drop', at))

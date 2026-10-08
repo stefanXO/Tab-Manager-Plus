@@ -1,0 +1,64 @@
+/* The drag image of a drag that takes several tabs (src/popup/dragImage.ts):
+   up to three tab tiles stacked, the dragged one in front at the top left
+   (under the pointer), the others peeking out below and to the right of it,
+   and the number of tabs under the stack. It lives off screen for the moment
+   setDragImage takes its picture; the theme's tokens colour it. The picture
+   is the element's box: the shadows stay inside it (--pad). */
+.drag-stack {
+	--tile-w: 190px;
+	--tile-h: 30px;
+	--step: 6px;
+	--pad: 4px;
+	position: fixed;
+	top: 0;
+	left: -10000px;
+	width: calc(var(--tile-w) + (var(--layers) - 1) * var(--step) + 2 * var(--pad));
+	height: calc(var(--tile-h) + (var(--layers) - 1) * var(--step) + 2 * var(--pad) + 24px);
+	font-size: 12px;
+	line-height: 1.2;
+	color: var(--text);
+	pointer-events: none;
+}
+.drag-tile {
+	position: absolute;
+	left: calc(var(--pad) + var(--depth) * var(--step));
+	top: calc(var(--pad) + var(--depth) * var(--step));
+	box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	width: var(--tile-w);
+	height: var(--tile-h);
+	padding: 0 8px;
+	border: 1px solid var(--tile-border);
+	border-radius: 6px;
+	background-color: var(--tile-bg);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+/* the tiles behind the dragged one: the page's ground colour, so their
+   edges read as more tiles, not as a thicker border */
+.drag-tile.behind {
+	background-color: var(--bg);
+}
+.drag-fav {
+	flex: none;
+	width: 16px;
+	height: 16px;
+	background: var(--fav, none) center / 16px 16px no-repeat;
+}
+.drag-title {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+.drag-count {
+	position: absolute;
+	left: var(--pad);
+	bottom: var(--pad);
+	padding: 3px 8px;
+	border-radius: 10px;
+	background-color: var(--toast-bg);
+	color: var(--toast-text);
+	font-weight: 600;
+	white-space: nowrap;
+}

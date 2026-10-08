@@ -13,6 +13,9 @@ import {windowName, compactName, tabsKey} from '../windowName';
 import {sendAndWait} from '../messaging';
 import {buildSavedWindow, newSessionId} from '@helpers/sessions';
 import {isSavedWindowDrag} from '../sessionOrder';
+import {isSavedTabDrag} from '../savedDrag';
+import {isOpenTabDrag} from '../savedAdd';
+import {readTabDrag} from '../dragPayload';
 
 export class Window extends React.Component<IWindow, IWindowState> {
 	static contextType = ManagerContext;
@@ -322,6 +325,11 @@ export class Window extends React.Component<IWindow, IWindowState> {
 		if (isSavedWindowDrag(e.dataTransfer?.types)) return;
 		this.setState({hover: true});
 		this.stopProp(e);
+		// what the drop does, said outright (as the saved windows do) instead
+		// of left to the browser's guess: saved tabs open here as copies, the
+		// saved window keeps them; open tabs move here
+		if (isSavedTabDrag(e.dataTransfer?.types)) e.dataTransfer.dropEffect = "copy";
+		else if (isOpenTabDrag(e.dataTransfer?.types)) e.dataTransfer.dropEffect = "move";
 	}
 	dragLeave = (e) => {
 		this.setState({hover: false});
@@ -354,6 +362,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 		}
 
 		this.stopProp(e);
+		const dragged = readTabDrag(e.dataTransfer);
 
 		if (closestTab != null) {
 			let before : boolean;
@@ -363,9 +372,9 @@ export class Window extends React.Component<IWindow, IWindowState> {
 			} else {
 				before = e.nativeEvent.clientX < boundingRect.left;
 			}
-			this.context.drop(closestTab, before);
+			this.context.drop(closestTab, before, dragged);
 		} else {
-			this.context.dropWindow(this.props.window.id);
+			this.context.dropWindow(this.props.window.id, dragged);
 		}
 	}
 	hoverWindow = () => {

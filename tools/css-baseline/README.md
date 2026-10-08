@@ -226,6 +226,16 @@ currently on disk — there is no stale copy to forget about.
   title of "Tax 2029" (outlined; the copy goes at the end); `-sel`: Ctrl+click "Sprint board"
   (Work) and "Browser extension" (Research), drop the second on "Tax 2029": both copied to
   its end in popup order, the selection cleared, the open tabs still open
+- `drag-stack-saved` / `drag-stack-open`: the drag image of a drag that takes several tabs
+  (`src/popup/dragImage.ts`). The `{drag, over, ..., image: true}` entry catches what the
+  page hands `setDragImage` (an element that lives off screen for a moment; the browser
+  draws its picture under the pointer) and shows a copy where the pointer is, held at the
+  same point. `-saved`: Escape, Ctrl+click two saved tabs of "Conference reading", hold the
+  second over a tab of "Work": two stacked tiles, "Lofi beats" in front, "2 tabs" under
+  them; `-open`: Ctrl+click three open tabs (Work, Research), hold the last over the title
+  of "Tax 2029": three tiles, "3 tabs" (blocks + List, 800x600 and 380x900). The real
+  browser draws the picture a little translucent; real drags are checked by
+  `tools/drag-check/`
 - `fresh` / `fresh-compact`: the List view's freshness bars (`src/popup/freshness.ts`, drawn at the end of every List row from the fixture's `lastAccessed`, 0 min .. 14 days: all five levels) — `fresh` as `plain`, `fresh-compact` with the `compact` setting on. `vertical` × 2 themes × `800x600`, dpr 1 only
 - `page-options-na-<theme>-<width>`: `options.html` standalone, 2 × 3 = 6
 - `page-changelog-na-<theme>-<width>`: `changelog.html` standalone, 2 × 3 = 6.

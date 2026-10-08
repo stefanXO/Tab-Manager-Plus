@@ -2,6 +2,7 @@ import * as React from "react";
 import * as browser from "webextension-polyfill";
 import {ITabManagerState, ISavedSession} from "@types";
 import {SessionEdit} from "./sessionEdit";
+import type {TabDrag} from "./dragPayload";
 
 // Settings that live in TabManager state and can be changed from the options screen
 export type ISettings = Pick<ITabManagerState,
@@ -16,9 +17,13 @@ export interface ITabManagerActions {
 	select(id : number) : void;
 	selectTo(id : number, tabs : browser.Tabs.Tab[]) : void;
 	deleteTab(id : number) : void;
-	drag(e : React.DragEvent<HTMLDivElement>, id : number) : void;
-	drop(id : number, before : boolean) : void;
-	dropWindow(windowId : number) : void;
+	// a tab drag starts: its drag data, the tabs it takes (./dragPayload.ts)
+	drag(e : React.DragEvent<HTMLDivElement>, id : number) : string;
+	// dropped on an open tab / on an open window with no tab next to it;
+	// `dragged`: what the drop event carries (null: none of this popup's tab
+	// drags, or nothing readable)
+	drop(id : number, before : boolean, dragged : TabDrag | null) : void;
+	dropWindow(windowId : number, dragged : TabDrag | null) : void;
 	dragFavicon(icon? : string) : string;
 	// a drag ended, dropped or not
 	dragEnd() : void;
@@ -34,7 +39,7 @@ export interface ITabManagerActions {
 	savedDropMoves(sessionId : string, index : number | undefined, before : boolean) : boolean;
 	// the dragged saved tabs dropped there: moved, in one write; dragged open
 	// tabs: copied there, and they stay open
-	dropSaved(sessionId : string, index : number | undefined, before : boolean) : void;
+	dropSaved(sessionId : string, index : number | undefined, before : boolean, dragged : TabDrag | null) : void;
 	hoverIcon(text : string) : void;
 	openWindowOptions(windowId : number, autoName : string) : void;
 	// the same screen on a saved window

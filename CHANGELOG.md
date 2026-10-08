@@ -47,7 +47,8 @@ Windows And Sessions
 - Ctrl+click or right-click on a tab of a saved window selects it, instead of an unrelated open tab that Delete would then close; saved windows are no longer marked as the active window
 - Tabs of saved windows can be deleted: select them, then use the trash button or the Delete key; a saved window with no tab left is deleted, and the same Undo notice applies (#180)
 - Selected tabs can be saved as a new saved window, named from their sites: the new button next to "Move tabs to new window" in the bottom bar (#201)
-- Tabs of saved windows can be dragged into an open window: dropped on a window or next to one of its tabs, the tab opens there (all selected saved tabs, when the dragged one is selected), and the saved window keeps it
+- Tabs of saved windows can be dragged into an open window: dropped on a window or next to one of its tabs, the tab opens there (all selected saved tabs, when the dragged one is selected), and the saved window keeps it, also when dropped in a Tab Manager tab or sidebar other than the one the drag started in
+- Dragging several tabs (open or saved) shows them as a small stack of tabs with their number under the mouse
 - Tabs of saved windows can be reordered: drag one before or after another tab of the same saved window, onto a tab of another saved window to move it there, or onto another saved window's title or edge to add it at the end; selected saved tabs move together and stay selected, a saved window left with no tab is removed, and tabs do not move between private and normal saved windows
 - Open tabs can be added to a saved window: drag a tab (all selected tabs, when the dragged one is selected) onto a tab of a saved window to put a copy before or after it, or onto the saved window's title or edge to add it at the end; the open tabs stay open (#192)
 - Saved windows can be put in any order: drag a saved window by its edge or title and drop it before or after another one; a marker shows where it goes, newly saved and imported windows are listed first, and the ones saved before are listed newest first
@@ -67,6 +68,7 @@ Smaller fixes
 - Window names and colors changed in the background refresh in the popup
 - Hover texts: restored when moving from a tab back to its window, sessions have one too, tab counts and plurals are right (#121, #183)
 - The drop indicator when dragging a tab fits every layout and shows in the dark theme; the color picker lists colors in order (#97)
+- A tab dragged from one Tab Manager tab or sidebar into another moves that tab, instead of the tabs selected in the other one
 - The window name and color screen covers the whole popup, its close button shows a pointer and Escape closes only that screen
 - Firefox-based browsers (LibreWolf, Zen, Waterfox) are detected as Firefox
 

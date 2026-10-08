@@ -30,6 +30,19 @@ import {moveSavedTabs, remapSavedKeys, renumberedIndex, movedText, SavedTabMove,
 import {addOpenTabs, addedText, draggedOpen, SavedAddResult} from "../savedAdd";
 import {SavedWrites, SavedChange} from "../savedWrites";
 import type {SavedTabRef} from "../sessionKeys";
+import {stackTiles, encodeSaved, encodeIds, TabDrag} from "../dragPayload";
+import {setStackImage, StackTile} from "../dragImage";
+
+// the saved window and stored index of each of these saved tab keys; keys
+// the popup no longer knows are left out
+function refsOf(keys : readonly number[]) : SavedTabRef[] {
+	return keys.map((key) => savedTabKeys.ref(key)).filter((ref) : ref is SavedTabRef => !!ref);
+}
+
+// the ids of these open tabs
+function tabIds(tabs : readonly browser.Tabs.Tab[]) : number[] {
+	return tabs.map((tab) => tab.id).filter((id) : id is number => typeof id === "number");
+}
 
 // the focus is in a text box that holds text: Delete edits that text
 function editingText() : boolean {
@@ -204,15 +217,15 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			selectTo: (id, tabs) => this.selectTo(id, tabs),
 			deleteTab: (id) => this.deleteTab(id),
 			drag: (e, id) => this.drag(e, id),
-			drop: (id, before) => { this.drop(id, before); },
-			dropWindow: (windowId) => { this.dropWindow(windowId); },
+			drop: (id, before, dragged) => { this.drop(id, before, dragged); },
+			dropWindow: (windowId, dragged) => { this.dropWindow(windowId, dragged); },
 			dragFavicon: (icon) => this.dragFavicon(icon),
 			dragEnd: () => { this.draggingSaved = null; this.draggingOpen = null; },
 			dragSession: (id) => { this.draggingSession = id; if (id) this.draggingOpen = null; },
 			sessionDropMoves: (target, before) => this.sessionDropMoves(target, before),
 			dropSession: (target, before) => { void this.dropSession(target, before); },
 			savedDropMoves: (sessionId, index, before) => this.savedDropMoves(sessionId, index, before),
-			dropSaved: (sessionId, index, before) => { void this.dropSaved(sessionId, index, before); },
+			dropSaved: (sessionId, index, before, dragged) => { void this.dropSaved(sessionId, index, before, dragged); },
 			hoverIcon: (text) => this.hoverIcon(text),
 			openWindowOptions: (windowId, autoName) => this.setState({ colorsActive: windowId, colorsAutoName: autoName }),
 			openSessionOptions: (id, autoName) => this.setState({ colorsSession: id, colorsAutoName: autoName }),
@@ -934,7 +947,12 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	}
 	// the saved window and stored index of each saved tab being dragged
 	private draggedRefs() : SavedTabRef[] {
-		return (this.draggingSaved || []).map((key) => savedTabKeys.ref(key)).filter((ref) : ref is SavedTabRef => !!ref);
+		return refsOf(this.draggingSaved || []);
+	}
+	// the open tabs with these ids, in that order; ids of tabs that are gone
+	// are left out
+	private openTabsById(ids : readonly number[]) : browser.Tabs.Tab[] {
+		return ids.map((id) => this.state.tabsbyid.get(id)).filter((tab) : tab is browser.Tabs.Tab => !!tab);
 	}
 	// Whether the dragged saved tabs would move if dropped before / after the
 	// saved tab `index` of `sessionId` (undefined: at its end), among what is
@@ -968,13 +986,17 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	// one write of `sessions`. The selected ones stay selected, a pending delete
 	// keeps hiding its tabs under their new numbers. Dragged open tabs are
 	// copied there instead (addOpenTabs).
-	async dropSaved(sessionId : string, index : number | undefined, before : boolean) {
+	// `dragged`: what the drop event carries (../dragPayload.ts); without it,
+	// what the popup remembers of the drag.
+	async dropSaved(sessionId : string, index : number | undefined, before : boolean, dragged? : TabDrag | null) {
 		const target = { sessionId, index, before };
-		if (this.draggingOpen) {
-			await this.addOpenTabs(target);
+		const open = dragged ? (dragged.kind === "open" ? this.openTabsById(dragged.ids) : null) : this.draggingOpen;
+		if (open) {
+			this.draggingOpen = null;
+			await this.addOpenTabs(target, open);
 			return;
 		}
-		const refs = this.draggedRefs();
+		const refs = dragged ? (dragged.kind === "saved" ? dragged.refs : []) : this.draggedRefs();
 		this.draggingSaved = null;
 		if (refs.length === 0 || !moveSavedTabs(this.shownSavedStore(), refs, target)) return;
 		const moved = await this.renumberingChange((stored) => moveSavedTabs(stored, refs, target));
@@ -991,10 +1013,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	// copies of them go in there (../savedAdd.ts), in one write. The open tabs
 	// stay open; the selection they were is done with, as after moving open
 	// tabs. The saved window's tabs are numbered anew, as after a move.
-	async addOpenTabs(target : SavedDropTarget) {
-		const tabs = this.draggingOpen;
-		this.draggingOpen = null;
-		if (!tabs || tabs.length === 0 || !this.addOpen(this.shownSavedStore(), tabs, target)) return;
+	async addOpenTabs(target : SavedDropTarget, tabs : browser.Tabs.Tab[]) {
+		if (tabs.length === 0 || !this.addOpen(this.shownSavedStore(), tabs, target)) return;
 		const added = await this.renumberingChange((stored) => this.addOpen(stored, tabs, target));
 		if (!added) return;
 		if (tabs.some((tab) => this.state.selection.has(tab.id))) this.clearSelection();
@@ -1969,7 +1989,11 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		this.draggingSaved = null;
 		this.draggingOpen = null;
 	}
-	drag(e : React.DragEvent<HTMLDivElement>, id : number) {
+	// A tab drag starts: what it takes is remembered for the drop markers, and
+	// returned as the drag data (../dragPayload.ts): the saved tabs by saved
+	// window and index, or the open tab ids. A drag of several tabs gets a
+	// drag image of stacked tiles and their number (../dragImage.ts).
+	drag(e : React.DragEvent<HTMLDivElement>, id : number) : string {
 		// a tab drag: no saved window card is being dragged
 		this.draggingSession = null;
 		// With "Hide non-matching tabs" on, selected tabs the search hides stay
@@ -1980,9 +2004,11 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		// a saved tab: it and, when it is selected, the other selected saved
 		// tabs; it is opened, not moved, so the selection stays as it is
 		if (isSavedTabKey(id)) {
-			this.draggingSaved = draggedSaved(id, this.state.selection, filter ? this.savedSearch(this.visibleSessions()).hidden : undefined);
+			const keys = draggedSaved(id, this.state.selection, filter ? this.savedSearch(this.visibleSessions()).hidden : undefined);
+			this.draggingSaved = keys;
 			this.draggingOpen = null;
-			return;
+			this.stackImage(e, id, keys);
+			return encodeSaved(refsOf(keys));
 		}
 		this.draggingSaved = null;
 		if (!this.state.selection.has(id)) {
@@ -1994,17 +2020,41 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		}
 		// what a drop on a saved window copies (../savedAdd.ts)
 		this.draggingOpen = draggedOpen(this.selectedTabs(), id, filter ? this.state.hiddenTabs : undefined);
+		const ids = tabIds(this.draggingOpen);
+		// moved between open windows, every selected open tab goes
+		// (selectedTabs()), also the ones the search hides: the image counts them
+		const moved = tabIds(this.selectedTabs());
+		this.stackImage(e, id, moved.length > ids.length ? moved : ids);
+		return encodeIds(ids);
 	}
-	async drop(id : number, before : boolean) {
+	// The drag image of a drag that takes several tabs: the tiles on screen
+	// of the dragged one and the next ones, as the popup draws them (favicon,
+	// title), and how many tabs go.
+	private stackImage(e : React.DragEvent<HTMLDivElement>, dragged : number, ids : readonly number[]) {
+		const tiles : StackTile[] = [];
+		for (const id of stackTiles(dragged, ids)) {
+			const ref = isSavedTabKey(id) ? savedTabKeys.ref(id) : undefined;
+			const el = document.getElementById(ref ? "sessiontab_" + ref.sessionId + "_" + ref.index : "tab-" + id);
+			if (!el) continue;
+			const icon = el.querySelector<HTMLElement>(".iconoverlay");
+			const fav = el.style.getPropertyValue("--fav") || icon?.style.getPropertyValue("--fav") || "";
+			tiles.push({ fav, title: (el.getAttribute("data-hover") || "").split("\n")[0] });
+		}
+		if (tiles.length > 1) setStackImage(e.dataTransfer, tiles, ids.length);
+	}
+	// Dropped on the open tab `id`. `dragged`: what the drop event carries
+	// (../dragPayload.ts); without it, what the popup remembers of the drag.
+	async drop(id : number, before : boolean, dragged? : TabDrag | null) {
 		// a saved window card is no tab (open tabs and windows take no drop from it)
-		if (this.draggingSession) return;
+		if (this.draggingSession && !dragged) return;
 		var tab : browser.Tabs.Tab = this.state.tabsbyid.get(id);
 		if (!tab) return;
-		if (this.draggingSaved) {
-			await this.openSaved(tab.windowId, tab.index + (before ? 0 : 1));
+		const saved = this.droppedSaved(dragged);
+		if (saved) {
+			await this.openSaved(tab.windowId, tab.index + (before ? 0 : 1), saved);
 			return;
 		}
-		var tabs = this.selectedTabs();
+		var tabs = this.movedTabs(dragged);
 		var index = tab.index + (before ? 0 : 1);
 
 		for (let i = 0; i < tabs.length; i++) {
@@ -2015,27 +2065,42 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		this.state.selection.clear();
 		this.update();
 	}
-	async dropWindow(windowId : number) {
-		if (this.draggingSession) return;
-		if (this.draggingSaved) {
+	async dropWindow(windowId : number, dragged? : TabDrag | null) {
+		if (this.draggingSession && !dragged) return;
+		const saved = this.droppedSaved(dragged);
+		if (saved) {
 			// no tab to go next to: at the end
-			await this.openSaved(windowId, undefined);
+			await this.openSaved(windowId, undefined, saved);
 			return;
 		}
-		var tabs = this.selectedTabs();
+		var tabs = this.movedTabs(dragged);
 
 		browser.runtime.sendMessage<ICommand>({command: S.move_tabs_to_window, window_id: windowId, tabs: tabs});
 
 		this.state.selection.clear();
 	}
+	// The open tabs a drop on an open window moves: the selection (the
+	// dragged tab joined it at dragstart; with "Hide non-matching tabs" also
+	// the selected tabs the search hides, as in 6.x). A drag that started in
+	// another Tab Manager page, whose tabs are not this page's selection: the
+	// tabs it carries.
+	private movedTabs(dragged? : TabDrag | null) : browser.Tabs.Tab[] {
+		if (dragged && dragged.kind === "open" && !dragged.ids.every((id) => this.state.selection.has(id))) return this.openTabsById(dragged.ids);
+		return this.selectedTabs();
+	}
+	// the saved tab keys a drop on an open window opens: the ones the drop
+	// carries, else the ones the popup remembers; null for any other drop
+	private droppedSaved(dragged? : TabDrag | null) : number[] | null {
+		if (dragged) return dragged.kind === "saved" ? dragged.refs.map((ref) => savedTabKeys.key(ref.sessionId, ref.index)) : null;
+		return this.draggingSaved && this.draggingSaved.length ? this.draggingSaved : null;
+	}
 	// Opens the dragged saved tabs in the open window `windowId` at `index`
 	// (undefined: at the end), through the worker (../../helpers/openTabs.ts),
 	// and waits for it. The saved window is not changed. When the dragged tabs
 	// were the selection, the selection is done with.
-	async openSaved(windowId : number, index : number | undefined) {
-		const keys = this.draggingSaved;
+	async openSaved(windowId : number, index : number | undefined, keys : number[]) {
 		this.draggingSaved = null;
-		if (!keys || keys.length === 0) return;
+		if (keys.length === 0) return;
 		const tabs = savedTabsToOpen(keys, this.visibleSessions());
 		if (tabs.length === 0) return;
 		let opened : number | undefined;

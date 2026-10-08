@@ -17,6 +17,7 @@ import {ICON_FAMILY} from "../icons";
 import {dropSide, isSavedWindowDrag, SAVED_WINDOW_DRAG} from "../sessionOrder";
 import {isSavedTabDrag} from "../savedDrag";
 import {isOpenTabDrag} from "../savedAdd";
+import {readTabDrag} from "../dragPayload";
 
 interface ISessionState {
 	// this card is being dragged (it fades)
@@ -241,7 +242,7 @@ export class Session extends React.Component<ISession, ISessionState> {
 			if (!into) return;
 			e.preventDefault();
 			e.stopPropagation();
-			this.context.dropSaved(this.props.session.id, undefined, false);
+			this.context.dropSaved(this.props.session.id, undefined, false, readTabDrag(e.dataTransfer));
 			return;
 		}
 		if (!isSavedWindowDrag(e.dataTransfer?.types)) return;

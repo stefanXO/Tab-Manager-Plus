@@ -12,6 +12,7 @@ import {sendAndWait} from "../messaging";
 import {isSavedWindowDrag} from "../sessionOrder";
 import {SAVED_TAB_DRAG, isSavedTabDrag} from "../savedDrag";
 import {OPEN_TAB_DRAG, isOpenTabDrag} from "../savedAdd";
+import {readTabDrag} from "../dragPayload";
 
 export class Tab extends React.Component<ITab, ITabState> {
 	static contextType = ManagerContext;
@@ -254,20 +255,22 @@ export class Tab extends React.Component<ITab, ITabState> {
 			dragFavIcon: ""
 		});
 		this.context.dragFavicon(this.state.favIcon);
+		// every tab the drag takes (this one, or the selection it is in): the
+		// drop reads them from its own event (../dragPayload.ts)
+		const taken = this.context.drag(e, this.props.tab.id);
 		if (saved) {
 			// a saved tab's key means nothing outside the popup: its address. It
 			// is copied (opened) into an open window, linked by the browser's tab
 			// strip, and moved only among saved windows (the drag type says so)
 			e.dataTransfer.setData("Text", this.props.tab.url || "");
-			e.dataTransfer.setData(SAVED_TAB_DRAG, this.props.tab.id.toString());
+			e.dataTransfer.setData(SAVED_TAB_DRAG, taken);
 			e.dataTransfer.effectAllowed = "all";
 		} else {
 			e.dataTransfer.setData("Text", this.props.tab.id.toString());
-			// saved windows take copies of it (../savedAdd.ts)
-			e.dataTransfer.setData(OPEN_TAB_DRAG, this.props.tab.id.toString());
+			// saved windows take copies of them (../savedAdd.ts)
+			e.dataTransfer.setData(OPEN_TAB_DRAG, taken);
 		}
 		e.dataTransfer.setData("text/uri-list", this.props.tab.url || "");
-		this.context.drag(e, this.props.tab.id);
 	}
 	dragEnd = () => {
 		this.context.dragEnd();
@@ -319,7 +322,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 			dragFavIcon: ""
 		});
 
-		this.context.drop(this.props.tab.id, before);
+		this.context.drop(this.props.tab.id, before, readTabDrag(e.dataTransfer));
 		this.forceUpdate();
 		this.props.onDragChange?.();
 	}
@@ -356,7 +359,7 @@ export class Tab extends React.Component<ITab, ITabState> {
 		// the card under it takes no drop of its own then
 		e.preventDefault();
 		e.stopPropagation();
-		this.context.dropSaved(this.props.session.id, this.props.tab.index, side === "left" || side === "top");
+		this.context.dropSaved(this.props.session.id, this.props.tab.index, side === "left" || side === "top", readTabDrag(e.dataTransfer));
 	}
 	selectTo(tabId : number) {
 		if (!!tabId && !!this.props.tabs) this.context.selectTo(tabId, this.props.tabs);
