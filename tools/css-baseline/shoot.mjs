@@ -188,6 +188,11 @@ const STATES = [
 	// windowsInfo says focused, with the id of the focused open window "Work"):
 	// it must not look like the active window. dpr 1, blocks + List, 800x600
 	{name: 'saved-focused', layouts: ['blocks', 'vertical'], scaleLayouts: [], widths: ['800x600'], apply: {savedFocused: 's1', scrollInto: '#session-s1'}},
+	// the foot of the window list: the last open window above the "Saved
+	// windows" divider and both saved windows under it, to compare how the two
+	// kinds of card look (css/components/session.css). dpr 1, every layout,
+	// 800x600 and 380x900
+	{name: 'saved-look', layouts: LAYOUTS, scaleLayouts: [], widths: ['800x600', '380x900'], apply: {scrollEnd: true}},
 ]
 
 /**

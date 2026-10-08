@@ -11,6 +11,8 @@ import {popupScreen} from "@helpers/popup_size";
 import {ManagerContext, ITabManagerActions} from '../context';
 import {savedTabKeys} from '../sessionKeys';
 import {windowName} from '../windowName';
+import {Icon} from "@icons/Icon";
+import {ICON_FAMILY} from "../icons";
 
 export class Session extends React.Component<ISession> {
 	static contextType = ManagerContext;
@@ -89,6 +91,7 @@ export class Session extends React.Component<ISession> {
 				if (name) {
 					tabs.unshift(
 						<h3 key={"session-" + this.props.session.id + "-windowTitle"} className="center windowTitle">
+							{savedMark()}
 							{name}
 						</h3>
 					);
@@ -173,4 +176,15 @@ export class Session extends React.Component<ISession> {
 		// hidden at once; removed from storage when the Undo countdown ends
 		this.context.deleteSession(this.props.session);
 	}
+}
+
+// The "saved" marker in front of a saved window's name: the options screen's
+// Saved windows icon (a stack of windows with the star of Save), so a saved
+// card reads as one at a glance next to the open windows. Nothing when the
+// icon family lacks the icon; the dashed edge (css/components/session.css)
+// still tells the two kinds of card apart.
+function savedMark() : React.ReactNode {
+	const def = ICON_FAMILY.icons["sessions"];
+	if (!def) return null;
+	return <span className="saved-mark" role="img" aria-label="Saved window"><Icon def={def} size={14} /></span>;
 }

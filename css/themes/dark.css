@@ -43,7 +43,10 @@
 		--toast-track: rgba(255, 255, 255, 0.18);
 
 		--minimized-opacity: 0.85;
-		--session-opacity: 0.85;
+
+		--saved-edge: rgba(255, 255, 255, 0.3);
+		--saved-edge-hover: rgba(255, 255, 255, 0.5);
+		--saved-fav-opacity: 0.7;
 
 		--selection: var(--dk-select);
 		--selection-hover: var(--dk-select-hover);
@@ -255,6 +258,11 @@
 		/* window colours: the wash (tokens) plus a top edge in the hue */
 		& :is(.color1, .color2, .color3, .color4, .color5, .color6, .color7, .color8, .color9, .color10, .color11, .color12, .color13, .color14, .color15, .color16, .color17, .color18, .color19, .color20, .color21, .color22, .color23, .color24, .color25) {
 			border-top: 3px solid var(--win-edge);
+		}
+		/* a saved window's top edge is dashed like the rest of its edge
+		   (components/session.css) */
+		& .window.session[class*=" color"] {
+			border-top-style: dashed;
 		}
 		/* the picker shows the edge colour as the swatch itself */
 		& .colors-box .icon[class*="color"] {

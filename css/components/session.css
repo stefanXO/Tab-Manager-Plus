@@ -1,18 +1,46 @@
-/* Minimized windows and saved sessions: their cards are dimmed until hovered,
-   and each group sits under a labelled divider ("Minimized windows", "Saved
-   windows"). */
+/* Minimized windows and saved windows, each group under a labelled divider
+   ("Minimized windows", "Saved windows"). Minimized cards are dimmed until
+   hovered. Saved cards stay fully readable but must not pass for open
+   windows: a dashed edge instead of the hairline ring (a draft of a window,
+   not a window), the Saved windows icon in front of the name (Session.tsx),
+   and favicons faded and half grey until the card is hovered. */
 
 .window.minimized {
 	opacity: var(--minimized-opacity);
 }
 
-.window.session {
-	opacity: var(--session-opacity);
-}
-
-.window.session:hover,
 .window.minimized:hover {
 	opacity: 1 !important;
+}
+
+/* drawn inside the card's edge, so it takes no room and follows the radius */
+.window.session {
+	box-shadow: none;
+	outline: 1px dashed var(--saved-edge);
+	outline-offset: -1px;
+}
+.window.session:hover {
+	outline-color: var(--saved-edge-hover);
+}
+
+.saved-mark {
+	display: inline-flex;
+	vertical-align: -2px;
+	margin-right: 0.3rem;
+	line-height: 0;
+}
+
+/* the favicons (on the tile's ::after, on .iconoverlay in the List view; see
+   components/tab.css): faded, and half grey unless they are grey anyway (the
+   mono icons, which keep their own invert filter). A selected saved tab and
+   a hovered card show them as they are. */
+.window.session:not(:hover) .icon.tab:not(.selected)::after,
+.window.session:not(:hover) .icon.tab:not(.selected) .iconoverlay {
+	opacity: var(--saved-fav-opacity);
+}
+.window.session:not(:hover) .icon.tab:not(.selected):not(.icon-mono-light):not(.icon-mono-dark)::after,
+.window.session:not(:hover) .icon.tab:not(.selected) .iconoverlay:not(.icon-mono-light):not(.icon-mono-dark) {
+	filter: var(--saved-fav-filter);
 }
 
 /* section divider: a rule with its label on top */

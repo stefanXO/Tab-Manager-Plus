@@ -111,7 +111,13 @@
 
 	/* opacity of dimmed cards */
 	--minimized-opacity: 0.8;
-	--session-opacity: 0.6;
+
+	/* saved windows (components/session.css): the dashed card edge, and
+	   their favicons until the card is hovered */
+	--saved-edge: rgba(0, 0, 0, 0.35);
+	--saved-edge-hover: rgba(0, 0, 0, 0.55);
+	--saved-fav-opacity: 0.65;
+	--saved-fav-filter: grayscale(0.7);
 
 	/* the selection (tabs picked by hand or by search) */
 	--selection: var(--yellow);

@@ -45,6 +45,7 @@ Windows And Sessions
 - Deleting a saved window can be undone: it disappears at once and a notice with an 8 second countdown offers Undo; it is only removed for good when the countdown ends or the popup closes
 - Saved windows can be renamed and recolored with the same name and color screen as open windows, from the color button on the saved window's card (#172)
 - Ctrl+click or right-click on a tab of a saved window selects it, instead of an unrelated open tab that Delete would then close; saved windows are no longer marked as the active window
+- Saved windows look different from open windows: a dashed edge, a saved icon before the name, and faded favicons that regain their color under the mouse; they are no longer dimmed as a whole, so their tabs stay readable
 - The window order no longer resets on its own; the current window is always listed first and marked, also as a popup
 - Clicking the icon while Tab Manager Plus is already open in a tab switches to that tab
 - The "switch to previous tab" shortcut works again (#37, #108, #238)
