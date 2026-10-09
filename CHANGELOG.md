@@ -138,11 +138,8 @@ Firefox
 Smaller fixes
 - Escape clears the header line that shows the selection, together with the selection
 - Typing in the search box is faster: the popup no longer reads every window from the browser on each key, and with animations on, matching tabs turn yellow at once instead of one after another
-- In the dark theme, a selected tab with a light icon now turns yellow like the others, not only when you hover it. Sleeping tabs that do not match a search now fade like the rest
 - Hovering over tabs and going to the options and back do less work behind the scenes, so the popup stays smooth with many tabs
-- The popup stays quick when you move the mouse over tabs and buttons with hundreds of tabs open. Chrome lays an extension popup out twice per frame, and one style rule and the frame widths made every pass redo all the tiles
 - Settings, window names and colors no longer go back to an older state when the popup opens while you are changing them (#126, #131)
-- A search of only a prefix like t: no longer selects every tab, and the match count stays right when tabs close in the background
 - Clicking a tab or a window in the popup now switches to it every time, and clicking a tab of a saved session opens it. After the browser sat idle, the first click used to only close the popup (#242, #246, #252)
 - Closing, discarding or moving selected tabs now works even when one of them was closed in the meantime. Window names and colors that change in the background also update in the popup
 - Hover texts are back when you move from a tab to its window, and sessions now have one too, while tab counts and plurals are shown correctly again (#121, #183)
