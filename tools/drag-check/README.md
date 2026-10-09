@@ -28,7 +28,8 @@ a tab with nothing selected selects three tabs, arrow, arrow, Space selects only
 after an arrow with nothing selected switches to the cursor tab (its window's active tab, read with
 `chrome.tabs.query`) and opens no window. Enter opens the selected saved tabs in one new window in the
 shown order, Enter with open tabs still moves them; a double press and a held Enter still open one
-window; Enter after an `s:` search (which selects no open tab) opens no window. Ten of them
+window; Enter after an `s:` search (which selects no open tab, only the saved matches) opens those in one
+new window, never an empty one. Ten of them
 (`--only undo`) press Ctrl+Z (Cmd+Z on a Mac): with an Undo notice up and text in the focused search box
 it takes back the delete and leaves the text; with no Undo notice it is the text's own undo; with two
 stacked Undo notices (a move that empties "Taxes", then "Reading" deleted) it takes back the delete
