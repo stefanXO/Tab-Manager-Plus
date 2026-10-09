@@ -13,3 +13,5 @@ dist/
 .claude/skills/
 skills-lock.json
 
+Folder.DotSettings.user
+key.pe*
