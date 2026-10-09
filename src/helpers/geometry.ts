@@ -7,10 +7,13 @@ export interface Bounds {
 	height : number;
 }
 
-// true when the point (left, top) lies inside the bounds
+// true when the point (left, top) lies inside the bounds. Display rectangles
+// are half-open: the left and top edges are inside, the right and bottom edges
+// are not (x = 1920 belongs to the display starting at 1920, not the one
+// ending there).
 export function isInBounds(point : { left : number, top : number }, bounds : Bounds) : boolean {
-	return point.left >= bounds.left && point.left <= bounds.left + bounds.width
-		&& point.top >= bounds.top && point.top <= bounds.top + bounds.height;
+	return point.left >= bounds.left && point.left < bounds.left + bounds.width
+		&& point.top >= bounds.top && point.top < bounds.top + bounds.height;
 }
 
 // Where a saved window goes on the displays available now: the display its

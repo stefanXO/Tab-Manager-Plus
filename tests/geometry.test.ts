@@ -22,18 +22,20 @@ describe("isInBounds", () => {
 	test("point on the left edge is in bounds (>=)", () => {
 		assert.equal(isInBounds({ left: 10, top: 40 }, bounds), true);
 	});
-	test("point on the right edge is in bounds (<=)", () => {
-		assert.equal(isInBounds({ left: 110, top: 40 }, bounds), true);
+	test("point on the right edge is out of bounds (half-open, <)", () => {
+		assert.equal(isInBounds({ left: 110, top: 40 }, bounds), false);
+		assert.equal(isInBounds({ left: 109, top: 40 }, bounds), true);
 	});
 	test("point on the top edge is in bounds (>=)", () => {
 		assert.equal(isInBounds({ left: 50, top: 20 }, bounds), true);
 	});
-	test("point on the bottom edge is in bounds (<=)", () => {
-		assert.equal(isInBounds({ left: 50, top: 70 }, bounds), true);
+	test("point on the bottom edge is out of bounds (half-open, <)", () => {
+		assert.equal(isInBounds({ left: 50, top: 70 }, bounds), false);
+		assert.equal(isInBounds({ left: 50, top: 69 }, bounds), true);
 	});
 
-	test("point exactly at the far (bottom-right) corner is in bounds", () => {
-		assert.equal(isInBounds({ left: 110, top: 70 }, bounds), true);
+	test("point exactly at the far (bottom-right) corner is out of bounds", () => {
+		assert.equal(isInBounds({ left: 110, top: 70 }, bounds), false);
 	});
 	test("point exactly at the near (top-left) corner is in bounds", () => {
 		assert.equal(isInBounds({ left: 10, top: 20 }, bounds), true);
@@ -152,16 +154,19 @@ describe("placeWindow", () => {
 		assert.deepEqual(placeWindow(saved, [d1, d2]), fitInto(saved, d1));
 	});
 
-	test("saved position exactly on the boundary between two displays: picked by isInBounds's first match (d1, since its right edge check is inclusive) -- documents observed behavior, not a guaranteed contract", () => {
+	test("saved position at the far edge of display A and the origin of adjacent B is placed on B", () => {
 		const d1 = { left: 0, top: 0, width: 1920, height: 1080 };
 		const d2 = { left: 1920, top: 0, width: 1920, height: 1080 };
 		const saved = { left: 1920, top: 100, width: 300, height: 200 };
-		const result = placeWindow(saved, [d1, d2]);
-		// isInBounds(saved, d1) is true because d1's right edge (1920) is an
-		// inclusive boundary, so Array.find picks d1 first even though the
-		// point sits exactly on d2's left edge too.
-		assert.deepEqual(result, fitInto(saved, d1));
-		assert.deepEqual(result, { left: 1620, top: 100, width: 300, height: 200 });
+		assert.deepEqual(placeWindow(saved, [d1, d2]), fitInto(saved, d2));
+		assert.deepEqual(placeWindow(saved, [d1, d2]), saved);
+	});
+
+	test("saved position inside A stays on A", () => {
+		const d1 = { left: 0, top: 0, width: 1920, height: 1080 };
+		const d2 = { left: 1920, top: 0, width: 1920, height: 1080 };
+		const saved = { left: 1919, top: 100, width: 300, height: 200 };
+		assert.deepEqual(placeWindow(saved, [d1, d2]), fitInto(saved, d1));
 	});
 });
 
@@ -252,15 +257,17 @@ describe("windowsToMinimize", () => {
 		assert.deepEqual(windowsToMinimize(1, [w(1, 10, 10)], [left]), []);
 	});
 
-	test("a window on the display's edge counts as on it (like isInBounds)", () => {
-		const windows = [w(1, 10, 10), w(2, 1920, 1040)];
-		assert.deepEqual(windowsToMinimize(1, windows, [left]), [2]);
+	test("the far edge belongs to the next display, not this one (like isInBounds)", () => {
+		const windows = [w(1, 10, 10), w(2, 1919, 1039), w(3, 1920, 10)];
+		assert.deepEqual(windowsToMinimize(1, windows, [left, right]), [2]);
 	});
 
 	test("the target's display is the first one containing it", () => {
 		// overlapping displays (mirrored or odd layouts): the first match wins
-		const windows = [w(1, 1920, 10), w(2, 100, 10), w(3, 3000, 10)];
-		assert.deepEqual(windowsToMinimize(1, windows, [left, right]), [2]);
+		const windows = [w(1, 1600, 10), w(2, 100, 10), w(3, 3000, 10)];
+		const overlap = { left: 1500, top: 0, width: 2000, height: 1040 };
+		assert.deepEqual(windowsToMinimize(1, windows, [left, overlap]), [2]);
+		assert.deepEqual(windowsToMinimize(1, windows, [overlap, left]), [3]);
 	});
 });
 

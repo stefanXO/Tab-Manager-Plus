@@ -14,8 +14,8 @@ const types = {
 /** Serves app/ on a free port; resolves to {server, origin}. */
 export function serve(port = 0) {
 	const server = createServer(async (req, res) => {
-		const path = normalize(decodeURIComponent(new URL(req.url, 'http://x').pathname)).replace(/^([\\/]\.\.)+/, '')
 		try {
+			const path = normalize(decodeURIComponent(new URL(req.url, 'http://x').pathname)).replace(/^([\\/]\.\.)+/, '')
 			const body = await readFile(join(root, path))
 			res.writeHead(200, {'content-type': types[extname(path)] || 'application/octet-stream', 'cache-control': 'no-store'})
 			res.end(body)
