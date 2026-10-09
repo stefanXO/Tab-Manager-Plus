@@ -55,6 +55,7 @@ const HELP = {
 		? "Lists the keys set now, and how to change or turn off the key that opens Tab Manager Plus"
 		: "Lists the keys set now. The link opens the browser's shortcut settings, to change or turn off the key that opens Tab Manager Plus",
 	changelog: "Opens the list of changes of every release in a new tab",
+	documentation: "Opens a short guide with examples in a new tab: search, keys, windows and saved windows",
 	debugExport: "Saves a JSON file with your windows and tabs (titles, urls, times) and the current settings, for reporting a bug or a bad automatic window name",
 	tabActions: "Adds 'Open a new tab' and 'Close this window' option to each window. Default : on",
 } as const;
@@ -456,6 +457,14 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 							</a>
 						</OptionTitle>
 						<div className="option-description">The changes of every release, and where to leave a review or report a problem.</div>
+					</div>
+					<div className="toggle-box" {...this.help("documentation")}>
+						<OptionTitle icon="changelog">
+							<a href="documentation.html" target="_blank" rel="noopener">
+								Help: how to use Tab Manager Plus
+							</a>
+						</OptionTitle>
+						<div className="option-description">A short guide with examples: searching, selecting, the keyboard, windows and saved windows.</div>
 					</div>
 				</OptionsBox>
 				<OptionsBox title="Export tabs for debugging">
