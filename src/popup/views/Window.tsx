@@ -35,7 +35,6 @@ export class Window extends React.Component<IWindow, IWindowState> {
 			name: "",
 			auto_name: "",
 			tabsKey: "",
-			hover: false,
 			hidden: false,
 			tabrefs: new Map<number, React.RefObject<Tab>>()
 		};
@@ -321,8 +320,6 @@ export class Window extends React.Component<IWindow, IWindowState> {
 					onDragOver={this.dragOver}
 					onDragLeave={this.dragLeave}
 					onClick={this.windowClick}
-					onMouseEnter={this.hoverWindow}
-					onMouseLeave={this.hoverWindowOut}
 					onDrop={this.drop}
 				>
 					<div key={"windowcontainer_" + this.props.window.id} className="windowcontainer" data-hover={"Focus this window\nWill select this window with " + maybePluralize(this.props.tabs.length, "tab")}>{children}</div>
@@ -358,11 +355,9 @@ export class Window extends React.Component<IWindow, IWindowState> {
 			if (!this.context.openDropOver(this.props.window.id, place.tabId, place.before)) {
 				this.stopProp(e);
 				e.dataTransfer.dropEffect = "none";
-				if (this.state.hover) this.setState({hover: false});
 				return;
 			}
 		}
-		this.setState({hover: true});
 		this.stopProp(e);
 		// what the drop does, said outright (as the saved windows do) instead
 		// of left to the browser's guess: saved tabs open here as copies, the
@@ -371,7 +366,6 @@ export class Window extends React.Component<IWindow, IWindowState> {
 		else if (isOpenTabDrag(e.dataTransfer?.types)) e.dataTransfer.dropEffect = "move";
 	}
 	dragLeave = (e) => {
-		this.setState({hover: false});
 		this.stopProp(e);
 	}
 	// Where a drag at the pointer goes in this window: next to the open tab
@@ -435,12 +429,6 @@ export class Window extends React.Component<IWindow, IWindowState> {
 		} else {
 			this.context.dropWindow(this.props.window.id, dragged);
 		}
-	}
-	hoverWindow = () => {
-		this.setState({ hover: true });
-	}
-	hoverWindowOut = (_) => {
-		this.setState({ hover: false });
 	}
 	windowClick = async (e) => {
 		this.stopProp(e);

@@ -15,6 +15,7 @@ import {hoverKey, hoverAction, isWarm, parseKey, arrowsMoveCard, ACTION_SELECTOR
 import {actionCard} from "./actionHelp";
 import {isMacPlatform} from "./notices";
 import {shownUrl} from "./safeUrl";
+import {perfSpan} from "./perfSpan";
 import type {IStatsFavicon, IStatsCardContent} from "./views/StatsCard";
 
 // how many site favicons the window card shows
@@ -141,7 +142,8 @@ export class StatsHover {
 
 	// ---- the events ----
 
-	private readonly onOver = (e : MouseEvent) => {
+	private readonly onOver = (e : MouseEvent) => perfSpan("stats.over", () => this.over(e));
+	private over(e : MouseEvent) {
 		this.track(e);
 		const key = hoverKey(e.target as Element);
 		const action = hoverAction(key, this.key, this.view.isOpen(), isWarm(this.view.isOpen(), Date.now(), this.leftAt));
@@ -184,7 +186,7 @@ export class StatsHover {
 	// the card follows the pointer right away, in the same event, straight
 	// on the card's element (a transform: no React render, no layout)
 	private readonly onMove = (e : MouseEvent) => {
-		this.track(e);
+		perfSpan("stats.follow", () => this.track(e));
 	}
 
 	private track(e : MouseEvent) {
@@ -267,6 +269,9 @@ export class StatsHover {
 	// options screen too): at the pointer, clear of the button, and built
 	// again whenever its help changes
 	private showAction(button : HTMLElement) {
+		perfSpan("stats.showAction", () => this.showActionNow(button));
+	}
+	private showActionNow(button : HTMLElement) {
 		if (!button.isConnected || !button.dataset.help) return;
 		this.view.show({ kind: "action", id: -1, element: button, pointer: { ...this.pointer }, avoid: button.getBoundingClientRect() }, undefined);
 		if (this.helpWatch) {
@@ -276,6 +281,9 @@ export class StatsHover {
 	}
 
 	private show(kind : IStatsTarget["kind"], id : number, keyboard = false, session? : string) {
+		perfSpan("stats.show", () => this.showNow(kind, id, keyboard, session));
+	}
+	private showNow(kind : IStatsTarget["kind"], id : number, keyboard : boolean, session? : string) {
 		this.helpWatch?.disconnect();
 		const st = this.source.state();
 		if (!onMainScreen(st)) return;
@@ -311,7 +319,7 @@ export class StatsHover {
 
 	private windowName(windowId : number) : string {
 		const w = this.source.state().windowrefs.get(windowId)?.current;
-		return w ? w.shownName() : "";
+		return w ? perfSpan("windowName", () => w.shownName()) : "";
 	}
 
 	// the favicon the tile resolved (Tab.resolveFavIconUrl), with the tone the
@@ -422,6 +430,9 @@ export class StatsHover {
 
 	// the card of a target, from the manager's data; null: nothing to show
 	resolve(t : IStatsTarget, zoom : number | undefined) : IStatsCardContent | null {
+		return perfSpan("stats.build." + t.kind, () => this.build(t, zoom));
+	}
+	private build(t : IStatsTarget, zoom : number | undefined) : IStatsCardContent | null {
 		if (t.kind === "action") {
 			const el = t.element;
 			const help = el && el.isConnected ? actionCard(el.dataset.help, el.dataset.helpKeys) : null;
@@ -440,7 +451,7 @@ export class StatsHover {
 				allTabs: st.tabsbyid.values(),
 				windowName: (id) => this.windowName(id),
 				zoom,
-				savedIn: savedWindowsWith(tab.url || tab.pendingUrl, this.source.sessions().map((s) => ({ name: this.savedName(s), tabs: s.tabs })))
+				savedIn: savedWindowsWith(tab.url || tab.pendingUrl, this.source.sessions().map((s) => { const hover = this; return { get name() { return hover.savedName(s); }, tabs: s.tabs }; }))
 			});
 			return { card, icon: this.favicon(tab), url: shownUrl(tab.url || tab.pendingUrl) };
 		}

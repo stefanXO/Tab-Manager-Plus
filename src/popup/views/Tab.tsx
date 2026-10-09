@@ -15,6 +15,7 @@ import {SAVED_TAB_DRAG, isSavedTabDrag} from "../savedDrag";
 import {OPEN_TAB_DRAG, isOpenTabDrag} from "../savedAdd";
 import {readTabDrag} from "../dragPayload";
 import {tabDropBefore} from "../tabDropSide";
+import {batchedTimeout} from "../batchedTimer";
 
 export class Tab extends React.Component<ITab, ITabState> {
 	static contextType = ManagerContext;
@@ -29,21 +30,21 @@ export class Tab extends React.Component<ITab, ITabState> {
 			iconTone: "normal",
 			dragFavIcon: "",
 			draggingOver: "",
-			hovered: false,
 			entering: true
 		};
 
 	}
 
-	private enterTimer = 0;
+	private cancelEnter = () => {};
 
 	componentDidMount() {
 		this.update();
-		this.enterTimer = window.setTimeout(() => this.setState({ entering: false }), 800);
+		// one commit for all the tiles that mounted together (../batchedTimer.ts)
+		this.cancelEnter = batchedTimeout(() => this.setState({ entering: false }), 800);
 	}
 
 	componentWillUnmount() {
-		clearTimeout(this.enterTimer);
+		this.cancelEnter();
 	}
 
 	update = () => {
@@ -150,8 +151,6 @@ export class Tab extends React.Component<ITab, ITabState> {
 			onMouseDown: this.onMouseDown,
 			// the header shows both lines: no "user:password@", the host in Unicode (../safeUrl.ts)
 			"data-hover": stripUserinfo(this.props.tab.title) + "\n" + shownUrl(this.props.tab.url || this.props.tab.pendingUrl),
-			onMouseEnter: this.onHover,
-			onMouseLeave: this.onHoverOut
 		};
 
 		if (!!this.props.draggable) {
@@ -196,12 +195,6 @@ export class Tab extends React.Component<ITab, ITabState> {
 		}
 		if (at < title.length) parts.push(title.slice(at));
 		return parts;
-	}
-	onHover = () => {
-		this.setState({hovered: true});
-	}
-	onHoverOut = () => {
-		this.setState({hovered: false});
 	}
 	onMouseDown = async (e : React.MouseEvent<HTMLDivElement>) => {
 		if (e.button === 0) return;

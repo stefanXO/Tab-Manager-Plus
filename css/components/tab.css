@@ -266,6 +266,11 @@
 	opacity: 0.8;
 	background-blend-mode: luminosity;
 }
+/* a sleeping tile the search does not match fades like any other (the rule
+   above outranked .tab.search-faded); selected it stays at its 0.6 (above) */
+.icon.discarded.blocks.search-faded:not(.selected) {
+	opacity: 0.25;
+}
 
 .tab.full > .tabtitle {
 	max-width: calc(100% - 1.5rem);

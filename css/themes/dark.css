@@ -67,11 +67,13 @@
 		--tile-active-bg: var(--dk-tile-hover);
 		--tile-incognito-active-bg: var(--dk-tile-hover);
 		--tile-incognito-active-border: var(--active-border);
-		/* no tint behind light favicons: the dark tile already gives them an edge */
+		/* no tint behind light favicons: the dark tile already gives them an
+		   edge, so a light-favicon tile takes each state's plain colour (the
+		   selected one stays yellow; it was the bare tile, yellow on hover only) */
 		--tile-tint: var(--dk-tile);
-		--tile-tint-active: var(--dk-tile);
-		--tile-tint-selected: var(--dk-tile);
-		--tile-tint-selected-hover: var(--dk-select-hover);
+		--tile-tint-active: var(--tile-active-bg);
+		--tile-tint-selected: var(--selection);
+		--tile-tint-selected-hover: var(--selection-hover);
 		/* white-only favicons as they are, black-only ones inverted */
 		--fav-mono-light-filter: none;
 		--fav-mono-dark-filter: invert(1);

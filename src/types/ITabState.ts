@@ -6,7 +6,6 @@ export interface ITabState {
 	dragFavIcon: string,
 	favIcon: string,
 	iconTone: FaviconTone,
-	hovered: boolean,
 	// carries the entrance animation for the first moment after mount; a
 	// tile shown again after being hidden by the search must not replay it
 	entering: boolean

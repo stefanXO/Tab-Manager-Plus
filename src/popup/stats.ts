@@ -218,7 +218,10 @@ export function savedWindowsWith(url : string | undefined, sessions : Iterable<S
 	const names : string[] = [];
 	if (!key) return names;
 	for (const s of sessions) {
-		if (s.name && !names.includes(s.name) && s.tabs.some((t) => dupKey(t) === key)) names.push(s.name);
+		// the tabs first: the name may be worked out from every saved tab's site
+		if (!s.tabs.some((t) => dupKey(t) === key)) continue;
+		const name = s.name;
+		if (name && !names.includes(name)) names.push(name);
 	}
 	return names;
 }
