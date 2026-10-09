@@ -1,6 +1,6 @@
 # Store listing
 
-> Version 7.0.0 (2026-10-06)
+> Version 7.0.0 (2026-10-09)
 
 ## Product details
 
