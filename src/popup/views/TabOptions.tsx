@@ -402,7 +402,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 							label="Show all monitors"
 							checked={!!this.state.monitorAccess}
 							onChange={this.toggleMonitors}
-							description="The window card (hover a window) draws a map of your monitors and where the window is. With this on it knows all of them; it asks the browser for permission to read your display layout, the same one Minimize inactive windows uses."
+							description="The window card (hover a window) draws a map of your monitors and where the window is. With this on it knows all of them; the switch asks the browser for permission to read your display layout, the same one Minimize inactive windows uses. Chrome usually grants it without asking you anything."
 							notes={["Recommended: enabled", "Starts disabled: the browser only grants the permission when you turn it on"]}
 						/>
 					)}

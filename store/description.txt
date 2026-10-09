@@ -95,7 +95,7 @@ Saved Windows (Sessions), rebuilt
 Tab And Window Info
 - Hover a tab to see when you last used it and its state: asleep, muted and why, playing, pinned. The card also shows its position, which tab opened it, copies in other windows and its zoom
 - Hover a window for its tab counts, sites, last activity, oldest and newest tab and size, while a small map shows where the window is on your monitors
-- The card follows the mouse and switches instantly between tabs, and Escape closes it. "Show all monitors" in the options draws every monitor on that map after it asks for the monitor permission
+- The card follows the mouse and switches instantly between tabs, and Escape closes it. "Show all monitors" in the options draws every monitor on that map after it asks the browser for the monitor permission, which Chrome usually grants without a prompt
 - Hovering and switching layouts are much faster, even with many windows and tabs
 
 Options

@@ -110,7 +110,7 @@ Tab And Window Info
 - When you hold the mouse on a tab, a card shows when you last used it and its state: asleep, muted and why, playing, or pinned. The card also shows its position, which tab opened it, copies in other windows and its zoom level, so you can decide whether to keep it
 - When you hold the mouse on a window, its card shows the tab counts, sites, last activity, oldest and newest tab, and the window size. A small map of your monitors shows where the window is, which helps when you have several screens
 - The card follows the mouse and switches instantly from one tab to the next, so you can skim through many tabs quickly, and pressing Escape closes it
-- In Chrome, the "Show all monitors" option draws every monitor on that map, instead of only the ones with windows on them. It asks for permission to see your monitors first
+- In Chrome, the "Show all monitors" option draws every monitor on that map, instead of only the ones with windows on them. The switch asks the browser for the monitor permission first, and Chrome usually grants it without asking you anything
 - Hovering and switching layouts are much faster now, even in a popup with many windows and tabs
 
 Options
