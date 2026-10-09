@@ -17,6 +17,7 @@ export const OPTION_ICONS = [
 	"badge", "own-tab", "minimize-inactive", "monitors", "action-buttons",
 	"private-windows", "shortcuts", "changelog", "debug-export",
 	"mouse-right", "mouse-shift-right", "mouse-middle", "key-enter",
+	"help", "back",
 ] as const;
 
 // Optional variants of another icon: the recent button's three levels, the

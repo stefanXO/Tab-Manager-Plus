@@ -128,9 +128,6 @@
 								<code>/localhost:\d+/</code> finds local dev servers, and <code>/\.pdf$/</code> finds open PDFs
 								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/156" target="_blank" rel="noopener">#156</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/194" target="_blank" rel="noopener">#194</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/247" target="_blank" rel="noopener">#247</a>)
 							</li>
-							<li>When you hover the search box, it lists all the search options, so you don't
-								have to remember them. In List view, the matching part of each title is shown in
-								bold, so that you can see at a glance why a tab matched your search</li>
 							<li>The new clock button in the bar highlights the tabs you used most recently, so
 								you can get back to your current work quickly. It picks the shortest time span
 								with more than one tab: 15 minutes, an hour, 3 hours, 12 hours, a day, 2 days
@@ -140,6 +137,10 @@
 							<li>Clicking the clock again reaches further back in time, up to two more times, and
 								each click lights up one more step under the clock. A fourth click turns the
 								highlighting off completely</li>
+							<li>In List view, the matching part of each title is shown in bold, so that you can see at a glance why a tab matched your search</li>
+							<li>A small question mark at the right end of the search box opens a card that lists
+								all the search options, so you don't have to remember them. The card no longer
+								pops up when you just hover over or type in the box</li>
 						</ul>
 						<h4>Keyboard</h4>
 						<figure class="clip"><video muted loop playsinline preload="none" poster="features/7.0.0/keys.jpg" aria-label="Arrow keys move the cursor, Space selects, Shift+arrows select a range, Enter switches, Tab reaches the buttons"><source src="features/7.0.0/keys.webm" type="video/webm"></video></figure>
@@ -411,6 +412,10 @@
 								also skips Minimize inactive windows and Show all monitors if the browser hasn't
 								given the monitor permission, so turn them on in the options first</li>
 							<li>Import Sessions and Import Settings each refuse the other's file and show a message, so you can't load the wrong file by accident</li>
+							<li>A bar at the bottom of the options holds buttons for Changelog, Help, Back to
+								tabs and, where the browser allows it, Change shortcut keys. On a narrow popup
+								it shows only their icons. The credits now sit at the end of the page</li>
+							<li>On Chrome, the Allow in Incognito option now shows whether incognito access is currently allowed or not allowed</li>
 						</ul>
 						<h4>Firefox</h4>
 						<ul>
@@ -427,6 +432,16 @@
 						<h4>Smaller fixes</h4>
 						<ul>
 							<li>Escape clears the header line that shows the selection, together with the selection</li>
+							<li>Typing in the search box is faster: the popup no longer reads every window from
+								the browser on each key, and with animations on, matching tabs turn yellow at
+								once instead of one after another</li>
+							<li>In the dark theme, a selected tab with a light icon now turns yellow like the
+								others, not only when you hover it. Sleeping tabs that do not match a search now
+								fade like the rest</li>
+							<li>Hovering over tabs and going to the options and back do less work behind the scenes, so the popup stays smooth with many tabs</li>
+							<li>The popup stays quick when you move the mouse over tabs and buttons with
+								hundreds of tabs open. Chrome lays an extension popup out twice per frame, and
+								one style rule and the frame widths made every pass redo all the tiles</li>
 							<li>Settings, window names and colors no longer go back to an older state when the popup opens while you are changing them
 								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/126" target="_blank" rel="noopener">#126</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/131" target="_blank" rel="noopener">#131</a>)
 							</li>

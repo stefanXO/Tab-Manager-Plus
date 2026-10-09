@@ -627,7 +627,7 @@ const SCALES = [
 	{name: 'z200', os: 1, zoom: 2},
 	{name: 'os125', os: 1.25, zoom: 1},
 	{name: 'os150', os: 1.5, zoom: 1},
-	{name: 'os200', os: 2, zoom: 1},
+	{name: 'os200', os: 2, zoom: 1, narrow: true},
 	{name: 'os150z125', os: 1.5, zoom: 1.25},
 ]
 const DPR1 = {name: '', os: dpr, zoom: 1}
@@ -1059,7 +1059,7 @@ async function hoverAt(page, selector, click = false) {
 /** Moves the real mouse onto the search box and waits for its help panel (css/components/search.css). */
 async function hoverSearchHelp(page) {
 	const at = await page.evaluate(() => {
-		const r = document.querySelector('.searchBoxInput').getBoundingClientRect()
+		const r = document.querySelector('.search-help-icon').getBoundingClientRect()
 		return {x: r.left + r.width / 2, y: r.top + r.height / 2}
 	})
 	await page.mouse.move(1, 1)

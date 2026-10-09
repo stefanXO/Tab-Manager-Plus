@@ -72,7 +72,12 @@
 	filter: none;
 }
 .animations .tab.search-active, .animations .tab.search-faded {
-	transition-delay: calc(min(var(--i, 0), 16) * 10ms);
+	/* the ripple moves the tiles only: the selection's yellow (background-color,
+	   box-shadow) changes at once, in the frame the search selects, as with
+	   animations off (a transition on it runs on the main thread, which the
+	   typing keeps busy) */
+	transition-delay: calc(min(var(--i, 0), 16) * 10ms), calc(min(var(--i, 0), 16) * 10ms), 0s, 0s;
+	transition-duration: 220ms, 220ms, 0s, 0s;
 }
 .animations .tab.search-active {
 	transform: scale(1.12);
@@ -136,7 +141,10 @@
 .no-animations .search-help {
 	transition: none;
 }
-.no-animations .window.searchbox td.one:hover .search-help {
+.no-animations .search-help-icon:hover ~ .search-help,
+.no-animations .search-help-icon:focus-visible ~ .search-help,
+.no-animations .search-help-icon.open ~ .search-help,
+.no-animations .search-help:hover {
 	transition-delay: 0s;
 }
 

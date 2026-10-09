@@ -18,5 +18,7 @@ export interface ITabOptions {
 	sessions: ISavedSession[],
 	// the open windows and tabs, for the debug export's note
 	windowCount: number,
-	tabCount: number
+	tabCount: number,
+	// closes the options (the header options button's function); absent on the standalone options page (options.html), which has no tabs to go back to
+	onBack?: () => void
 }

@@ -3,45 +3,72 @@
    the bottom bar's toolbar. Each action class's image is in icons.css
    (generated, see the end of this file); donate keeps its PayPal image here. */
 
-/* sizes and places in the header and the bottom bar: both rows are 2rem
-   squares --bar-gap apart, --bar-inset from the right edge (layout/frame.css),
-   so the header's four line up with the bottom bar's eight or nine */
+/* sizes and places in the header and the bottom bar: both rows are
+   --bar-button squares --bar-gap apart, --bar-edge from the top, the bottom
+   and the right edge (the tokens are in layout/frame.css), so the header's
+   four line up with the bottom bar's eight or nine. The options' footer
+   buttons (options.css) wear the same look. */
 .window.searchbox .icon {
-	height: 2rem;
-	width: 2rem;
-	margin: 0.6rem 0 0.6rem var(--bar-gap);
+	height: var(--bar-button);
+	width: var(--bar-button);
+	margin: var(--bar-edge) 0 var(--bar-edge) var(--bar-gap);
 }
 .window.searchbox td.two {
-	padding-right: var(--bar-inset);
+	/* not the cell's own 1px: it would grow the row */
+	padding: 0 var(--bar-edge) 0 0;
 }
-/* the header's four, right to left: options, theme, rate, donate; centred in
-   its 2.8rem. Without donate and rate (supportLinks) theme stays where it is */
+/* the header's four, right to left: options, theme, rate, donate. Without
+   donate and rate (supportLinks) theme stays where it is */
 .options.icon, .compact .options.icon,
 .theme.icon, .compact .theme.icon,
 .donate.icon, .compact .donate.icon,
 .rate.icon, .compact .rate.icon {
-	height: 2rem;
-	width: 2rem;
+	height: var(--bar-button);
+	width: var(--bar-button);
 	margin: 0;
 	padding: 0;
 	position: absolute;
-	top: 0.4rem;
-	right: var(--bar-inset);
+	top: var(--bar-edge);
+	right: var(--bar-edge);
 }
 .theme.icon, .compact .theme.icon {
-	right: calc(var(--bar-inset) + 2rem + var(--bar-gap));
+	right: calc(var(--bar-edge) + var(--bar-button) + var(--bar-gap));
 }
 .rate.icon, .compact .rate.icon {
-	right: calc(var(--bar-inset) + 2 * (2rem + var(--bar-gap)));
+	right: calc(var(--bar-edge) + 2 * (var(--bar-button) + var(--bar-gap)));
 }
 .donate.icon, .compact .donate.icon {
-	right: calc(var(--bar-inset) + 3 * (2rem + var(--bar-gap)));
+	right: calc(var(--bar-edge) + 3 * (var(--bar-button) + var(--bar-gap)));
 }
 
 /* the buttons take the Tab key (src/popup/buttonKeys.ts): a ring for the
    keyboard only, a mouse click shows none. Drawn outside the square, in the
    focus color of the options' switches (light and dark in the tokens) */
 .icon[role="button"]:focus-visible {
+	outline: 2px solid var(--focus-ring);
+	outline-offset: 1px;
+}
+
+/* the options footer's buttons (options.css) take the header buttons' look: the
+   same border, radius, background, hover and focus ring as .icon (tab.css),
+   the same --bar-button height; they add the label beside the icon */
+.options-footer-button {
+	box-sizing: border-box;
+	height: var(--bar-button);
+	margin: 0;
+	border: 1px solid var(--tile-border);
+	border-radius: 3px;
+	background-color: var(--tile-bg);
+	color: var(--text);
+	font: inherit;
+	font-size: 0.8rem;
+	cursor: pointer;
+	user-select: none;
+}
+.options-footer-button:hover {
+	background-color: var(--action-hover);
+}
+.options-footer-button:focus-visible {
 	outline: 2px solid var(--focus-ring);
 	outline-offset: 1px;
 }

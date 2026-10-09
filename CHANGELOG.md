@@ -30,9 +30,10 @@ Searching And Duplicates
 - You can search only in titles with `t:word`, or only in web addresses with `u:word`, so that common words in links don't clutter the results. To leave tabs out of a search, put a minus in front, as in `-word` or `-u:word`
 - To search for words that contain a space, put them in quotes, for example `"pull request"`, so that the words must appear together (#224)
 - You can also search with a pattern (a regular expression) when plain words are not enough. For example, `/\(\d+\)/` finds tabs with an unread count, `/localhost:\d+/` finds local dev servers, and `/\.pdf$/` finds open PDFs (#156, #194, #247)
-- When you hover the search box, it lists all the search options, so you don't have to remember them. In List view, the matching part of each title is shown in bold, so that you can see at a glance why a tab matched your search
 - The new clock button in the bar highlights the tabs you used most recently, so you can get back to your current work quickly. It picks the shortest time span with more than one tab: 15 minutes, an hour, 3 hours, 12 hours, a day, 2 days and so on (#203)
 - Clicking the clock again reaches further back in time, up to two more times, and each click lights up one more step under the clock. A fourth click turns the highlighting off completely
+- In List view, the matching part of each title is shown in bold, so that you can see at a glance why a tab matched your search
+- A small question mark at the right end of the search box opens a card that lists all the search options, so you don't have to remember them. The card no longer pops up when you just hover over or type in the box
 
 Keyboard
 ![Arrow keys move the cursor, Space selects, Shift+arrows select a range, Enter switches, Tab reaches the buttons](features/7.0.0/keys.webm)
@@ -126,6 +127,8 @@ Options
 - Import Settings restores your settings from that file or from a debug file, which helps when you move to a new computer. The notice lists what changed, what was skipped and why
 - Import skips settings that are unknown, of the wrong type or out of range. It also skips Minimize inactive windows and Show all monitors if the browser hasn't given the monitor permission, so turn them on in the options first
 - Import Sessions and Import Settings each refuse the other's file and show a message, so you can't load the wrong file by accident
+- A bar at the bottom of the options holds buttons for Changelog, Help, Back to tabs and, where the browser allows it, Change shortcut keys. On a narrow popup it shows only their icons. The credits now sit at the end of the page
+- On Chrome, the Allow in Incognito option now shows whether incognito access is currently allowed or not allowed
 
 Firefox
 - "Minimize inactive windows" now works on Firefox, so you can keep one window open in front of you. All the other windows are minimized, on every monitor (#28)
@@ -133,6 +136,10 @@ Firefox
 
 Smaller fixes
 - Escape clears the header line that shows the selection, together with the selection
+- Typing in the search box is faster: the popup no longer reads every window from the browser on each key, and with animations on, matching tabs turn yellow at once instead of one after another
+- In the dark theme, a selected tab with a light icon now turns yellow like the others, not only when you hover it. Sleeping tabs that do not match a search now fade like the rest
+- Hovering over tabs and going to the options and back do less work behind the scenes, so the popup stays smooth with many tabs
+- The popup stays quick when you move the mouse over tabs and buttons with hundreds of tabs open. Chrome lays an extension popup out twice per frame, and one style rule and the frame widths made every pass redo all the tiles
 - Settings, window names and colors no longer go back to an older state when the popup opens while you are changing them (#126, #131)
 - Clicking a tab or a window in the popup now switches to it every time, and clicking a tab of a saved session opens it. After the browser sat idle, the first click used to only close the popup (#242, #246, #252)
 - Closing, discarding or moving selected tabs now works even when one of them was closed in the meantime. Window names and colors that change in the background also update in the popup

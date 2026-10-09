@@ -13,9 +13,12 @@
    without a query.)
    --------------------------------------------------------------------------- */
 @media (min-width: 100px) and (max-width: 450px) {
-	/* the bottom bar's height: search box plus one row of actions */
+	/* the bottom bar's height: the search box row and one row of actions,
+	   each a --bar-button tall, --bar-edge from the top, the bottom and the
+	   sides, --narrow-row-gap between the rows */
 	:root {
-		--searchbox-height: 4.2rem;
+		--narrow-row-gap: 0.2rem;
+		--searchbox-height: calc(2 * var(--bar-edge) + 2 * var(--bar-button) + var(--narrow-row-gap));
 	}
 	.window.searchbox {
 		height: var(--searchbox-height);
@@ -34,15 +37,15 @@
 		display: block;
 		width: auto;
 	}
-	.window.searchbox input.searchBoxInput {
-		width: calc(100% - 0.5rem);
-		box-sizing: border-box;
-		padding: 0 0.6rem;
-		font-size: 0.7rem;
+	/* the input row: the help button's insets follow these paddings */
+	.window.searchbox td.one {
+		--sb-pr: var(--bar-edge);
+		--sb-pb: var(--narrow-row-gap);
+		padding: var(--sb-pt) var(--sb-pr) var(--sb-pb) var(--bar-inset);
 	}
-
 	.window.searchbox input.searchBoxInput {
-		margin: 0.15rem 0.15rem 0 0.15rem;
+		font-size: 0.7rem;
+		padding-left: 0.6rem;
 	}
 	/* the actions in a row, packed against the right edge like the wide bar;
 	   spare width stays on the left instead of opening gaps. The wide bar
@@ -54,13 +57,11 @@
 		flex-direction: row-reverse;
 		justify-content: flex-start;
 		gap: var(--bar-gap);
-		padding: 0.1rem var(--bar-inset) 0;
+		padding: 0 var(--bar-edge) var(--bar-edge);
 	}
 	.window.searchbox td.two .icon {
 		float: none;
 		margin: 0;
-		height: 26px;
-		width: 26px;
 		flex: none;
 	}
 	/* the rename / color screen: its wide side padding would leave the title
@@ -102,6 +103,18 @@
 	}
 	.window.horizontal .window-actions {
 		padding: 0.3rem 0 0 0;
+	}
+}
+/* the options bottom bar: the labels go, the icons stay (the buttons keep
+   their aria-label). From 100px: see the top of this file. */
+@media (min-width: 100px) and (max-width: 450px) {
+	.options-footer-button span.label {
+		display: none;
+	}
+	/* icons only: the header's squares */
+	.options-footer-button {
+		width: var(--bar-button);
+		padding: 0;
 	}
 }
 /* the options screen and the changelog: a box spans the width instead of a

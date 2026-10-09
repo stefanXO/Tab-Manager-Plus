@@ -5,6 +5,7 @@
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import {
 	SAVED_SEARCH_TIP, SEARCH_HELP_ROWS, searchHelpIntro, searchHelpRows, searchTips
 } from "../src/popup/searchHelp.ts";
@@ -77,5 +78,32 @@ describe("search tips", () => {
 	});
 	test("the tip names the nested form", () => {
 		assert.ok(SAVED_SEARCH_TIP.includes("s:u:github"));
+	});
+});
+
+describe("search help icon", () => {
+	const read = (p : string) => readFileSync(new URL("../" + p, import.meta.url), "utf8");
+	const tsx = read("src/popup/views/TabManager.tsx");
+	const css = read("css/components/search.css");
+	test("the TSX has the help button with its label and description", () => {
+		assert.match(tsx, /<button type="button" className=\{"search-help-icon"[^>]*aria-label="Search help" aria-describedby="search-help"/);
+		assert.match(tsx, /onMouseDown=\{\(e\) => e\.preventDefault\(\)\}/);
+	});
+	test("the icon is a mono outline svg, not a button look", () => {
+		assert.match(tsx, /search-help-icon[\s\S]{0,400}<svg viewBox="0 0 16 16"/);
+		const block = css.slice(css.indexOf(".search-help-icon {"), css.indexOf("}", css.indexOf(".search-help-icon {")));
+		assert.match(block, /border:\s*0/);
+		assert.match(block, /background:\s*none/);
+		assert.match(css, /stroke:\s*currentColor/);
+		assert.match(css, /stroke-width:\s*1\.5/);
+		assert.match(css, /\.search-help-icon:focus-visible\s*\{[^}]*outline/);
+	});
+	test("the card shows on the icon, not on the whole cell", () => {
+		assert.ok(!/td\.one:hover\s+\.search-help/.test(css));
+		assert.ok(!/td\.one:hover\s+\.search-help/.test(read("css/motion.css")));
+		assert.match(css, /\.search-help-icon:hover ~ \.search-help/);
+		assert.match(css, /\.search-help-icon:focus-visible ~ \.search-help/);
+		assert.match(css, /\.search-help:hover/);
+		assert.match(css, /transition-delay:\s*400ms/);
 	});
 });

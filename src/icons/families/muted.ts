@@ -529,6 +529,11 @@ export const family : IconFamily = {
 			fill(circ(9.4, 10.3, 0.75) + circ(12.6, 10.3, 0.75) + circ(9.6, 12.8, 0.7) + circ(12.4, 12.8, 0.7), "ink"),
 			ink("M11 7.6V15", 0.8), ink(circ(11, 11.2, 3.8)),
 		] },
+		"help": { parts: disc("blue-soft", [
+			// a question mark: the hook and the dot
+			line("M6 6.4C6 5.2 6.9 4.5 8 4.5C9.1 4.5 10 5.2 10 6.2C10 7.6 8 7.6 8 9.2", "white", 1.6), fill(circ(8, 11.3, 0.95), "white"),
+		]) },
+		"back": { parts: disc("blue-soft", [line("M11 8H5.2M7.8 5.2L5 8L7.8 10.8", "white", 2)]) },
 		// one mouse, the same size in all three: the clicked part coral
 		"mouse-right": { parts: mouse(3.5, "right") },
 		"mouse-middle": { parts: mouse(3.5, "middle") },

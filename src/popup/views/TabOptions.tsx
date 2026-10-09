@@ -54,6 +54,7 @@ const HELP = {
 	shortcuts: IS_FIREFOX && !CAN_OPEN_SHORTCUTS
 		? "Lists the keys set now, and how to change or turn off the key that opens Tab Manager Plus"
 		: "Lists the keys set now. The link opens the browser's shortcut settings, to change or turn off the key that opens Tab Manager Plus",
+	back: "Closes the options and goes back to your tabs",
 	changelog: "Opens the list of changes of every release in a new tab",
 	documentation: "Opens a short guide with examples in a new tab: search, keys, windows and saved windows",
 	debugExport: "Saves a JSON file with your windows and tabs (titles, urls, times) and the current settings, for reporting a bug or a bad automatic window name",
@@ -88,11 +89,10 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		// when the user comes back from there
 		window.addEventListener("focus", this.loadShortcuts);
 		this.loadShortcuts();
-		// Firefox has no link to its private windows setting, so show where it stands
-		if (IS_FIREFOX) {
-			const incognitoAllowed = await browser.extension.isAllowedIncognitoAccess().catch(() => undefined);
-			this.setState({ incognitoAllowed });
-		} else {
+		// the private windows setting is changed in the browser's own page: show where it stands
+		window.addEventListener("focus", this.checkIncognito);
+		this.checkIncognito();
+		if (!IS_FIREFOX) {
 			// "Show all monitors": a setting of its own next to the system.display
 			// permission (which "Minimize inactive windows" can grant as well)
 			browser.permissions.onAdded?.addListener(this.checkMonitorAccess);
@@ -101,8 +101,10 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		}
 	}
 	componentWillUnmount() {
+		this.unmounted = true;
 		clearTimeout(this.debugCopiedTimer);
 		window.removeEventListener("focus", this.loadShortcuts);
+		window.removeEventListener("focus", this.checkIncognito);
 		if (!IS_FIREFOX) {
 			browser.permissions.onAdded?.removeListener(this.checkMonitorAccess);
 			browser.permissions.onRemoved?.removeListener(this.checkMonitorAccess);
@@ -117,6 +119,19 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 		const { setting, enabled } = await currentShowMonitors();
 		if (run !== this.monitorCheck) return;
 		if (enabled !== this.state.monitorAccess || setting !== this.state.showMonitors) this.setState({ monitorAccess: enabled, showMonitors: setting });
+	}
+	// "Allow in private windows / incognito": undefined while unknown or unreadable
+	private unmounted = false;
+	checkIncognito = async () => {
+		if (!browser.extension?.isAllowedIncognitoAccess) return;
+		let incognitoAllowed : boolean | undefined;
+		try {
+			incognitoAllowed = await browser.extension.isAllowedIncognitoAccess().catch(() => undefined);
+		} catch {
+			incognitoAllowed = undefined;
+		}
+		if (this.unmounted) return;
+		if (incognitoAllowed !== this.state.incognitoAllowed) this.setState({ incognitoAllowed });
 	}
 	loadShortcuts = async () => {
 		const shortcuts = await getShortcuts();
@@ -425,9 +440,10 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 									</a>
 								</OptionTitle>
 							</div>
-							<div className="option-description">
-								If you also want to see your incognito tabs in the Tab Manager overview, then enable incognito access for this extension.
-							</div>
+							<Description
+								text="If you also want to see your incognito tabs in the Tab Manager overview, then enable incognito access for this extension."
+								notes={this.state.incognitoAllowed === undefined ? [] : ["Currently: " + (this.state.incognitoAllowed ? "allowed" : "not allowed")]}
+							/>
 						</div>
 					)}
 					{IS_FIREFOX && !CAN_OPEN_SHORTCUTS ? (
@@ -441,31 +457,11 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 						</div>
 					) : (
 						<div className="toggle-box" {...this.help("shortcuts")}>
-							<OptionTitle icon="shortcuts">
-								<a href="#" onClick={this.openShortcuts}>
-									Change shortcut key
-								</a>
-							</OptionTitle>
+							<OptionTitle icon="shortcuts"><strong>Shortcut keys</strong></OptionTitle>
 							{this.shortcutList()}
-							<div className="option-description">If you want to disable or change the shortcut key with which to open Tab Manager Plus, you can do so here.</div>
+							<div className="option-description">To disable or change the shortcut key with which to open Tab Manager Plus, use the Change shortcut keys button at the bottom.</div>
 						</div>
 					)}
-					<div className="toggle-box" {...this.help("changelog")}>
-						<OptionTitle icon="changelog">
-							<a href="changelog.html" target="_blank" rel="noopener">
-								What's new in this version
-							</a>
-						</OptionTitle>
-						<div className="option-description">The changes of every release, and where to leave a review or report a problem.</div>
-					</div>
-					<div className="toggle-box" {...this.help("documentation")}>
-						<OptionTitle icon="changelog">
-							<a href="documentation.html" target="_blank" rel="noopener">
-								Help: how to use Tab Manager Plus
-							</a>
-						</OptionTitle>
-						<div className="option-description">A short guide with examples: searching, selecting, the keyboard, windows and saved windows.</div>
-					</div>
 				</OptionsBox>
 				<OptionsBox title="Export tabs for debugging">
 					<div className="toggle-box" {...this.help("debugExport")}>
@@ -506,13 +502,33 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 			url: "chrome://extensions/?id=" + browser.runtime.id
 		});
 	}
-	async openShortcuts() {
+	openShortcuts = async () => {
 		if (CAN_OPEN_SHORTCUTS) {
 			await browser.commands.openShortcutSettings();
 		} else {
 			await browser.tabs.create({ url: "chrome://extensions/shortcuts" });
 		}
 	}
+	// The fixed bottom bar of buttons. Each shows its help in the header like
+	// the option rows do (help()); on a narrow popup only the icons stay.
+	footer() {
+		const button = (key : HelpKey, icon : IconName, label : string, onClick : () => void, extra? : string) => (
+			<button type="button" className={"options-footer-button" + (extra ? " " + extra : "")} aria-label={label} {...this.help(key)} onBlur={() => this.context.hoverIcon("")} onClick={onClick}>
+				<OptionIcon icon={icon} />
+				<span className="label">{label}</span>
+			</button>
+		);
+		return (
+			<div className="options-footer" key="footer">
+				{button("changelog", "changelog", "Changelog", this.openChangelog)}
+				{button("documentation", "help", "Help", this.openHelpPage)}
+				{(!IS_FIREFOX || CAN_OPEN_SHORTCUTS) && button("shortcuts", "shortcuts", "Change shortcut keys", this.openShortcuts)}
+				{this.props.onBack && button("back", "back", "Back to tabs", this.props.onBack)}
+			</div>
+		);
+	}
+	openChangelog = () => { browser.tabs.create({ url: "changelog.html" }); }
+	openHelpPage = () => { browser.tabs.create({ url: "documentation.html" }); }
 	// Credits for the code and images the extension ships; changelog.html
 	// carries a static copy of the same text
 	licenses() {
@@ -539,13 +555,13 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 
 		children.push(this.logo());
 		children.push(this.optionsSection());
+		children.push(this.licenses());
 		children.push(<div className="clearfix" key="clear_fix" />);
 		//children.push(React.createElement('h4', {}, this.props.getTip()));
-		children.push(this.licenses());
-
 		return (
 			<div className="options-window" key="options_window">
 				<div key="options_content">{children}</div>
+				{this.footer()}
 			</div>
 		);
 	}

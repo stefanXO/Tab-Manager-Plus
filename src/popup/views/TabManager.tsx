@@ -48,6 +48,9 @@ import type {SavedTabRef} from "../sessionKeys";
 import {stackTiles, stackKind, encodeSaved, encodeIds, TabDrag} from "../dragPayload";
 import {setStackImage, StackTile} from "../dragImage";
 import {ACTION_BUTTON} from "../buttonKeys";
+import {Icon} from "@icons/Icon";
+import {ICON_FAMILY} from "../icons";
+import {perfSpan} from "../perfSpan";
 
 // the saved window and stored index of each of these saved tab keys; keys
 // the popup no longer knows are left out
@@ -336,6 +339,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	}
 
 	componentWillUnmount() {
+		document.removeEventListener("mousedown", this.searchHelpOutside);
 		this.masonry?.disconnect();
 		this.stopWorkerCheck?.();
 
@@ -422,7 +426,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			writeBootCache({ tabWidth: this.state.tabWidth, tabHeight: this.state.tabHeight, theme: this.state.theme, layout: this.state.layout, compact: this.state.compact });
 		});
 	}
-	hoverOver = (e : React.MouseEvent<HTMLDivElement>) => {
+	hoverOver = (e : React.MouseEvent<HTMLDivElement>) => perfSpan("hoverOver", () => {
 		const target = e.target as HTMLElement;
 		// an action button's help is in the hover card (data-help,
 		// ../actionHelp.ts, ../statsHover.ts): the header has none for it, not
@@ -432,7 +436,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		// text stays while the pointer is anywhere inside the section and goes
 		// once it moves onto something without a hover text
 		this.hoverIcon(el ? (el.dataset.hover ?? el.title) : "", !!el && el.dataset.hoverHold !== undefined);
-	}
+	})
 	// the pointer left the popup: no mouseover follows, so a held help text
 	// (an option's) would stay; it goes as on leaving it (not a text something
 	// else put there since, e.g. a button's result; read from the pending
@@ -485,7 +489,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	// the first line of the held help text hoverIcon showed last, null when
 	// the last one was not held
 	private helpHeld : string | null = null;
-	hoverIcon = (text : string, hold = false) => {
+	hoverIcon = (text : string, hold = false) => perfSpan("hoverIcon", () => {
 		let bottom = " ";
 		if (text.indexOf("\n") > -1) {
 			const a = text.split("\n");
@@ -505,7 +509,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			bottomText: bottom,
 			resetTimeout: hold ? undefined : setTimeout(() => this.headerOnly(() => this.setState({ topText: "", bottomText: "" })), 15000)
 		}));
-	}
+	})
 	// ---- the window list, rendered again only when something it shows changed ----
 	// The header text follows the pointer from tile to tile (hoverIcon): one
 	// setState per mouseover. Re-rendering every window and tile for that
@@ -703,6 +707,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				</div>)}
 				{this.state.optionsActive && <div className={"options-container"}>
 					<TabOptions
+						onBack={window.optionPage ? undefined : this.toggleOptions}
 						compact={this.state.compact}
 						theme={this.state.theme}
 						animations={this.state.animations}
@@ -773,7 +778,11 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 						<tbody>
 							<tr>
 								<td className="one">
-									<input className="searchBoxInput" type="text" placeholder="Start typing to search tabs..." aria-describedby="search-help" tabIndex={1} onChange={this.search} ref={this.searchBoxRef} />
+									<input className="searchBoxInput" type="text" placeholder="Start typing to search tabs..." aria-describedby="search-help" tabIndex={1} onChange={this.search} onFocus={this.closeSearchHelp} ref={this.searchBoxRef} />
+									{/* the card opens from this icon only (search.css), never from the input; mousedown must not take focus from the search box. A click or tap toggles it (class open); Escape, a click elsewhere or the search box closes it */}
+									<button type="button" className={"search-help-icon" + (this.state.searchHelpOpen ? " open" : "")} aria-label="Search help" aria-describedby="search-help" aria-expanded={!!this.state.searchHelpOpen} tabIndex={1} onMouseDown={(e) => e.preventDefault()} onClick={this.toggleSearchHelp}>
+										<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="6.75" /><path d="M6.1 6.2a2 2 0 1 1 2.9 1.8c-.7.4-1 .8-1 1.5M8 11.6v.1" /></svg>
+									</button>
 									<div className="search-help" role="tooltip" id="search-help">
 										<p className="search-help-intro">{searchHelpIntro(this.state.sessionsFeature)}</p>
 										<table className="search-help-table">
@@ -989,6 +998,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		document.addEventListener("visibilitychange", this.flushPendingHidden);
 		// first (capturing), before a text field takes Ctrl+Z for its own undo
 		document.addEventListener("keydown", this.onUndoKey, true);
+		document.addEventListener("mousedown", this.searchHelpOutside);
 		// after the cards' and tabs' own handlers (bubbling, on the document)
 		document.addEventListener("dragend", this.dragDone);
 		document.addEventListener("drop", this.dragDone);
@@ -1601,11 +1611,11 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	donate = () => {
 		browser.tabs.create({ url: "https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=67TZLSEGYQFFW" });
 	}
+	// no dirty: the browser's events keep the windows current while the
+	// options are up, and reading them again re-rendered every tile once more
+	// right after the list came back
 	toggleOptions = () => {
-		this.setState({
-			optionsActive: !this.state.optionsActive,
-			dirty: true
-		});
+		this.setState({ optionsActive: !this.state.optionsActive });
 	}
 	// the options button's help (its hover card changes with a click)
 	optionsHelp(optionsActive : boolean) : string {
@@ -1919,7 +1929,16 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			dirty: true
 		});
 	}
+	toggleSearchHelp = () => this.setState((prev) => ({ searchHelpOpen: !prev.searchHelpOpen }));
+	closeSearchHelp = () => { if (this.state.searchHelpOpen) this.setState({ searchHelpOpen: false }); }
+	// a click anywhere but on the help icon or its card closes the card
+	private searchHelpOutside = (e : MouseEvent) => {
+		if (!this.state.searchHelpOpen) return;
+		if ((e.target as HTMLElement | null)?.closest?.(".search-help-icon, .search-help")) return;
+		this.setState({ searchHelpOpen: false });
+	}
 	search = (e : React.ChangeEvent<HTMLInputElement>) => {
+		this.closeSearchHelp();
 		this.runSearch(e.target.value);
 	}
 	runSearch(query : string) {
@@ -1940,8 +1959,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			this.setState({
 				hiddenCount: 0,
 				dupTabs: false,
-				recentLevel: 0,
-				dirty: true
+				recentLevel: 0
 			});
 			this.clearHiddenTabs();
 			hiddenCount = 0;
@@ -1976,11 +1994,8 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				}
 				// a query of only -s: shows every open tab and selects none
 				searchTab(this.state.selection, this.searchPicks, id, match, selects);
-				this.setState({
-					lastSelect: id,
-					dirty: true
-				});
 			}
+			if (idList.length) this.setState({ lastSelect: idList[idList.length - 1] });
 			saved = searchSaved(
 				this.visibleSessions(),
 				parsed,
@@ -2031,9 +2046,6 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 				bottomText: keptByHand(this.state.selection, this.searchPicks) ? this.selectionText().bottomText : summary.bottom
 			});
 		}
-		this.setState({
-			dirty: true
-		});
 	}
 	clearHiddenTabs = () => {
 		this.state.hiddenTabs.clear();
@@ -2134,6 +2146,13 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		// escape key
 		// (with a stats card open, StatsLayer takes Escape before this sees it)
 		if (e.keyCode === 27) {
+			if (this.state.searchHelpOpen) {
+				// the search help card is open: close that, not the popup
+				e.nativeEvent.preventDefault();
+				e.nativeEvent.stopPropagation();
+				this.setState({ searchHelpOpen: false });
+				return;
+			}
 			if (!!this.state.colorsActive || !!this.state.colorsSession) {
 				// the window name / color overlay is open: close that, not the popup
 				e.nativeEvent.preventDefault();

@@ -50,7 +50,7 @@ describe("documentation.html", () => {
 	});
 
 	test("the options page links to it", () => {
-		assert.match(read("src/popup/views/TabOptions.tsx"), /href="documentation\.html"/);
+		assert.match(read("src/popup/views/TabOptions.tsx"), /url: "documentation\.html"/);
 	});
 
 	test("every local link points to an existing file or an id on the page", () => {

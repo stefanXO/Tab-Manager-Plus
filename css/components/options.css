@@ -14,17 +14,46 @@
 	width: 100%;
 	clear: both;
 }
+/* the credits: the last lines of the page, small and muted */
 .licenses {
+	padding: 0 1rem 1rem;
+	font-size: 0.6rem;
+	color: var(--text-muted);
+}
+
+/* the fixed bottom bar of the options: changelog, help, shortcut keys, back to
+   tabs. The header's measure (layout/frame.css): the same height, buttons
+   --bar-edge from the top, the bottom and the sides, --bar-gap apart,
+   centred. The buttons' look is
+   .options-footer-button in actions.css, shared with the header's. */
+.options-footer {
 	position: fixed;
 	bottom: 0;
-	background-color: var(--surface-sunken);
 	left: 0;
-	width: 100%;
-	right: 0;
-	padding: 1rem 0;
-	font-size: 0.6rem;
-	/* the same edge as the bottom search bar's */
+	/* the popup's width, see layout/frame.css */
+	width: var(--popup-width, 100%);
+	box-sizing: border-box;
+	height: var(--bar-height);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--bar-gap);
+	padding: 0 var(--bar-edge);
+	background-color: var(--surface);
 	box-shadow: var(--shadow-footer);
+}
+.options-footer-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.4rem;
+	min-width: var(--bar-button);
+	padding: 0 0.6rem;
+}
+.options-footer-button .ico {
+	display: inline-flex;
+	flex: none;
+	line-height: 0;
 }
 
 /* a titled panel of options (also the changelog's page body) */

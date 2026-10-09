@@ -52,6 +52,8 @@ export interface ITabManagerState {
 	topText: string,
 	bottomText: string,
 	optionsActive: boolean,
+	// the search help card is held open by a click on its icon
+	searchHelpOpen?: boolean,
 	dupTabs: boolean,
 	// "Highlight recently active tabs": 0 off, else its level (see popup/recent)
 	recentLevel: number,
