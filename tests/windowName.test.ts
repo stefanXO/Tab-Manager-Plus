@@ -7,6 +7,7 @@ import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { windowName, compactName, tabsKey, siteOf, publicSuffix } from "../src/popup/windowName.ts";
 import type { NameTab } from "../src/popup/windowName.ts";
+import { hostToUnicode } from "../src/popup/punycode.ts";
 
 describe("a title that is not text (an imported file)", () => {
 	test("is no title", () => {
@@ -422,6 +423,10 @@ describe("international hosts are named in Unicode", () => {
 	});
 
 	test("a label that does not decode keeps its old name", () => {
-		assert.equal(siteOf(t("https://xn--zz.com/"))?.name, "Xn Zz");
+		// Node 22's URL parser refuses "xn--zz" outright (Node 24 and Chrome let it
+		// through), so the fallback is checked on the decoder, not through a url
+		assert.equal(hostToUnicode("xn--zz.com"), "xn--zz.com");
+		const site = siteOf(t("https://xn--zz.com/"));
+		if (site) assert.equal(site.name, "Xn Zz");
 	});
 });
