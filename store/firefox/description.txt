@@ -66,7 +66,7 @@ A brand new look!
 Search and duplicates
 - Highlight Duplicates selects only the extra copies and keeps the tab you used last, so you can close the rest safely.
 - Search for a phrase with quotes, like "pull request", or for a pattern with a /regular expression/.
-- Hover over the search box to see every available search option collected in one place.
+- A question mark at the right end of the search box opens a list of every available search option.
 - A new clock button highlights the tabs you have used most recently. Each additional click reaches a little further back in time.
 
 Windows

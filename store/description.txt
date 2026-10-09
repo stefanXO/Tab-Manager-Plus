@@ -61,9 +61,9 @@ Searching And Duplicates
 - Highlight Duplicates selects only the extra copies and keeps the one you used last, so Ctrl+Delete (Cmd+Delete on a Mac) closes just the duplicates (#142, #188, #240, #248, #260)
 - The header shows how many tabs have duplicates and how many are selected, and while duplicates are highlighted, a search looks only at them
 - Pasting a search or editing its middle now finds the right tabs, and clearing the search box no longer shows matches
-- t:word searches titles only and u:word web addresses only, so links don't clutter the results. -word (or -u:word) leaves tabs out, and quotes find a phrase such as "pull request" (#224)
+- t:word searches titles only and u:word web addresses only, so links don't clutter results. -word (or -u:word) leaves tabs out, and quotes find a phrase such as "pull request" (#224)
 - When plain words are not enough, search with a pattern: /\(\d+\)/ finds tabs with an unread count, /localhost:\d+/ local dev servers and /\.pdf$/ open PDFs (#247, #156)
-- Hover the search box to see all search options, and List view shows the matching part of a title in bold
+- The ? in the search box lists all search options, and List view shows the matching part of a title in bold
 - Hide non-matching tabs never hides a selected tab, and a new search keeps the tabs you selected yourself
 - The new clock button selects the tabs you used last: the shortest span with more than one tab (15 minutes, an hour, 3 hours, 12 hours, a day, 2 days ...). Two more clicks reach further back and light up its three steps, a fourth turns it off, and an eye shows when non-matching tabs are hidden
 
