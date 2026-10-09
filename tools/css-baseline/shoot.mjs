@@ -56,7 +56,7 @@ const here = dirname(fileURLToPath(import.meta.url))
 const USAGE = 'usage: node tools/css-baseline/shoot.mjs <outdir> [--only <substring>] [--keep] [--scales | --scales-only | --no-scales] [--ext-css] [--scrollbars] [--chrome] [--jobs <n>]'
 const argv = process.argv.slice(2)
 let outArg = null, only = null, keep = false, scaleMode = 'none', extCss = false, scrollbars = false, chrome = false
-let jobs = Math.min(6, availableParallelism())
+let jobs = Math.min(6, availableParallelism()), dpr = 1
 for (let i = 0; i < argv.length; i++) {
 	const a = argv[i]
 	if (a === '--only') only = argv[++i]
@@ -68,6 +68,8 @@ for (let i = 0; i < argv.length; i++) {
 	else if (a === '--ext-css') extCss = true
 	else if (a === '--scrollbars') scrollbars = true
 	else if (a === '--chrome') chrome = true
+	// --dpr <s>: the whole dpr-1 matrix at deviceScaleFactor s (OS display scale), same names; not pixel-comparable to dpr 1
+	else if (a === '--dpr') dpr = Number(argv[++i])
 	else if (a === '--jobs') {
 		jobs = Number(argv[++i])
 		if (!Number.isInteger(jobs) || jobs < 1) { console.error('--jobs needs a positive integer\n' + USAGE); process.exit(2) }
@@ -607,7 +609,7 @@ const SCALES = [
 	{name: 'os200', os: 2, zoom: 1},
 	{name: 'os150z125', os: 1.5, zoom: 1.25},
 ]
-const DPR1 = {name: '', os: 1, zoom: 1}
+const DPR1 = {name: '', os: dpr, zoom: 1}
 
 /**
  * Standalone pages from the same build. `ownTheme`: the theme is not forced
@@ -619,6 +621,9 @@ const DPR1 = {name: '', os: 1, zoom: 1}
 const PAGES = [
 	{name: 'page-options', url: 'options.html', themes: THEMES},
 	{name: 'page-changelog', url: 'changelog.html', themes: THEMES, ownTheme: true, scales: ['z150']},
+	// the help page; `widths`: its own widths instead of WIDTHS (dpr 1 only)
+	{name: 'page-documentation', url: 'documentation.html', themes: THEMES, ownTheme: true, widths: [
+		{name: '380x900', w: 380, h: 900}, {name: '540x900', w: 540, h: 900}, {name: '800x600', w: 800, h: 600}, {name: '1280x800', w: 1280, h: 800}]},
 ]
 
 // ------------------------------------------------------------------ browser
@@ -1061,7 +1066,16 @@ async function hoverStats(page, selector) {
 
 // --------------------------------------------------------------------- main
 console.log('building app from the current css...')
-await buildApp({chrome})
+const app = await buildApp({chrome})
+// documentation.html is not in build-app.mjs: copy it and bundle its script here
+{
+	const {cpSync} = await import('node:fs')
+	const {pathToFileURL} = await import('node:url')
+	const repo = join(here, '..', '..')
+	cpSync(join(repo, 'documentation.html'), join(app, 'documentation.html'))
+	const esbuild = await import(pathToFileURL(join(repo, 'node_modules', 'esbuild', 'lib', 'main.js')).href)
+	await esbuild.build({absWorkingDir: repo, entryPoints: {'popup/documentation': 'src/popup/documentation.ts'}, outdir: join(app, 'dist'), bundle: true, target: 'chrome110', minify: true, define: {IS_FIREFOX: String(!chrome), IS_CHROME: String(chrome)}, logLevel: 'warning'})
+}
 
 if (!keep) rmSync(OUT, {recursive: true, force: true})
 mkdirSync(OUT, {recursive: true})
@@ -1203,7 +1217,7 @@ if (scaleMode !== 'only') shootPopup(DPR1, WIDTHS, (st) => st.layouts)
 function shootPages(scale, sizes, defs) {
 	const suffix = scale.name ? '@' + scale.name : ''
 	for (const pageDef of defs) {
-		for (const size of sizes) {
+		for (const size of (!scale.name && pageDef.widths) || sizes) {
 			for (const theme of pageDef.themes) {
 				const name = `${pageDef.name}-na-${theme}-${size.name}${suffix}`
 				if (!want(name)) continue
