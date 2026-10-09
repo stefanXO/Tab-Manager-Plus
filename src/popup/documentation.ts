@@ -47,3 +47,16 @@ for (const el of Array.from(document.querySelectorAll<HTMLElement>(".optionsBox 
 	if (firefox && !chrome) el.classList.add("only-firefox");
 	if (chrome && !firefox) el.classList.add("only-chrome");
 }
+
+// Clips (plain autoplay, muted, looping videos): with prefers-reduced-motion they
+// stay on their first picture, and a clip whose files are missing is hidden.
+{
+	const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+	for (const video of Array.from(document.querySelectorAll<HTMLVideoElement>("figure.clip video"))) {
+		if (reduced.matches) {
+			video.removeAttribute("autoplay");
+			video.pause();
+		}
+		video.addEventListener("error", () => video.closest("figure")?.setAttribute("hidden", ""), true);
+	}
+}

@@ -65,6 +65,13 @@ clips.search = {
 	async run(rec) {
 		const { page } = rec;
 		await rec.wait(0.2);
+		// the "?" at the right end of the search box opens the help card (hover); the cursor is hidden at both ends
+		await rec.fade(1, 0.15);
+		await rec.moveTo(await centre(page, ".search-help-icon"), 0.45);
+		await rec.wait(1.5);
+		await rec.moveTo(REST, 0.35);
+		await rec.fade(0, 0.15);
+		await rec.wait(0.2);
 		await focusSearch(page);
 		await typeText(rec, "react", 11);
 		await rec.wait(0.55);
