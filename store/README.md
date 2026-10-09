@@ -36,4 +36,11 @@ The store rejects images of the wrong size, so the size is part of the file name
 The store icon is not duplicated here; it is `images/browsers128.png` in the extension
 itself.
 
+### Regenerate
+
+The screenshots and promo tiles are rendered from the real popup, not captured by hand: `npm run store:shots` writes
+them under their store names and sizes to `tools/store-shots/out/B/` (copy the ones to upload into `images/`), and
+`npm run store:list` prints the plan first. What each image shows, its headline and callouts live in
+`tools/store-shots/shots.json`; see `tools/store-shots/README.md`.
+
 Translations are not supported yet. The listing exists in English only.

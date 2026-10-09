@@ -25,7 +25,11 @@
     "release": "node --test tests/iconsStylesheet.test.ts && tsc --noEmit && npm run package",
     "package": "node scripts/package.mjs",
     "css:baseline": "node tools/css-baseline/shoot.mjs tools/css-baseline/baseline",
+    "perf:check": "node tools/perf-check/check.mjs",
     "css:compare": "node tools/css-baseline/compare.mjs tools/css-baseline/baseline",
+    "store:shots": "node tools/store-shots/shoot.mjs",
+    "store:list": "node tools/store-shots/shoot.mjs --list",
+    "clips": "node tools/clips/render.mjs",
     "icons:css": "node scripts/icons-css.mjs",
     "icons:sheet": "node tools/icons/sheet.mjs muted"
   },

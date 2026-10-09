@@ -1,0 +1,240 @@
+{
+	"_comment": "Everything a person tweaks for the Chrome Web Store images. Read by fake-browser.js (windows, saved, settings; bundled by esbuild) and shot.html (shots, keycaps; fetched at run time). See README.md.",
+	"settings": {
+		"layout": "blocks",
+		"tabWidth": 800,
+		"tabHeight": 600,
+		"animations": false,
+		"windowTitles": true,
+		"tabactions": true,
+		"badge": true,
+		"openInOwnTab": false,
+		"compact": false,
+		"dark": false,
+		"sessionsFeature": true,
+		"hideWindows": false,
+		"supportLinks": false,
+		"filter-tabs": false,
+		"tabLimit": 0,
+		"version": "7.0.0",
+		"migrated": true
+	},
+	"windows": [
+		{
+			"id": 101,
+			"name": "Work",
+			"color": "color9",
+			"focused": true,
+			"lastActiveMinutes": 1,
+			"tabs": [
+				{ "title": "Fix login redirect loop · Issue #412 · acme/webapp", "url": "https://github.com/acme/webapp/issues/412", "favicon": "github.com.png", "active": true, "ageMinutes": 1 },
+				{ "title": "Add dark mode tokens · Pull Request #418 · acme/webapp", "url": "https://github.com/acme/webapp/pull/418", "favicon": "github.com.png", "ageMinutes": 4 },
+				{ "title": "Array.prototype.findLast() - JavaScript | MDN", "url": "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/findLast", "favicon": "developer.mozilla.org.png", "ageMinutes": 9 },
+				{ "title": "How do I debounce a React input? - Stack Overflow", "url": "https://stackoverflow.com/questions/23123138/debounce-react", "favicon": "stackoverflow.com.png", "ageMinutes": 40 },
+				{ "title": "Fix login redirect loop · Issue #412 · acme/webapp", "url": "https://github.com/acme/webapp/issues/412", "favicon": "github.com.png", "ageMinutes": 120 },
+				{ "title": "Sprint board – Notion", "url": "https://www.notion.so/acme/sprint-board", "favicon": "notion.so.png", "ageMinutes": 300 },
+				{ "title": "Design system – Figma", "url": "https://www.figma.com/file/acme-design-system", "favicon": "figma.com.png", "ageMinutes": 480 },
+				{ "title": "react - npm", "url": "https://www.npmjs.com/package/react", "favicon": "npmjs.com.png", "ageMinutes": 1440 },
+				{ "title": "Q3 planning - Google Docs", "url": "https://docs.google.com/document/d/q3-planning", "favicon": "docs.google.com.png", "ageMinutes": 4320 }
+			]
+		},
+		{
+			"id": 102,
+			"name": "Life",
+			"color": "color1",
+			"lastActiveMinutes": 25,
+			"tabs": [
+				{ "title": "Inbox (3) - you@acme.dev - Gmail", "url": "https://mail.google.com/mail/u/0/#inbox", "favicon": "mail.google.com.png", "active": true, "ageMinutes": 20 },
+				{ "title": "Lofi beats to code to - YouTube", "url": "https://www.youtube.com/watch?v=jfKfPfyJRdk", "favicon": "youtube.com.png", "audible": true, "ageMinutes": 50 },
+				{ "title": "(12) Home / X", "url": "https://x.com/home", "favicon": "x.com.png", "ageMinutes": 150 },
+				{ "title": "r/webdev - Reddit", "url": "https://www.reddit.com/r/webdev/", "favicon": "reddit.com.png", "ageMinutes": 360 },
+				{ "title": "Calendar - Week of Sep 28", "url": "https://calendar.google.com/calendar/r/week", "favicon": "calendar.google.com.png", "ageMinutes": 1440 },
+				{ "title": "Lofi beats to code to - YouTube", "url": "https://www.youtube.com/watch?v=jfKfPfyJRdk", "favicon": "youtube.com.png", "ageMinutes": 2880 },
+				{ "title": "Discover Weekly - Spotify", "url": "https://open.spotify.com/playlist/discover-weekly", "favicon": "spotify.com.png", "ageMinutes": 240 },
+				{ "title": "Mechanical keyboard - Amazon.com", "url": "https://www.amazon.com/s?k=mechanical+keyboard", "favicon": "amazon.com.png", "ageMinutes": 7200 }
+			]
+		},
+		{
+			"id": 103,
+			"name": "Research",
+			"color": "color6",
+			"lastActiveMinutes": 180,
+			"tabs": [
+				{ "title": "Hacker News", "url": "https://news.ycombinator.com/", "favicon": "news.ycombinator.com.png", "active": true, "ageMinutes": 25 },
+				{ "title": "Tab (interface) - Wikipedia", "url": "https://en.wikipedia.org/wiki/Tab_(interface)", "favicon": "wikipedia.org.png", "ageMinutes": 180 },
+				{ "title": "Information overload - Wikipedia", "url": "https://en.wikipedia.org/wiki/Information_overload", "favicon": "wikipedia.org.png", "ageMinutes": 600 },
+				{ "title": "Hacker News", "url": "https://news.ycombinator.com/", "favicon": "news.ycombinator.com.png", "ageMinutes": 660 },
+				{ "title": "Browser extension - Wikipedia", "url": "https://en.wikipedia.org/wiki/Browser_extension", "favicon": "wikipedia.org.png", "ageMinutes": 2880 },
+				{ "title": "Ask HN: How many tabs do you keep open?", "url": "https://news.ycombinator.com/item?id=41234567", "favicon": "news.ycombinator.com.png", "ageMinutes": 8640 }
+			]
+		}
+	],
+	"saved": [
+		{
+			"id": "s1",
+			"name": "Side project",
+			"color": "color4",
+			"ageDays": 2,
+			"tabs": [
+				{ "title": "acme/side-project: Weekend hack", "url": "https://github.com/acme/side-project", "favicon": "github.com.png" },
+				{ "title": "Side project roadmap – Notion", "url": "https://www.notion.so/acme/side-project", "favicon": "notion.so.png" },
+				{ "title": "Landing page – Figma", "url": "https://www.figma.com/file/side-project-landing", "favicon": "figma.com.png" },
+				{ "title": "vite - npm", "url": "https://www.npmjs.com/package/vite", "favicon": "npmjs.com.png" }
+			]
+		},
+		{
+			"id": "s2",
+			"name": "Reading list",
+			"color": "color15",
+			"ageDays": 9,
+			"tabs": [
+				{ "title": "Attention span - Wikipedia", "url": "https://en.wikipedia.org/wiki/Attention_span", "favicon": "wikipedia.org.png" },
+				{ "title": "Show HN: I keep 400 tabs open", "url": "https://news.ycombinator.com/item?id=41000001", "favicon": "news.ycombinator.com.png" },
+				{ "title": "Deep work, explained - YouTube", "url": "https://www.youtube.com/watch?v=deepwork", "favicon": "youtube.com.png" }
+			]
+		}
+	],
+	"keycaps": ["Alt", "⇧ Shift", "M"],
+	"shots": [
+		{ "id": "0", "file": "screenshot-0", "size": [1280,800], "frame": "hero", "styles": ["B"], "heroName": "Tab Manager Plus", "hint": "open it from any tab", "keycaps": true },
+		{ "id": "1", "file": "screenshot-1", "size": [1280,800], "frame": "card", "styles": ["A", "B"], "title": "Every window. {One view.}", "sub": "All your windows and tabs in a single popup. Click any tab to jump to it." },
+		{
+			"id": "2",
+			"file": "screenshot-2",
+			"size": [1280,800],
+			"frame": "card",
+			"styles": ["A", "B"],
+			"title": "Highlight the tabs you {just used}",
+			"pill": "New in 7.0",
+			"sub": "The clock lights up your recent tabs. Click again to reach further back.",
+			"recent": 1,
+			"callouts": [
+				{ "selector": ".icon.windowaction.recent", "text": "Click the clock" }
+			],
+			"crop": "clock"
+		},
+		{
+			"id": "3",
+			"file": "screenshot-3",
+			"size": [1280,800],
+			"frame": "card",
+			"styles": ["A", "B"],
+			"title": "Find any tab {as you type}",
+			"sub": "Search titles and URLs as you type. Narrow it down with t:, u: or -word.",
+			"layout": "vertical",
+			"query": "react",
+			"hitsCrop": true,
+			"callouts": [
+				{ "selector": ".searchBoxInput", "text": "Type to search", "align": "right" }
+			],
+			"crop": "search"
+		},
+		{
+			"id": "4",
+			"file": "screenshot-4",
+			"size": [1280,800],
+			"frame": "card",
+			"styles": ["A", "B"],
+			"title": "Spot {duplicates} in one click",
+			"sub": "One click selects the extra copies. Delete closes them and keeps one of each.",
+			"duplicates": true,
+			"callouts": [
+				{ "selector": ".icon.windowaction.duplicates", "text": "Click to select duplicates" }
+			],
+			"crop": "dups"
+		},
+		{ "id": "5", "file": "screenshot-5", "size": [1280,800], "frame": "card", "styles": ["A", "B"], "title": "Light or dark? {Up to you.}", "sub": "Pick light or dark in the options, or follow your system.", "layout": "vertical", "theme": "dark" },
+		{ "id": "6", "file": "screenshot-6", "size": [1280,800], "frame": "card", "styles": ["A"], "onRequest": ["B"], "keycaps": true, "title": "One shortcut {opens everything}", "sub": "Press it from any tab, start typing, hit Enter. No mouse needed." },
+		{
+			"id": "7",
+			"file": "screenshot-7",
+			"size": [1280,800],
+			"frame": "grid",
+			"styles": ["B"],
+			"title": "Four layouts. {Light or dark.}",
+			"sub": "Block, big block, rows or list. Pick a theme in the options, or follow your system.",
+			"grid": [
+				{ "layout": "blocks", "caption": "Block View", "theme": "light" },
+				{ "layout": "blocks-big", "caption": "Big Block View", "theme": "dark" },
+				{ "layout": "horizontal", "caption": "Rows View", "theme": "dark" },
+				{ "layout": "vertical", "caption": "List View", "theme": "light" }
+			]
+		},
+		{
+			"id": "8",
+			"file": "screenshot-8",
+			"size": [1280,800],
+			"frame": "card",
+			"styles": ["B"],
+			"saved": true,
+			"popH": 450,
+			"title": "Save windows for later. {Restore them anywhere.}",
+			"sub": "Save a whole window, or just the tabs you selected. Restore it later, or one tab of it.",
+			"layout": "horizontal",
+			"selections": ["#tab-11", "#tab-16", "#tab-17"],
+			"callouts": [
+				{ "selector": ".icon.windowaction.save-tabs", "text": "Save the selected tabs" }
+			]
+		},
+		{
+			"id": "9",
+			"file": "screenshot-9",
+			"size": [1280,800],
+			"frame": "side",
+			"styles": ["B"],
+			"twoLine": true,
+			"sub": "",
+			"title": "Keyboard first.\n{Arrows move, Space selects, Enter switches.}",
+			"keys": ["Right", "Right", "Right", "Space", "Right", "Right", "Right"],
+			"callouts": [
+				{ "selector": ".tab.key-cursor", "text": "The cursor", "align": "center", "ring": false, "above": "#root .window" }
+			],
+			"keypanel": [
+				{ "caps": ["←", "→", "↑", "↓"], "label": "move the cursor" },
+				{ "caps": ["Space"], "label": "selects the tab" },
+				{ "caps": ["Enter"], "label": "switches to it" }
+			]
+		},
+		{
+			"id": "small",
+			"file": "promo-small",
+			"size": [440,280],
+			"frame": "tile",
+			"styles": ["A", "B"],
+			"A": { "recent": 1, "name": "Tab Manager\nPlus {7.0}", "line": "Every window.\nOne view." },
+			"B": { "name": "Tab Manager\nPlus", "line": "Every window.\nOne view.", "scales": [1,2] }
+		},
+		{
+			"id": "marquee",
+			"file": "promo-marquee",
+			"size": [1400,560],
+			"frame": "tile",
+			"styles": ["A", "B"],
+			"A": { "recent": 1, "name": "Tab Manager\nPlus {7.0}", "line": "Every window. One view.\nHighlight the tabs you just used.", "keycaps": true },
+			"B": { "name": "Tab Manager Plus", "line": "Every window. One view.", "keycaps": true, "scales": [1,2] }
+		}
+	],
+	"tiles": [
+		{
+			"id": "chaos",
+			"html": "tile-chaos.html",
+			"out": "tiles-chaos",
+			"note": "tab strips crammed behind the logo, popup peeking in (marquee)",
+			"sizes": { "marquee": [1400,560], "small": [440,280] }
+		},
+		{
+			"id": "purple",
+			"html": "tile-purple.html",
+			"out": "tiles-purple",
+			"note": "bold purple gradient, logo on a badge",
+			"sizes": { "marquee": [1400,560], "small": [440,280] }
+		},
+		{
+			"id": "windows",
+			"html": "tile-windows.html",
+			"out": "tiles-windows",
+			"note": "three big window panels in the popup's window colours",
+			"sizes": { "small": [440,280], "marquee": [1400,560] }
+		}
+	]
+}
