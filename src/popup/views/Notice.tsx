@@ -26,6 +26,9 @@ export interface INotice {
 // countdown, so the two stay together.
 export class Notice extends React.Component<INotice, {held : boolean}> {
 	state = {held: false};
+	// the two reasons to hold, kept apart so one ending does not end the other
+	private hovered = false;
+	private focused = false;
 
 	private hold(held : boolean) {
 		if (held === this.state.held) return;
@@ -43,12 +46,15 @@ export class Notice extends React.Component<INotice, {held : boolean}> {
 				className={"notice " + kind + (this.state.held ? " held" : "")}
 				role={kind === "error" ? "alert" : "status"}
 				aria-live={kind === "error" ? "assertive" : "polite"}
-				onMouseEnter={() => this.hold(true)}
-				onMouseLeave={() => this.hold(false)}
-				onFocus={() => this.hold(true)}
+				onMouseEnter={() => { this.hovered = true; this.hold(true); }}
+				onMouseLeave={() => { this.hovered = false; this.hold(this.focused); }}
+				onFocus={() => { this.focused = true; this.hold(true); }}
 				onBlur={(e) => {
-					// focus moving between the notice's own buttons keeps the hold
-					if (!e.currentTarget.contains(e.relatedTarget as Node | null)) this.hold(false);
+					// focus moving between the notice's own buttons keeps the hold; the
+					// hold ends only when neither the mouse nor the focus is on the notice
+					if (e.currentTarget.contains(e.relatedTarget as Node | null)) return;
+					this.focused = false;
+					this.hold(this.hovered);
 				}}
 			>
 				<span className="notice-text">{text}</span>
