@@ -191,3 +191,18 @@ describe("importSummary / importWorked with windows already there", () => {
 		assert.ok(importWorked(planImport([good("a")])));
 	});
 });
+
+describe("a saved window without a date", () => {
+	test("reads as saved just now, not NaN", () => {
+		const now = Date.now();
+		assert.equal(savedLabel({}, now), "saved just now");
+		assert.ok(!/NaN|Invalid/.test(savedHover({}, now)));
+		assert.ok(!/NaN/.test(savedLabel({ date: NaN }, now)));
+	});
+	test("addSessions stamps a missing date", async () => {
+		const { addSessions } = await import("../src/popup/sessionStore.ts");
+		const out = addSessions({}, [{ id: "a", tabs: [] } as any, { id: "b", tabs: [], date: 5 } as any]);
+		assert.ok(Number.isFinite((out.a as any).date));
+		assert.equal((out.b as any).date, 5);
+	});
+});

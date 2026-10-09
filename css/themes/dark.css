@@ -20,7 +20,7 @@
 		--bg: var(--dk-ground);
 		--text: var(--dk-text);
 		--text-muted: var(--dk-text-2);
-		--text-faint: rgba(255, 255, 255, 0.4);
+		--text-faint: rgba(255, 255, 255, 0.6);
 		--surface: var(--dk-panel);
 		--surface-sunken: var(--dk-ground);
 		--surface-incognito: var(--gray-900);

@@ -169,6 +169,20 @@ export function queryReach(query : SearchQuery) : { open : boolean, saved : bool
 	return { open: !t.some((x) => x.scope === "saved"), saved: !t.some((x) => x.scope === "open") };
 }
 
+// matchTab for text the user typed: a query that parsed to no term at all
+// (`t:`, `u:`, `-`, `""`, spaces, `OR`) matches nothing, not everything
+export function matchTyped(tab : Searchable, query : SearchQuery) : boolean {
+	return !query.empty && matchTab(tab, query);
+}
+
+// The open tabs a search shows: those of `ids` not in `hidden`, which may
+// still hold tabs that closed since
+export function shownCount(ids : Iterable<number>, hidden : ReadonlySet<number>) : number {
+	let n = 0;
+	for (const id of ids) if (!hidden.has(id)) n++;
+	return n;
+}
+
 export function matchTab(tab : Searchable, query : SearchQuery) : boolean {
 	if (query.empty) return true;
 	const hit = (t : SearchTerm) : boolean => {

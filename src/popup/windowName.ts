@@ -594,8 +594,11 @@ function isIp(host: string): boolean {
 	return /^\d{1,3}(\.\d{1,3}){3}$/.test(host) || host.startsWith("[") || host.includes(":");
 }
 
+const FORMAT_CHARS = /[​-‏‪-‮⁦-⁩﻿]/g;
+
 function titleSegments(title: string | undefined): string[] {
-	const clean = (typeof title === "string" ? title : "").replace(/^\(\d+\+?\)\s*/, "").trim();
+	// format characters (bidi controls) would stay live in the window name
+	const clean = (typeof title === "string" ? title : "").replace(FORMAT_CHARS, "").replace(/^\(\d+\+?\)\s*/, "").trim();
 	if (!clean) return [];
 	return clean.split(SEPARATORS).map((s) => s.trim()).filter(Boolean);
 }

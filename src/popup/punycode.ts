@@ -51,9 +51,15 @@ export function decodePunycode(input : string) : string | null {
 		i %= len;
 		if (n > 0x10ffff || (n >= 0xd800 && n <= 0xdfff)) return null;
 		out.splice(i++, 0, n);
+		// a DNS label is at most 63 characters; refuse a longer decoding
+		if (out.length > 1024) return null;
 	}
 	// an encoder never writes a label with nothing to encode ("a-")
-	return out.some((c) => c >= 0x80) ? String.fromCodePoint(...out) : null;
+	if (!out.some((c) => c >= 0x80)) return null;
+	// no spread: a long label would pass too many arguments and throw
+	let text = "";
+	for (const c of out) text += String.fromCodePoint(c);
+	return text;
 }
 
 // every "xn--" label of a host decoded; a label that does not decode stays

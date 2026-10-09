@@ -56,10 +56,10 @@ export interface SavedTime {
 // The times a card shows: "created 2 days ago" and "last saved 3 hours ago"
 // when they read differently, else only "saved 2 days ago".
 export function savedTimes(s : Dated, now : number) : SavedTime[] {
-	const created = s.date as number;
-	const saved = lastSaved(s);
-	const createdText = timeAgo(created, now);
-	const savedText = timeAgo(saved, now);
+	const created = usable(s.date) ? s.date : now;
+	const saved = usable(s.updated) ? s.updated : created;
+	const createdText = ago(created, now);
+	const savedText = ago(saved, now);
 	if (saved === created || savedText === createdText) return [{ key: "saved", text: "saved " + savedText, at: saved }];
 	return [
 		{ key: "created", text: "created " + createdText, at: created },
@@ -67,9 +67,14 @@ export function savedTimes(s : Dated, now : number) : SavedTime[] {
 	];
 }
 
+// timeAgo, "just now" for a time that is not a number (an import without a date)
+function ago(at : unknown, now : number) : string {
+	return timeAgo(usable(at) ? at : now, now);
+}
+
 // the card's "saved … ago" label
 export function savedLabel(s : Dated, now : number) : string {
-	return "saved " + timeAgo(lastSaved(s), now);
+	return "saved " + ago(lastSaved(s), now);
 }
 
 // its tooltip: each time with the exact date under it

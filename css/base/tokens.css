@@ -82,8 +82,8 @@
 	--bg: var(--gray-50);
 	--text: var(--black);
 	--text-muted: rgba(0, 0, 0, 0.5);
-	--text-faint: rgba(0, 0, 0, 0.45);
-	--text-subtle: var(--gray-550);
+	--text-faint: rgba(0, 0, 0, 0.6);
+	--text-subtle: #6b6b6b;
 	--surface: white;
 	--surface-sunken: white;
 	--surface-incognito: #333333CC;

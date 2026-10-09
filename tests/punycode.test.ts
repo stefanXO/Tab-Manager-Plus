@@ -39,3 +39,10 @@ test("urlToUnicode changes the host only", () => {
 	assert.equal(urlToUnicode("about:blank"), "about:blank");
 	assert.equal(urlToUnicode(""), "");
 });
+
+test("a huge label is refused, not a RangeError", () => {
+	assert.equal(decodePunycode("a".repeat(200000)), null);
+	assert.equal(decodePunycode("a".repeat(2000) + "-" + "b".repeat(3000)), null);
+	assert.doesNotThrow(() => hostToUnicode("xn--" + "a".repeat(200000) + ".com"));
+	assert.equal(urlToUnicode("https://xn--" + "a".repeat(200000) + ".com/").startsWith("https://xn--"), true);
+});

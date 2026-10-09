@@ -142,6 +142,7 @@ Smaller fixes
 - Hovering over tabs and going to the options and back do less work behind the scenes, so the popup stays smooth with many tabs
 - The popup stays quick when you move the mouse over tabs and buttons with hundreds of tabs open. Chrome lays an extension popup out twice per frame, and one style rule and the frame widths made every pass redo all the tiles
 - Settings, window names and colors no longer go back to an older state when the popup opens while you are changing them (#126, #131)
+- A search of only a prefix like t: no longer selects every tab, and the match count stays right when tabs close in the background
 - Clicking a tab or a window in the popup now switches to it every time, and clicking a tab of a saved session opens it. After the browser sat idle, the first click used to only close the popup (#242, #246, #252)
 - Closing, discarding or moving selected tabs now works even when one of them was closed in the meantime. Window names and colors that change in the background also update in the popup
 - Hover texts are back when you move from a tab to its window, and sessions now have one too, while tab counts and plurals are shown correctly again (#121, #183)

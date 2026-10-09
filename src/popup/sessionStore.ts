@@ -86,7 +86,9 @@ export function addSessions<T extends StoredWindow>(stored : Readonly<Record<str
 	const next : Record<string, T> = { ...stored };
 	const orders = firstOrders(stored, added.length);
 	added.forEach((s, i) => {
-		next[s.id] = { ...s, tabs: fixTabIndexes(s.tabs), order: orders[i] };
+		const was = (s as { date? : unknown }).date;
+		const date = typeof was === "number" && Number.isFinite(was) ? was : Date.now();
+		next[s.id] = { ...s, date, tabs: fixTabIndexes(s.tabs), order: orders[i] };
 	});
 	return next;
 }

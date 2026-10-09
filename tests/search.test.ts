@@ -1232,3 +1232,25 @@ describe("international hosts match in both forms", () => {
 		assert.deepEqual(searchable("A", "https://example.com/"), { title: "a", url: "https://example.com/" });
 	});
 });
+
+import { matchTyped, shownCount } from "../src/popup/search.ts";
+import { parseQuery as parseQ } from "../src/popup/search.ts";
+
+describe("a query with text but no term matches nothing", () => {
+	test("t:, u:, -, quotes, spaces and OR", () => {
+		const tab = searchable("Release", "https://example.com/");
+		for (const q of ["t:", "u:", "-", '""', "  ", "OR"]) {
+			const parsed = parseQ(q);
+			assert.equal(parsed.empty, true, q);
+			assert.equal(matchTyped(tab as any, parsed), false, q);
+		}
+		assert.equal(matchTyped(tab as any, parseQ("release")), true);
+	});
+});
+
+describe("the shown count never counts closed tabs", () => {
+	test("hidden ids of closed tabs are ignored and the count is not negative", () => {
+		assert.equal(shownCount([1, 2, 3, 4, 5], new Set([1, 2, 3, 4, 5, 6, 7, 8])), 0);
+		assert.equal(shownCount([1, 2, 3], new Set([2, 9, 10, 11])), 2);
+	});
+});

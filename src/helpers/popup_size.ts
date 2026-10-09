@@ -14,7 +14,14 @@ const MIN_ROOM = 300;
 // the widest action popup Chrome shows
 const CHROME_POPUP_MAX_WIDTH = 800;
 
+// the options' ranges (SETTING_RULES): older versions stored unclamped values
+export function clampPopupSize(width : number, height : number) : { width : number, height : number } {
+	const clamp = (n : number, min : number, max : number) => Math.min(Math.max(n, min), max);
+	return { width: clamp(width, 450, 800), height: clamp(height, 400, 600) };
+}
+
 export function sizePopup(width : number, height : number) {
+	if (width > 0 && height > 0) ({ width, height } = clampPopupSize(width, height));
 	if (width > 0 && height > 0) requested = { width, height };
 	apply();
 	if (IS_FIREFOX && !listening) {

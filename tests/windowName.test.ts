@@ -430,3 +430,11 @@ describe("international hosts are named in Unicode", () => {
 		if (site) assert.equal(site.name, "Xn Zz");
 	});
 });
+
+describe("format characters in a title", () => {
+	test("do not reach the window name", () => {
+		const tabs = ["Acme\u202E", "GitHub", "Google"].map((t, i) => ({ url: ["https://acme.com/", "https://github.com/", "https://google.com/"][i], title: t }));
+		const name = windowName(tabs);
+		assert.ok(!/[\u200B-\u200F\u202A-\u202E\u2066-\u2069\uFEFF]/.test(name), JSON.stringify(name));
+	});
+});

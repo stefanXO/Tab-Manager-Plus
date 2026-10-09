@@ -2,7 +2,7 @@ import {getLocalStorage, setLocalStorage, getLocalStorageMap} from "@helpers/sto
 import {readSettings, writeBootCache, SETTING_DEFAULTS, Settings, Layout, LAYOUT, getSetting, saveSetting} from "@helpers/settings";
 import {sortWindows} from "@helpers/windows";
 import {groupSelection, buildSavedWindow, newSessionId, savedText} from "@helpers/sessions";
-import {parseQuery, matchTab, searchable, queryReach} from "../search";
+import {parseQuery, matchTab, matchTyped, shownCount, searchable, queryReach} from "../search";
 import {SAVED_SEARCH_TIP, searchHelpIntro, searchHelpRows, searchTips} from "../searchHelp";
 import {duplicatesTitle, findDuplicates} from "../duplicates";
 import {recentTabs, recentText, recentTitle, RecentTabs, RECENT_LEVELS} from "../recent";
@@ -1659,6 +1659,15 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			this.setState({keyCursor: 0, keyCursorShown: false});
 			if (cursorText) this.setState(this.selectionText(0));
 		}
+		// tabs that closed no longer count as hidden by the search
+		let pruned = false;
+		for (const id of this.state.hiddenTabs) {
+			if (!isSavedTabKey(id) && !this.state.tabsbyid.has(id)) {
+				this.state.hiddenTabs.delete(id);
+				pruned = true;
+			}
+		}
+		if (pruned) this.setState({ hiddenCount: this.state.hiddenTabs.size });
 		this.setState({ ...patch, lastActive: lastActive });
 	}
 	// Fills the id maps from a sorted window list and returns the state that
@@ -1985,7 +1994,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			}
 			for (const id of idList) {
 				const tab = this.state.tabsbyid.get(id);
-				const match = matchTab(searchable(tab.title, tab.url || tab.pendingUrl), parsed);
+				const match = matchTyped(searchable(tab.title, tab.url || tab.pendingUrl), parsed);
 				if (match) {
 					openMatches++;
 					hiddenCount -= this.state.hiddenTabs.has(id) ? 1 : 0;
@@ -2015,7 +2024,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 			query: searchLen ? parsed : null
 		})
 
-		const matches = this.state.tabsbyid.size - hiddenCount;
+		const matches = shownCount(this.state.tabsbyid.keys(), this.state.hiddenTabs);
 		if (searchLen === 0) {
 			// the field was cleared: no search, no header
 			this.setState({
