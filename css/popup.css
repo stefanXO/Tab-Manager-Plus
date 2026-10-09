@@ -1,4 +1,5 @@
-/* Stylesheet entry for popup.html, options.html and changelog.html.
+/* Stylesheet entry for popup.html, options.html, changelog.html and
+   documentation.html.
 
    build.mjs bundles this file with esbuild into build/<browser>/css/popup.css;
    the html pages link only that. Nothing but the layer order and the imports
@@ -8,7 +9,7 @@
      base        normalize, design tokens, type and element defaults
      components  the pieces in isolation: window card, tab tile, actions,
                  sessions, colour screen, search, hover cards, drag image,
-                 options, controls, changelog
+                 options, controls, changelog, documentation
      layout      the frame (header, container, bottom bar), the three views
                  (blocks grid, rows, list) and the width breakpoints. It sits
                  above components because it arranges them: the header and
@@ -48,6 +49,7 @@
 @import "components/options.css" layer(components);
 @import "components/controls.css" layer(components);
 @import "components/changelog.css" layer(components);
+@import "components/documentation.css" layer(components);
 
 @import "layout/frame.css" layer(layout);
 @import "layout/view-blocks.css" layer(layout);
