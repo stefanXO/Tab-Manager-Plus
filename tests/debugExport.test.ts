@@ -95,15 +95,12 @@ test("no user:password@ in the export, open or saved, and the inputs keep theirs
 	assert.equal(open[0].tabs[0].url, "http://user:secret-pass@cred.example.com/login");
 });
 
-test("open tab urls lose the query string and the fragment; saved windows keep theirs", () => {
-	const open = [{ id: 1, tabs: [{ id: 2, title: "https://a.example/cb?token=1", url: "https://a.example/cb#access_token=eyJ", pendingUrl: "https://a.example/r?password=x" }, { id: 3, title: "Why? Because", url: "https://b.example/p?q=1" }] }];
-	const sessions = [{ id: "s", tabs: [{ url: "https://c.example/p?token=2#f", title: "https://c.example/p?token=2", favIconUrl: "https://c.example/f.ico?k=1" }] }];
+test("query strings and fragments survive in open tabs and saved windows", () => {
+	const open = [{ id: 1, tabs: [{ id: 2, title: "t", url: "https://a.example/watch?v=abc#f", pendingUrl: "https://a.example/r?v=abc" }] }];
+	const sessions = [{ id: "s", tabs: [{ url: "https://www.youtube.com/watch?v=abc", title: "Video" }] }];
 	const out = buildEverythingExport(open, settings, meta, sessions);
-	assert.deepEqual(out.windows[0].tabs.map((t) => [t.title, t.url, t.pendingUrl]), [
-		["https://a.example/cb?token=1", "https://a.example/cb", "https://a.example/r"],
-		["Why? Because", "https://b.example/p", ""],
-	]);
-	assert.deepEqual(out.sessions, [{ id: "s", tabs: [{ url: "https://c.example/p?token=2#f", title: "https://c.example/p?token=2", favIconUrl: "https://c.example/f.ico?k=1" }] }]);
+	assert.deepEqual(out.windows[0].tabs.map((t) => [t.url, t.pendingUrl]), [["https://a.example/watch?v=abc#f", "https://a.example/r?v=abc"]]);
+	assert.deepEqual(readSessionsFile(out), sessions);
 });
 
 test("round trip: a saved tab url with ?v=abc survives the export", () => {

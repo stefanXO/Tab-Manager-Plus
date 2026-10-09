@@ -157,7 +157,6 @@ Smaller fixes
 - The header icons (Donate, Rate, theme and options) now stay visible in a narrow popup and in the sidebar. At 450 px wide or less they used to be hidden, which left no way into the options
 - On the changelog page, a section whose lines are only for the other browser no longer shows as an empty heading
 - A user name and password in a web address (user:password@) no longer show in the popup or in the debug export file
-- The debug export file holds the addresses of open tabs without query strings or fragments, so a token after a ? or # is never written to a file you attach to a bug report
 - Long Arabic and Hebrew titles and window names now show their start and are cut at their end, and the name box types right to left
 - Settings saved as text by version 5 (popup size, tab limit) are read correctly. A saved window with a broken name no longer leaves the popup empty. One broken old value no longer stops the move of version 5 saved windows
 

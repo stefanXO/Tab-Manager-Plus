@@ -5,7 +5,7 @@
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { stripUserinfo, stripUserinfoDeep, exportUrl } from "../src/popup/safeUrl.ts";
+import { stripUserinfo, stripUserinfoDeep } from "../src/popup/safeUrl.ts";
 
 test("http, https and ftp lose user:password@", () => {
 	assert.equal(stripUserinfo("http://user:secret-pass@cred.example.com/login"), "http://cred.example.com/login");
@@ -54,12 +54,3 @@ test("stripUserinfoDeep cleans every url key and copies", () => {
 	assert.equal(stripUserinfoDeep("http://a:b@h"), "http://a:b@h");
 });
 
-test("exportUrl drops userinfo, query string and fragment, keeps scheme, host and path", () => {
-	assert.equal(exportUrl("https://app.example.com/cb#access_token=eyJ"), "https://app.example.com/cb");
-	assert.equal(exportUrl("https://u:p@app.example.com:8080/reset/x?token=abc&b=2#frag"), "https://app.example.com:8080/reset/x");
-	assert.equal(exportUrl("https://example.com/?next=https://bob:pw@evil/"), "https://example.com/");
-	assert.equal(exportUrl("https://example.com/a/b"), "https://example.com/a/b");
-	assert.equal(exportUrl("chrome://version/?x=1"), "chrome://version/");
-	assert.equal(exportUrl(undefined), "");
-	assert.equal(stripUserinfo("https://example.com/?token=abc#x"), "https://example.com/?token=abc#x");
-});

@@ -4,12 +4,11 @@
 // windows and settings, to
 // attach to a bug report. Pure (no browser APIs), so it is unit tested in
 // tests/debugExport.test.ts. Only the fields listed here are copied. Urls
-// of open tabs lose their "user:password@" part, query string and fragment
-// (exportUrl in ./safeUrl.ts): the file goes to bug reports. Saved windows lose
-// only the "user:password@" part, so the file can restore them.
+// lose their "user:password@" part (./safeUrl.ts): the file goes to bug
+// reports.
 
 import { windowName } from "./windowName.ts";
-import { exportUrl, stripUserinfo, stripUserinfoDeep } from "./safeUrl.ts";
+import { stripUserinfo, stripUserinfoDeep } from "./safeUrl.ts";
 
 interface ExportTabSource {
 	id?: number;
@@ -97,8 +96,8 @@ export function buildDebugExport(windows: ExportWindowSource[], settings: Record
 				id: t.id ?? -1,
 				index: t.index ?? i,
 				title: stripUserinfo(t.title),
-				url: exportUrl(t.url),
-				pendingUrl: exportUrl(t.pendingUrl),
+				url: stripUserinfo(t.url),
+				pendingUrl: stripUserinfo(t.pendingUrl),
 				active: !!t.active,
 				pinned: !!t.pinned,
 				audible: !!t.audible,
@@ -121,9 +120,8 @@ export function buildDebugExport(windows: ExportWindowSource[], settings: Record
 }
 
 // The debug export is the session export plus the debug keys: the sessions
-// file reader finds `sessions` in it. Their urls lose only the userinfo, not
-// the query or fragment: Import Sessions replaces stored windows by id, so a
-// query-less copy would overwrite the real saved window.
+// file reader finds `sessions` in it. Their urls lose the userinfo too, so a
+// restore from this file opens them without it.
 export function buildEverythingExport(windows: ExportWindowSource[], settings: Record<string, unknown>, meta: DebugMeta, sessions: unknown[]): DebugExport {
-	return { ...buildDebugExport(windows, settings, meta), version: 1, sessions: stripUserinfoDeep(sessions, (v) => stripUserinfo(v)) };
+	return { ...buildDebugExport(windows, settings, meta), version: 1, sessions: stripUserinfoDeep(sessions) };
 }
