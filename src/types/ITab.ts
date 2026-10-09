@@ -1,28 +1,27 @@
-﻿import * as browser from "webextension-polyfill";
-import {DragEvent, MouseEvent} from "react";
+import {Layout} from "../helpers/settings";
+import {SearchQuery} from "../popup/search";
+import * as browser from "webextension-polyfill";
 import {ISavedSession} from "./ISavedSession";
+import {MouseEvent} from "react";
 
 export interface ITab {
 	tab: browser.Tabs.Tab,
 	window?: browser.Windows.Window,
 	session?: ISavedSession,
 	selected: boolean,
+	// the arrow keys are on this tab
+	keyCursor?: boolean,
 	hidden: boolean,
+	faded: boolean,
 	id: string,
 
 	searchActive: boolean,
-	layout: string,
+	// the search, for the matched parts of a title (bold in List view)
+	query?: SearchQuery | null,
+	layout: Layout,
 	draggable: boolean,
 
-	middleClick: (tabId: number) => void,
-
-	hoverHandler: (tab: browser.Tabs.Tab) => void,
-	parentUpdate?: () => void,
-	select: (id: number) => void,
-	selectTo?: (id: number) => void,
-	drag?: (e: DragEvent<HTMLDivElement>, id: number) => void,
-	drop?: (id: number, before: boolean) => void,
-	dropWindow?: (windowId: number) => void,
-	dragFavicon?: (icon?: string) => string
-	click?: (e: MouseEvent<HTMLDivElement>, index: number) => void
+	tabs?: browser.Tabs.Tab[],
+	onOpen?: (e : MouseEvent<HTMLDivElement>, index : number) => void | Promise<void>,
+	onDragChange?: () => void
 }

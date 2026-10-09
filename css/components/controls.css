@@ -1,0 +1,158 @@
+/* Form controls of the options screen: the on/off switch (.toggle: a hidden
+   checkbox and its label drawn as a track with a knob), its text label, and
+   the number fields. The switch's slide is in motion.css. */
+
+/* The switch is sized from three lengths; the knob and its travel follow:
+     knob   = --sw-h - 2 * --sw-gap
+     travel = --sw-w - --sw-h        (the knob ends --sw-gap from the right)
+   rem, so it scales with the root size instead of lining up only at 16px. */
+.toggle {
+	--sw-w: 2.5rem;
+	--sw-h: 1.375rem;
+	--sw-gap: 0.1875rem;
+	--sw-knob: calc(var(--sw-h) - 2 * var(--sw-gap));
+	--sw-travel: calc(var(--sw-w) - var(--sw-h));
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	vertical-align: middle;
+	margin: 0 0.75rem 0.625rem 0;
+	cursor: pointer;
+}
+.textlabel {
+	display: block;
+	cursor: pointer;
+	text-align: left;
+	font-weight: bold;
+	font-size: 0.8rem;
+	padding: 0.5rem 0;
+}
+/* the text label next to a switch sits on the switch's line, centred on it */
+.toggle + .textlabel {
+	display: inline-block;
+	vertical-align: middle;
+	margin-bottom: 0.625rem;
+}
+/* the track; its ring is an inset shadow so it takes no room from the knob */
+.toggle label {
+	position: relative;
+	display: block;
+	box-sizing: border-box;
+	flex: none;
+	width: var(--sw-w);
+	height: var(--sw-h);
+	padding: 0;
+	border-radius: calc(var(--sw-h) / 2);
+	background-color: var(--switch-track);
+	box-shadow: inset 0 0 0 1px var(--switch-border);
+	transition: all 0s ease-in-out;
+	cursor: pointer;
+	-webkit-tap-highlight-color: transparent;
+}
+/* the knob */
+.toggle label:before {
+	content: "";
+	position: absolute;
+	top: var(--sw-gap);
+	left: var(--sw-gap);
+	box-sizing: border-box;
+	width: var(--sw-knob);
+	height: var(--sw-knob);
+	border-radius: calc(var(--sw-knob) / 2);
+	background-color: var(--switch-knob);
+	box-shadow: 0 1px 2px var(--switch-shadow);
+	transition: box-shadow 0s ease-in-out;
+	animation: moveLeft 0s ease-in-out;
+}
+
+/* the checkbox: invisible but still focusable, so the switch can be reached
+   and toggled from the keyboard */
+.toggle input {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	opacity: 0;
+	cursor: pointer;
+}
+.toggle input:focus-visible + label {
+	outline: 2px solid var(--focus-ring);
+	outline-offset: 2px;
+}
+.toggle input:checked + label {
+	background-color: var(--switch-on);
+	box-shadow: inset 0 0 0 1px var(--switch-on-border);
+}
+.toggle input:checked + label:before {
+	background-color: var(--switch-knob-on);
+	transform: translateX(var(--sw-travel));
+	animation: moveRight 0s ease-in-out;
+}
+
+/* A choice of a few values (ChoiceOption, the Theme): a segmented row as tall
+   as the switch, on its track, the chosen value drawn as its knob. Each radio
+   is invisible but focusable, like the switch's checkbox. */
+.choice {
+	display: inline-flex;
+	vertical-align: middle;
+	margin: 0 0.75rem 0.625rem 0;
+	padding: 0.1875rem;
+	border-radius: 0.6875rem;
+	background-color: var(--switch-track);
+	box-shadow: inset 0 0 0 1px var(--switch-border);
+}
+.choice label {
+	position: relative;
+	display: block;
+	cursor: pointer;
+}
+.choice input {
+	position: absolute;
+	inset: 0;
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	opacity: 0;
+	cursor: pointer;
+}
+.choice label > span {
+	display: flex;
+	align-items: center;
+	gap: 0.3125rem;
+	padding: 0 0.625rem;
+	border-radius: 0.5rem;
+	font-size: 0.75rem;
+	line-height: 1rem;
+	color: var(--choice-text);
+}
+.choice input:checked + span {
+	background-color: var(--switch-knob);
+	box-shadow: 0 1px 2px var(--switch-shadow);
+	color: var(--choice-on-text);
+}
+.choice input:focus-visible + span {
+	outline: 2px solid var(--focus-ring);
+	outline-offset: 1px;
+}
+.choice .ico {
+	display: inline-flex;
+	flex: none;
+	line-height: 0;
+}
+.choice + .textlabel {
+	display: inline-block;
+	vertical-align: middle;
+	margin-bottom: 0.625rem;
+}
+
+input[type=number] {
+	font-size: 2rem;
+	width: 6rem;
+	text-align: center;
+}
+
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+	opacity: 1;
+}

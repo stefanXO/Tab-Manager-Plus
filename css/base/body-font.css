@@ -1,0 +1,21 @@
+/* The body's font family, imported WITHOUT a layer (see popup.css).
+
+   Chrome injects a stylesheet into every extension page - popup, options,
+   changelog - ahead of the page's own sheets:
+
+     body { font-family: "Segoe UI", Tahoma, sans-serif; font-size: 75%; }
+
+   (the family is the platform's UI font; this is the Windows one). It is an
+   unlayered author sheet, and unlayered rules beat every rule inside an
+   @layer, so a body font-family in layer(base) loses to it: the whole page,
+   and the inputs and buttons that inherit from body (the header's tab count
+   and tip, the search box, the options fields), fell back to Segoe UI. Before
+   the layers, popup.css was unlayered too and won by coming later. Unlayered
+   here, it does again.
+
+   Only the family: the injected 75% font-size applied before the layers as
+   well (the old body rule set no size), so it is left as it was. */
+
+body {
+	font-family: "Noto Sans", 'Graphik', -apple-system, system-ui, BlinkMacSystemFont, "Segoe UI", 'Helvetica', Roboto, "Helvetica Neue", Arial, sans-serif;
+}

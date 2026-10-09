@@ -1,0 +1,306 @@
+import { test, describe } from "node:test";
+import assert from "node:assert/strict";
+import {
+	placeWindow,
+	fitInto,
+	usableBounds,
+	isInBounds,
+	windowsToMinimize,
+} from "../src/helpers/geometry.ts";
+
+// ---------------------------------------------------------------------------
+// isInBounds
+// ---------------------------------------------------------------------------
+describe("isInBounds", () => {
+	const bounds = { left: 10, top: 20, width: 100, height: 50 };
+	// right edge = 110, bottom edge = 70
+
+	test("point strictly inside bounds", () => {
+		assert.equal(isInBounds({ left: 50, top: 40 }, bounds), true);
+	});
+
+	test("point on the left edge is in bounds (>=)", () => {
+		assert.equal(isInBounds({ left: 10, top: 40 }, bounds), true);
+	});
+	test("point on the right edge is out of bounds (half-open, <)", () => {
+		assert.equal(isInBounds({ left: 110, top: 40 }, bounds), false);
+		assert.equal(isInBounds({ left: 109, top: 40 }, bounds), true);
+	});
+	test("point on the top edge is in bounds (>=)", () => {
+		assert.equal(isInBounds({ left: 50, top: 20 }, bounds), true);
+	});
+	test("point on the bottom edge is out of bounds (half-open, <)", () => {
+		assert.equal(isInBounds({ left: 50, top: 70 }, bounds), false);
+		assert.equal(isInBounds({ left: 50, top: 69 }, bounds), true);
+	});
+
+	test("point exactly at the far (bottom-right) corner is out of bounds", () => {
+		assert.equal(isInBounds({ left: 110, top: 70 }, bounds), false);
+	});
+	test("point exactly at the near (top-left) corner is in bounds", () => {
+		assert.equal(isInBounds({ left: 10, top: 20 }, bounds), true);
+	});
+
+	test("point outside to the left", () => {
+		assert.equal(isInBounds({ left: 9, top: 40 }, bounds), false);
+	});
+	test("point outside to the right", () => {
+		assert.equal(isInBounds({ left: 111, top: 40 }, bounds), false);
+	});
+	test("point outside above (top)", () => {
+		assert.equal(isInBounds({ left: 50, top: 19 }, bounds), false);
+	});
+	test("point outside below (bottom)", () => {
+		assert.equal(isInBounds({ left: 50, top: 71 }, bounds), false);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// fitInto
+// ---------------------------------------------------------------------------
+describe("fitInto", () => {
+	test("window already fits inside the display: unchanged", () => {
+		const bounds = { left: 50, top: 50, width: 200, height: 200 };
+		const display = { left: 0, top: 0, width: 1920, height: 1080 };
+		assert.deepEqual(fitInto(bounds, display), bounds);
+	});
+
+	test("wider than the display: width capped and left moved so it fits", () => {
+		const bounds = { left: 500, top: 0, width: 3000, height: 200 };
+		const display = { left: 0, top: 0, width: 1920, height: 1080 };
+		assert.deepEqual(fitInto(bounds, display), { left: 0, top: 0, width: 1920, height: 200 });
+	});
+
+	test("taller than the display: height capped and top moved so it fits", () => {
+		const bounds = { left: 0, top: 500, width: 200, height: 3000 };
+		const display = { left: 0, top: 0, width: 1920, height: 1080 };
+		assert.deepEqual(fitInto(bounds, display), { left: 0, top: 0, width: 200, height: 1080 });
+	});
+
+	test("partly off the right edge: shifted left so it stays inside", () => {
+		const bounds = { left: 1800, top: 0, width: 300, height: 200 };
+		const display = { left: 0, top: 0, width: 1920, height: 1080 };
+		assert.deepEqual(fitInto(bounds, display), { left: 1620, top: 0, width: 300, height: 200 });
+	});
+
+	test("partly off the bottom edge: shifted up so it stays inside", () => {
+		const bounds = { left: 0, top: 1000, width: 200, height: 300 };
+		const display = { left: 0, top: 0, width: 1920, height: 1080 };
+		assert.deepEqual(fitInto(bounds, display), { left: 0, top: 780, width: 200, height: 300 });
+	});
+
+	test("partly off the left edge (negative left): shifted to the display's left", () => {
+		const bounds = { left: -100, top: 0, width: 200, height: 200 };
+		const display = { left: 0, top: 0, width: 1920, height: 1080 };
+		assert.deepEqual(fitInto(bounds, display), { left: 0, top: 0, width: 200, height: 200 });
+	});
+
+	test("partly off the top edge (negative top): shifted to the display's top", () => {
+		const bounds = { left: 0, top: -50, width: 200, height: 200 };
+		const display = { left: 0, top: 0, width: 1920, height: 1080 };
+		assert.deepEqual(fitInto(bounds, display), { left: 0, top: 0, width: 200, height: 200 });
+	});
+
+	test("display not at the origin (second monitor at left:1920): result stays inside that monitor", () => {
+		const bounds = { left: 3800, top: 0, width: 300, height: 200 };
+		const display = { left: 1920, top: 0, width: 1920, height: 1080 };
+		const result = fitInto(bounds, display);
+		assert.deepEqual(result, { left: 3540, top: 0, width: 300, height: 200 });
+		assert.ok(result.left >= display.left && result.left + result.width <= display.left + display.width);
+	});
+
+	test("a window exactly the display size equals the display", () => {
+		const display = { left: 1920, top: 0, width: 1920, height: 1080 };
+		const bounds = { left: 1920, top: 0, width: 1920, height: 1080 };
+		assert.deepEqual(fitInto(bounds, display), display);
+	});
+
+	test("Samsung G9 -> MacBook: an oversized ultrawide saved window is clamped fully into the small display", () => {
+		const saved = { left: 300, top: 100, width: 5120, height: 1440 };
+		const display = { left: 0, top: 25, width: 1512, height: 957 };
+		assert.deepEqual(fitInto(saved, display), { left: 0, top: 25, width: 1512, height: 957 });
+	});
+});
+
+// ---------------------------------------------------------------------------
+// placeWindow
+// ---------------------------------------------------------------------------
+describe("placeWindow", () => {
+	test("no displays available -> null", () => {
+		const saved = { left: 0, top: 0, width: 200, height: 200 };
+		assert.equal(placeWindow(saved, []), null);
+	});
+
+	test("one display -> same as fitInto against that display", () => {
+		const saved = { left: 1800, top: 0, width: 300, height: 200 };
+		const display = { left: 0, top: 0, width: 1920, height: 1080 };
+		assert.deepEqual(placeWindow(saved, [display]), fitInto(saved, display));
+	});
+
+	test("two displays, saved top-left lies on the second: fitted into the second, not the first", () => {
+		const d1 = { left: 0, top: 0, width: 1920, height: 1080 };
+		const d2 = { left: 1920, top: 0, width: 1920, height: 1080 };
+		const saved = { left: 2000, top: 100, width: 500, height: 400 };
+		const result = placeWindow(saved, [d1, d2]);
+		assert.deepEqual(result, { left: 2000, top: 100, width: 500, height: 400 });
+		// sanity: fitting into d1 instead would have produced a different left
+		assert.notEqual(result.left, fitInto(saved, d1).left);
+	});
+
+	test("saved position on no display -> fitted into displays[0]", () => {
+		const d1 = { left: 0, top: 0, width: 1920, height: 1080 };
+		const d2 = { left: 1920, top: 0, width: 1920, height: 1080 };
+		const saved = { left: 5000, top: 5000, width: 300, height: 200 };
+		assert.deepEqual(placeWindow(saved, [d1, d2]), fitInto(saved, d1));
+	});
+
+	test("saved position at the far edge of display A and the origin of adjacent B is placed on B", () => {
+		const d1 = { left: 0, top: 0, width: 1920, height: 1080 };
+		const d2 = { left: 1920, top: 0, width: 1920, height: 1080 };
+		const saved = { left: 1920, top: 100, width: 300, height: 200 };
+		assert.deepEqual(placeWindow(saved, [d1, d2]), fitInto(saved, d2));
+		assert.deepEqual(placeWindow(saved, [d1, d2]), saved);
+	});
+
+	test("saved position inside A stays on A", () => {
+		const d1 = { left: 0, top: 0, width: 1920, height: 1080 };
+		const d2 = { left: 1920, top: 0, width: 1920, height: 1080 };
+		const saved = { left: 1919, top: 100, width: 300, height: 200 };
+		assert.deepEqual(placeWindow(saved, [d1, d2]), fitInto(saved, d1));
+	});
+});
+
+// ---------------------------------------------------------------------------
+// usableBounds
+// ---------------------------------------------------------------------------
+describe("usableBounds", () => {
+	test("all numbers >= 100 -> true", () => {
+		assert.equal(usableBounds({ left: 100, top: 100, width: 100, height: 100 }), true);
+	});
+
+	test("width 99 -> false", () => {
+		assert.equal(usableBounds({ left: 0, top: 0, width: 99, height: 100 }), false);
+	});
+
+	test("height 50 -> false", () => {
+		assert.equal(usableBounds({ left: 0, top: 0, width: 100, height: 50 }), false);
+	});
+
+	test("missing left -> false", () => {
+		assert.equal(usableBounds({ top: 0, width: 100, height: 100 }), false);
+	});
+
+	test("NaN -> false", () => {
+		assert.equal(usableBounds({ left: NaN, top: 0, width: 100, height: 100 }), false);
+	});
+
+	test("Infinity -> false", () => {
+		assert.equal(usableBounds({ left: 0, top: 0, width: Infinity, height: 100 }), false);
+	});
+
+	test("negative left with valid size -> true (position may be negative on a left monitor)", () => {
+		assert.equal(usableBounds({ left: -500, top: 0, width: 100, height: 100 }), true);
+	});
+
+	test("strings -> false", () => {
+		assert.equal(usableBounds({ left: "0", top: 0, width: 100, height: 100 } as any), false);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// windowsToMinimize
+// ---------------------------------------------------------------------------
+describe("windowsToMinimize", () => {
+	const left = { left: 0, top: 0, width: 1920, height: 1040 };
+	const right = { left: 1920, top: 0, width: 2560, height: 1400 };
+	const w = (id : number, x : number, y : number, state = "normal") => ({ id, left: x, top: y, state });
+
+	test("minimizes the other windows on the target's display", () => {
+		const windows = [w(1, 10, 10), w(2, 100, 50), w(3, 500, 300)];
+		assert.deepEqual(windowsToMinimize(1, windows, [left]), [2, 3]);
+	});
+
+	test("leaves windows on other displays alone", () => {
+		const windows = [w(1, 10, 10), w(2, 2000, 10), w(3, 300, 300)];
+		assert.deepEqual(windowsToMinimize(1, windows, [left, right]), [3]);
+	});
+
+	test("target on the second display: only that display's windows", () => {
+		const windows = [w(1, 10, 10), w(2, 2000, 10), w(3, 2500, 500)];
+		assert.deepEqual(windowsToMinimize(2, windows, [left, right]), [3]);
+	});
+
+	test("target on no known display -> nothing", () => {
+		const windows = [w(1, 10, 10), w(2, 2000, 10), w(3, 300, 300)];
+		assert.deepEqual(windowsToMinimize(2, windows, [left]), []);
+	});
+
+	test("no displays -> nothing", () => {
+		assert.deepEqual(windowsToMinimize(1, [w(1, 10, 10), w(2, 20, 20)], []), []);
+	});
+
+	test("target not among the windows -> nothing", () => {
+		assert.deepEqual(windowsToMinimize(9, [w(1, 10, 10), w(2, 20, 20)], [left]), []);
+	});
+
+	test("windows that are already minimized are skipped", () => {
+		const windows = [w(1, 10, 10), w(2, 20, 20, "minimized"), w(3, 30, 30)];
+		assert.deepEqual(windowsToMinimize(1, windows, [left]), [3]);
+	});
+
+	test("windows without a position are skipped", () => {
+		const windows = [w(1, 10, 10), { id: 2, state: "normal" }, w(3, 30, 30)];
+		assert.deepEqual(windowsToMinimize(1, windows, [left]), [3]);
+	});
+
+	test("the target window itself is never minimized", () => {
+		assert.deepEqual(windowsToMinimize(1, [w(1, 10, 10)], [left]), []);
+	});
+
+	test("the far edge belongs to the next display, not this one (like isInBounds)", () => {
+		const windows = [w(1, 10, 10), w(2, 1919, 1039), w(3, 1920, 10)];
+		assert.deepEqual(windowsToMinimize(1, windows, [left, right]), [2]);
+	});
+
+	test("the target's display is the first one containing it", () => {
+		// overlapping displays (mirrored or odd layouts): the first match wins
+		const windows = [w(1, 1600, 10), w(2, 100, 10), w(3, 3000, 10)];
+		const overlap = { left: 1500, top: 0, width: 2000, height: 1040 };
+		assert.deepEqual(windowsToMinimize(1, windows, [left, overlap]), [2]);
+		assert.deepEqual(windowsToMinimize(1, windows, [overlap, left]), [3]);
+	});
+});
+
+// Firefox (no display API): displays = null, one window stays active across
+// all monitors together
+describe("windowsToMinimize without displays (Firefox)", () => {
+	const w = (id : number, x? : number, y? : number, state = "normal", type = "normal") => ({ id, left: x, top: y, state, type });
+
+	test("minimizes every other window, on every monitor", () => {
+		const windows = [w(1, 10, 10), w(2, 2000, 10), w(3, 300, 300), w(4, -1500, 200)];
+		assert.deepEqual(windowsToMinimize(1, windows, null), [2, 3, 4]);
+	});
+
+	test("the target window itself is never minimized", () => {
+		assert.deepEqual(windowsToMinimize(1, [w(1, 10, 10)], null), []);
+	});
+
+	test("windows that are already minimized are skipped", () => {
+		const windows = [w(1, 10, 10), w(2, 20, 20, "minimized"), w(3, 30, 30)];
+		assert.deepEqual(windowsToMinimize(1, windows, null), [3]);
+	});
+
+	test("positions do not matter: windows without one are minimized too", () => {
+		const windows = [w(1), w(2), w(3, 30, 30)];
+		assert.deepEqual(windowsToMinimize(1, windows, null), [2, 3]);
+	});
+
+	test("only normal windows: popups and panels are left alone", () => {
+		const windows = [w(1, 10, 10), w(2, 20, 20, "normal", "popup"), w(3, 30, 30, "normal", "panel"), w(4, 40, 40)];
+		assert.deepEqual(windowsToMinimize(1, windows, null), [4]);
+	});
+
+	test("target not among the windows -> nothing", () => {
+		assert.deepEqual(windowsToMinimize(9, [w(1, 10, 10), w(2, 20, 20)], null), []);
+	});
+});

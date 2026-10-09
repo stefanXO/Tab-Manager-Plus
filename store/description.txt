@@ -1,0 +1,188 @@
+Tab Manager Plus
+===============
+
+The Marie Kondo for your Chrome Tabs! Do all these open tabs bring you joy? Let's organize them ^_^
+
+The best tool to find, close, or switch to the tabs you want, when you have many tabs and windows. In a world of ever-expanding tabs in the browser - this is a helpful addition to keeping them organized and for quick switching between them!
+
+If you like it, please leave a review! We read all the reviews ❤
+
+★  What is Tab Manager Plus?
+
+A simple and super-fast Google Extension to help you get the best overview over many tabs.  It helps filtering your tabs, moving them, re-arranging them.  Once you open Tab Manager Plus, you can type right away.  The main focus in this app is speed - so you can find the tab you're looking for - right away!
+
+★  Functionality:
+
+➤ Display all Tabs & Windows quickly in current window
+➤ Highlight duplicate tabs - only the extra copies are selected, the one you used last is kept
+➤ Highlight the tabs you used recently
+➤ Select Tabs using Right Click, Ctrl, Cmd or Shift
+➤ Quickly filter tabs by title and url ( just type - right away! )
+  ➤ Switch to found tab with "Enter"
+  ➤ Move multiple highlighted tabs with "Enter"
+  ➤ Search in titles with t:word, in urls with u:word, leave tabs out with -word, search "a phrase" or a /regular expression/
+  ➤ s:word searches saved windows only, -s:word open tabs only, also s:u:word, s:t:word
+➤ Switch to your previously active tab with Alt+Shift+Comma (PC) / Ctrl+Shift+Comma (Mac)
+➤ Limit open tabs - Tab Manager will open a new tab in a new window once your limit is reached
+➤ Create new Tabs & Windows
+➤ Move Tabs between Windows
+➤ Delete Tabs & Windows, saved ones too - close the selection with Ctrl+Delete (Cmd+Delete on a Mac), undo a saved delete with Ctrl+Z
+➤ Pin/unpin Tabs
+➤ Discard tabs to save memory
+➤ See which tabs play sound, are muted, asleep or pinned
+➤ Windows are named after their sites automatically (GitHub, Gmail, Google Docs)
+➤ Name and color your windows - names and colors survive a browser restart
+➤ Save windows and restore them later, with their size and position (on by default); save the selected tabs as a new saved window
+➤ Rename and recolor a saved window by clicking its name; export and import saved windows
+➤ Drag saved tabs into open or other saved windows, open tabs into saved windows, and reorder them
+➤ "Enter" opens selected saved tabs in a new window
+➤ Hold the mouse on a tab or window for details: last used, tab counts, sites, monitor, and where a saved window will restore
+➤ Light and dark theme, or follow your system
+➤ Supports incognito mode, if you enable it
+
+★  Updates
+
+➤ 7.0.0 ( 9th October 2026 )
+A Brand New Look!
+- Every layout is redesigned: Block view is a grid, List view (was Vertical) shows one tab per line, and Rows view (was Horizontal) shows one window per row (#264)
+- The dark theme is rebuilt with consistent colors, so scrollbars and controls are dark too. Window colors show as a colored edge, and a new palette has a matching set for the dark theme (#99, #151)
+- Pick a theme: System, Light or Dark. System is the new default and follows your computer's dark mode, even while the popup is open, and if you had dark mode on, it stays dark
+- New icons stay sharp at any zoom in light and dark, and each setting has its own icon
+- Badges show whether a tab plays sound or is muted, asleep (put to sleep by the browser), pinned, active or selected, and List view shows them as chips with a colored edge (#171)
+- In List view, four small bars show how recently you used each tab, fading from green (minutes) to grey (a week), and hovering them shows the exact time
+- Windows show when they were last active and saved windows when they were saved. White favicons stay visible in the light theme, and favicons update when a tab finishes loading (#251)
+- When animations are on, they are subtle: windows and tabs fade in, changes ease in instead of jumping, and a playing row breathes
+
+Faster
+- The popup opens with its final layout, theme and windows in the first frame, so nothing fills in afterwards, and its script is about 40% smaller
+- Tab changes show up right away, and typing right after you open the popup no longer loses the first letters
+
+Searching And Duplicates
+- Highlight Duplicates selects only the extra copies and keeps the one you used last, so Ctrl+Delete (Cmd+Delete on a Mac) closes just the duplicates (#142, #188, #240, #248, #260)
+- The header shows how many tabs have duplicates and how many are selected, and while duplicates are highlighted, a search looks only at them
+- Pasting a search or editing its middle now finds the right tabs, and clearing the search box no longer shows matches
+- t:word searches titles only and u:word web addresses only, so links don't clutter results. -word (or -u:word) leaves tabs out, and quotes find a phrase such as "pull request" (#224)
+- When plain words are not enough, search with a pattern: /\(\d+\)/ finds tabs with an unread count, /localhost:\d+/ local dev servers and /\.pdf$/ open PDFs (#247, #156)
+- The ? in the search box lists all search options, and List view shows the matching part of a title in bold
+- Hide non-matching tabs never hides a selected tab, and a new search keeps the tabs you selected yourself
+- The new clock button selects the tabs you used last: the shortest span with more than one tab (15 minutes, an hour, 3 hours, 12 hours, a day, 2 days ...). Two more clicks reach further back and light up its three steps, a fourth turns it off, and an eye shows when non-matching tabs are hidden
+
+Keyboard
+- The arrow keys move a cursor instead of the selection, and the tab under the cursor gets a ring, so you always know where you are
+- Space selects the tab under the cursor, and Shift+arrow selects every tab it lands on. With nothing selected, Enter switches to the tab under the cursor, and Escape clears the cursor and the selection
+- Ctrl+arrow keys move the cursor even while you type in the search box, and the Tab key reaches every button, which Enter or Space then presses
+
+Windows
+- Windows get automatic names from their sites, spelled right (GitHub, Stack Overflow, Gmail, Google Docs), instead of names like "Facebook, facebook & 5 more"
+- Window names and colors survive a browser restart, even if the window's tabs changed. Names and colors of windows closed over a day ago are cleaned up, so a new window can't inherit them (#103, #244)
+- The window order no longer resets on its own, and the current window is always listed first and marked, also in a popup window
+- Clicking the icon while Tab Manager Plus is open in a tab takes you to that tab
+- The "switch to previous tab" shortcut works again (#37, #108, #238)
+- Dragging several tabs shows them as a stack and a drop that isn't allowed shows a "not allowed" cursor. Drops land exactly at the marker, also for several tabs moved inside their window
+
+Saved Windows (Sessions), rebuilt
+- Saved windows are on by default and no longer beta. They look different from open windows: a dashed edge, a saved icon and faded favicons that get their color back under the mouse
+- A bottom bar button saves the selected tabs as a new saved window (#201). Rename and recolor a saved window by clicking its name or color (#172)
+- Restored windows keep their size and position, fitted to the screen (#205, #207, #208). A window saved maximized comes back maximized on its own monitor if it is connected, and in own-tab mode the popup scrolls to it
+- A saved window's card shows when it was saved, its size, and where a restore will land on your monitors, while an open tab's card lists the saved windows that hold it
+- Delete saved tabs with the trash button or Ctrl+Delete (Cmd+Delete on a Mac), and saved windows with their delete button. Undo works for 8 seconds, Ctrl+Z (Cmd+Z) undoes the newest change first, and up to three Undo notices stack (#180)
+- Errors show in a red notice with the reason, for example when the browser has no room left, a file can't be read, or a drop isn't allowed
+- Drag saved tabs into open or saved windows, and drag open tabs onto a saved window to add copies (#192). You can reorder saved tabs and windows, and Enter opens selected saved tabs in a new window
+- Search finds saved tabs too and selects them when no open tab matches, s:tax looks only in saved tabs and -s:tax only in open tabs, and Ctrl+click or right-click selects a saved tab
+- Import says how many saved windows it restored or skipped and why, and it skips ones you already have (#39). It reads both export files (tab-manager-plus-sessions and -everything), older backups, and files from other apps, with a note
+- Saved windows no longer have to fit in the browser's 10 MB limit, showing one no longer changes it (which could break exports), and turning them on shows them right away. They are no longer lost when the update from version 5 is cut short, e.g. by closing the popup
+
+Tab And Window Info
+- Hover a tab to see when you last used it and its state: asleep, muted and why, playing, pinned. The card also shows its position, which tab opened it, copies in other windows and its zoom
+- Hover a window for its tab counts, sites, last activity, oldest and newest tab and size, while a small map shows where the window is on your monitors
+- The card follows the mouse and switches instantly between tabs, and Escape closes it. "Show all monitors" in the options draws every monitor on that map after it asks the browser for the monitor permission, which Chrome usually grants without a prompt
+- Hovering and switching layouts are much faster, even with many windows and tabs
+
+Options
+- The options list each keyboard shortcut with its current key, or "Not set", and one option hides the Donate and Rate buttons
+- New installs get new default keys, because the browser took the old ones. Alt+Shift+M opens Tab Manager Plus and Alt+Shift+, switches to the previous tab (Ctrl+Shift+M and Ctrl+Shift+, on a Mac), while existing installs keep theirs
+- The switches are easy to read in the dark theme and grow with the browser's zoom. Hover an option to see its help in the header, and Popup size, Incognito, Shortcut and What's new now have help too
+- Enter no longer opens a new window while the options or the color screen are open. A number field no longer breaks when you clear it to type a new one
+- The changelog page follows the dark theme, and the tip in the header no longer changes while the popup is loading
+- Export tabs for debugging saves your windows, tabs and settings, so you can attach the file to a bug report
+
+Smaller fixes
+- Settings, window names and colors no longer revert when the popup opens while you change them (#126, #131). Names and colors changed in the background update in the popup
+- Closing, discarding or moving selected tabs works even when one of them was already closed
+- Hover texts are back when you move from a tab to its window, sessions have one too, and tab counts and plurals are right (#121, #183)
+- The drop marker fits every layout and shows in the dark theme, and the color picker lists colors in order (#97)
+- A window hidden by Hide non-matching tabs shows again when the search ends
+- The window name and color screen covers the whole popup, its close button shows a pointer, and Escape closes only that screen
+- The header icons stay in a narrow popup and the sidebar, so the options are always in reach. With one tab selected, the new window button now says that it switches to that tab
+
+➤ 6.0.0 ( 1st October 2024 )
+- Open single tabs from saved sessions, and (experimental) window names and colors survive a browser restart. Closing, moving or discarding many tabs no longer stops early when the popup closes
+- Saved windows restore fully, even if saved off-screen or bigger than the monitor. Window titles update after tabs load, use the hostname, show IPs properly and group by IP range
+- Fixes: Vertical layout width and separators, dragged tabs drop next to the closest tab, a window color no longer hides other windows, mixed incognito and normal tabs move into two windows, no scroll animation when animations are off
+
+➤ 5.2.1 – 5.3.0 ( 22nd September 2024 ) crash fix, manifest v3
+➤ 5.2.0 ( 22nd June 2020 ) smarter search, Shift-right click ranges, bigger popup, blocks by default
+➤ 5.1.4 – 5.1.6 ( 17th June 2020 ) moving multiple tabs fixed, dark input fields, fewer options restored in sessions
+➤ 5.1.3 ( 7th November 2019 ) popup width
+➤ 5.1.2 ( 4th November 2019 ) context menu, speed
+➤ 5.1.1 ( 1st November 2019 ) duplicates button back
+➤ 5.1.0 ( 31st October 2019 ) sleeping tabs, arrow keys
+➤ 5.0.8 ( 29th October 2019 ) backup
+➤ 5.0.7 ( 28th October 2019 ) dark mode
+➤ 5.0.6 ( 25th October 2019 ) older browsers
+➤ 5.0.4 – 5.0.5 ( 23rd October 2019 ) save windows, one permission less
+➤ 5.0.3 ( 15th August 2019 ) own-tab mode
+➤ 5.0.2 ( 6th August 2019 ) Chrome hotfix
+➤ 5.0.0 ( 5th August 2019 ) rate and review buttons
+➤ 4.9.0 – 4.9.9 ( 2018 – 2019 ) window colors, auto-hide, top sites as names, rendering fixes
+
+Tab Manager Plus is open source.
+
+The main purpose of Tab Manager Plus is to find "lost" tabs easily. You can open the Tab Manager with a keyboard shortcut - Alt+Shift+M (PC) / Ctrl+Shift+M (Mac) or by clicking on the icon - and then you can type right away!
+
+The Tab Manager will then show you all tabs that match your search terms - by tab title, and by url. If you've found your tab, and it's the only one selected - press "enter" - and you will jump right to it!
+
+If you don't like one of the layouts, there are 4 views available in total :
+
+★ Block view ( Shows you groups of icons - each window is one group )
+★ Big block view ( same as above, but with bigger icons )
+★ Rows view ( every window is one line, and every tab is represented by an icon )
+★ List view ( a list of all your tabs - with readable titles )
+
+You can move tabs between windows in every view - and you can select tabs with your right mouse button ( or CTRL+click on Mac ). Once you have selected a few tabs, simply press the "enter" key, and all tabs will be moved to a new browser window.
+
+Are you stuck with lost duplicate tabs? Simply press the "duplicate tabs" icon, and Tab Manager will select the extra copies for you and keep the one you used last. Ctrl+Delete (Cmd+Delete on a Mac) or the trash button closes just the duplicates, "Enter" moves them to a separate window.
+
+➤ Don't like animations? You can turn off / turn on animations in the options.
+
+➤ The window is too big - the tabs take too much space? Switch to a compact view in the options - it's less beautiful, but more space efficient.
+
+➤ Each window has action buttons: the star saves it for later, + opens a new tab in it, the pen names and colors it, the arrow minimizes it and x closes the whole window. Don't need them? Turn off "Show action buttons" in the options.
+
+If you want to have an overview over your incognito tabs as well - make sure to go into the extension settings, and to enable the extension in Incognito mode.
+
+★ Additional benefits
+
+Depending on how many scripts are running inside your tabs, cleaning out duplicates from time to time can also speed up your computer by reducing the CPU load. Please take care of your computer.
+
+★ Not so obvious nowadays, but important nevertheless :
+
+- We don't share ANY data with anybody. Everything happens offline and in your browser only.
+- This version does NOT have any malware or hidden ads. We made this, because we were fed up with the previous version that was infested with malware and ads.
+- We love Tab Manager - we hope you love it, too.
+
+★★★★★
+If you like it, please leave a rating.
+
+★★★★★
+If you have suggestions, leave a comment in the support box.
+
+★ Legalities :
+
+This app is not affiliated with Google or Google Chrome.
+Google Chrome is a registered trademark of Google, Inc.
+
+Tab Manager Plus does not monitor your links or page visits, and does not track any of your searches or filters.
+
+★★★★★
+Please enjoy this free Chrome Extension :-)

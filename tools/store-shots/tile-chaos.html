@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<!-- Promo tiles, style "tab chaos". URL: tile-chaos.html?tile=<marquee|small>
+     Behind: browser tab strips crammed with dozens of tiny tabs (real favicons from /app/fav), faded and blurred.
+     In front: logo + name + "Dozens of tabs. One view."; the marquee also has the real popup (/app/popup.html) peeking in,
+     sharp, from the right/bottom edge. window.ready() resolves once fonts, favicons and the popup are loaded.
+     Rendered by shoot-tile-chaos.mjs. -->
+<link rel="stylesheet" href="/app/font.css">
+<style>
+	:root { --W: 1400px; --H: 560px; }
+	html, body { margin: 0; width: var(--W); height: var(--H); overflow: hidden; }
+	body { font-family: "interfont", system-ui, sans-serif; position: relative; -webkit-font-smoothing: antialiased; color: #1b1d3a;
+		background: #f6f4fb; }
+	#bg { position: absolute; inset: 0; background:
+		radial-gradient(55% 70% at 88% 115%, rgba(155, 123, 212, 0.14), transparent 70%),
+		linear-gradient(180deg, #ffffff 0%, #f8f6fd 45%, #efebf8 100%); }
+
+	/* ---- the chaos: browser tab strips, crammed, faded */
+	.chrome { position: absolute; left: -40px; right: -40px; border-radius: 12px; background: #e1dcee;
+		box-shadow: 0 0 0 1px rgba(60,50,110,0.06); display: flex; align-items: flex-end; overflow: hidden; }
+	.chrome .strip { display: flex; gap: 0; padding: 0 8px; align-items: flex-end; }
+	.tab { flex: 0 0 auto; box-sizing: border-box; display: flex; align-items: center; justify-content: center; position: relative;
+		border-radius: 7px 7px 0 0; }
+	.tab::after { content: ""; position: absolute; right: 0; top: 28%; bottom: 28%; width: 1px; background: rgba(60,50,110,0.18); }
+	.tab.active { background: #fbfaff; box-shadow: 0 -1px 0 rgba(60,50,110,0.06); }
+	.tab.active::after { display: none; }
+	.tab img { display: block; }
+	.chaos { position: absolute; inset: 0; pointer-events: none;
+		-webkit-mask-image: linear-gradient(180deg, #000 0%, #000 calc(var(--H) * 0.12), transparent calc(var(--H) * 0.27)); }
+
+	/* ---- the order: brand block + real popup */
+	.brand { position: absolute; display: flex; align-items: center; }
+	.brand .name { font-weight: 700; color: #1b1d3a; white-space: nowrap; }
+	.brand .line { color: #3a3d5c; font-weight: 600; }
+	.accent { color: #7650c0; }
+
+	.card { position: absolute; border-radius: 14px; overflow: hidden; background: #fff;
+		box-shadow: 0 30px 70px rgba(40,30,90,0.22), 0 8px 20px rgba(40,30,90,0.12), 0 0 0 1px rgba(27,29,58,0.08); }
+	.card iframe { border: 0; display: block; transform-origin: 0 0; }
+
+	/* marquee */
+	body.marquee .brand { left: 48px; top: 120px; bottom: 0; gap: 36px; }
+	body.marquee .brand img { filter: drop-shadow(0 16px 30px rgba(40,30,90,0.22)); }
+	body.marquee .brand .name { font-size: 62px; line-height: 1.05; letter-spacing: -1.4px; }
+	body.marquee .brand .line { font-size: 31px; margin-top: 16px; letter-spacing: -0.3px; }
+
+	/* small */
+	body.small .brand { left: 48px; top: 56px; bottom: 0; gap: 22px; }
+	body.small .brand img { filter: drop-shadow(0 10px 20px rgba(40,30,90,0.22)); }
+	body.small .brand .name { font-size: 30px; line-height: 1.05; letter-spacing: -0.6px; }
+	body.small .brand .line { font-size: 17px; margin-top: 10px; line-height: 1.3; }
+</style>
+</head>
+<body>
+<div id="bg"></div>
+<div class="chaos" id="chaos"></div>
+
+<script>
+const P = new URLSearchParams(location.search);
+const TILE = P.get("tile") || "marquee", BIG = TILE === "marquee";
+document.body.className = TILE;
+const W = BIG ? 1400 : 440, H = BIG ? 560 : 280;
+document.documentElement.style.setProperty("--W", W + "px"); document.documentElement.style.setProperty("--H", H + "px");
+const $ = (id) => document.getElementById(id);
+
+// real favicons (store-shots/app/fav), shuffled deterministically so neighbours differ
+const FAVS = ["github.com", "mail.google.com", "youtube.com", "stackoverflow.com", "developer.mozilla.org", "reddit.com", "notion.so",
+	"figma.com", "wikipedia.org", "x.com", "news.ycombinator.com", "docs.google.com", "npmjs.com", "calendar.google.com", "spotify.com", "amazon.com"];
+let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+function favSeq(n) {
+	const out = []; let prev = "";
+	while (out.length < n) { const f = FAVS[Math.floor(rnd() * FAVS.length)]; if (f !== prev) { out.push(f); prev = f; } }
+	return out;
+}
+
+// one browser tab strip: y, height, tab width, icon size, opacity, blur, active tab index
+function strip({ y, h, tabW, icon, opacity, blur, active, shift = 0, rot = 0 }) {
+	const c = document.createElement("div");
+	c.className = "chrome";
+	Object.assign(c.style, { top: y + "px", height: h + "px", opacity, filter: blur ? `blur(${blur}px)` : "", transform: rot ? `rotate(${rot}deg)` : "" });
+	const s = document.createElement("div");
+	s.className = "strip"; s.style.marginLeft = shift + "px";
+	const n = Math.ceil((W + 80 - shift) / tabW) + 1;
+	favSeq(n).forEach((f, i) => {
+		const t = document.createElement("div");
+		t.className = "tab" + (i === active ? " active" : "");
+		Object.assign(t.style, { width: tabW + "px", height: h - 6 + "px" });
+		t.innerHTML = `<img src="/app/fav/${f}.png" width="${icon}" height="${icon}">`;
+		s.appendChild(t);
+	});
+	c.appendChild(s);
+	$("chaos").appendChild(c);
+	return n;
+}
+
+let tabCount = 0;
+if (BIG) {
+	// a pile of windows' tab strips, the back ones smaller, blurrier, tilted; the pile fades out above the text
+	tabCount += strip({ y: -18, h: 34, tabW: 17, icon: 9, opacity: 0.30, blur: 2.2, active: 52, shift: -6, rot: -1.1 });
+	tabCount += strip({ y: 14, h: 38, tabW: 20, icon: 11, opacity: 0.40, blur: 1.5, active: 23, shift: -13, rot: 0.7 });
+	tabCount += strip({ y: 52, h: 44, tabW: 24, icon: 13, opacity: 0.52, blur: 0.8, active: 41, rot: -0.35 });
+} else {
+	tabCount += strip({ y: -10, h: 24, tabW: 12, icon: 7, opacity: 0.30, blur: 1.3, active: 27, shift: -4, rot: -1.2 });
+	tabCount += strip({ y: 10, h: 26, tabW: 14, icon: 8, opacity: 0.40, blur: 0.9, active: 11, shift: -9, rot: 0.8 });
+	tabCount += strip({ y: 34, h: 30, tabW: 17, icon: 10, opacity: 0.52, blur: 0.5, active: 19, rot: -0.4 });
+}
+window.tabCount = tabCount;
+
+// brand block; logo2.svg for the marquee and any 2x render, logo2.png 1:1 for the 1x small tile
+const b = document.createElement("div");
+b.className = "brand";
+const logo = BIG || devicePixelRatio > 1 ? "/logo2.svg" : "/logo2.png";
+const ls = BIG ? 220 : 128;
+b.innerHTML = BIG
+	? `<img src="${logo}" width="${ls}" height="${ls}"><div class="text"><div class="name">Tab Manager Plus</div>
+		<div class="line">Dozens of tabs. <span class="accent">One view.</span></div></div>`
+	: `<img src="${logo}" width="${ls}" height="${ls}"><div class="text"><div class="name">Tab Manager<br>Plus</div>
+		<div class="line">Dozens of tabs.<br><span class="accent">One view.</span></div></div>`;
+document.body.appendChild(b);
+
+// marquee: the real popup, sharp and in front, peeking in from the right and bottom edges
+const frames = [];
+if (BIG) {
+	const c = document.createElement("div");
+	c.className = "card"; c.id = "card";
+	c.innerHTML = `<iframe id="frame" src="/app/popup.html"></iframe>`;
+	document.body.appendChild(c);
+	const f = c.querySelector("iframe");
+	const scale = 1.06, POP_W = 640, POP_H = 368;
+	Object.assign(c.style, { left: "900px", top: "230px", width: Math.round(POP_W * scale) + "px", height: Math.round(POP_H * scale) + "px" });
+	Object.assign(f.style, { width: POP_W + "px", height: POP_H + "px", transform: `scale(${scale})` });
+	frames.push(f);
+}
+
+window.ready = () => new Promise((resolve) => {
+	const check = async () => {
+		const loaded = (f) => { const d = f.contentDocument; return d && d.querySelector(".searchBoxInput") && d.querySelectorAll(".window").length >= 3; };
+		const imgs = [...document.images].every((i) => i.complete);
+		if (frames.every(loaded) && imgs && document.fonts.status === "loaded") {
+			await new Promise((r) => setTimeout(r, 900));
+			requestAnimationFrame(() => requestAnimationFrame(() => resolve(true)));
+		} else setTimeout(check, 50);
+	};
+	check();
+});
+</script>
+</body>
+</html>

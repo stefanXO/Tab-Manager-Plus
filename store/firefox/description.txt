@@ -1,0 +1,162 @@
+Tab Manager Plus
+===============
+
+The Marie Kondo for your Firefox tabs! Do all these open tabs bring you joy? Let's organize them ^_^
+
+Find, close or switch to the tabs you need, even when you have dozens of tabs spread across several different windows.
+
+If you like it, please leave a review! We read every single review ❤
+
+★  What is Tab Manager Plus?
+
+Tab Manager Plus is a simple and fast Firefox add-on that gives you a clear view of all your open tabs.
+You can filter them, move them between windows and organize them in whatever order you like.
+Open Tab Manager Plus and start typing right away. Speed is our main priority, so that you can locate the tab you need almost immediately.
+
+★  What you can do:
+
+➤ See all of your tabs and windows together in one overview, instead of clicking through every window separately.
+➤ Highlight duplicate tabs. Only the extra copies are selected, and the copy you used last is kept.
+➤ Highlight the tabs you used most recently, so you can return to your current activity quickly.
+➤ Select several tabs with a right click, or by holding Ctrl, Cmd or Shift while clicking.
+➤ Filter your tabs by their title and web address simply by starting to type.
+  ➤ Press "Enter" to switch immediately to the tab you found.
+  ➤ Press "Enter" to move all highlighted tabs into a new window.
+  ➤ Search only titles with t:word, and only web addresses with u:word.
+  ➤ Exclude unwanted tabs from the search results by typing -word.
+  ➤ Search for an exact phrase by typing "a phrase" inside quotation marks.
+  ➤ Search with a /regular expression/ when you need a precise pattern.
+  ➤ Search exclusively inside your saved windows by typing s:word.
+➤ Switch back to your previous tab with Alt+Shift+Comma (PC) or Ctrl+Shift+Comma (Mac).
+➤ Open Tab Manager Plus with Alt+Shift+M (PC) or Ctrl+Shift+M (Mac).
+➤ Limit the number of tabs allowed in each window. Once a window reaches its limit, new tabs automatically open in a new window.
+➤ Create new tabs and windows directly from the overview.
+➤ Move tabs between windows by dragging them to the exact position you want.
+➤ Close tabs and whole windows, including saved ones.
+➤ Undo deleting a saved window or saved tab with Ctrl+Z (Cmd+Z on a Mac).
+➤ Pin and unpin tabs, so important pages stay at the beginning of the window.
+➤ Put tabs to sleep so that they use less memory while you are not using them.
+➤ See at a glance which tabs are playing audio, muted, sleeping or pinned.
+➤ Windows are named automatically after their sites, like GitHub or Gmail, so they are easy to tell apart.
+➤ Name and color your windows yourself, and the names and colors remain after Firefox restarts.
+➤ Save windows and open them again later, with their original size and position.
+➤ Rename and recolor saved windows, and export or import them as a backup.
+➤ Drag tabs into saved windows, and move them between saved windows.
+➤ Hold the mouse over a tab or window to see more details about it.
+➤ Choose a light theme or a dark theme, or let it follow your operating system automatically.
+➤ Use it in the Firefox sidebar, in the popup, or in a tab of its own.
+➤ Minimize inactive windows: one window stays active, and all the others are minimized.
+➤ It works in private windows if you allow it, and the options show you how to do that.
+➤ When you save a window, its about:blank tabs are included as well.
+➤ "Change shortcut key" in the options opens the Firefox shortcut settings, so you can pick your own keys.
+➤ It also works in browsers built on Firefox, like LibreWolf, Zen and Waterfox.
+
+★  Updates
+
+➤ 7.0.0 ( 9th October 2026 )
+A brand new look!
+- Every layout is new: Block view is a grid, List view shows one tab per line, and Rows view shows one window per row.
+- The dark theme has been completely rebuilt, and you can now choose System, Light or Dark. System is the default, because it automatically follows your computer.
+- A theme button at the top changes the theme with one click, so you do not need to open the options.
+- The add-on comes with redesigned icons and a new collection of colors for your windows.
+- Small badges indicate whether a tab is playing audio, muted, sleeping or pinned.
+- In List view, small bars show how recently you used each tab, so old tabs are easy to spot.
+- The popup opens faster, and typing right after you open it no longer loses the first letters.
+
+Search and duplicates
+- Highlight Duplicates selects only the extra copies and keeps the tab you used last, so you can close the rest safely.
+- Search for a phrase with quotes, like "pull request", or for a pattern with a /regular expression/.
+- A question mark at the right end of the search box opens a list of every available search option.
+- A new clock button highlights the tabs you have used most recently. Each additional click reaches a little further back in time.
+
+Windows
+- Window names are smarter now, because they use the real names of sites, like GitHub and Gmail.
+- Window names and colors stay in place after you restart Firefox, even when their tabs have changed.
+- The current window is always listed first, so you can immediately find your position.
+- The "switch to previous tab" shortcut works again after being broken in earlier versions.
+
+Saved windows
+- Saved windows are now turned on by default, and you can still turn them off in the options.
+- You can save just the selected tabs as a new saved window with a single button.
+- Click the name or color of a saved window to change it, the same way as for open windows.
+- When you open a saved window again, it comes back with its original size and position.
+- You can delete saved tabs and windows, and an Undo button stays available for 8 seconds afterwards.
+- Drag tabs into saved windows, and drag saved tabs back out into your open windows.
+- After an import, a message tells you how many windows were restored and how many were skipped.
+- Saved windows no longer have to fit within the browser's 10 MB limit, so you can keep many more of them.
+
+Tab and window info
+- Hover over a tab to see when you last used it and what its current state is.
+- Hold the mouse over a window to see how many tabs it has, which sites are open and how big it is.
+- A small map shows where the window is on your screen.
+
+Options
+- The options now list every shortcut key, so you can see at once which keys do what.
+- New installations get new default keys: Alt+Shift+M opens Tab Manager Plus, and Alt+Shift+Comma goes to the previous tab. On a Mac, the default keys use Ctrl+Shift instead of Alt+Shift.
+- If you do not want them, you can hide the Donate and Rate buttons at the top of the popup.
+- You can export your tabs and settings to a file, which helps us when you attach it to a bug report.
+
+Firefox
+- "Minimize inactive windows" now works in Firefox, so one window stays active while all the others are minimized.
+- The options explain how to allow private windows, and they show whether the add-on is already allowed there.
+- "Change shortcut key" opens the Firefox shortcut settings, where you can choose your own keys.
+- When you save a window, its about:blank tabs are now kept instead of being left out.
+- LibreWolf, Zen and Waterfox are now recognized as Firefox, so the add-on behaves the same way in them.
+
+➤ 6.0.0 ( 1st October 2024 )
+- You can open single tabs from your saved windows instead of restoring the whole window.
+- Many small fixes make closing, moving and restoring tabs and windows more reliable.
+
+Tab Manager Plus is open source, so anyone can read and verify its code.
+
+The main purpose of Tab Manager Plus is to help you rediscover tabs you have lost. Open it with Alt+Shift+M (PC) or Ctrl+Shift+M (Mac), or click its icon, and then start typing right away.
+
+It immediately shows every tab whose title or web address matches the words you entered.
+When the tab you were looking for is the only one selected, press "Enter" to jump directly to it.
+
+There are 4 layouts:
+
+★ Block view ( one group of icons for each window )
+★ Big block view ( the same, with bigger icons )
+★ Rows view ( one line for each window, one icon for each tab )
+★ List view ( a list of all your tabs, with readable titles )
+
+You can move tabs between windows in every layout.
+Select individual tabs with the right mouse button, or with Ctrl+click on a Mac.
+Then press "Enter" to move all of the selected tabs into a new window.
+
+Stuck with duplicate tabs? Press the "duplicate tabs" icon, and Tab Manager Plus selects the extra copies while keeping the one you used last. Then Ctrl+Delete (Cmd+Delete on a Mac) closes just the duplicates, or "Enter" moves them into a separate window.
+
+➤ If you find the animations distracting, you can turn them off in the options.
+
+➤ If the window is too big for your screen, you can switch to a more compact view in the options.
+
+➤ Each window has its own row of buttons with different functions. The star saves it, the + opens a new tab in it, and the pen lets you name and color it. The arrow minimizes the window, and the x closes the whole window. If you don't need these buttons, you can easily turn them off in the options.
+
+To see your private tabs as well, allow the add-on in private windows; the options explain exactly how to do it.
+
+★ Good to know
+
+Duplicate tabs that run scripts can slow down your computer, so it is a good idea to close them from time to time. Please take good care of your computer.
+
+★ Our promise
+
+- We share NO data with anybody, and everything stays inside your own browser.
+- There is no malware and there are no hidden advertisements. We created this add-on because an older version contained both.
+- We really love Tab Manager, and we hope that you will enjoy using it, too.
+
+★★★★★
+If you like it, please leave a review on addons.mozilla.org.
+
+★★★★★
+Have an idea? Open an issue at https://github.com/stefanXO/Tab-Manager-Plus/issues
+
+★ Legal
+
+This add-on is not affiliated with Mozilla or Firefox.
+Firefox is a registered trademark of the Mozilla Foundation.
+
+Tab Manager Plus does not watch your links or page visits, and it does not track your searches or filters.
+
+★★★★★
+Please enjoy this free Firefox add-on :-)

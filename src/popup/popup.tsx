@@ -1,14 +1,18 @@
 "use strict";
 
-import '@helpers/migrate';
-import {getLocalStorage} from "@helpers/storage";
+import {migrated} from '@helpers/migrate';
+import {readBootCache} from "@helpers/settings";
+import {sizePopup} from "@helpers/popup_size";
+import {applyTheme, readTheme} from "@helpers/theme";
+import {fetchBootData} from "./boot";
+import * as browser from 'webextension-polyfill';
 import {TabManager} from '@views';
 import * as React from 'react';
-import * as ReactDOM from "react-dom";
+import { createRoot } from 'react-dom/client';
+import {perfCommit, perfOverlayWanted, startPerfOverlay} from "./perfOverlay";
 
 declare global {
 	interface Window {
-		loaded: boolean;
 		inPopup: boolean;
 		inPanel: boolean;
 		optionPage: boolean;
@@ -16,71 +20,95 @@ declare global {
 	}
 }
 
-window.loaded = false;
 window.inPopup = window.location.search.indexOf("?popup") > -1;
 window.inPanel = window.location.search.indexOf("?panel") > -1;
 window.extensionVersion = process.env.VERSION;
 
-window.onload = () => window.requestAnimationFrame(loadApp);
 
-setTimeout(loadApp, 75);
-setTimeout(loadApp, 125);
-setTimeout(loadApp, 250);
-setTimeout(loadApp, 375);
-setTimeout(loadApp, 700);
-setTimeout(loadApp, 1000);
-setTimeout(loadApp, 2000);
-setTimeout(loadApp, 3000);
-setTimeout(loadApp, 5000);
-setTimeout(loadApp, 15000);
+async function switchToOwnTab() : Promise<boolean> {
+	const page = browser.runtime.getURL("popup.html");
+	const tabs = await browser.tabs.query({});
+	const current = await browser.windows.getLastFocused();
+	const own = tabs
+		.filter((tab) => (tab.url || tab.pendingUrl || "") === page)
+		.sort((a, b) => (a.windowId === current.id ? 0 : 1) - (b.windowId === current.id ? 0 : 1))[0];
+	if (!own) return false;
+	await browser.windows.update(own.windowId, {focused: true});
+	await browser.tabs.update(own.id, {active: true});
+	return true;
+}
+
+// own tab and sidebar fill the page
+function sizePage() {
+	if (window.inPanel) {
+		document.documentElement.style.maxHeight = "auto";
+		document.documentElement.style.maxWidth = "auto";
+		document.body.style.maxHeight = "auto";
+		document.body.style.maxWidth = "auto";
+	}
+	document.documentElement.style.maxHeight = "100%";
+	document.documentElement.style.maxWidth = "100%";
+	document.documentElement.style.height = "100%";
+	document.documentElement.style.width = "100%";
+	document.body.style.maxHeight = "100%";
+	document.body.style.maxWidth = "100%";
+	document.body.style.height = "100%";
+	document.body.style.width = "100%";
+}
+
+// set while a boot runs or once it succeeded; a failed boot clears it and retries
+let booting = false;
+let attempts = 0;
 
 async function loadApp() {
-	if (!!window.loaded) return;
-	let height : number = await getLocalStorage("tabHeight", 600);
-	let width : number = await getLocalStorage("tabWidth", 800);
-	console.log(height, width);
-	if (window.inPopup) {
+	if (booting) return;
+	try {
+		booting = true;
 
-		if (height > 0 && width > 0) {
-			document.body.style.width = width + "px";
-			document.body.style.height = height + "px";
-		}
+		// 1. synchronous: size and theme from the cache of the last run, so the
+		//    very first frame has the right popup size and colours
+		const cache = readBootCache();
+		applyTheme(readTheme(cache.theme, cache.dark));
+		if (window.inPopup) sizePopup(cache.tabWidth || 0, cache.tabHeight || 0);
+		else sizePage();
 
-		var root = document.getElementById("root");
-		if (root != null) {
-			var _height = parseInt(document.body.style.height.split("px")[0]) || 0;
-			if (_height < 300) {
-				_height = 400;
-				document.body.style.minHeight = _height + "px";
-			} else {
-				_height++;
-				if (_height > 600) _height = 600;
-				document.body.style.minHeight = _height + "px";
-			}
+		// 2. everything the first render needs, in parallel: the own-tab check
+		//    (a Tab Manager tab already open means the popup closes instead),
+		//    settings, windows, their order and last-active times
+		const [own, boot] = await Promise.all([
+			window.inPopup ? switchToOwnTab() : Promise.resolve(false),
+			migrated.then(() => fetchBootData(window.extensionVersion))
+		]);
+		if (own) {
+			window.close();
+			return;
 		}
-	} else {
-		if (window.inPanel) {
-			document.documentElement.style.maxHeight = "auto";
-			document.documentElement.style.maxWidth = "auto";
-			document.body.style.maxHeight = "auto";
-			document.body.style.maxWidth = "auto";
+		applyTheme(boot.settings.theme);
+		if (window.inPopup) sizePopup(boot.settings.tabWidth, boot.settings.tabHeight);
+
+		const container = document.getElementById('TMP');
+		const root = createRoot(container!);
+		const app = <TabManager optionsActive={!!window.optionPage} boot={boot}/>;
+		// development builds only (src/popup/perfOverlay.ts); the production
+		// build turns the condition into false and drops the overlay
+		if (process.env.NODE_ENV !== "production" && perfOverlayWanted()) {
+			startPerfOverlay();
+			root.render(<React.Profiler id="TabManager" onRender={perfCommit}>{app}</React.Profiler>);
+		} else {
+			root.render(app);
 		}
-		document.documentElement.style.maxHeight = "100%";
-		document.documentElement.style.maxWidth = "100%";
-		document.documentElement.style.height = "100%";
-		document.documentElement.style.width = "100%";
-		document.body.style.maxHeight = "100%";
-		document.body.style.maxWidth = "100%";
-		document.body.style.height = "100%";
-		document.body.style.width = "100%";
+	} catch (err) {
+		console.error(err);
+		booting = false;
+		// a storage or API call rejected at boot: try again a few times, then
+		// give up. A slow machine does not land here, its awaits just take
+		// longer and resolve.
+		if (attempts++ < 10) setTimeout(loadApp, 250 * attempts);
 	}
-
-	if (!!window.loaded) return;
-	window.loaded = true;
-	ReactDOM.render(<TabManager optionsActive={!!window.optionPage}/>, document.getElementById("TMP"));
 }
 
 window.addEventListener("contextmenu", function (e) {
 	e.preventDefault();
 });
 
+loadApp();

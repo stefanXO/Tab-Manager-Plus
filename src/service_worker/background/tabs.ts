@@ -2,12 +2,16 @@
 
 import {getLocalStorage} from "@helpers/storage";
 import {trackLastTab} from "@background/actions"
-import {globalTabsActive} from '@context';
+import {globalTabsActive, tabsActiveLoaded, persistTabsActive, forgetTab} from '@context';
 import {debounce} from "@helpers/utils";
 import {checkWindow, createWindowWithTabs} from '@background/windows';
 import * as browser from 'webextension-polyfill';
+import {getSetting} from "@helpers/settings";
+import {openTabsAt, ISavedTabOpen} from "@helpers/openTabs";
 
-export async function setupTabListeners() {
+// must stay synchronous: it runs during the service worker's first event loop
+// turn so that the events that woke the worker are not missed
+export function setupTabListeners() {
 	browser.tabs.onCreated.removeListener(tabAdded);
 	browser.tabs.onUpdated.removeListener(tabCountChanged);
 	browser.tabs.onRemoved.removeListener(tabCountChanged);
@@ -16,6 +20,7 @@ export async function setupTabListeners() {
 	browser.tabs.onAttached.removeListener(tabCountChanged);
 	browser.tabs.onActivated.removeListener(tabActiveChanged);
 	browser.tabs.onMoved.removeListener(tabCountChanged);
+	browser.tabs.onRemoved.removeListener(tabRemoved);
 
 	browser.tabs.onCreated.removeListener(checkTabCreate);
 	browser.tabs.onUpdated.removeListener(checkTabUpdate);
@@ -32,6 +37,7 @@ export async function setupTabListeners() {
 	browser.tabs.onAttached.addListener(tabCountChanged);
 	browser.tabs.onActivated.addListener(tabActiveChanged);
 	browser.tabs.onMoved.addListener(tabCountChanged);
+	browser.tabs.onRemoved.addListener(tabRemoved);
 
 	browser.tabs.onCreated.addListener(checkTabCreate); // 1, tab
 	browser.tabs.onUpdated.addListener(checkTabUpdate); // 3, tabid, changeinfo, tab
@@ -58,15 +64,34 @@ export async function closeTabs(tabs) {
 	}
 }
 
-export async function moveTabsToWindow(windowId, tabs) {
+// the open tabs dragged onto an open window (not onto one of its tabs): moved
+// to its end, one after the other. A tab the browser refuses (closed
+// meanwhile, a private tab into a normal window) is logged and skipped, the
+// rest still move. Resolves with how many moved, so the popup can say so.
+export async function moveTabsToWindow(windowId, tabs) : Promise<number> {
+	let moved = 0;
 	for (const tab of tabs) {
-		await browser.tabs.move(tab.id, {windowId: windowId, index: -1});
-		await browser.tabs.update(tab.id, {pinned: tab.pinned});
+		try {
+			await browser.tabs.move(tab.id, {windowId: windowId, index: -1});
+			moved++;
+			await browser.tabs.update(tab.id, {pinned: tab.pinned});
+		} catch (e) {
+			console.error("could not move the tab", tab.id, e);
+		}
 	}
+	return moved;
+}
+
+// saved tabs dragged from a saved window into an open window (the popup waits
+// for this): opened in the background at the drop position, the saved window
+// is not changed. Resolves with how many tabs opened.
+export async function openSavedTabs(windowId : number, index : number | undefined, tabs : ISavedTabOpen[] = []) : Promise<number> {
+	const opened = await openTabsAt((data) => browser.tabs.create(data), windowId, index, tabs, IS_FIREFOX);
+	return opened.length;
 }
 
 export function focusOnTabAndWindowDelayed(tabId: number, windowId: number) {
-	setTimeout(focusOnTabAndWindow.bind(this, tabId, windowId), 125);
+	setTimeout(() => focusOnTabAndWindow(tabId, windowId), 125);
 }
 
 export async function focusOnTabAndWindow(tabId : number, windowId : number) {
@@ -78,7 +103,7 @@ export async function focusOnTabAndWindow(tabId : number, windowId : number) {
 export async function updateTabCount() {
 	let run = true;
 
-	const badge = await getLocalStorage("badge", true);
+	const badge = await getSetting("badge");
 	if (!badge) run = false;
 
 	if (run) {
@@ -91,6 +116,7 @@ export async function updateTabCount() {
 		await browser.action.setBadgeBackgroundColor({color: "purple"});
 		const _to_remove : number[] = [];
 
+		await tabsActiveLoaded;
 		if (!!globalTabsActive) {
 			for (let i = 0; i < globalTabsActive.length; i++) {
 				const t = globalTabsActive[i];
@@ -104,12 +130,14 @@ export async function updateTabCount() {
 			}
 		}
 
+		const pruned = _to_remove.length > 0;
 		while (_to_remove.length > 0) {
 			let index = _to_remove.pop();
 			if (!!globalTabsActive && globalTabsActive.length > 0) {
 				if (!!globalTabsActive[index]) globalTabsActive.splice(index, 1);
 			}
 		}
+		if (pruned) persistTabsActive();
 
 	} else {
 		await browser.action.setBadgeText({text: ""});
@@ -123,7 +151,7 @@ function tabCountChanged() {
 export const updateTabCountDebounce = debounce(updateTabCount, 250);
 
 async function tabAdded(tab) {
-	const tabLimit = await getLocalStorage("tabLimit", 0);
+	const tabLimit = await getSetting("tabLimit");
 	if (tabLimit > 0) {
 		if (tab.id !== browser.tabs.TAB_ID_NONE) {
 			const tabCount = await browser.tabs.query({currentWindow: true});
@@ -136,31 +164,52 @@ async function tabAdded(tab) {
 }
 
 function tabActiveChanged(tab : browser.Tabs.OnActivatedActiveInfoType) {
-	trackLastTab(tab);
 	updateTabCountDebounce();
+	// returned so the event keeps the worker alive until the history is written
+	return trackLastTab(tab);
+}
+
+function tabRemoved(tabId : number) {
+	return forgetTab(tabId);
+}
+
+// checkWindow rehashes the whole window, so collapse bursts of tab events
+// into one trailing call per window
+const checkWindowTimers : Map<number, ReturnType<typeof setTimeout>> = new Map();
+
+function checkWindowDebounced(windowId : number) {
+	if (!windowId) return;
+	const timer = checkWindowTimers.get(windowId);
+	if (timer) clearTimeout(timer);
+	checkWindowTimers.set(windowId, setTimeout(function () {
+		checkWindowTimers.delete(windowId);
+		checkWindow(windowId).catch(function (e) {
+			console.error(e);
+		});
+	}, 500));
 }
 
 async function checkTabCreate(tab) {
-	await checkWindow(tab.windowId);
+	checkWindowDebounced(tab.windowId);
 }
 
 async function checkTabUpdate(tabid, changeinfo, tab) {
-	await checkWindow(tab.windowId);
+	checkWindowDebounced(tab.windowId);
 }
 
 async function checkTabRemove(tabid, removeinfo) {
 	if (removeinfo.isWindowClosing) return;
-	await checkWindow(removeinfo.windowId);
+	checkWindowDebounced(removeinfo.windowId);
 }
 
 async function checkTabDetached(tabid, detachinfo) {
-	await checkWindow(detachinfo.oldWindowId);
+	checkWindowDebounced(detachinfo.oldWindowId);
 }
 
 async function checkTabAttached(tabid, attachinfo) {
-	await checkWindow(attachinfo.newWindowId);
+	checkWindowDebounced(attachinfo.newWindowId);
 }
 
 async function checkTabMoved(tabid, moveinfo) {
-	await checkWindow(moveinfo.windowId);
+	checkWindowDebounced(moveinfo.windowId);
 }

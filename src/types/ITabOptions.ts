@@ -1,46 +1,24 @@
-﻿import * as React from "react";
+import {ISavedSession} from "./ISavedSession";
+import {Theme} from "../helpers/theme";
 
 export interface ITabOptions {
 	animations: boolean,
 	badge: boolean,
 	compact: boolean,
-	dark: boolean,
+	theme: Theme,
 	hideWindows: boolean,
 	openInOwnTab: boolean,
 	sessionsFeature: boolean,
+	supportLinks: boolean,
 	tabHeight: number,
 	tabLimit: number,
 	tabWidth: number,
 	tabactions: boolean,
 	windowTitles: boolean,
-
-	tabLimitText: () => void,
-	changeTabLimit: (e: React.ChangeEvent<HTMLInputElement>) => void,
-	tabWidthText: () => void,
-	changeTabWidth: (e: React.ChangeEvent<HTMLInputElement>) => void,
-	tabHeightText: () => void,
-	changeTabHeight: (e: React.ChangeEvent<HTMLInputElement>) => void,
-	darkText: () => void,
-	toggleDark: () => void,
-	compactText: () => void,
-	toggleCompact: () => void,
-	animationsText: () => void,
-	toggleAnimations: () => void,
-	windowTitlesText: () => void,
-	toggleWindowTitles: () => void,
-	sessionsText: () => void,
-	toggleSessions: () => void,
-	exportSessionsText: () => void,
-	exportSessions: () => void,
-	importSessionsText: () => void,
-	importSessions: (e: React.ChangeEvent<HTMLInputElement>) => void,
-	badgeText: () => void,
-	toggleBadge: () => void,
-	openInOwnTabText: () => void,
-	toggleOpenInOwnTab: () => void,
-	hideText: () => void,
-	toggleHide: () => void,
-	tabActionsText: () => void,
-	toggleTabActions: () => void
-	getTip: () => string
+	sessions: ISavedSession[],
+	// the open windows and tabs, for the debug export's note
+	windowCount: number,
+	tabCount: number,
+	// closes the options (the header options button's function); absent on the standalone options page (options.html), which has no tabs to go back to
+	onBack?: () => void
 }

@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<!-- One store image, driven by shots.json. URL: shot.html?shot=<id>&style=<A|B>[&ring=<px>]
+     The popup is the real 7.0 popup (/app/popup.html, built by build-app.mjs, running on the fake browser).
+     window.ready() resolves once the popup is loaded AND the state of the shot has been applied (README.md lists the keys of a shot). -->
+<link rel="stylesheet" href="/app/font.css">
+<style>
+	:root { --W: 1280px; --H: 800px; }
+	html, body { margin: 0; width: var(--W); height: var(--H); overflow: hidden; }
+	body { font-family: "interfont", system-ui, sans-serif; position: relative; -webkit-font-smoothing: antialiased; }
+
+	/* ---- style A: brag (dark navy, same family as the video) */
+	body.A { background: #0e1124; color: #fff; }
+	body.A #bg { background:
+		radial-gradient(55% 65% at 62% 108%, rgba(155, 123, 212, 0.40), transparent 70%),
+		radial-gradient(45% 55% at 8% -12%, rgba(98, 149, 212, 0.28), transparent 70%),
+		linear-gradient(180deg, #11142a, #0c0f20); }
+	body.A .accent { color: #c9b5f5; }
+	body.A .sub { color: #c9c3ec; }
+	body.A .card { box-shadow: 0 34px 90px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.10), 0 0 120px rgba(155,123,212,0.22); }
+	body.A .pill { background: rgba(155,123,212,0.22); color: #e2d6ff; border: 1px solid rgba(201,181,245,0.45); }
+
+	/* ---- style B: clean light */
+	body.B { background: #f4f3f8; color: #1b1d3a; }
+	body.B #bg { background:
+		radial-gradient(60% 70% at 85% 110%, rgba(155, 123, 212, 0.16), transparent 70%),
+		radial-gradient(50% 60% at 0% -10%, rgba(98, 149, 212, 0.14), transparent 70%),
+		linear-gradient(160deg, #fbfbfd, #eceaf3); }
+	body.B .accent { color: #7650c0; }
+	body.B .sub { color: #5a5d7a; }
+	body.B .card { box-shadow: 0 28px 70px rgba(40,30,90,0.18), 0 6px 18px rgba(40,30,90,0.10), 0 0 0 1px rgba(27,29,58,0.08); }
+	body.B .pill { background: #ece4fb; color: #5b3aa3; border: 1px solid #d6c7f3; }
+	body.B .key { background: #fff; box-shadow: 0 6px 0 #cfc5ea, 0 12px 26px rgba(40,30,90,0.18); }
+
+	#bg { position: absolute; inset: 0; }
+
+	/* headline block, top-left inside 48 px margins */
+	#head { position: absolute; left: 48px; top: 46px; right: 48px; }
+	body.centered #head { text-align: center; }
+	body.centered #title { justify-content: center; }
+	#title { font-size: 46px; font-weight: 700; letter-spacing: -0.8px; line-height: 1.08; display: flex; align-items: center; gap: 16px; }
+	.sub { font-size: 21px; margin-top: 10px; line-height: 1.3; }
+	.pill { font-size: 15px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase; padding: 6px 12px; border-radius: 999px; }
+
+	/* the real popup as a card; iframe at its natural popup size, scaled up */
+	.card { position: absolute; border-radius: 16px; overflow: hidden; background: #fff; }
+	.card iframe { border: 0; display: block; transform-origin: 0 0; }
+
+	/* keycaps (shot 6) */
+	.keys { position: absolute; display: flex; align-items: center; gap: 12px; }
+	.keys .plus { font-size: 26px; font-weight: 700; opacity: 0.55; }
+	.key { height: 58px; min-width: 58px; padding: 0 18px; box-sizing: border-box; border-radius: 12px; background: #f4f2ff; color: #1b1d3a;
+		font-size: 25px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+		box-shadow: 0 6px 0 #b3a9dd, 0 14px 30px rgba(0,0,0,0.45); }
+
+	/* shot 2 callout */
+	.ring { position: absolute; box-sizing: border-box; border-radius: 12px; border: 3px solid #9b7bd4; box-shadow: 0 0 0 6px rgba(155,123,212,0.22), 0 0 28px rgba(155,123,212,0.45); pointer-events: none; }
+	.tag { position: absolute; white-space: nowrap; font-size: 18px; font-weight: 700; color: #fff; background: #7650c0; padding: 8px 14px; border-radius: 10px;
+		box-shadow: 0 8px 20px rgba(60,30,120,0.28); }
+	.tag::after { content: ""; position: absolute; left: 50%; bottom: -7px; margin-left: -7px; border: 7px solid transparent; border-bottom: 0; border-top-color: #7650c0; }
+
+	/* shot 9: key caps beside the card */
+	.keypanel { position: absolute; display: flex; flex-direction: column; justify-content: center; gap: 34px; }
+	.keypanel .krow { display: flex; flex-direction: column; align-items: flex-start; gap: 14px; }
+	.keypanel .kcaps { display: flex; gap: 10px; }
+	.keypanel .key { height: 54px; min-width: 54px; padding: 0 16px; font-size: 24px; }
+	.keypanel .klabel { font-size: 21px; font-weight: 600; color: #5a5d7a; }
+
+	.tagline { position: absolute; width: 2px; background: #7650c0; border-radius: 1px; pointer-events: none; }
+	.tag.below::after { bottom: auto; top: -7px; border: 7px solid transparent; border-top: 0; border-bottom-color: #7650c0; }
+	#title.twoLine { display: block; font-size: 42px; line-height: 1.12; }
+
+	/* shot 0 hero */
+	.hero { position: absolute; left: 48px; width: 400px; top: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 26px; }
+	.hero img { filter: drop-shadow(0 16px 30px rgba(40,30,90,0.22)); }
+	.hero .hint { font-size: 19px; color: #6a6d88; }
+	.hero .name { font-size: 44px; font-weight: 700; letter-spacing: -0.8px; color: #1b1d3a; white-space: nowrap; }
+
+	/* shot 7: dark cards on the light backdrop get a firmer edge and shadow */
+	body.B .card.darkcard { box-shadow: 0 26px 60px rgba(20,15,50,0.30), 0 6px 16px rgba(20,15,50,0.18), 0 0 0 1px rgba(20,22,40,0.55); }
+	/* shot 7 captions */
+	.label { position: absolute; font-size: 18px; line-height: 22px; font-weight: 700; letter-spacing: 0.2px; }
+	body.B .label { color: #5b3aa3; }
+	body.A .label { color: #c9b5f5; }
+
+	/* style B promo tiles */
+	.brand.promoB { position: absolute; inset: 0; flex-direction: row; align-items: center; }
+	.brand.promoB .name { color: #1b1d3a; }
+	.brand.promoB .line { color: #5a5d7a; }
+	.brand.promoB.marquee { padding-left: 48px; gap: 34px; }
+	.brand.promoB.marquee img { filter: drop-shadow(0 16px 30px rgba(40,30,90,0.20)); }
+	.brand.promoB.marquee .name { font-size: 60px; line-height: 1.05; letter-spacing: -1.2px; white-space: nowrap; }
+	.brand.promoB.marquee .line { font-size: 28px; margin-top: 14px; }
+	.brand.promoB.small { padding-left: 40px; gap: 26px; }
+	.brand.promoB.small img { filter: drop-shadow(0 10px 20px rgba(40,30,90,0.20)); }
+	.brand.promoB.small .name { font-size: 34px; line-height: 1.05; letter-spacing: -0.6px; }
+	.brand.promoB.small .line { font-size: 18px; margin-top: 12px; line-height: 1.3; }
+
+	/* promo tiles */
+	.brand { position: absolute; display: flex; flex-direction: column; }
+	.brand .row { display: flex; align-items: center; }
+	.brand img { filter: drop-shadow(0 10px 24px rgba(0,0,0,0.45)); }
+	.brand .name { font-weight: 700; letter-spacing: -0.6px; }
+	.brand .line { color: #c9c3ec; }
+</style>
+</head>
+<body>
+<div id="bg"></div>
+<div id="head"><div id="title"></div><div class="sub" id="sub"></div></div>
+<div id="card" class="card"><iframe id="frame" src="/app/popup.html"></iframe></div>
+
+<script type="module">
+const CFG = await (await fetch("/shots.json", { cache: "no-store" })).json();
+const P = new URLSearchParams(location.search);
+const RING_PAD = +(P.get("ring") || 7);  // callout ring padding around the target, px
+const SHOT = P.get("shot") || "1", STYLE = P.get("style") || "B";
+// a shot's own keys, with the A / B object (if any) merged over them
+const base = CFG.shots.find((s) => s.id === SHOT);
+if (!base) throw new Error("no shot with id " + SHOT + " in shots.json");
+const S = { ...base, ...(base[STYLE] || {}) };
+const [W, H] = S.size;
+document.body.className = STYLE + (STYLE === "B" && !(S.keycaps && S.frame === "card") ? " centered" : "");
+document.documentElement.style.setProperty("--W", W + "px"); document.documentElement.style.setProperty("--H", H + "px");
+const $ = (id) => document.getElementById(id);
+// text markup of shots.json: {accent words}, \n = line break
+const html = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/\{([^}]*)\}/g, '<span class="accent">$1</span>').replace(/\n/g, "<br>");
+
+// ---------------------------------------------------------------- state-driving API
+const frame = $("frame");
+const doc = () => frame.contentDocument;
+const q = (s) => doc().querySelector(s);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const KEYCODE = { Left: 37, Up: 38, Right: 39, Down: 40, Space: 32, Enter: 13, Escape: 27, Tab: 9 };
+const TM = window.TM = {
+	clickRecent(n = 1) { for (let i = 0; i < n; i++) q(".icon.windowaction.recent").click(); },
+	duplicates() { q(".icon.windowaction.duplicates").click(); },
+	search(value) {
+		const el = q(".searchBoxInput");
+		Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value").set.call(el, value);
+		el.dispatchEvent(new Event("input", { bubbles: true }));
+	},
+	// layout: "blocks" | "blocks-big" | "horizontal" | "vertical"; theme: "system" | "light" | "dark". f = another popup iframe (the grid)
+	setting(obj, f = frame) { return f.contentWindow.__fake.storage.local.set(obj); },
+	// Ctrl+click on popup elements (tabs: "#tab-<id>", ids count 1..23 through the windows in shots.json order), as the user selects tabs one by one
+	async ctrlClick(...sels) {
+		for (const sel of sels) {
+			q(sel).dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, button: 0, ctrlKey: true }));
+			await sleep(80);
+		}
+	},
+	// key presses on the tab list, as the root's onKeyDown sees them: the list gets the focus first; names or codes (37-40 arrows, 32 Space, 13 Enter)
+	async keys(...codes) {
+		q(".window-container").focus();
+		for (const code of codes) {
+			const k = KEYCODE[code] ?? code;
+			q("#root").dispatchEvent(new KeyboardEvent("keydown", { bubbles: true, cancelable: true, keyCode: k, which: k }));
+			await sleep(80);
+		}
+	},
+};
+
+// popup natural size and where the card sits
+const POP_W = 640;
+let POP_H = 368;
+const PROMO_B = { cardX: 948, cardVisibleH: 368 };  // whole height, flush with the bottom edge; cropped on the right
+// headline + sub-line end near y 133; two rows of (caption + card) + gap fill y 147..752
+const GRID = { gapX: 28, gapY: 10, cap: 26, top: 147 };
+GRID.scale = ((H - 48 - GRID.top - GRID.gapY) / 2 - GRID.cap) / 368;
+function placeCard(x, y, scale, radius = 16, c = $("card")) {
+	const frame = c.querySelector("iframe");
+	c.style.left = x + "px"; c.style.top = y + "px";
+	c.style.width = Math.round(POP_W * scale) + "px"; c.style.height = Math.round(POP_H * scale) + "px";
+	c.style.borderRadius = radius + "px";
+	frame.style.width = POP_W + "px"; frame.style.height = POP_H + "px";
+	frame.style.transform = `scale(${scale})`;
+}
+function keycaps(parent, x, y, scale = 1) {
+	const k = document.createElement("div");
+	k.className = "keys";
+	k.innerHTML = CFG.keycaps.map((c) => `<div class="key">${html(c)}</div>`).join(`<span class="plus">+</span>`);
+	k.style.left = x + "px"; k.style.top = y + "px";
+	k.style.transform = `scale(${scale})`; k.style.transformOrigin = "0 0";
+	parent.appendChild(k);
+	return k;
+}
+
+// callout(selector in the popup DOM, tag text): accent ring around that popup control, with even padding,
+// and a tag centered above it. Both are drawn in this page, over the card; the popup DOM is untouched.
+// ring false: tag only (shot 9: the popup draws its own cursor ring); below: the tag under the target, arrow up
+// above: a popup selector; the tag sits just above that element's top edge, with a line down to the target
+function callout(sel, text, align = "center", ring = true, below = false, above = null) {
+	const r = q(sel).getBoundingClientRect(), c = $("card").getBoundingClientRect(), s = c.width / POP_W;
+	const x = c.left + s * r.left, y = c.top + s * r.top, w = s * r.width, h = s * r.height;
+	const pad = RING_PAD;
+	if (ring) {
+		const el = document.createElement("div");
+		el.className = "ring";
+		Object.assign(el.style, { left: x - pad + "px", top: y - pad + "px", width: w + 2 * pad + "px", height: h + 2 * pad + "px" });
+		document.body.append(el);
+	}
+	// without a ring the tag sits closer
+	const tag = document.createElement("div");
+	tag.className = "tag" + (below ? " below" : ""); tag.textContent = text;
+	document.body.append(tag);
+	const tw = tag.getBoundingClientRect().width;
+	const left = align === "right" ? x + w - tw : x + w / 2 - tw / 2;
+	let top = below ? y + h + 12 : y - (ring ? 62 : 52);
+	if (above) {
+		const edge = c.top + s * q(above).getBoundingClientRect().top;
+		const th = tag.getBoundingClientRect().height;
+		top = edge - 10 - th;
+		const line = document.createElement("div");
+		line.className = "tagline";
+		Object.assign(line.style, { left: x + w / 2 - 1 + "px", top: top + th + 6 + "px", height: y - 4 - (top + th + 6) + "px" });
+		document.body.append(line);
+	}
+	Object.assign(tag.style, { left: left + "px", top: top + "px" });
+}
+
+// ---------------------------------------------------------------- the frame of the shot
+if (S.saved) frame.src = "/app/popup.html?saved";   // the fake browser then seeds the `saved` windows of shots.json
+const frames = [frame];
+let run = null;   // applied once the popup has loaded
+if (S.frame === "hero") {
+	// no headline: icon + name on the left 40 %, the popup on the right 60 %
+	$("head").remove();
+	const s = 736 / POP_W, h = POP_H * s;
+	placeCard(W - 48 - 736, Math.round((H - h) / 2), s);
+	const b = document.createElement("div");
+	b.className = "hero";
+	b.innerHTML = `<img src="/app/images/browsers.svg" width="210" height="210"><div class="name">${html(S.heroName)}</div>`;
+	document.body.appendChild(b);
+	if (S.keycaps) {
+		const k = keycaps(b, 0, 0, 0.8);
+		k.style.cssText += "position:relative;transform-origin:50% 0;margin-top:6px;margin-bottom:-12px;";
+	}
+	const line = document.createElement("div");
+	line.className = "hint"; line.textContent = S.hint;
+	b.appendChild(line);
+} else if (S.frame === "grid") {
+	// one popup per entry of S.grid, 2×2, each card captioned; a checkerboard of light and dark
+	$("title").innerHTML = html(S.title); $("sub").textContent = S.sub;
+	const s = GRID.scale, cw = POP_W * s, ch = POP_H * s, gx = GRID.gapX, gy = GRID.gapY, cap = GRID.cap;
+	const x0 = Math.round((W - 2 * cw - gx) / 2), y0 = GRID.top;
+	S.grid.forEach(({ layout, caption, theme }, i) => {
+		const x = x0 + (i % 2) * (cw + gx), y = y0 + Math.floor(i / 2) * (ch + cap + gy);
+		let c = $("card");
+		if (i > 0) { c = c.cloneNode(true); c.id = ""; c.querySelector("iframe").id = ""; document.body.appendChild(c); frames.push(c.querySelector("iframe")); }
+		c.dataset.layout = layout; c.dataset.theme = theme;
+		if (theme === "dark") c.classList.add("darkcard");
+		placeCard(Math.round(x), Math.round(y + cap), s, 12, c);
+		const l = document.createElement("div");
+		l.className = "label"; l.textContent = caption;
+		Object.assign(l.style, { left: Math.round(x) + 2 + "px", top: Math.round(y) + "px" });
+		document.body.appendChild(l);
+	});
+	// layout first, theme a beat later (setting both at once drops one); an explicit theme overrides the light system pin
+	run = async () => {
+		for (const f of frames) await TM.setting({ layout: f.parentNode.dataset.layout }, f);
+		await sleep(600);
+		for (const f of frames) await TM.setting({ theme: f.parentNode.dataset.theme }, f);
+	};
+} else if (S.frame === "card" || S.frame === "side") {
+	// headline block 40..~150, the card fills the rest inside 48 px margins
+	$("title").innerHTML = html(S.title) + (S.pill ? ` <span class="pill">${html(S.pill)}</span>` : "");
+	$("sub").textContent = S.sub || "";
+	if (S.twoLine) $("title").classList.add("twoLine");
+	if (S.popH) POP_H = S.popH;
+	const top = 166, bottom = H - 48, scale = (bottom - top) / POP_H;
+	placeCard(Math.round((W - POP_W * scale) / 2), top, scale);
+	if (S.frame === "side") {
+		// a smaller card on the left, the keys it talks about drawn on the right
+		const s2 = 1.3, cw = POP_W * s2, ch = POP_H * s2;
+		placeCard(48, Math.round(166 + (H - 48 - 166 - ch) / 2), s2);
+		const panel = document.createElement("div");
+		panel.className = "keypanel";
+		panel.innerHTML = S.keypanel.map(({ caps, label }) =>
+			`<div class="krow"><div class="kcaps">${caps.map((c) => `<div class="key">${html(c)}</div>`).join("")}</div><div class="klabel">${html(label)}</div></div>`).join("");
+		Object.assign(panel.style, { left: 48 + cw + 40 + "px", top: 166 + "px", width: W - 48 - cw - 40 - 48 + "px", height: H - 48 - 166 + "px" });
+		document.body.appendChild(panel);
+	}
+	if (S.keycaps) {
+		// keycaps on the right of the headline row
+		const k = keycaps(document.body, 0, 0, 0.92);
+		requestAnimationFrame(() => { k.style.left = (W - 48 - k.getBoundingClientRect().width) + "px"; k.style.top = "52px"; });
+		$("head").style.right = "520px";
+	}
+} else if (S.frame === "tile" && STYLE === "B") {
+	// style B tiles: new logo (logo2.svg, hand-vectorized from tabmanagerlogo2.png; the small 1x tile uses the 128 px PNG 1:1), no popup on the small one
+	$("head").remove();
+	const big = W === 1400;
+	const b = document.createElement("div");
+	b.className = "brand promoB " + (big ? "marquee" : "small");
+	const logo = big || devicePixelRatio > 1 ? "/logo2.svg" : "/logo2.png";
+	if (big) {
+		// the overview popup peeks in from the right edge, bottom-aligned, cropped by the tile; no clock click here
+		placeCard(PROMO_B.cardX, H - PROMO_B.cardVisibleH, 1, 14);
+		b.innerHTML = `<img src="${logo}" width="300" height="300"><div class="text"><div class="name">${html(S.name)}</div><div class="line">${html(S.line)}</div></div>`;
+		document.body.appendChild(b);
+		if (S.keycaps) keycaps(b.querySelector(".text"), 0, 0, 0.78).style.cssText += "position:relative;margin-top:26px;";
+	} else {
+		$("card").remove(); frames.length = 0;
+		b.innerHTML = `<img src="${logo}" width="128" height="128"><div class="text"><div class="name">${html(S.name)}</div><div class="line">${html(S.line)}</div></div>`;
+		document.body.appendChild(b);
+	}
+} else if (S.frame === "tile") {
+	// style A tiles: icon + name + line, the popup (clock clicked) peeking in
+	$("head").remove();
+	const big = W === 1400;
+	const b = document.createElement("div");
+	b.className = "brand";
+	if (big) {
+		const s = 704 / POP_W; placeCard(W - 56 - 704, Math.round((H - POP_H * s) / 2), s, 14);
+		b.style.left = "72px"; b.style.top = "128px";
+		b.innerHTML = `<div class="row" style="gap:22px"><img src="/app/images/browsers128.png" width="104" height="104">
+			<div class="name" style="font-size:52px;line-height:1.05">${html(S.name)}</div></div>
+			<div class="line" style="font-size:26px;margin-top:30px;line-height:1.35">${html(S.line)}</div>`;
+		document.body.appendChild(b);
+		if (S.keycaps) keycaps(b, 0, 0, 0.7).style.cssText += "position:relative;margin-top:30px;";
+	} else {
+		// the popup peeks in from the bottom-right
+		placeCard(196, 128, 0.62, 10);
+		b.style.left = "26px"; b.style.top = "24px";
+		b.innerHTML = `<div class="row" style="gap:12px"><img src="/app/images/browsers128.png" width="56" height="56">
+			<div class="name" style="font-size:30px;line-height:1.05">${html(S.name)}</div></div>
+			<div class="line" style="font-size:16px;margin-top:14px;line-height:1.3;width:160px">${html(S.line)}</div>`;
+		document.body.appendChild(b);
+	}
+} else throw new Error("shot " + SHOT + ": unknown frame " + S.frame);
+
+// the declarative state of a shot, in the order a person would do it: layout, theme, recent clock, duplicates, search, selection, keys, own script
+if (!run && !(S.frame === "tile" && STYLE === "B")) run = async () => {
+	if (S.layout) { await TM.setting({ layout: S.layout }); await sleep(600); }   // layout and theme about 0.5 s apart; both at once only applies one
+	if (S.theme) await TM.setting({ theme: S.theme });
+	if (S.recent) TM.clickRecent(S.recent);
+	if (S.duplicates) TM.duplicates();
+	if (S.query) TM.search(S.query);
+	if (S.selections) await TM.ctrlClick(...S.selections);
+	if (S.keys) await TM.keys(...S.keys);
+	// escape hatch for a step the keys above cannot say: async function body with TM, q, sleep, frame, S in scope
+	if (S.script) await new (Object.getPrototypeOf(async () => {}).constructor)("TM", "q", "sleep", "frame", "S", S.script)(TM, q, sleep, frame, S);
+};
+
+window.ready = () => new Promise((resolve) => {
+	const check = async () => {
+		const loaded = (f) => { const d = f.contentDocument; return d && d.querySelector(".searchBoxInput") && d.querySelectorAll(".window").length >= 3; };
+		if (frames.every(loaded) && document.fonts.status === "loaded") {
+			if (run) await run();
+			// let React settle and any transitions finish
+			await sleep(900);
+			for (const c of S.callouts || []) callout(c.selector, c.text, c.align, c.ring !== false, c.below, c.above);
+			requestAnimationFrame(() => requestAnimationFrame(() => resolve(true)));
+		} else setTimeout(check, 50);
+	};
+	check();
+});
+</script>
+</body>
+</html>

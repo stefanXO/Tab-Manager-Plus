@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<!-- Promo tiles, style "three windows". URL: tile-windows.html?tile=<small|marquee>
+     Backdrop = three large rounded "window" panels in the popup's own light window colours
+     (app/css/popup.css: --win-9 #d0eaff blue (Work), --win-1 #ffdad6 pink (Life), --win-6 #cff3d5 green (Research)).
+     Panels are opaque and stacked like the logo's windows (no blending), so overlaps stay clean.
+     window.ready() resolves once fonts (and on the marquee the real popup with 3 windows) are loaded. -->
+<link rel="stylesheet" href="/app/font.css">
+<style>
+	:root {
+		--W: 1400px; --H: 560px;
+		--bg: #f8f7fc;
+		--blue: #d0eaff;  --blue-bar: #bcdcf8;  --blue-edge: #a9cdf0;
+		--pink: #ffdad6;  --pink-bar: #fbc8c2;  --pink-edge: #f3b5ae;
+		--green: #cff3d5; --green-bar: #b9e9c2; --green-edge: #a3dcaf;
+		--ink: #1b1d3a; --sub: #4f5272; --accent: #9b7bd4;
+	}
+	html, body { margin: 0; width: var(--W); height: var(--H); overflow: hidden; }
+	body { font-family: "interfont", system-ui, sans-serif; position: relative; -webkit-font-smoothing: antialiased; background: var(--bg); color: var(--ink); }
+
+	/* ---- the three window panels */
+	.pane { position: absolute; border-radius: 44px; border: 3px solid; box-sizing: border-box; overflow: hidden;
+		box-shadow: 0 24px 60px rgba(40,30,90,0.10), 0 4px 12px rgba(40,30,90,0.05); transform-origin: 50% 50%; }
+	.pane::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: var(--bar, 54px); background: var(--barc); }
+	.pane i { position: absolute; top: calc(var(--bar, 54px) / 2 - var(--dot, 9px)); width: calc(var(--dot, 9px) * 2); height: calc(var(--dot, 9px) * 2);
+		border-radius: 50%; background: rgba(255,255,255,0.85); }
+	.pane.blue  { background: var(--blue);  border-color: var(--blue-edge);  --barc: var(--blue-bar); }
+	.pane.pink  { background: var(--pink);  border-color: var(--pink-edge);  --barc: var(--pink-bar); }
+	.pane.green { background: var(--green); border-color: var(--green-edge); --barc: var(--green-bar); }
+
+	/* ---- brand */
+	.brand { position: absolute; display: flex; align-items: center; }
+	.brand .name { font-weight: 700; color: var(--ink); white-space: nowrap; }
+	.brand .line { color: var(--sub); font-weight: 500; }
+	.brand .accent { color: var(--accent); font-weight: 700; }
+
+	body.marquee .brand { left: 48px; top: 0; bottom: 0; gap: 34px; }
+	body.marquee .brand img { filter: drop-shadow(0 16px 26px rgba(40,30,90,0.22)); }
+	body.marquee .name { font-size: 62px; line-height: 1.05; letter-spacing: -1.3px; }
+	body.marquee .line { font-size: 30px; margin-top: 16px; }
+
+	body.small .brand { left: 40px; top: 0; bottom: 0; gap: 22px; }
+	body.small .brand img { filter: drop-shadow(0 8px 16px rgba(40,30,90,0.22)); }
+	body.small .name { font-size: 32px; line-height: 1.05; letter-spacing: -0.6px; }
+	body.small .line { font-size: 18px; margin-top: 12px; line-height: 1.3; }
+
+
+	/* the real popup as a card */
+	.card { position: absolute; overflow: hidden; background: #fff;
+		box-shadow: 0 28px 70px rgba(40,30,90,0.20), 0 6px 18px rgba(40,30,90,0.10), 0 0 0 1px rgba(27,29,58,0.08); }
+	.card iframe { border: 0; display: block; transform-origin: 0 0; }
+</style>
+</head>
+<body>
+<script>
+const TILE = new URLSearchParams(location.search).get("tile") || "marquee";
+const big = TILE === "marquee";
+document.body.className = TILE;
+const root = document.documentElement.style;
+root.setProperty("--W", big ? "1400px" : "440px"); root.setProperty("--H", big ? "560px" : "280px");
+
+// pane(colour, x, y, w, h, deg, opts): a big rounded window with a title bar and three dots
+function pane(c, x, y, w, h, deg, o = {}) {
+	const p = document.createElement("div");
+	p.className = "pane " + c;
+	Object.assign(p.style, { left: x + "px", top: y + "px", width: w + "px", height: h + "px", transform: `rotate(${deg}deg)` });
+	if (o.r) p.style.borderRadius = o.r + "px";
+	if (o.bw) p.style.borderWidth = o.bw + "px";
+	if (o.bar) p.style.setProperty("--bar", o.bar + "px");
+	if (o.dot) p.style.setProperty("--dot", o.dot + "px");
+	const bar = o.bar || 54, dot = o.dot || 9;
+	for (let k = 0; k < 3; k++) { const i = document.createElement("i"); i.style.right = (bar * 0.55 + k * dot * 3.2) + "px"; p.appendChild(i); }
+	document.body.appendChild(p);
+	return p;
+}
+
+const frames = [];
+if (big) {
+	// back to front: green (right, behind the popup), pink (middle), blue (left, behind the logo)
+	pane("green", 790, 46, 560, 640, -5);
+	pane("pink", 330, 404, 590, 360, -5);
+	pane("blue", -130, 34, 480, 640, -5);
+
+	const b = document.createElement("div");
+	b.className = "brand";
+	b.innerHTML = `<img src="/logo2.svg" width="300" height="300">
+		<div class="text"><div class="name">Tab Manager Plus</div><div class="line">Every window. <span class="accent">One view.</span></div></div>`;
+	document.body.appendChild(b);
+
+	// real popup peeking in from the right edge, full height, flush with the bottom (as out/B marquee)
+	const POP_W = 640, POP_H = 368;
+	const c = document.createElement("div");
+	c.className = "card";
+	Object.assign(c.style, { left: "948px", top: (560 - POP_H) + "px", width: POP_W + "px", height: POP_H + "px", borderRadius: "14px" });
+	c.innerHTML = `<iframe src="/app/popup.html" style="width:${POP_W}px;height:${POP_H}px"></iframe>`;
+	document.body.appendChild(c);
+	frames.push(c.querySelector("iframe"));
+} else {
+	pane("green", 318, -128, 190, 200, -6, { r: 22, bw: 2, bar: 24, dot: 4 });
+	pane("pink", 206, 222, 222, 200, -6, { r: 22, bw: 2, bar: 24, dot: 4 });
+	pane("blue", -64, 26, 210, 300, -6, { r: 22, bw: 2, bar: 24, dot: 4 });
+
+	const b = document.createElement("div");
+	b.className = "brand";
+	const logo = devicePixelRatio > 1 ? "/logo2.svg" : "/logo2.png";
+	b.innerHTML = `<img src="${logo}" width="128" height="128">
+		<div class="text"><div class="name">Tab Manager<br>Plus</div><div class="line">Every window.<br><span class="accent">One view.</span></div></div>`;
+	document.body.appendChild(b);
+}
+
+window.ready = () => new Promise((resolve) => {
+	const check = async () => {
+		const loaded = (f) => { const d = f.contentDocument; return d && d.querySelector(".searchBoxInput") && d.querySelectorAll(".window").length >= 3; };
+		const imgs = [...document.images].every((i) => i.complete);
+		if (frames.every(loaded) && imgs && document.fonts.status === "loaded") {
+			await new Promise((r) => setTimeout(r, frames.length ? 900 : 100));
+			requestAnimationFrame(() => requestAnimationFrame(() => resolve(true)));
+		} else setTimeout(check, 50);
+	};
+	check();
+});
+</script>
+</body>
+</html>

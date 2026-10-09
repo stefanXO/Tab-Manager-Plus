@@ -1,0 +1,218 @@
+/* The user guide (documentation.html). It reuses the changelog page's shell
+   (.optionsBox, components/changelog.css: link chips, inline code, the
+   .only-chrome / .only-firefox rule) and the hover card's key caps
+   (.stats-keys kbd, components/stats.css). This adds a wider box for the
+   example tables, the tables and the caps inside running text. Its theme comes
+   from src/popup/documentation.ts, the colours are tokens. */
+
+/* wider than the options' 500px: a table has an example and its meaning side by side */
+.doc .optionsBox {
+	width: 720px;
+}
+
+/* the links at the top: What's new, Options, GitHub */
+.doc-nav {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem 1rem;
+	align-items: center;
+}
+
+/* the contents: one line of short links that wraps */
+.doc-toc {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.2rem 1rem;
+	margin: 0.4rem 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+/* an example table: the example (or key, or button) left, what it does right */
+.doc-table {
+	width: 100%;
+	margin: 0.6rem 0 0.8rem;
+	border-collapse: collapse;
+	font-size: 0.9em;
+}
+.doc-table th {
+	padding: 0.3rem 0.5rem;
+	border-bottom: 1px solid var(--rule-strong);
+	font-weight: 600;
+	text-align: left;
+	color: var(--text-subtle);
+}
+.doc-table td {
+	padding: 0.35rem 0.5rem;
+	border-bottom: 1px solid var(--rule);
+	vertical-align: top;
+	line-height: 1.45;
+}
+.doc-table td:first-child {
+	width: 34%;
+	overflow-wrap: anywhere;
+}
+.doc-table code {
+	white-space: nowrap;
+}
+/* the hover card's caps in running text: no gap before them, a little larger
+   than in the card, kept on one line */
+.doc .stats-keys {
+	display: inline-flex;
+	margin: 0 0.1em;
+	vertical-align: 0.05em;
+	white-space: nowrap;
+}
+.doc .stats-keys kbd {
+	font-size: 0.8rem;
+	line-height: 1.35;
+}
+
+/* the popup's own button icons (the same classes as in the popup: .icon +
+   .windowaction / .tabaction + the action, images from icons.css). Here they
+   are a picture, not a button: never floated or placed like the header's, no
+   hover state. In the popup a .windowaction is a framed tile and a .tabaction
+   a bare image; here every one is the same framed tile of the same size, so
+   all the icons look alike. */
+.doc .optionsBox .icon {
+	display: block;
+	flex: none;
+	float: none;
+	position: static;
+	box-sizing: border-box;
+	width: 1.25rem;
+	height: 1.25rem;
+	margin: 0;
+	padding: 0;
+	border: 1px solid var(--tile-border);
+	border-radius: 3px;
+	background-color: var(--tile-bg);
+	background-size: 0.9rem 0.9rem;
+	background-position: center;
+	pointer-events: none;
+}
+
+/* an icon and its name as one item. In a table: the icon in a fixed square
+   at the top of the cell, the name next to it, so the names start in one
+   column and a name that wraps stays beside its icon. In a sentence: the icon
+   sits centred on the text's line (a word joiner after it in the page keeps
+   it with the first word of the name) and the name wraps like any text. */
+.doc-btn {
+	display: inline-flex;
+	align-items: flex-start;
+	gap: 0.45em;
+}
+.doc-table .doc-btn .icon {
+	margin-top: 0.05em;
+}
+p .doc-btn, li .doc-btn {
+	display: inline;
+}
+.doc .optionsBox p .icon, .doc .optionsBox li .icon {
+	display: inline-block;
+	margin: 0 0.35em 0 0.1em;
+	vertical-align: -0.3em;
+}
+
+/* the list items are full sentences: a little air between them */
+.doc .optionsBox li + li {
+	margin-top: 0.3rem;
+}
+.doc .optionsBox .doc-toc li + li {
+	margin-top: 0;
+}
+/* a button's name reads as one term */
+.doc .doc-name {
+	font-weight: 600;
+}
+
+/* the key column: the keys, and under them the keys on a Mac, marked "Mac" */
+.doc-keys {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
+	gap: 0.3rem;
+}
+.doc-key-line {
+	display: inline-flex;
+	flex-wrap: nowrap;
+	white-space: nowrap;
+	align-items: center;
+	gap: 0.25rem;
+}
+.doc-key-line .stats-keys {
+	margin: 0;
+}
+.doc-mac small {
+	margin-left: 0.2rem;
+	font-size: 0.75em;
+	font-weight: 600;
+	letter-spacing: 0.03em;
+	color: var(--text-subtle);
+}
+
+/* narrow (the sidebar, a narrow popup): the example column takes less.
+   From 100px, as the queries in layout/narrow.css: this file is part of the
+   popup's stylesheet too, and Chrome lays an action popup out at 25px wide
+   first on every frame that changes anything. A plain max-width query matched
+   there and not at the popup's width, so every hover restyled the whole popup
+   twice (150 ms+ per frame with ~150 tabs and 17 saved windows) */
+@media (min-width: 100px) and (max-width: 540px) {
+	.doc-table td:first-child {
+		width: 40%;
+	}
+	.doc-table td, .doc-table th {
+		padding: 0.3rem 0.3rem;
+	}
+	.doc-table code {
+		white-space: normal;
+		overflow-wrap: anywhere;
+	}
+}
+
+/* wide (a tab of its own): the first column only as wide as its longest
+   entry, so the meaning column gets the room and its key caps stay on one
+   line. Narrower pages (the popup, the sidebar) keep the share above. */
+@media (min-width: 900px) {
+	.doc-table td:first-child {
+		width: 1%;
+		white-space: nowrap;
+		padding-right: 1.5rem;
+	}
+}
+
+/* the mouse glyphs (the <symbol>s at the top of documentation.html): a click
+   drawn as a key cap, so "Ctrl + click" reads as two caps. The same border,
+   colour and height as .doc .stats-keys kbd (0.8rem x 1.35 line + 1px top +
+   2px bottom); inside, the 12x16 glyph at 1rem = 16px, one pixel a unit, with
+   no air around the mouse. The pressed half (or the wheel) in the key cursor
+   ring colour, the rest of the mouse white, in the dark theme the cap colour.
+   The word follows the glyph in the page; the aria-label names the glyph. */
+.mouse-sprite {
+	position: absolute;
+	width: 0;
+	height: 0;
+	overflow: hidden;
+}
+.doc svg.mouse {
+	--mouse-press: var(--key-cursor);
+	--mouse-body: var(--white);
+	display: inline-block;
+	box-sizing: content-box;
+	width: 0.75rem;
+	height: 1rem;
+	padding: 0.04rem 0.05rem;
+	margin: 0 0.1em;
+	border: 1px solid currentColor;
+	border-bottom-width: 2px;
+	border-radius: 0.25rem;
+	vertical-align: -0.3em;
+	opacity: 0.8;
+	overflow: visible;
+}
+html[data-theme="dark"] .doc svg.mouse {
+	--mouse-body: var(--kbd-bg);
+}
+.doc-key-line svg.mouse {
+	margin: 0;
+}

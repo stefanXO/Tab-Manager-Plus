@@ -1,95 +1,152 @@
 "use strict"
 
-import {getLocalStorage, setLocalStorage} from "@helpers/storage";
 import {Tab} from "@views";
+import {isBlockLayout} from "@helpers/settings";
 import * as React from "react";
+import {maybePluralize} from "@helpers/utils";
 import * as browser from 'webextension-polyfill';
-import {ICommand, ISession, ISessionState} from '@types';
+import {ICommand, ISession} from '@types';
 import * as S from "@strings";
+import {popupScreen} from "@helpers/popup_size";
+import {restoreDisplays} from "../restoreDisplays";
+import {ManagerContext, ITabManagerActions} from '../context';
+import {savedTabKeys} from '../sessionKeys';
+import {refusedText} from '../notices';
+import {savedTileRef} from '../savedTiles';
+import {windowName} from '../windowName';
+import {shownSavedName} from '../sessionEdit';
+import {Icon} from "@icons/Icon";
+import {ICON_FAMILY} from "../icons";
+import {dropSide, isSavedWindowDrag, SAVED_WINDOW_DRAG} from "../sessionOrder";
+import {isSavedTabDrag} from "../savedDrag";
+import {isOpenTabDrag} from "../savedAdd";
+import {readTabDrag} from "../dragPayload";
+import {savedLabel, savedHover} from "../savedUpdated";
+import {tabShow} from "../selectedShown";
+import {actionHelp} from "../actionHelp";
+import {ACTION_BUTTON} from "../buttonKeys";
+
+interface ISessionState {
+	// this card is being dragged (it fades)
+	dragging : boolean;
+	// another card held over this one: the side its drop marker shows on;
+	// "into": saved tabs (or open tabs, copied) held over it (not over a tab),
+	// they would go at its end
+	dropMarker : "" | "left" | "right" | "top" | "bottom" | "into";
+}
 
 export class Session extends React.Component<ISession, ISessionState> {
+	static contextType = ManagerContext;
+	declare context : ITabManagerActions;
+	// the last mouse press on the card was on a tab or an action icon: a drag
+	// from there is not a drag of the card
+	private grabbedPart = false;
 	constructor(props : ISession) {
 		super(props);
-
-		let name = this.props.session.name;
-		let color = this.props.session.color || "default";
-
-		this.state = {
-			name: name,
-			color: color
-		};
-
-		this.stop = this.stop.bind(this);
-		this.windowClick = this.windowClick.bind(this);
-		this.windowTabClick = this.windowTabClick.bind(this);
-		this.close = this.close.bind(this);
-		this.openTab = this.openTab.bind(this);
-		this.maximize = this.maximize.bind(this);
-
+		this.state = { dragging: false, dropMarker: "" };
 	}
 	render() {
-		let _this = this;
+		// straight from the stored window, so a rename or recolour shows at once;
+		// without a custom name, the automatic name as it is made now
+		const name = this.shownName();
+		const color = this.props.session.color || "default";
 		let hideWindow = true;
 		let titleAdded = false;
-		let tabsperrow = this.props.layout.indexOf("blocks") > -1 ? Math.ceil(Math.sqrt(this.props.tabs.length + 2)) : this.props.layout === "vertical" ? 1 : 15;
-		let tabs = this.props.tabs.map(function(tab) {
-			let tabId = tab.id * tab.id * tab.id * 100;
-			let isHidden = _this.props.hiddenTabs.has(tabId) && _this.props.filterTabs;
-			let isSelected = _this.props.selection.has(tabId);
-			tab.id = tab.index;
+		// A saved tab's stored id belonged to an open tab when the window was
+		// saved, and its index is an ordinary open tab id too: in the selection
+		// and hiddenTabs it goes by a key that never clashes with an open tab
+		// (../sessionKeys.ts). Render copies carrying the key, so the stored
+		// session is never changed by rendering; restoring still sends the index.
+		const sessionTabs = this.props.tabs.map((tab) => Object.assign({}, tab, {id: savedTabKeys.key(this.props.session.id, tab.index)}));
+		let tabs = sessionTabs.map((tab) => {
+			// a selected tab is never hidden: it fades like any non-match
+			const show = tabShow(tab.id, this.props.hiddenTabs, this.props.filterTabs, this.props.selection);
+			let isHidden = show === "hidden";
+			let isSelected = this.props.selection.has(tab.id);
+			let isFaded: boolean = show === "faded";
 			if (!isHidden) hideWindow = false;
 			return (
 				<Tab
-					id={"sessiontab_" + _this.props.session.id + "_" + tab.index}
-					key={"sessiontab_" + _this.props.session.id + "_" + tab.index}
-					session={_this.props.session}
-					layout={_this.props.layout}
+					ref={savedTileRef(tab.id) as React.RefObject<Tab>}
+					id={"sessiontab_" + this.props.session.id + "_" + tab.index}
+					key={"sessiontab_" + this.props.session.id + "_" + tab.index}
+					onOpen={this.openTab}
+					session={this.props.session}
+					layout={this.props.layout}
 					tab={tab}
+					tabs={sessionTabs}
 					selected={isSelected}
 					hidden={isHidden}
+					faded={isFaded}
 					draggable={false}
-					click={_this.openTab}
-					middleClick={_this.props.tabMiddleClick}
-					hoverHandler={_this.props.hoverHandler}
-					searchActive={_this.props.searchActive}
-					select={_this.props.select}
-					ref={"sessiontab" + tabId}
+					searchActive={this.props.searchActive}
+					query={this.props.query}
 				/>
 			);
 		});
 		if (!hideWindow) {
 			if (!!this.props.tabactions) {
 				tabs.push(
-					<div key={"sessionnl_" + _this.props.session.id} className="newliner" />,
-					<div key={"sessionwa_" + _this.props.session.id} className="window-actions">
+					<div key={"sessionnl_" + this.props.session.id} className="newliner" />,
+					<div
+						key={"sessionage_" + this.props.session.id}
+						className="window-age"
+						data-hover={savedHover(this.props.session, Date.now())}
+					>
+						{savedLabel(this.props.session, Date.now())}
+					</div>,
+					<div key={"sessionwa_" + this.props.session.id} className="window-actions">
 						<div
-							className={"icon tabaction restore " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-							title={"Restore this saved window\nWill restore " + tabs.length + " tabs. Please note : The tabs will be restored without their history."}
+							className={"icon tabaction restore " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
+							role="button"
+							{...ACTION_BUTTON}
+							aria-label="Restore this saved window"
+							{...actionHelp("Restore this saved window\nWill restore " + maybePluralize(this.props.tabs.length, "tab") + ". Please note : The tabs will be restored without their history.")}
 							onClick={this.windowClick}
-							onMouseEnter={this.props.hoverIcon}
 						/>
 						<div
-							className={"icon tabaction delete " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-							title={"Delete this saved window\nWill delete " + tabs.length + " tabs permanently"}
+							className={"icon tabaction colors " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
+							role="button"
+							{...ACTION_BUTTON}
+							aria-label="Change the name or color of this saved window"
+							{...actionHelp("Change the name or color of this saved window")}
+							onClick={this.openOptions}
+						/>
+						<div
+							className={"icon tabaction delete " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
+							role="button"
+							{...ACTION_BUTTON}
+							aria-label="Delete this saved window"
+							{...actionHelp("Delete this saved window\nWill delete " + maybePluralize(this.props.tabs.length, "tab") + ". Undo is possible for a few seconds")}
 							onClick={this.close}
-							onMouseEnter={this.props.hoverIcon}
 						/>
 					</div>
 				);
 			}
 
 			if (this.props.windowTitles) {
-				if (this.state.name) {
+				if (name) {
 					tabs.unshift(
 						<h3 key={"session-" + this.props.session.id + "-windowTitle"} className="center windowTitle">
-							{this.state.name}
+							{/* The name opens the name / colour screen, as an open window's does.
+							    The saved marker goes inside the name's span, not beside it: the span
+							    is an atomic inline (max-width 100%, ellipsis of its own), and next to
+							    the marker a long name no longer fitted the title bar, so the bar's
+							    own text-overflow dropped the whole span for a bare "..." (which is
+							    not the span: a click on it went to the card and restored the window). */}
+							<span
+								className="editName windowName"
+								dir="auto"
+								onClick={this.openOptions}
+								data-hover="Change the name of this saved window"
+							>
+								{savedMark()}
+								{name}
+							</span>
 						</h3>
 					);
 					titleAdded = true;
 				}
-			}
-			if (tabsperrow < 3) {
-				tabsperrow = 3;
 			}
 			var children = [];
 			if (!!titleAdded) {
@@ -97,13 +154,6 @@ export class Session extends React.Component<ISession, ISessionState> {
 			}
 			for (var j = 0; j < tabs.length; j++) {
 				children.push(tabs[j]);
-				if ((j + 1) % tabsperrow === 0 && j && this.props.layout.indexOf("blocks") > -1) {
-					children.push(<div key={"sessionnl_" + _this.props.session.id + "_" + j} className="newliner" />);
-				}
-			}
-			var focused = false;
-			if (this.props.session.windowsInfo.focused || this.props.lastOpenWindow === this.props.session.windowsInfo.id) {
-				focused = true;
 			}
 			return (
 				<div
@@ -112,82 +162,212 @@ export class Session extends React.Component<ISession, ISessionState> {
 					className={
 						"window " +
 						this.props.session.windowsInfo.state +
-						" " +
-						(focused ? "activeWindow" : "") +
 						" session " +
-						(this.props.layout.indexOf("blocks") > -1 ? "block" : "") +
+						(isBlockLayout(this.props.layout) ? "block" : "") +
 						" " +
 						this.props.layout +
 						" " +
-						this.state.color +
+						color +
 						" " +
 						(this.props.session.windowsInfo.incognito ? " incognito" : "") +
-						" " +
-						(focused ? " focused" : "")
+						(this.state.dragging ? " dragging" : "") +
+						(this.state.dropMarker ? " drop-" + this.state.dropMarker : "")
 					}
 					onClick={this.windowClick}
+					draggable={true}
+					onMouseDown={this.mouseDown}
+					onDragStart={this.dragStart}
+					onDragEnd={this.dragEnd}
+					onDragEnter={this.dragOver}
+					onDragOver={this.dragOver}
+					onDragLeave={this.dragLeave}
+					onDrop={this.drop}
 				>
-					<div className="windowcontainer">{children}</div>
+					{/* data-hover (the header's hover text), not title: a native tooltip
+					would cover the saved window's hover card (../statsHover.ts) */}
+					<div className="windowcontainer" data-hover={"Restore this saved window\nWill restore " + maybePluralize(this.props.tabs.length, "tab") + " in a new window. Click a single tab to restore only that one"}>{children}</div>
 				</div>
 			);
 		} else {
 			return null;
 		}
 	}
+	// the name as the title shows it (./sessionEdit.ts shownSavedName)
+	shownName() : string {
+		return shownSavedName(this.props.session, !!this.props.compact);
+	}
 	shouldComponentUpdate(nextProps, nextState) {
 		//console.log("should update?", nextProps, nextState);
 		return true;
 	}
-	stop(e) {
+	stop = (e) => {
 		e.stopPropagation();
 	}
-	async windowTabClick(e : React.MouseEvent<HTMLDivElement>) {
+	// Reordering (../sessionOrder.ts): the card is dragged by any part that is
+	// not a tab (a tab drags itself, into an open window) or an action icon.
+	mouseDown = (e : React.MouseEvent<HTMLDivElement>) => {
+		this.grabbedPart = !!(e.target as Element).closest?.(".tab, .icon, .window-actions");
+	}
+	dragStart = (e : React.DragEvent<HTMLDivElement>) => {
+		// a saved tab's own drag, on its way up
+		if ((e.target as Element).closest?.(".tab")) return;
+		if (this.grabbedPart || (e.target as Element).closest?.(".icon, .window-actions")) {
+			e.preventDefault();
+			return;
+		}
+		e.stopPropagation();
+		e.dataTransfer.setData(SAVED_WINDOW_DRAG, this.props.session.id);
+		// some text too: Firefox starts no drag without data it knows
+		e.dataTransfer.setData("Text", this.shownName());
+		e.dataTransfer.effectAllowed = "move";
+		this.context.dragSession(this.props.session.id);
+		// faded after the browser took the drag image, so the image is not
+		setTimeout(() => this.setState({ dragging: true }), 0);
+	}
+	dragEnd = () => {
+		this.grabbedPart = false;
+		this.context.dragSession(null);
+		this.setState({ dragging: false, dropMarker: "" });
+	}
+	dragOver = (e : React.DragEvent<HTMLDivElement>) => {
+		if (isSavedTabDrag(e.dataTransfer?.types) || isOpenTabDrag(e.dataTransfer?.types)) {
+			this.savedTabOver(e);
+			return;
+		}
+		if (!isSavedWindowDrag(e.dataTransfer?.types)) return;
+		const card = e.currentTarget;
+		// the cards stand side by side while their grid has more than one column
+		const grid = card.parentElement ? getComputedStyle(card.parentElement).gridTemplateColumns : "none";
+		const across = !!grid && grid !== "none" && grid.trim().split(/\s+/).length > 1;
+		const side = dropSide(card.getBoundingClientRect(), e.clientX, e.clientY, across);
+		const before = side === "before";
+		if (!this.context.sessionDropMoves(this.props.session.id, before)) {
+			if (this.state.dropMarker) this.setState({ dropMarker: "" });
+			// dropped on itself, or where it already is: not allowed
+			e.preventDefault();
+			e.stopPropagation();
+			e.dataTransfer.dropEffect = "none";
+			return;
+		}
+		e.preventDefault();
+		e.stopPropagation();
+		e.dataTransfer.dropEffect = "move";
+		const marker = across ? (before ? "left" : "right") : (before ? "top" : "bottom");
+		if (marker !== this.state.dropMarker) this.setState({ dropMarker: marker });
+	}
+	// Saved tabs (../savedMove.ts) held over the card but not over one of its
+	// tabs (its title, its edge, the gaps): they would go at its end; open tabs
+	// (../savedAdd.ts) too, as copies. Over a tab, the tab shows where they go
+	// (Tab.savedDragOver) and the card shows nothing. Where nothing would go
+	// (nothing changes, or every tab is refused for a reason) the drop is not
+	// allowed: the browser's not-allowed cursor, no marker; a drag that ends
+	// there shows the reason (TabManager.dragDone).
+	savedTabOver(e : React.DragEvent<HTMLDivElement>) {
+		const onTab = !!(e.target as Element).closest?.(".tab");
+		if (onTab) {
+			if (this.state.dropMarker) this.setState({ dropMarker: "" });
+			return;
+		}
+		if (!this.context.savedDropOver(this.props.session.id, undefined, false)) {
+			if (this.state.dropMarker) this.setState({ dropMarker: "" });
+			e.preventDefault();
+			e.stopPropagation();
+			e.dataTransfer.dropEffect = "none";
+			return;
+		}
+		e.preventDefault();
+		e.stopPropagation();
+		e.dataTransfer.dropEffect = isOpenTabDrag(e.dataTransfer.types) ? "copy" : "move";
+		if (this.state.dropMarker !== "into") this.setState({ dropMarker: "into" });
+	}
+	dragLeave = (e : React.DragEvent<HTMLDivElement>) => {
+		// moving onto a part of this card is no leaving
+		if (e.relatedTarget instanceof Node && e.currentTarget.contains(e.relatedTarget)) return;
+		if (this.state.dropMarker) this.setState({ dropMarker: "" });
+	}
+	drop = (e : React.DragEvent<HTMLDivElement>) => {
+		if (isSavedTabDrag(e.dataTransfer?.types) || isOpenTabDrag(e.dataTransfer?.types)) {
+			const into = this.state.dropMarker === "into";
+			this.setState({ dropMarker: "" });
+			// no marker: nothing was allowed here (or it was dropped on a tab, which takes its own)
+			if (!into) return;
+			e.preventDefault();
+			e.stopPropagation();
+			this.context.dropSaved(this.props.session.id, undefined, false, readTabDrag(e.dataTransfer));
+			return;
+		}
+		if (!isSavedWindowDrag(e.dataTransfer?.types)) return;
+		e.preventDefault();
+		e.stopPropagation();
+		const marker = this.state.dropMarker;
+		this.setState({ dropMarker: "" });
+		if (!marker || marker === "into") return;
+		this.context.dropSession(this.props.session.id, marker === "left" || marker === "top");
+	}
+	windowTabClick = async (e : React.MouseEvent<HTMLDivElement>) => {
 		e.stopPropagation();
 	}
-	async windowClick(e : React.MouseEvent<HTMLDivElement>) {
-		this.restoreSession(e, null);
+	windowClick = async (e : React.MouseEvent<HTMLDivElement>) => {
+		await this.restoreSession(e, null);
 	}
-	async openTab(e : React.MouseEvent<HTMLDivElement>, index : number) {
-		this.restoreSession(e, index);
+	openTab = async (e : React.MouseEvent<HTMLDivElement>, index : number) => {
+		await this.restoreSession(e, index);
 	}
 	async restoreSession(e : React.MouseEvent<HTMLDivElement>, tabId : number) {
 		e.stopPropagation();
 
-		await browser.runtime.sendMessage<ICommand>({
-			command: S.create_window_with_session_tabs,
-			session: this.props.session,
-			tab_id: tabId
-		});
-
-		this.props.parentUpdate();
+		// the worker answers with the id of the window it created
+		let windowId : number | undefined;
+		try {
+			windowId = await browser.runtime.sendMessage<ICommand, number | undefined>({
+				command: S.create_window_with_session_tabs,
+				session: this.props.session,
+				tab_id: tabId,
+				// the worker has no screen; this is the display the popup is on
+				screen: popupScreen(),
+				// and the monitors the hover card predicted the landing with
+				displays: await restoreDisplays()
+			});
+		} catch (err) {
+			// the worker did not take it: the popup stays open to say so
+			console.error(err);
+			this.context.showError(refusedText(tabId === null ? "restore the saved window" : "restore the saved tab", err));
+			return;
+		}
+		if (typeof windowId !== "number") {
+			// the worker answered without a window: the browser refused both
+			// windows.create calls. The popup stays open to say so.
+			this.context.showError(tabId === null ? "Could not restore the saved window" : "Could not restore the saved tab");
+			return;
+		}
 
 		if (!!window.inPopup) {
 			window.close();
-		}else{
-			setTimeout(function() {
-				this.props.scrollTo("window", browser.windows.WINDOW_ID_CURRENT);
-			}.bind(this), 500);
+		} else {
+			// give the popup a moment to pick up the new window and render it
+			setTimeout(() => {
+				this.context.scrollTo("window", windowId.toString());
+			}, 500);
 		}
 	}
-	async close(e) {
+	openOptions = (e : React.MouseEvent) => {
 		e.stopPropagation();
-
-		var sessions = await getLocalStorage('sessions', {});
-		delete sessions[this.props.session.id];
-
-		var value = await setLocalStorage('sessions', sessions).catch(function (err) {
-			console.log(err);
-			console.error(err.message);
-		});
-
-		console.log(value);
-		this.props.parentUpdate();
-		// browser.windows.remove(this.props.session.windowsInfo.id);
+		this.context.openSessionOptions(this.props.session.id, windowName(this.props.tabs));
 	}
-	maximize(e) {
+	close = (e) => {
 		e.stopPropagation();
-		// browser.windows.update(this.props.session.windowsInfo.id, {
-		// 	"state": "normal" },
-		// function (a) {this.props.parentUpdate();}.bind(this));
+		// hidden at once; removed from storage when the Undo countdown ends
+		this.context.deleteSession(this.props.session);
 	}
+}
+
+// The "saved" marker in front of a saved window's name: the options screen's
+// Saved windows icon (a stack of windows with the star of Save), so a saved
+// card reads as one at a glance next to the open windows. Nothing when the
+// icon family lacks the icon; the dashed edge (css/components/session.css)
+// still tells the two kinds of card apart.
+function savedMark() : React.ReactNode {
+	const def = ICON_FAMILY.icons["sessions"];
+	if (!def) return null;
+	return <span className="saved-mark" role="img" aria-label="Saved window"><Icon def={def} size={14} /></span>;
 }

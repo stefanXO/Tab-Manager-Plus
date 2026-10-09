@@ -1,0 +1,111 @@
+/* Square action buttons (.icon + an action class): the window card's action
+   row (.windowaction / .tabaction), the header's donate / rate / theme / options, and
+   the bottom bar's toolbar. Each action class's image is in icons.css
+   (generated, see the end of this file); donate keeps its PayPal image here. */
+
+/* sizes and places in the header and the bottom bar: both rows are
+   --bar-button squares --bar-gap apart, --bar-edge from the top, the bottom
+   and the right edge (the tokens are in layout/frame.css), so the header's
+   four line up with the bottom bar's eight or nine. The options' footer
+   buttons (options.css) wear the same look. */
+.window.searchbox .icon {
+	height: var(--bar-button);
+	width: var(--bar-button);
+	margin: var(--bar-edge) 0 var(--bar-edge) var(--bar-gap);
+}
+.window.searchbox td.two {
+	/* not the cell's own 1px: it would grow the row */
+	padding: 0 var(--bar-edge) 0 0;
+}
+/* the header's four, right to left: options, theme, rate, donate. Without
+   donate and rate (supportLinks) theme stays where it is */
+.options.icon, .compact .options.icon,
+.theme.icon, .compact .theme.icon,
+.donate.icon, .compact .donate.icon,
+.rate.icon, .compact .rate.icon {
+	height: var(--bar-button);
+	width: var(--bar-button);
+	margin: 0;
+	padding: 0;
+	position: absolute;
+	top: var(--bar-edge);
+	right: var(--bar-edge);
+}
+.theme.icon, .compact .theme.icon {
+	right: calc(var(--bar-edge) + var(--bar-button) + var(--bar-gap));
+}
+.rate.icon, .compact .rate.icon {
+	right: calc(var(--bar-edge) + 2 * (var(--bar-button) + var(--bar-gap)));
+}
+.donate.icon, .compact .donate.icon {
+	right: calc(var(--bar-edge) + 3 * (var(--bar-button) + var(--bar-gap)));
+}
+
+/* the buttons take the Tab key (src/popup/buttonKeys.ts): a ring for the
+   keyboard only, a mouse click shows none. Drawn outside the square, in the
+   focus color of the options' switches (light and dark in the tokens) */
+.icon[role="button"]:focus-visible {
+	outline: 2px solid var(--focus-ring);
+	outline-offset: 1px;
+}
+
+/* the options footer's buttons (options.css) take the header buttons' look: the
+   same border, radius, background, hover and focus ring as .icon (tab.css),
+   the same --bar-button height; they add the label beside the icon */
+.options-footer-button {
+	box-sizing: border-box;
+	height: var(--bar-button);
+	margin: 0;
+	border: 1px solid var(--tile-border);
+	border-radius: 3px;
+	background-color: var(--tile-bg);
+	color: var(--text);
+	font: inherit;
+	font-size: 0.8rem;
+	cursor: pointer;
+	user-select: none;
+}
+.options-footer-button:hover {
+	background-color: var(--action-hover);
+}
+.options-footer-button:focus-visible {
+	outline: 2px solid var(--focus-ring);
+	outline-offset: 1px;
+}
+
+.windowaction {
+	float: right;
+}
+.windowaction:hover {
+	background-color: var(--hover-mark);
+}
+.tabaction:hover {
+	background-color: var(--action-hover);
+}
+.windowaction + .enabled {
+	background-color: var(--action-hover);
+}
+.save, .restore, .delete, .add, .close, .minimize, .maximize, .colors {
+	background-color: var(--action-bg);
+	border: var(--action-border);
+}
+.add:hover {
+	background-color: var(--action-add-hover);
+}
+.close:hover {
+	background-color: var(--action-close-hover);
+}
+.rate, .theme, .options {
+	float: right;
+}
+/* the one image that is not drawn by the icon set: PayPal's mark */
+.donate {
+	float: right;
+	background-image: url(../images/paypal.png);
+}
+/* Every other image (.icon.save … .icon.filter, the four layout buttons, the
+   filter button's on state and the recent button's clock per level,
+   data-level 0..3: the clock, then more of it filled) is drawn by the icon
+   set in icons.css, generated from src/icons/families/muted.ts by
+   `npm run icons:css`; it follows this file in the same layer, so its images
+   win over anything here. */

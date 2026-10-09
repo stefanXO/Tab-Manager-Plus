@@ -1,0 +1,156 @@
+/* The frame: the page box, the scrolling window container between a fixed
+   header (.window.top) and a fixed bottom bar (.window.searchbox, the search
+   box and the toolbar).
+
+   Popup, own tab and side panel share this frame. The popup's size is set on
+   html/body inline by src/helpers/popup_size.ts; the own tab and the panel
+   fill the viewport (src/popup/popup.tsx). layout/narrow.css adapts it below
+   450px (the Firefox sidebar, a small popup). */
+
+/* the popup's 450px minimum; a narrower viewport (the Firefox sidebar)
+   gets its own width instead, so it never scrolls sideways (a percentage, not
+   a media query: see layout/narrow.css) */
+html, body {
+	min-width: min(450px, 100%);
+	min-height: 400px;
+}
+
+/* The fixed parts of the frame are as wide as the popup: --popup-width, set
+   in px on Chrome's action popup by src/helpers/popup_size.ts, else the
+   viewport. Not 100% there: Chrome lays the popup out at 25px wide first on
+   every frame that changes anything (see layout/narrow.css), and a width
+   that follows the viewport laid every tile out again at 25px and back,
+   twice per hover (40 ms+ with ~280 tiles). At a fixed width that pass
+   leaves them alone. */
+.window-container, .options-container {
+	position: fixed;
+	top: 2.85rem;
+	bottom: var(--bar-height);
+	width: var(--popup-width, 100%);
+	overflow-y: scroll;
+	padding-top: 5px;
+}
+.options-container {
+	overflow: auto;
+	overflow-y: auto;
+}
+
+/* One measure for the header, the bottom bar and the options' footer (they
+   are all a row of --bar-button squares): every button sits --bar-edge from
+   the top, the bottom and the right edge of its bar, --bar-gap from the next
+   one, and the bar is exactly that tall. Text (the header's tab count, the
+   search box) starts on --bar-inset, the cards' left edge. */
+:root {
+	--bar-button: 2rem;
+	--bar-edge: 0.4rem;
+	--bar-gap: 2px;
+	--bar-inset: 0.5rem;
+	--bar-height: calc(var(--bar-button) + 2 * var(--bar-edge));
+}
+
+/* header: the tab count and, under it, the hovered tab's url or a tip */
+.window.top {
+	background-color: var(--surface);
+	box-shadow: var(--shadow-header);
+	padding: 0;
+	margin: 0;
+	position: fixed;
+	border-radius: 0;
+	border: 0;
+	top: 0px;
+	left: 0px;
+	width: var(--popup-width, 100%);
+	/* exactly its two inputs (2 x 1.4rem), so the bar's own edge - and the
+	   dark theme's hairline in --shadow-header - is the visible bottom edge.
+	   At 2.5rem the inputs hung 0.3rem below it: the dark header, whose
+	   inputs are transparent, ended short of the content with its line
+	   hidden 4.8px up. The same height as the bottom bar (--bar-height) */
+	height: var(--bar-height);
+	z-index: 999999;
+}
+/* the text starts on the bars' inset, the cards' left edge, and stops
+   short of the four icons (also in the narrow layout) */
+.window.top input {
+	width: 100%;
+	border: 0;
+	height: 1.4rem;
+	padding-left: var(--bar-inset);
+	padding-right: calc(4 * (var(--bar-button) + var(--bar-gap)) + var(--bar-edge));
+	margin: 0;
+	font-size: 0.9rem;
+	padding-top: 0.25rem;
+	padding-bottom: 0.125rem;
+	background: var(--header-field-bg);
+	border-radius: 0;
+	color: var(--text);
+	/* dir="auto" on both lines: right-to-left text reads right, still left-aligned */
+	text-align: left;
+}
+/* Donate and Rate turned off in the options: only the theme and options buttons */
+.no-supportLinks .window.top input {
+	padding-right: calc(2 * (var(--bar-button) + var(--bar-gap)) + var(--bar-edge));
+}
+.window.top .taburl {
+	width: 100%;
+	border: 0;
+	border-radius: 0;
+	margin: 0;
+	font-size: 0.6rem;
+	padding-top: 0;
+	padding-bottom: 0;
+	color: var(--text-muted);
+}
+
+/* bottom bar: search box and toolbar, see components/search.css and actions.css */
+.window.searchbox {
+	background-color: var(--surface);
+	box-shadow: var(--shadow-footer);
+	padding: 0;
+	margin: 0;
+	position: fixed;
+	bottom: 0px;
+	left: 0px;
+	width: var(--popup-width, 100%);
+	height: var(--bar-height);
+	border-radius: 0;
+}
+
+.infobox {
+	position: fixed;
+	font-weight: bold;
+	font-size: 0.5em;
+	color: var(--info);
+	top: 3px;
+	right: 8px;
+	z-index: 100;
+}
+
+.window-container.blocks-big, .window-container.blocks {
+	padding: 0.5rem 0;
+}
+/* room under the last row while the notices (components/session.css) cover the
+   foot of the list: a row's worth for each (--notice-count, set on #root). The
+   id outranks the per-view paddings above and in view-*.css, which sit in this
+   same layer. */
+#root.notices-showing .window-container {
+	padding-bottom: calc(1.2rem + 2.2rem * var(--notice-count, 1));
+}
+.window-container.vertical {
+	min-height: 0;
+}
+.window-container.vertical > div {
+	min-height: 0;
+	min-width: 0;
+}
+
+.compact .window.top, .compact .window.searchbox {
+	padding: 0;
+	margin: 0;
+}
+
+/* compact mode: tighter card insides. !important, like the per-view paddings
+   in view-*.css it competes with; important declarations rank by layer the
+   other way round, so all of them have to share this layer */
+.compact .windowcontainer {
+	padding: 0.2rem !important;
+}
