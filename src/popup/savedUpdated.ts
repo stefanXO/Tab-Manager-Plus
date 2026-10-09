@@ -56,7 +56,7 @@ export interface SavedTime {
 // The times a card shows: "created 2 days ago" and "last saved 3 hours ago"
 // when they read differently, else only "saved 2 days ago".
 export function savedTimes(s : Dated, now : number) : SavedTime[] {
-	const created = usable(s.date) ? s.date : now;
+	const created = usable(s.date) ? s.date : usable(s.updated) ? s.updated : now;
 	const saved = usable(s.updated) ? s.updated : created;
 	const createdText = ago(created, now);
 	const savedText = ago(saved, now);

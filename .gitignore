@@ -11,6 +11,7 @@ tab-manager*/
 dist/
 .agents/
 .claude/skills/
+.mcp.json
 skills-lock.json
 
 Folder.DotSettings.user

@@ -4,8 +4,9 @@
 // windows and settings, to
 // attach to a bug report. Pure (no browser APIs), so it is unit tested in
 // tests/debugExport.test.ts. Only the fields listed here are copied. Urls
-// lose their "user:password@" part, query string and fragment (exportUrl in ./safeUrl.ts): the file goes to bug
-// reports.
+// of open tabs lose their "user:password@" part, query string and fragment
+// (exportUrl in ./safeUrl.ts): the file goes to bug reports. Saved windows lose
+// only the "user:password@" part, so the file can restore them.
 
 import { windowName } from "./windowName.ts";
 import { exportUrl, stripUserinfo, stripUserinfoDeep } from "./safeUrl.ts";
@@ -120,8 +121,9 @@ export function buildDebugExport(windows: ExportWindowSource[], settings: Record
 }
 
 // The debug export is the session export plus the debug keys: the sessions
-// file reader finds `sessions` in it. Their urls lose them too, so a
-// restore from this file opens them without it.
+// file reader finds `sessions` in it. Their urls lose only the userinfo, not
+// the query or fragment: Import Sessions replaces stored windows by id, so a
+// query-less copy would overwrite the real saved window.
 export function buildEverythingExport(windows: ExportWindowSource[], settings: Record<string, unknown>, meta: DebugMeta, sessions: unknown[]): DebugExport {
-	return { ...buildDebugExport(windows, settings, meta), version: 1, sessions: stripUserinfoDeep(sessions, (v, k) => k === "title" ? stripUserinfo(v) : exportUrl(v)) };
+	return { ...buildDebugExport(windows, settings, meta), version: 1, sessions: stripUserinfoDeep(sessions, (v) => stripUserinfo(v)) };
 }

@@ -103,6 +103,10 @@ describe("lastSaved / savedTimes / savedLabel / savedHover", () => {
 		const s = { date: NOW - 10e3, updated: NOW - 5e3 };
 		assert.deepEqual(savedTimes(s, NOW).map((t) => t.text), ["saved just now"]);
 	});
+	test("no usable date: created falls back to updated, one line", () => {
+		assert.deepEqual(savedTimes({ updated: NOW - 3 * HOUR }, NOW).map((t) => [t.key, t.text]), [["saved", "saved 3 hours ago"]]);
+		assert.deepEqual(savedTimes({}, NOW).map((t) => t.text), ["saved just now"]);
+	});
 	test("an unusable updated is ignored", () => {
 		assert.equal(lastSaved({ date: 5, updated: NaN }), 5);
 		assert.equal(lastSaved({ date: 5, updated: "x" as unknown as number }), 5);

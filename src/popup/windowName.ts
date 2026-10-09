@@ -594,7 +594,7 @@ function isIp(host: string): boolean {
 	return /^\d{1,3}(\.\d{1,3}){3}$/.test(host) || host.startsWith("[") || host.includes(":");
 }
 
-const FORMAT_CHARS = /[​-‏‪-‮⁦-⁩﻿]/g;
+const FORMAT_CHARS = /[‎‏‪-‮⁦-⁩﻿]/g;
 
 function titleSegments(title: string | undefined): string[] {
 	// format characters (bidi controls) would stay live in the window name
