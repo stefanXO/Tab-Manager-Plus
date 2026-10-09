@@ -24,6 +24,7 @@ export const WORKER_ENTRIES = {
 export const APP_ENTRIES = {
 	'popup/early': 'src/popup/early.ts',
 	'popup/changelog': 'src/popup/changelog.ts',
+	'popup/documentation': 'src/popup/documentation.ts',
 	'popup/popup': 'src/popup/popup.tsx',
 	'popup/options': 'src/popup/options.js',
 }

@@ -20,6 +20,7 @@ const targets = [
 	{ file: "manifest.json", kind: "json" },
 	{ file: "readme.md", kind: "marker" },
 	{ file: "changelog.html", kind: "marker" },
+	{ file: "documentation.html", kind: "marker" },
 ];
 
 let failed = false;
