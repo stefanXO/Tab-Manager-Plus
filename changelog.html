@@ -31,6 +31,7 @@
 					<ul>
 						<li class="only-chrome">A short review helps others find it: <a href="https://chrome.google.com/webstore/detail/tab-manager-plus-for-chro/cnkdjjdmfiffagllbiiilooaoofcoeff/reviews" target="_blank" rel="noopener">rate it on the Chrome Web Store</a></li>
 						<li class="only-firefox">A short review helps others find it: <a href="https://addons.mozilla.org/en-US/firefox/addon/tab-manager-plus-for-firefox/reviews/" target="_blank" rel="noopener">rate it on Firefox Add-ons</a></li>
+						<li>New here, or missed a feature? <a href="documentation.html">How to use Tab Manager Plus</a>: searching, the keyboard, windows and saved windows, with examples</li>
 						<li>Something broken or missing? <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues" target="_blank" rel="noopener">Open an issue on GitHub</a>, that is where the work gets planned</li>
 						<li>I made this extension because I need it myself, and I keep it going for the other tab junkies out there. It will never pay for itself, and that is fine. If you want to chip in anyway, small donations cover the running costs (tools, AI, store fees): <a href="https://www.patreon.com/bePatron?u=26287710" target="_blank" rel="noopener">Patreon</a> or <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&amp;hosted_button_id=67TZLSEGYQFFW" target="_blank" rel="noopener">PayPal</a>. A review or a good bug report helps just as much. 🙏</li>
 						<li>To the people emailing about buying the extension or "partnering" for its data: it is not for sale, there is no data, it never leaves your browser. Please buzz off.</li>
@@ -40,350 +41,430 @@
 					<div class="toggle-box">
 					<!-- CHANGELOG -->
 
-						<h3>7.0.0</h3>
+						<h3>7.0.0 <time datetime="2026-10-09" title="2026-10-09"></time></h3>
 						<h4>A Brand New Look!</h4>
 						<figure class="clip"><video muted loop playsinline preload="none" poster="features/7.0.0/look.jpg" aria-label="Layouts, badges, recency bars and the new theme button"><source src="features/7.0.0/look.webm" type="video/webm"></video></figure>
 						<ul>
-							<li>Every layout redesigned: Block view is a grid, List view (was Vertical) shows
-								one tab per line, Rows view (was Horizontal) one window per row
+							<li>Every layout is redesigned, so you can pick the one that fits how you work.
+								Block view is now a grid, List view (was Vertical) shows one tab per line, and
+								Rows view (was Horizontal) shows one window per row
 								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/264" target="_blank" rel="noopener">#264</a>)
 							</li>
-							<li>Dark theme rebuilt with consistent colors; window colors show as a colored edge;
-								scrollbars and controls are dark too; the active tab has a clear outline
+							<li>The dark theme is rebuilt with consistent colors, so scrollbars and controls are
+								dark too instead of flashing white. Window colors show as a colored edge, and
+								the active tab has a clear outline so that you can find it at a glance
 								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/45" target="_blank" rel="noopener">#45</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/67" target="_blank" rel="noopener">#67</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/99" target="_blank" rel="noopener">#99</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/147" target="_blank" rel="noopener">#147</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/151" target="_blank" rel="noopener">#151</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/241" target="_blank" rel="noopener">#241</a>)
 							</li>
-							<li>Theme: System, Light or Dark. System is the new default and follows your
-								operating system's dark mode, also while the popup is open; if you had dark mode
-								on, it stays dark
+							<li>You can pick a theme: System, Light or Dark. System is the new default and
+								follows your computer's dark mode, even while the popup is open, and if you had
+								dark mode on before, it stays dark
 								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/84" target="_blank" rel="noopener">#84</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/182" target="_blank" rel="noopener">#182</a>)
 							</li>
-							<li>A theme button at the top, between Rate and the options: each click switches
-								System, Light, Dark, the same setting as in the options, applied at once; its
-								icon shows the theme (half sun half moon for System, a sun, a moon). It stays
-								when Donate and Rate are turned off</li>
-							<li>New window color palette, with a matching set for the dark theme</li>
-							<li>New icons: every toolbar, window and options icon redrawn, crisp at any zoom in
-								light and dark, with an icon for each setting, a recent-tabs clock whose three
-								steps light up as it reaches further back, and an eye that shows when
-								non-matching tabs are hidden</li>
-							<li>Favicons: white icons stay visible in the light theme, and icons refresh when a tab finishes loading
+							<li>A new theme button sits at the top, between Rate and the options, so you can
+								switch themes without opening the options. Each click moves to the next theme
+								(System, Light, Dark) and changes the same setting as the options, right away</li>
+							<li>The theme button's icon tells you which theme is active: half sun and half moon
+								for System, a sun for Light, and a moon for Dark. The button stays visible when
+								you turn off the Donate and Rate buttons</li>
+							<li>Windows get a new color palette, with a matching set for the dark theme, so that colored windows look good in both themes</li>
+							<li>Every toolbar, window and options icon is redrawn, so the icons stay sharp at
+								any zoom level in both light and dark. Each setting also has its own icon, which
+								makes the options easier to scan</li>
+							<li>The recent tabs clock has three steps that light up as it reaches further back
+								in time, so you can see how far back it is looking. An eye icon shows when tabs
+								that don't match your search are hidden</li>
+							<li>White favicons now stay visible in the light theme instead of vanishing into the
+								background. Favicons also update when a tab finishes loading, so you no longer
+								see an outdated icon
 								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/220" target="_blank" rel="noopener">#220</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/251" target="_blank" rel="noopener">#251</a>)
 							</li>
-							<li>Badges show a tab's state: playing sound, muted, asleep (put to sleep by the
-								browser), pinned, active, selected. In List view as chips with a colored edge on
-								the left
+							<li>Badges show a tab's state at a glance, so you can see which tabs are playing
+								sound, muted, asleep (put to sleep by the browser), pinned, active or selected.
+								In List view they appear as chips with a colored edge on the left
 								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/171" target="_blank" rel="noopener">#171</a>)
 							</li>
-							<li>List view shows how recently each tab was used: four small bars at the right of
-								the row, filled from the right and fading with age (green for the last minutes,
-								grey after a week); hover them for the exact time
+							<li>List view shows how recently you used each tab with four small bars at the right
+								of the row, so you can spot old tabs quickly. The bars fill from the right and
+								fade with age, from green for the last few minutes to grey after a week, and
+								hovering them shows the exact time
 								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/40" target="_blank" rel="noopener">#40</a>)
 							</li>
-							<li>Windows show when they were last active, saved sessions when they were saved</li>
-							<li>Subtle animations when they are on: windows and tabs fade in, state changes ease instead of snapping, a playing row breathes</li>
+							<li>Windows show when they were last active, and saved sessions show when they were
+								saved, so you can tell at a glance what you have not touched in a while</li>
+							<li>When animations are on, they are now subtle: windows and tabs fade in, changes
+								ease in instead of jumping, and a row that plays sound gently breathes</li>
 						</ul>
 						<h4>Faster</h4>
 						<ul>
-							<li>The popup opens with its final layout, theme and windows in the first frame instead of filling in afterwards</li>
-							<li>The popup script is about 40% smaller</li>
-							<li>Tab changes show up immediately</li>
-							<li>Typing right after opening the popup no longer loses the first characters (<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/122" target="_blank" rel="noopener">#122</a>)</li>
+							<li>The popup now opens with its final layout, theme and windows in the very first frame, so nothing jumps or fills in after it appears</li>
+							<li>The popup script is about 40% smaller, so the popup has less to load each time you open it</li>
+							<li>Changes to your tabs show up in the popup right away, so you never act on an outdated list</li>
+							<li>When you start typing right after you open the popup, the first letters are no longer lost, so your search finds what you meant
+								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/122" target="_blank" rel="noopener">#122</a>)
+							</li>
 						</ul>
 						<h4>Searching And Duplicates</h4>
 						<figure class="clip"><video muted loop playsinline preload="none" poster="features/7.0.0/search.jpg" aria-label="Search with u: and -word, Highlight Duplicates and the recent tabs clock"><source src="features/7.0.0/search.webm" type="video/webm"></video></figure>
 						<ul>
-							<li>Highlight Duplicates selects only the extra copies and keeps the one you used
-								last, so Ctrl+Delete (Cmd+Delete on a Mac) closes just the duplicates
+							<li>Highlight Duplicates now selects only the extra copies and keeps the one you
+								used last. That way, Ctrl+Delete (Cmd+Delete on a Mac) closes just the
+								duplicates and leaves one copy of each page open
 								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/54" target="_blank" rel="noopener">#54</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/142" target="_blank" rel="noopener">#142</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/188" target="_blank" rel="noopener">#188</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/240" target="_blank" rel="noopener">#240</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/248" target="_blank" rel="noopener">#248</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/260" target="_blank" rel="noopener">#260</a>)
 							</li>
-							<li>The header shows how many tabs have duplicates and how many are selected</li>
-							<li>Searching while duplicates are highlighted searches within them</li>
-							<li>Pasting a search term, or editing in the middle of it, now searches the right tabs</li>
-							<li>Clearing the search field no longer shows matches for an empty search</li>
-							<li>Search in titles only with <code>t:word</code>, in urls only with <code>u:word</code></li>
-							<li>Exclude tabs from a search with <code>-word</code>, also <code>-u:word</code></li>
-							<li>Search for a phrase with a space by quoting it: <code>"pull request"</code> (<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/224" target="_blank" rel="noopener">#224</a>)</li>
-							<li>Search with a regular expression: <code>/\(\d+\)/</code> finds tabs with an unread count, <code>/localhost:\d+/</code> local dev servers, <code>/\.pdf$/</code> open PDFs
+							<li>The header shows how many tabs have duplicates and how many of them are
+								selected. While duplicates are highlighted, a search looks only within them, so
+								you can narrow the list down before you close anything</li>
+							<li>Pasting a search, or editing in the middle of it, now finds the right tabs
+								instead of matching the old text. Clearing the search box no longer shows
+								matches for an empty search</li>
+							<li>You can search only in titles with <code>t:word</code>, or only in web addresses with <code>u:word</code>,
+								so that common words in links don't clutter the results. To leave tabs out of a
+								search, put a minus in front, as in <code>-word</code> or <code>-u:word</code></li>
+							<li>To search for words that contain a space, put them in quotes, for example <code>"pull request"</code>, so that the words must appear together
+								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/224" target="_blank" rel="noopener">#224</a>)
+							</li>
+							<li>You can also search with a pattern (a regular expression) when plain words are
+								not enough. For example, <code>/\(\d+\)/</code> finds tabs with an unread count,
+								<code>/localhost:\d+/</code> finds local dev servers, and <code>/\.pdf$/</code> finds open PDFs
 								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/156" target="_blank" rel="noopener">#156</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/194" target="_blank" rel="noopener">#194</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/247" target="_blank" rel="noopener">#247</a>)
 							</li>
-							<li>Hover the search box for the whole search syntax</li>
-							<li>The arrow keys move a cursor, not the selection: the tab they are on is lifted,
-								with a ring (a list row gets the ring inside and a coloured left edge), and what
-								is selected stays selected. Space selects or deselects the cursor tab,
-								Shift+arrow selects every tab it lands on, and Enter with nothing selected
-								switches to the cursor tab (arrow, arrow, Enter, as in 6.x). A click on a tab
-								puts the cursor there, Escape clears it with the selection. Ctrl+arrow keys
-								(Alt+arrows too, except on a Mac) move the cursor even while the search box has
-								the focus and holds text, and take the focus to the tabs; the plain arrows and
-								Shift+arrows keep editing the search text</li>
-							<li>List view shows the part of a title that matched the search in bold</li>
-							<li>Highlight recently active tabs: the new clock button in the bar selects the tabs
-								you used last: the shortest span (15 minutes, an hour, 3 hours, 12 hours, a day,
-								2 days ...) with more than one tab in it. Click again to reach further back,
-								twice more (one more step lights up under the clock each time), a fourth click
-								turns it off
+							<li>When you hover the search box, it lists all the search options, so you don't
+								have to remember them. In List view, the matching part of each title is shown in
+								bold, so that you can see at a glance why a tab matched your search</li>
+							<li>The new clock button in the bar highlights the tabs you used most recently, so
+								you can get back to your current work quickly. It picks the shortest time span
+								with more than one tab: 15 minutes, an hour, 3 hours, 12 hours, a day, 2 days
+								and so on
 								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/203" target="_blank" rel="noopener">#203</a>)
+							</li>
+							<li>Clicking the clock again reaches further back in time, up to two more times, and
+								each click lights up one more step under the clock. A fourth click turns the
+								highlighting off completely</li>
+						</ul>
+						<h4>Keyboard</h4>
+						<figure class="clip"><video muted loop playsinline preload="none" poster="features/7.0.0/keys.jpg" aria-label="Arrow keys move the cursor, Space selects, Shift+arrows select a range, Enter switches, Tab reaches the buttons"><source src="features/7.0.0/keys.webm" type="video/webm"></video></figure>
+						<ul>
+							<li>The arrow keys now move a cursor instead of the selection, so whatever you selected stays selected while you look around</li>
+							<li>The tab under the cursor is lifted and gets a ring, so you always know where you
+								are in the list. In List view, the row gets the ring on the inside, together
+								with a colored edge on its left side</li>
+							<li>Space selects or unselects the tab under the cursor, so you can pick tabs one by one without the mouse</li>
+							<li>Holding Shift while you press an arrow key (Shift+arrow) selects every tab the cursor lands on, which makes it quick to select a range</li>
+							<li>When nothing is selected, Enter switches to the tab under the cursor, so arrow, arrow, Enter works just as it did in 6.x</li>
+							<li>Clicking a tab puts the cursor on it, so you can carry on with the keyboard from
+								there. Escape clears both the cursor and the selection when you want to start
+								over</li>
+							<li>Ctrl+arrow keys move the cursor even while you type in the search box, and they
+								also move the focus from the search box to the tabs. Alt+arrow keys do the same
+								thing, except on a Mac</li>
+							<li>Plain arrows and Shift+arrows keep editing the search text, so typing and fixing a search works the way you would expect</li>
+							<li>The Tab key now reaches the buttons in the bottom bar, at the top, and on
+								windows and saved windows, so you can use every button without the mouse</li>
+							<li>Enter or Space presses the button that has the focus. A ring shows which button
+								has the focus, but only while you use the keyboard, so that it never gets in the
+								way when you use the mouse</li>
+							<li>Ctrl+Delete and Ctrl+Backspace (Cmd on a Mac) close the selected tabs, whether
+								they are open tabs or saved tabs. Ctrl+Z undoes a change to a saved window, as
+								the Saved Windows section below describes</li>
+							<li>New installs get new default keys, because the browser took over the old ones.
+								Alt+Shift+M opens Tab Manager Plus, and Alt+Shift+, switches to the previous tab</li>
+							<li>On a Mac, the new keys are Ctrl+Shift+M and Ctrl+Shift+, instead. Existing
+								installs keep the keys they already had, so nothing about your shortcuts changes
+								when you install the update</li>
+							<li>The "switch to previous tab" shortcut works again, so you can jump back and forth between your two latest tabs
+								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/37" target="_blank" rel="noopener">#37</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/108" target="_blank" rel="noopener">#108</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/238" target="_blank" rel="noopener">#238</a>)
 							</li>
 						</ul>
 						<h4>Windows</h4>
 						<ul>
-							<li>Automatic window names come from the sites in the window, with proper spelling
-								(GitHub, Stack Overflow, Gmail, Google Docs), no more "Facebook, facebook &amp; 5
-								more"</li>
-							<li>Window names and colors survive a browser restart, even when the window's tabs changed since
+							<li>Windows get automatic names from their sites, spelled the way the sites spell
+								them: GitHub, Stack Overflow, Gmail, Google Docs. You no longer see names like
+								"Facebook, facebook &amp; 5 more"</li>
+							<li>Window names and colors now survive a browser restart, even when the window's
+								tabs changed in the meantime, so you don't have to set them up again
 								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/16" target="_blank" rel="noopener">#16</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/50" target="_blank" rel="noopener">#50</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/103" target="_blank" rel="noopener">#103</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/159" target="_blank" rel="noopener">#159</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/178" target="_blank" rel="noopener">#178</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/195" target="_blank" rel="noopener">#195</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/223" target="_blank" rel="noopener">#223</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/232" target="_blank" rel="noopener">#232</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/236" target="_blank" rel="noopener">#236</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/244" target="_blank" rel="noopener">#244</a>)
 							</li>
-							<li>Names and colors of windows closed for more than a day are cleaned up, so a new window cannot inherit an old name
+							<li>Names and colors of windows that were closed for more than a day are cleaned up, so that a new window can't pick up an old name by mistake
 								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/103" target="_blank" rel="noopener">#103</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/244" target="_blank" rel="noopener">#244</a>)
 							</li>
-							<li>Dragging several tabs (open or saved) shows them as a small stack of tabs with
-								their number under the mouse: with titles in the List view, icons only in the
-								views that show tabs as icons, as big as that view's tabs</li>
-							<li>A tab dropped on its own right half, or on the left half of its right neighbour,
-								stays where it is; every other drop lands exactly where the marker shows, also
-								for several tabs moved inside their window (the old move put them one place off)</li>
-							<li>The window order no longer resets on its own; the current window is always listed first and marked, also as a popup</li>
-							<li>Clicking the icon while Tab Manager Plus is already open in a tab switches to that tab</li>
-							<li>The "switch to previous tab" shortcut works again (<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/37" target="_blank" rel="noopener">#37</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/108" target="_blank" rel="noopener">#108</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/238" target="_blank" rel="noopener">#238</a>)</li>
+							<li>When you drag several tabs, open or saved, they show as a small stack under the
+								mouse with their number, so you can see what you are moving. The stack shows
+								titles in List view and icons in the icon views, as big as that view's tabs</li>
+							<li>A tab dropped on its own right half, or on the left half of the tab to its
+								right, stays where it is. Every other drop lands exactly where the marker shows,
+								even when you move several tabs inside their window, where they used to land one
+								place off</li>
+							<li>The window order no longer resets on its own, so windows stay where you expect
+								them. The current window is always listed first and marked, even when Tab
+								Manager Plus opens as a popup window</li>
+							<li>When Tab Manager Plus is already open in a tab, clicking its icon in the toolbar takes you to that tab. You no longer get a second copy</li>
 						</ul>
 						<h4>Saved Windows</h4>
-						<figure class="clip"><video muted loop playsinline preload="none" poster="features/7.0.0/saved.jpg" aria-label="Save selected tabs, rename and recolor, drag saved tabs out, s: search, delete and Ctrl+Z"><source src="features/7.0.0/saved.webm" type="video/webm"></video></figure>
+						<figure class="clip"><video muted loop playsinline preload="none" poster="features/7.0.0/saved.jpg" aria-label="Save selected tabs, recolor the new saved window, drag saved tabs out, s: search, delete and Ctrl+Z"><source src="features/7.0.0/saved.webm" type="video/webm"></video></figure>
 						<ul>
-							<li>Restored windows keep their size and position, fitted to the screen they are
-								restored on; a window saved maximized comes back maximized on the monitor it was
-								saved on when that monitor is connected, else on the monitor you restore from.
-								The hover card of a saved window shows where it will land, and Restore goes by
-								the same monitors as the card, so the window lands there (before, a window saved
-								maximized on a second monitor could come back on the current one while the card
-								said otherwise). The debug file (tab-manager-plus-everything-....json) now also
-								says how each saved window would be restored on your monitors
-								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/205" target="_blank" rel="noopener">#205</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/207" target="_blank" rel="noopener">#207</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/208" target="_blank" rel="noopener">#208</a>)
-							</li>
-							<li>Restoring a window in own-tab mode scrolls to it</li>
-							<li>Saved sessions could be lost when the update from version 5 was interrupted, e.g. by closing the popup</li>
-							<li>Saved sessions are no longer limited by the browser's 10 MB storage quota, and
-								showing a session no longer changes it (which could corrupt exports)</li>
-							<li>Enabling the sessions feature shows your saved windows right away</li>
-							<li>Importing a backup says how many saved windows it restored and how many it
-								skipped, and why (<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/39" target="_blank" rel="noopener">#39</a>); saved windows that are already there (the same tabs in
-								the same order) are not imported twice and are counted as already there</li>
-							<li>Exported files are named tab-manager-plus-sessions-YYYY-MM-DD-HH-MM-SS.json
-								(saved windows) and tab-manager-plus-everything-YYYY-MM-DD-HH-MM-SS.json (debug
-								export, which also holds your saved windows); both files carry the format
-								"tab-manager-plus-export" and a kind ("sessions" or "everything"), and Import
-								Sessions reads both, older backup files and the files of earlier test builds; a
-								file with a list of saved windows under another format is imported too, with a
-								note that it was not in Tab Manager Plus's format</li>
-							<li>A file in another format that holds a list of saved windows but restores nothing
-								shows a note, not an error; an unreadable file or a refused write still shows
-								the red notice</li>
-							<li>Deleting a saved window can be undone: it disappears at once and a notice offers
-								Undo while a bar drains smoothly over 8 seconds; the countdown waits while the
-								mouse is over the notice, its close button removes the window for good at once,
-								and it is also removed when the countdown ends or the popup closes. Undo notices
-								stack (a delete's, a move's), at most three Undo notices at a time (a fourth
-								makes the oldest go, and its change stands; error notices never push one out,
-								and while three Undo notices are up at most two error or information notices
-								show); Ctrl+Z (Cmd+Z on a Mac, shown as key caps on the newest) undoes the
-								newest first, then the next, one per press (holding the keys undoes one), also
-								while the search box has the focus and holds text, and each Undo puts back only
-								what its own change did</li>
-							<li>Errors show in the same kind of notice, with a red edge, for 8 seconds
-								(information notes such as an import summary for 5): a save or rename the
-								browser refused (full browser storage), a sessions file that could not be read
-								or imported, saved tabs that could not be opened, a saved window that could not
-								be restored, and a drag and drop that only partly works or that you let go of
-								over a place that refuses it (there the cursor shows the browser's not-allowed
-								sign and no drop marker shows, as where a drop would change nothing), with the
-								reason (the saved window or tab is gone, private and normal tabs cannot mix,
-								Firefox cannot save about: pages, nothing to add) and how many tabs were left
-								out; they replace the red text in the header and the note under the file picker.
-								Starting an import closes the notices and writes a pending delete first</li>
-							<li>Saved windows can be renamed and recolored with the same name and color screen
-								as open windows, from the color button on the saved window's card or by clicking
-								its name (anywhere on it, however long it is; a long name shows as much as fits,
-								then an ellipsis, like an open window's); the popup scrolls back to the saved
-								window afterwards, and a saved window without a name of its own always shows the
-								automatic name made from its tabs now
-								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/172" target="_blank" rel="noopener">#172</a>)
-							</li>
-							<li>Saved windows are switched on by default (no longer called beta or experimental
-								in the settings), also after the update from 6.x when no saved window is stored;
-								the switch in the options still turns them off</li>
-							<li>Ctrl+click or right-click on a tab of a saved window selects it, instead of an
-								unrelated open tab that Ctrl+Delete would then close; saved windows are no
-								longer marked as the active window</li>
-							<li>Tabs of saved windows can be deleted: select them, then use the trash button or
-								Ctrl+Delete or Ctrl+Backspace (Cmd on a Mac); a saved window with no tab left is
-								deleted, and the same Undo notice applies (<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/180" target="_blank" rel="noopener">#180</a>). The same keys close selected
-								open tabs, as the trash button does. Plain Delete and Backspace stay typing and
-								go to the search box; in a search box that has the focus and holds text,
-								Ctrl+Backspace and Ctrl+Delete delete a word as usual and close nothing, so
-								"search, select results, Ctrl+Delete" works once you right-click a result or use
-								the arrow keys (selecting takes the focus out of the search box, typing puts it
-								back). Enter with saved tabs selected opens them in one new window, in the order
-								shown; Enter after a search that selected no open tab does nothing instead of
-								opening an empty window</li>
-							<li>Selected tabs can be saved as a new saved window, named from their sites: the new button next to "Move tabs to new window" in the bottom bar
+							<li>Saved windows are now on by default, and the update from 6.x turns them on too,
+								unless you had turned them off while you had saved windows. They are no longer
+								called beta or experimental, and you can still turn them off in the options</li>
+							<li>Saved windows now look different from open windows, so you can tell them apart
+								at once. They have a dashed edge, a saved icon before the name, and faded
+								favicons that get their color back under the mouse. They are no longer dimmed as
+								a whole or marked as the active window, so their tabs stay easy to read</li>
+							<li>When you rest the mouse on a saved tab, a card appears, just like for an open
+								tab. It shows when the tab was saved, its place in the saved window, and the
+								windows it is open in now, while an open tab's card lists the saved windows that
+								also hold it</li>
+							<li>When you rest the mouse on a saved window, its card shows its tabs and sites,
+								when it was saved, and the size and state it was saved with. A map of your
+								monitors shows where the window would land if you restored it now</li>
+							<li>Saved windows remember when their tabs last changed, whether tabs were moved in,
+								out or within them, added or deleted, but not when the name or color changed.
+								The card's "saved … ago" counts from that moment, and the cards show "created …
+								ago" and "last saved … ago" when the two differ</li>
+							<li>A new button next to "Move tabs to new window" in the bottom bar saves the
+								selected tabs as a new saved window, so you can put tabs aside without closing a
+								whole window. The new saved window is named after their sites
 								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/201" target="_blank" rel="noopener">#201</a>)
 							</li>
-							<li>Tabs of saved windows can be dragged into an open window: dropped on a window or
-								next to one of its tabs, the tab opens there (all selected saved tabs, when the
-								dragged one is selected), and the saved window keeps it, also when dropped in a
-								Tab Manager tab or sidebar other than the one the drag started in</li>
-							<li>Tabs of saved windows can be reordered: drag one before or after another tab of
-								the same saved window, onto a tab of another saved window to move it there, or
-								onto another saved window's title or edge to add it at the end; selected saved
-								tabs move together and stay selected, a saved window left with no tab is removed
-								with an Undo notice that puts the tabs back and brings the window back with its
-								name and color, and tabs do not move between private and normal saved windows</li>
-							<li>Open tabs can be added to a saved window: drag a tab (all selected tabs, when
-								the dragged one is selected) onto a tab of a saved window to put a copy before
-								or after it, or onto the saved window's title or edge to add it at the end; the
-								open tabs stay open
+							<li>You can rename and recolor a saved window with the same screen you use for open
+								windows. To open it, use the color button on the saved window's card, or click
+								anywhere on its name, however long the name is
+								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/172" target="_blank" rel="noopener">#172</a>)
+							</li>
+							<li>A long name shows as much as fits and then "…", just like an open window's name.
+								After a rename, the popup scrolls back to the saved window, and a saved window
+								without its own name always shows the automatic name from its current tabs</li>
+							<li>Restored windows keep their size and position, fitted to the screen you restore
+								them on. A window saved maximized comes back maximized on the monitor it was
+								saved on when that monitor is connected, or else on the monitor you restore from
+								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/205" target="_blank" rel="noopener">#205</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/207" target="_blank" rel="noopener">#207</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/208" target="_blank" rel="noopener">#208</a>)
+							</li>
+							<li>The hover card of a saved window shows where it will land, and Restore uses the
+								same monitors as the card. So a window saved maximized on a second monitor no
+								longer comes back on the current one. The debug file also explains how each
+								saved window would be restored, and in own-tab mode the popup scrolls to a
+								window you restore</li>
+							<li>To delete saved tabs, select them and then use the trash button, or press
+								Ctrl+Delete or Ctrl+Backspace (Cmd on a Mac). A saved window with no tabs left
+								is deleted with the same Undo notice, and the same keys close selected open
+								tabs, like the trash button
+								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/180" target="_blank" rel="noopener">#180</a>)
+							</li>
+							<li>Plain Delete and Backspace are kept for typing and go to the search box. While
+								you type a search, Ctrl+Backspace and Ctrl+Delete delete a word as usual and
+								close nothing, so to close search results, first right-click a result or use the
+								arrow keys. Selecting moves the focus out of the search box, and typing moves it
+								back</li>
+							<li>Ctrl+click or right-click on a saved tab now selects that tab, instead of an
+								unrelated open tab that Ctrl+Delete would then close. Enter with saved tabs
+								selected opens them in one new window in the order shown, and Enter after a
+								search that selected no open tab no longer opens an empty window</li>
+							<li>You can undo deleting a saved window, so a slip of the mouse costs you nothing.
+								The window disappears at once, and a notice offers Undo for 8 seconds while a
+								bar drains, with the countdown pausing while the mouse is over the notice</li>
+							<li>The window is deleted for good when the countdown ends, when the popup closes, or right away when you click the notice's close button</li>
+							<li>Undo notices stack, for example one for a delete and one for a move, so you can
+								undo either of them. Up to three show at a time, and a fourth makes the oldest
+								one go, which keeps its change</li>
+							<li>Ctrl+Z (Cmd+Z on a Mac) undoes the newest change first and then the next one,
+								one per press, even if you hold the keys down. It also works while you type in
+								the search box, the newest notice shows it as keys, and each Undo puts back only
+								what its own change did</li>
+							<li>Errors now show in the same kind of notice, with a red edge, for 8 seconds, and
+								info notes such as an import summary show for 5 seconds. They replace the red
+								text in the header and the note under the file picker. Error notices never push
+								out an Undo notice, and while three Undo notices show, at most two error or info
+								notices show</li>
+							<li>An error appears when the browser refuses a save or rename, for example when the
+								browser has no room left. It also appears when a saved windows file can't be
+								read or imported, when saved tabs can't be opened, or when a saved window can't
+								be restored</li>
+							<li>An error also appears when a drag and drop only partly works, or when you drop
+								somewhere that isn't allowed. In those places the cursor shows the browser's
+								"not allowed" sign and no drop marker appears, just as in places where a drop
+								would change nothing</li>
+							<li>Each error says why it happened, so you know what to do next: the saved window
+								or tab is gone, private and normal tabs can't mix, Firefox can't save about:
+								pages, or there is nothing to add. It also says how many tabs were left out</li>
+							<li>You can drag saved tabs into an open window, either onto the window or next to
+								one of its tabs, and they open there while the saved window keeps them. If the
+								tab you drag is selected, all selected saved tabs come along. This also works
+								when you drop them in another Tab Manager tab or sidebar</li>
+							<li>You can reorder saved tabs by dragging one before or after another tab of the
+								same saved window. Dropping it on a tab of another saved window moves it there,
+								and dropping it on that window's title or edge adds it at the end. Selected
+								saved tabs move together and stay selected, but tabs don't move between private
+								and normal saved windows</li>
+							<li>A saved window left with no tabs is removed with an Undo notice, so you can
+								still change your mind. Undo puts the tabs back and brings back the window with
+								its name and color</li>
+							<li>You can add open tabs to a saved window by dragging a tab onto a saved tab,
+								which puts a copy before or after it, or onto the saved window's title or edge,
+								which adds it at the end. If the tab you drag is selected, all selected tabs
+								come along, and they stay open
 								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/192" target="_blank" rel="noopener">#192</a>)
 							</li>
-							<li>Saved windows can be put in any order: drag a saved window by its edge or title
-								and drop it before or after another one; a marker shows where it goes, newly
-								saved and imported windows are listed first, and the ones saved before are
-								listed newest first</li>
-							<li>On Firefox, saving a window keeps its about:blank tabs</li>
-							<li>Saved windows look different from open windows: a dashed edge, a saved icon
-								before the name, and faded favicons that regain their color under the mouse;
-								they are no longer dimmed as a whole, so their tabs stay readable</li>
-							<li>Resting the mouse on a tab of a saved window shows a card like an open tab's:
-								when it was saved, its place in the saved window, and the windows it is open in
-								right now; an open tab's card lists the saved windows that also hold it</li>
-							<li>Resting the mouse on a saved window shows a card like an open window's: its tabs
-								and sites, when it was saved, the size and state it was saved with, and a map of
-								the monitors showing where it would land if restored now</li>
-							<li>Saved windows remember when their tabs last changed (tabs moved in, out or
-								within them, added or deleted; not a new name or color): the card's "saved …
-								ago" counts from then, and the hover cards show "created … ago" and "last saved
-								… ago" when the two differ</li>
-							<li>Search finds tabs in saved windows too: matching saved tabs stay clear while the
-								others fade (or hide, with Hide non-matching tabs on, together with saved
-								windows that have no match and hold no selected tab, instead of all saved
-								windows disappearing), and the header counts them. A search selects the open
-								tabs it matches, and the saved ones only when no open tab matches (then Enter
-								opens them in a new window), so open and saved tabs are never selected together</li>
-							<li>Selected tabs are always shown: Hide non-matching tabs (and the hide mode of
-								Highlight Duplicates and Highlight recently active tabs) never hides a selected
-								tab, open or saved. A selected tab that does not match stays on screen,
-								selected, as if the hiding were off (a little paler than a match, not as pale as
-								the other non-matches), also after you moved it to another window, until the
-								next search or Escape, and its window or saved window stays with it, so every
-								selected tab takes part in every move and close, and the drag stack counts them
-								all. A new search keeps the tabs you selected yourself (Ctrl+click, right-click,
-								a range with Shift+right-click, a drag, the arrow keys) and only replaces the
-								ones an earlier search selected; a range takes only the tabs on screen, and the
-								arrow keys also stop on a selected tab that does not match</li>
-							<li><code>s:</code> and <code>-s:</code> in the search box pick where to look. <code>s:tax</code> (title or url),
-								<code>s:u:github</code> (url only), <code>s:t:tax</code> (title only), <code>s:"pull request"</code> and <code>s:/\.pdf$/</code>
-								match saved tabs only, never open ones; <code>-s:</code> is the mirror and matches open tabs
-								only: <code>-s:tax</code>, <code>-s:u:github</code>, <code>-s:t:tax</code>. A bare <code>s:</code> or <code>-s:</code> followed by other terms
-								(<code>s: u:github t:tax</code>, <code>-s: tax</code>) limits the whole search to saved or to open
-								windows, and with Hide non-matching tabs on, the other kind hides. A search that
-								only saved tabs can match reads "N tabs in M saved windows" in the header. A
-								query of only <code>s:</code> or only <code>-s:</code> shows those windows and selects nothing. Both only
-								work while saved windows are switched on; off, <code>s:tax</code> is plain text, and the <code>s:</code>
-								rows of the search help and its tip are hidden</li>
-						</ul>
-						<h4>Smaller fixes</h4>
-						<ul>
-							<li>Settings, window names and colors no longer revert to an older state when the popup opens while they are being changed
-								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/126" target="_blank" rel="noopener">#126</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/131" target="_blank" rel="noopener">#131</a>)
+							<li>You can put saved windows in any order by dragging one by its edge or title and
+								dropping it before or after another, where a marker shows. New and imported
+								saved windows are listed first, and older ones follow with the newest first</li>
+							<li>Search now finds tabs in saved windows too, and the header counts them. Matching
+								saved tabs stay clear while the others fade, and with Hide non-matching tabs on,
+								saved tabs that don't match are hidden, along with saved windows that have no
+								match and no selected tab, instead of all saved windows disappearing</li>
+							<li>A search selects the open tabs it matches, and it selects saved tabs only when
+								no open tab matches, so that Enter then opens them in a new window. This way,
+								open and saved tabs are never selected together</li>
+							<li>Selected tabs, open or saved, are always shown, so you never act on tabs you
+								cannot see. Hide non-matching tabs never hides them, and neither does the hide
+								mode of Highlight Duplicates or Highlight recently active tabs</li>
+							<li>A selected tab that doesn't match stays on screen and selected, as if hiding
+								were off. It looks a bit paler than a match but not as pale as other
+								non-matches, and it stays with its window or saved window, even after you move
+								it, until the next search or Escape. That way, every selected tab takes part in
+								every move and close, and the drag stack counts them all</li>
+							<li>A new search keeps the tabs you selected yourself with Ctrl+click, right-click,
+								Shift+right-click for a range, a drag or the arrow keys, and it only replaces
+								the tabs an earlier search selected. A range only takes the tabs on screen, and
+								the arrow keys also stop on a selected tab that doesn't match</li>
+							<li>Use <code>s:</code> to look only in saved tabs, as in <code>s:tax</code> (title or web address),
+								<code>s:u:github</code> (web address only), <code>s:t:tax</code> (title only), <code>s:"pull request"</code> and
+								<code>s:/\.pdf$/</code>. Its opposite, <code>-s:</code>, looks only in open tabs, as in <code>-s:tax</code>,
+								<code>-s:u:github</code> and <code>-s:t:tax</code></li>
+							<li>When <code>s:</code> or <code>-s:</code> stands on its own before other words, it limits the whole search
+								to saved or to open windows, for example <code>s: u:github t:tax</code> or <code>-s: tax</code>. With Hide
+								non-matching tabs on, the other kind is hidden, and just <code>s:</code> or <code>-s:</code> alone shows
+								those windows and selects nothing</li>
+							<li>When a search can only match saved tabs, the header shows "N tabs in M saved
+								windows". <code>s:</code> and <code>-s:</code> only work while saved windows are on, so when they are off,
+								<code>s:tax</code> is plain text and the search help and tip don't show the <code>s:</code> lines</li>
+							<li>Import now tells you how many saved windows it restored and how many it skipped,
+								and why. Saved windows you already have, with the same tabs in the same order,
+								are not imported twice and are counted as already there, and starting an import
+								closes the notices and finishes a pending delete first
+								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/39" target="_blank" rel="noopener">#39</a>)
 							</li>
-							<li>Clicking a tab or a window in the popup switches to it every time, and clicking
-								a tab of a saved session opens it; after the browser sat idle for a while, the
-								first click only closed the popup
-								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/242" target="_blank" rel="noopener">#242</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/246" target="_blank" rel="noopener">#246</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/252" target="_blank" rel="noopener">#252</a>)
-							</li>
-							<li>Closing, discarding or moving selected tabs works even when one of them was closed in the meantime</li>
-							<li>Window names and colors changed in the background refresh in the popup</li>
-							<li>Hover texts: restored when moving from a tab back to its window, sessions have one too, tab counts and plurals are right
-								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/121" target="_blank" rel="noopener">#121</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/183" target="_blank" rel="noopener">#183</a>)
-							</li>
-							<li>The buttons in the bottom bar, at the top and on windows and saved windows show
-								their help in the hover card, the one tabs and windows have, instead of a
-								browser tooltip: what the button does, and the key that does the same as key
-								caps: Ctrl+Delete (Cmd+Delete on a Mac) on the trash button with tabs selected,
-								Enter on the new window button. The card stays clear of the button, follows the
-								mouse, changes with a click (the theme button) and switches straight to a tab's
-								or window's card</li>
-							<li>The drop indicator when dragging a tab fits every layout and shows in the dark theme; the color picker lists colors in order
-								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/97" target="_blank" rel="noopener">#97</a>)
-							</li>
-							<li>A tab dragged from one Tab Manager tab or sidebar into another moves that tab, instead of the tabs selected in the other one</li>
-							<li>A window whose tabs were all hidden by Hide non-matching tabs shows again when
-								the search ends or the hiding is turned off, also when its tabs changed
-								meanwhile</li>
-							<li>The window name and color screen covers the whole popup, its close button shows a pointer and Escape closes only that screen</li>
-							<li>Firefox-based browsers (LibreWolf, Zen, Waterfox) are detected as Firefox</li>
-							<li>The popup warns once, with a red notice, when the background part of the
-								extension is older than the popup (a rebuilt extension that was not reloaded)
-								and says where to reload it (chrome://extensions, in Firefox about:debugging);
-								it compares a fingerprint of the background code, so a rebuild that leaves that
-								code unchanged raises no warning</li>
-							<li>The header icons (Donate, Rate, theme and options) stay in a narrow popup and in
-								the sidebar; at 450 px and less they were hidden, which left no way into the
-								options</li>
-							<li>The buttons in the bottom bar, at the top and on windows and saved windows can
-								be reached with the Tab key: Enter or Space presses the focused one, and a ring
-								shows which has the focus (for the keyboard only)</li>
-							<li>With one tab selected, the new window button says it switches to that tab; it never moved a single tab, but its help said so</li>
+							<li>Exports carry the date and time in their file name, so a new export never
+								overwrites an older one. Saved windows go to
+								<code>tab-manager-plus-sessions-YYYY-MM-DD-HH-MM-SS.json</code>, and the debug export, which
+								also holds your saved windows, goes to
+								<code>tab-manager-plus-everything-YYYY-MM-DD-HH-MM-SS.json</code></li>
+							<li>Both files are marked as Tab Manager Plus exports along with their kind,
+								"sessions" or "everything". Import Sessions reads both of them, as well as older
+								backups and files from earlier test builds</li>
+							<li>A file from another app that holds a list of saved windows is imported too, with
+								a note that it was not a Tab Manager Plus file. If it restores nothing, you get
+								a note instead of an error, while a file that can't be read, or that the browser
+								refuses to save, still shows the red notice</li>
+							<li>Saved windows are no longer lost when the update from version 5 is cut short,
+								for example when you close the popup too early. On Firefox, saving a window now
+								keeps its about:blank tabs</li>
+							<li>Saved windows no longer have to fit into the browser's 10 MB limit, so you can
+								keep many large ones. Showing a saved window no longer changes it, which could
+								break exports, and turning on saved windows shows them right away</li>
 						</ul>
 						<h4>Tab And Window Info</h4>
 						<figure class="clip"><video muted loop playsinline preload="none" poster="features/7.0.0/info.jpg" aria-label="Hover cards for a tab, a window with its monitor map, and a button with its keys"><source src="features/7.0.0/info.webm" type="video/webm"></video></figure>
 						<ul>
-							<li>Hold the mouse on a tab to see when it was last used, its state (asleep, muted
-								and why, playing, pinned), its position, which tab opened it, copies in other
-								windows and its zoom</li>
-							<li>Hold the mouse on a window for its tab counts, sites, last activity, oldest and
-								newest tab, size, and a small map of your monitors showing where the window is</li>
-							<li>The card follows the mouse and switches instantly between tabs; Escape closes it</li>
-							<li>Chrome: "Show all monitors" in the options draws every monitor on that map (asks for the monitor permission)</li>
-							<li>Hovering and switching layouts are much faster in the popup with many windows and tabs</li>
+							<li>When you hold the mouse on a tab, a card shows when you last used it and its
+								state: asleep, muted and why, playing, or pinned. The card also shows its
+								position, which tab opened it, copies in other windows and its zoom level, so
+								you can decide whether to keep it</li>
+							<li>When you hold the mouse on a window, its card shows the tab counts, sites, last
+								activity, oldest and newest tab, and the window size. A small map of your
+								monitors shows where the window is, which helps when you have several screens</li>
+							<li>The card follows the mouse and switches instantly from one tab to the next, so
+								you can skim through many tabs quickly, and pressing Escape closes it</li>
+							<li>In Chrome, the "Show all monitors" option draws every monitor on that map,
+								instead of only the ones with windows on them. It asks for permission to see
+								your monitors first</li>
+							<li>Hovering and switching layouts are much faster now, even in a popup with many windows and tabs</li>
 						</ul>
 						<h4>Options</h4>
 						<figure class="clip"><video muted loop playsinline preload="none" poster="features/7.0.0/options.jpg" aria-label="Options: Donate and Rate switch, settings export and import, keyboard shortcuts"><source src="features/7.0.0/options.webm" type="video/webm"></video></figure>
 						<ul>
-							<li>The options list each keyboard shortcut with its current key, or "Not set"</li>
-							<li>"Donate and Rate buttons" in the options hides those two buttons at the top of the popup</li>
-							<li>New default keys for new installs, as the browser took the old ones: Alt+Shift+M
-								opens Tab Manager Plus, Alt+Shift+, switches to the previous tab (Ctrl+Shift+M
-								and Ctrl+Shift+, on Mac). Existing installs keep their keys</li>
-							<li>The switches are readable in the dark theme and scale with the browser's zoom
+							<li>The options list each keyboard shortcut with its current key, or "Not set", so you can see at once which keys are active</li>
+							<li>The new "Donate and Rate buttons" option hides those two buttons at the top of the popup if you would rather not see them</li>
+							<li>The switches are easy to read in the dark theme, and they grow and shrink with the browser's zoom, so they stay usable at any size
 								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/69" target="_blank" rel="noopener">#69</a>)
 							</li>
-							<li>Hovering anywhere over an option shows its help text in the header, and it stays
-								while the mouse is there; Popup size, Incognito, Shortcut and What's new have
-								help texts too</li>
-							<li>Enter no longer opens a new window while the options or the window color screen are open</li>
-							<li>Limit Tabs Per Window and the popup width and height: emptying the field to type
-								a new number no longer stores NaN (the field then showed "NaN" and the popup
-								lost its size); a value outside the limits is corrected when you leave the field</li>
-							<li>The changelog page follows the dark theme</li>
-							<li>The tip in the header no longer changes while the popup is loading</li>
-							<li>Advanced settings: Export tabs for debugging saves a JSON file with your windows, tabs and settings, to attach to a bug report</li>
-							<li>"Settings backup" in the options: Export Settings saves your settings to
-								tab-manager-plus-settings-YYYY-MM-DD-HH-MM-SS.json (not the saved windows,
-								window names or colors) and Import Settings restores them, from that file or
-								from a debug file; settings that are unknown, of the wrong type or out of range
-								are skipped, as are Minimize inactive windows and Show all monitors when the
-								browser has not granted the monitor permission (turn them on in the options
-								first), and the notice lists what changed and what was skipped and why. Import
-								Sessions and Import Settings each refuse the other's file with a message</li>
+							<li>When you hover anywhere over an option, its help text shows in the header for as
+								long as the mouse is there. Popup size, Incognito, Shortcut and What's new now
+								have help texts too</li>
+							<li>Enter no longer opens a new window while the options or the window color screen
+								are open. Pressing it there now does nothing that you didn't expect</li>
+							<li>Limit Tabs Per Window and the popup width and height no longer break when you
+								clear them to type a new number. The field used to show "NaN" and the popup lost
+								its size, and now a number outside the limits is fixed when you leave the field</li>
+							<li>The changelog page now follows the dark theme, and the tip in the header no longer changes while the popup is loading</li>
+							<li>Export tabs for debugging, in the options, saves a file with your windows, tabs and settings, so that you can attach it to a bug report</li>
+							<li>The new "Settings backup" lets you keep a copy of your settings, because Export
+								Settings saves them to <code>tab-manager-plus-settings-YYYY-MM-DD-HH-MM-SS.json</code>. The
+								file doesn't hold your saved windows, and it doesn't hold window names or colors
+								either</li>
+							<li>Import Settings restores your settings from that file or from a debug file,
+								which helps when you move to a new computer. The notice lists what changed, what
+								was skipped and why</li>
+							<li>Import skips settings that are unknown, of the wrong type or out of range. It
+								also skips Minimize inactive windows and Show all monitors if the browser hasn't
+								given the monitor permission, so turn them on in the options first</li>
+							<li>Import Sessions and Import Settings each refuse the other's file and show a message, so you can't load the wrong file by accident</li>
 						</ul>
 						<h4>Firefox</h4>
 						<ul>
-							<li>"Minimize inactive windows" works on Firefox: keeps one window active, the others (on every monitor) are minimized
+							<li>"Minimize inactive windows" now works on Firefox, so you can keep one window
+								open in front of you. All the other windows are minimized, on every monitor
 								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/28" target="_blank" rel="noopener">#28</a>)
 							</li>
 							<li>The options explain how to allow Tab Manager Plus in private windows and show
-								whether it is allowed; "Change shortcut key" opens Firefox's shortcut settings
+								whether it is allowed already. "Change shortcut key" opens Firefox's shortcut
+								settings, so you can change the keys there
 								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/33" target="_blank" rel="noopener">#33</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/166" target="_blank" rel="noopener">#166</a>)
 							</li>
+						</ul>
+						<h4>Smaller fixes</h4>
+						<ul>
+							<li>Settings, window names and colors no longer go back to an older state when the popup opens while you are changing them
+								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/126" target="_blank" rel="noopener">#126</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/131" target="_blank" rel="noopener">#131</a>)
+							</li>
+							<li>Clicking a tab or a window in the popup now switches to it every time, and
+								clicking a tab of a saved session opens it. After the browser sat idle, the
+								first click used to only close the popup
+								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/242" target="_blank" rel="noopener">#242</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/246" target="_blank" rel="noopener">#246</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/252" target="_blank" rel="noopener">#252</a>)
+							</li>
+							<li>Closing, discarding or moving selected tabs now works even when one of them was
+								closed in the meantime. Window names and colors that change in the background
+								also update in the popup</li>
+							<li>Hover texts are back when you move from a tab to its window, and sessions now
+								have one too, while tab counts and plurals are shown correctly again
+								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/121" target="_blank" rel="noopener">#121</a>, <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/183" target="_blank" rel="noopener">#183</a>)
+							</li>
+							<li>The buttons in the bottom bar, at the top, and on windows and saved windows now
+								show their help in a hover card, like tabs and windows do. The card says what
+								the button does and shows its key, for example Ctrl+Delete (Cmd+Delete on a Mac)
+								on the trash button with tabs selected, and Enter on the new window button</li>
+							<li>The button card stays clear of the button and follows the mouse, so it never
+								covers what you want to click. It changes when you click the theme button, and
+								it switches straight to a tab's or window's card when you move on to one</li>
+							<li>With one tab selected, the new window button now says that it switches to that
+								tab, which is what it always did. It never moved a single tab, even though its
+								help text used to describe it that way</li>
+							<li>The drop marker you see while dragging a tab now fits every layout and shows in
+								the dark theme. The color picker also lists its colors in order
+								(<a href="https://github.com/stefanXO/Tab-Manager-Plus/issues/97" target="_blank" rel="noopener">#97</a>)
+							</li>
+							<li>A tab dragged from one Tab Manager tab or sidebar into another now moves that tab, instead of the tabs selected in the other one</li>
+							<li>A window whose tabs were all hidden by Hide non-matching tabs shows again when
+								the search ends or you turn hiding off, and this also works when its tabs
+								changed in the meantime</li>
+							<li>The window name and color screen now covers the whole popup. Its close button
+								shows a pointer, and Escape closes only that screen instead of the whole popup</li>
+							<li>Browsers built on Firefox, such as LibreWolf, Zen and Waterfox, are now treated as Firefox. So the Firefox fixes apply to them too</li>
+							<li>The popup warns once, with a red notice, when the extension was rebuilt but not
+								reloaded, and tells you where to reload it (chrome://extensions, or
+								about:debugging in Firefox). It only warns when the extension's background code
+								really changed</li>
+							<li>The header icons (Donate, Rate, theme and options) now stay visible in a narrow
+								popup and in the sidebar. At 450 px wide or less they used to be hidden, which
+								left no way into the options</li>
 						</ul>
 
 						<h3>6.0.0 <time datetime="2024-10-01" title="2024-10-01"></time></h3>
