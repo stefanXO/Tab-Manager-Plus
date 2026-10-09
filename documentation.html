@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>Tab Manager Plus - How to use it</title>
+	<link rel="icon" type="image/png" href="./images/browsers128.png"/>
+	<meta charset="utf-8"/>
+	<meta name="viewport" content="width=device-width, initial-scale=1"/>
+	<link rel="stylesheet" type="text/css" href="css/popup.css"/>
+
+</head>
+<body>
+<!-- the mouse glyphs (css/components/documentation.css .mouse): a 12x16
+     mouse: the pressed half (or the wheel) filled, the outline in currentColor like the key caps -->
+<svg class="mouse-sprite" width="0" height="0" aria-hidden="true" focusable="false">
+	<symbol id="mouse-left" viewBox="0 0 12 16">
+		<rect x="1.5" y="0.5" width="9" height="15" rx="3.5" style="fill: var(--mouse-body)"/>
+		<path d="M6 0.5H5A3.5 3.5 0 0 0 1.5 4V8H6Z" style="fill: var(--mouse-press)"/>
+		<rect x="1.5" y="0.5" width="9" height="15" rx="3.5" fill="none" stroke="currentColor"/>
+		<path d="M1.5 8H10.5M6 0.5V8" fill="none" stroke="currentColor"/>
+	</symbol>
+	<symbol id="mouse-right" viewBox="0 0 12 16">
+		<rect x="1.5" y="0.5" width="9" height="15" rx="3.5" style="fill: var(--mouse-body)"/>
+		<path d="M6 0.5H7A3.5 3.5 0 0 1 10.5 4V8H6Z" style="fill: var(--mouse-press)"/>
+		<rect x="1.5" y="0.5" width="9" height="15" rx="3.5" fill="none" stroke="currentColor"/>
+		<path d="M1.5 8H10.5M6 0.5V8" fill="none" stroke="currentColor"/>
+	</symbol>
+	<symbol id="mouse-middle" viewBox="0 0 12 16">
+		<rect x="1.5" y="0.5" width="9" height="15" rx="3.5" style="fill: var(--mouse-body)"/>
+		<rect x="1.5" y="0.5" width="9" height="15" rx="3.5" fill="none" stroke="currentColor"/>
+		<path d="M1.5 8H10.5" fill="none" stroke="currentColor"/>
+		<rect x="4.5" y="2" width="3" height="4.5" rx="1.5" style="fill: var(--mouse-press)"/>
+	</symbol>
+</svg>
+
+<div class="options-container doc">
+	<div class="options-window">
+		<div>
+			<div class="logo-options">
+				<div class="logo-box">
+					<img src="images/browsers.svg" style="max-width: 3rem;" alt="">
+					<h2>Tab Manager Plus <!-- VERSION -->7.0.0<!-- /VERSION --></h2>
+				</div>
+			</div>
+			<div class="toggle-options">
+				<div class="optionsBox">
+					<p class="doc-nav">
+						<a href="changelog.html">What's new</a>
+						<a href="options.html">Options</a>
+						<a href="https://github.com/stefanXO/Tab-Manager-Plus" target="_blank" rel="noopener">GitHub</a>
+					</p>
+					<p><strong>How to use Tab Manager Plus.</strong> Each part below is short, so it helps to keep Tab Manager Plus open and try the examples while you read.</p>
+					<ul class="doc-toc">
+						<li><a href="#open">Open it</a></li>
+						<li><a href="#search">Find a tab</a></li>
+						<li><a href="#select">Select tabs</a></li>
+						<li><a href="#keys">Keyboard</a></li>
+						<li><a href="#windows">Windows</a></li>
+						<li><a href="#saved">Saved windows</a></li>
+						<li><a href="#look">Layouts and theme</a></li>
+						<li><a href="#cards">Hover cards</a></li>
+						<li><a href="#options">Options</a></li>
+						<li><a href="#faq">Questions</a></li>
+					</ul>
+
+					<h3 id="open">Open it</h3>
+					<p>Tab Manager Plus shows all your open windows and tabs in one place, so that you can find, sort and close them quickly. To open it, click its icon in the browser toolbar or press the shortcut below, and then simply start typing to search.</p>
+					<table class="doc-table">
+						<tr><th>Do this</th><th>What it is for</th></tr>
+						<tr><td><span class="doc-keys"><span class="doc-key-line"><span class="stats-keys"><kbd>Alt</kbd><kbd>Shift</kbd><kbd>M</kbd></span></span><span class="doc-key-line doc-mac"><span class="stats-keys"><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>M</kbd></span><small>Mac</small></span></span></td><td>Opens Tab Manager Plus from any page, so you can find a tab without reaching for the mouse.</td></tr>
+						<tr><td><span class="doc-keys"><span class="doc-key-line"><span class="stats-keys"><kbd>Alt</kbd><kbd>Shift</kbd><kbd>,</kbd></span></span><span class="doc-key-line doc-mac"><span class="stats-keys"><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>,</kbd></span><small>Mac</small></span></span></td><td>Jumps straight back to the tab you used before, which is handy when you keep switching between two pages.</td></tr>
+						<tr><td><svg class="mouse" role="img" aria-label="right-click"><use href="#mouse-right"/></svg>&nbsp;Right-click the toolbar icon</td><td>Pick "Open in own tab" to use Tab Manager Plus in a full browser tab, which gives you much more room for many windows.</td></tr>
+						<tr class="only-firefox"><td><svg class="mouse" role="img" aria-label="right-click"><use href="#mouse-right"/></svg>&nbsp;Right-click the toolbar icon</td><td>Pick "Open sidebar" to keep Tab Manager Plus at the side of the page, so you can see your tabs while you work.</td></tr>
+					</table>
+					<p>These shortcuts are the ones a new install gets. If you updated from an older version, you keep the keys you already had, and the options show which keys you have right now.</p>
+
+					<h3 id="search">Find a tab</h3>
+					<p>Searching is the fastest way to find one tab among hundreds. As soon as you type a word, the tabs with that word in their title or web address stay bright, while all the other tabs fade into the background. When you type several words, a tab has to contain every one of them to count as a match.</p>
+					<table class="doc-table">
+						<tr><th>Type</th><th>What it finds, and when it helps</th></tr>
+						<tr><td><code>react</code></td><td>Every tab with "react" in its title or address, for example all the pages about a topic you are reading up on.</td></tr>
+						<tr><td><code>github issue</code></td><td>Only the tabs that contain both words, which narrows a long list down to the few pages you want.</td></tr>
+						<tr><td><code>github OR reddit</code></td><td>Tabs that contain either word, so you can gather two kinds of pages in one search.</td></tr>
+						<tr><td><code>t:release</code></td><td>Looks only at the page titles, which helps when the word also appears in many web addresses.</td></tr>
+						<tr><td><code>u:github</code></td><td>Looks only at the web addresses, so you find every page from one site, whatever its title says.</td></tr>
+						<tr><td><code>-reddit</code></td><td>Leaves out every tab with this word, so the rest of the results are easier to look through.</td></tr>
+						<tr><td><code>-u:old.reddit</code></td><td>Leaves out the tabs from one address, even when the word also appears in their titles.</td></tr>
+						<tr><td><code>"pull request"</code></td><td>The exact phrase with the words side by side, instead of the two words anywhere in the tab.</td></tr>
+						<tr><td><code>/localhost:\d+/</code></td><td>A pattern instead of a plain word. This one finds the test sites a web developer runs on their own computer.</td></tr>
+						<tr><td><code>/\.pdf$/</code></td><td>Every tab whose address ends in .pdf, so you can collect all your open documents at once.</td></tr>
+						<tr><td><code>/\(\d+\)/</code></td><td>Tabs with a number in brackets in the title, like "Inbox (3)", which usually means unread messages.</td></tr>
+						<tr><td><code>s:tax</code></td><td>Looks only in your saved windows, for example to find the tax pages you put away last month.</td></tr>
+						<tr><td><code>s:u:github</code></td><td>Looks at the addresses in your saved windows, so you can find a saved page by its site.</td></tr>
+						<tr><td><code>-s:tax</code></td><td>Looks only at the tabs that are open right now and ignores your saved windows.</td></tr>
+						<tr><td><code>-s:</code></td><td>Shows only your open windows and selects nothing, which hides the saved windows for a moment.</td></tr>
+					</table>
+					<ul>
+						<li>The search also selects the open tabs it finds, so that you can close or move them in one step. When no open tab matches, it selects the matching tabs in your saved windows instead.</li>
+						<li>When only one tab matches, press <span class="stats-keys"><kbd>Enter</kbd></span> to switch to it, which is often faster than looking for it yourself.</li>
+						<li>When several tabs match, <span class="stats-keys"><kbd>Enter</kbd></span> moves them all into a new window, so the pages of one topic end up together.</li>
+						<li>Press <span class="stats-keys"><kbd>Esc</kbd></span> when you are done, because it clears the search and brings all your tabs back into view.</li>
+						<li>If the faded tabs get in the way, use the <span class="doc-btn"><span class="icon windowaction filter" aria-hidden="true"></span>&#8288;<span class="doc-name">Hide tabs that do not match search</span></span> button in the bottom bar. After you click it, you see only the matching tabs until you click it again.</li>
+						<li>If you forget these examples, rest the mouse on the search box for a moment, and a card will list all of them.</li>
+					</ul>
+
+					<h3 id="select">Select tabs</h3>
+					<p>Selecting tabs lets you deal with many tabs at once, because the buttons in the bottom bar then work on all the selected tabs together. For example, you can select ten old tabs and close them all with a single click.</p>
+					<table class="doc-table">
+						<tr><th>Do this</th><th>What happens</th></tr>
+						<tr><td><svg class="mouse" role="img" aria-label="click"><use href="#mouse-left"/></svg>&nbsp;Click a tab</td><td>Switches to that tab in the browser, so you can go straight to the page you were looking for.</td></tr>
+						<tr><td><svg class="mouse" role="img" aria-label="right-click"><use href="#mouse-right"/></svg>&nbsp;Right-click a tab</td><td>Selects the tab and leaves you in Tab Manager Plus. A second <svg class="mouse" role="img" aria-label="right-click"><use href="#mouse-right"/></svg>&nbsp;right-click takes it out of the selection again.</td></tr>
+						<tr><td><span class="doc-keys"><span class="doc-key-line"><span class="stats-keys"><kbd>Ctrl</kbd></span> + <svg class="mouse" role="img" aria-label="click"><use href="#mouse-left"/></svg>click</span><span class="doc-key-line doc-mac"><span class="stats-keys"><kbd>⌘</kbd></span> + <svg class="mouse" role="img" aria-label="click"><use href="#mouse-left"/></svg>click<small>Mac</small></span></span></td><td>Also selects the tab, which feels natural if you select files on your computer this way.</td></tr>
+						<tr><td><span class="doc-keys"><span class="doc-key-line"><span class="stats-keys"><kbd>Shift</kbd></span> + <svg class="mouse" role="img" aria-label="right-click"><use href="#mouse-right"/></svg>right-click</span></span></td><td>Selects every tab between the last one you picked and this one, which saves many clicks in a long row.</td></tr>
+						<tr><td><svg class="mouse" role="img" aria-label="middle-click"><use href="#mouse-middle"/></svg>&nbsp;Middle-click a tab</td><td>Closes that one tab right away, which is the quickest way to get rid of a single page.</td></tr>
+					</table>
+					<p>Two buttons in the bottom bar select tabs for you, which helps when you want to tidy up but do not know where to start.</p>
+					<table class="doc-table">
+						<tr><th>Button</th><th>What it is for</th></tr>
+						<tr><td><span class="doc-btn"><span class="icon windowaction duplicates" aria-hidden="true"></span><span class="doc-name">Highlight Duplicates</span></span></td><td>Selects the extra copies when the same page is open more than once, and keeps the copy you used last. One press of the delete keys below then closes only the copies.</td></tr>
+						<tr><td><span class="doc-btn"><span class="icon windowaction recent" data-level="0" aria-hidden="true"></span><span class="doc-name">Highlight recently active tabs</span></span></td><td>Selects the tabs you used most recently, so you can gather the pages of your current task into their own window.</td></tr>
+					</table>
+					<p>The clock first looks at the last 15 minutes. If you used fewer than two tabs in that time, it looks further back, to one hour, then 3 hours, 12 hours, a day and so on. Each new click reaches back to the next time span that adds more tabs, and a small mark under the clock lights up for each step. The fourth click turns the clock off again.</p>
+					<p>Once you have selected some tabs, you can act on all of them at once with the keys and buttons below.</p>
+					<table class="doc-table">
+						<tr><th>Keys or button</th><th>What it does to the selected tabs</th></tr>
+						<tr><td><span class="doc-keys"><span class="doc-key-line"><span class="stats-keys"><kbd>Ctrl</kbd><kbd>Del</kbd></span></span><span class="doc-key-line">or <span class="stats-keys"><kbd>Ctrl</kbd><kbd>Backspace</kbd></span></span><span class="doc-key-line doc-mac"><span class="stats-keys"><kbd>⌘</kbd><kbd>⌫</kbd></span><small>Mac</small></span></span></td><td>Closes all the selected tabs at once. If the tabs you selected are in a saved window, they are deleted from that saved window instead.</td></tr>
+						<tr><td><span class="doc-keys"><span class="doc-key-line"><span class="stats-keys"><kbd>Enter</kbd></span></span></span></td><td>Moves the selected tabs into a new window of their own, which is a good way to split one project away from the rest. With only one tab selected, it simply switches to that tab.</td></tr>
+						<tr><td><span class="doc-btn"><span class="icon windowaction new" aria-hidden="true"></span><span class="doc-name">Move tabs to new window</span></span></td><td>Does the same as the Enter key, so you can move the selected tabs into a new window with the mouse.</td></tr>
+						<tr><td><span class="doc-btn"><span class="icon windowaction trash" aria-hidden="true"></span><span class="doc-name">Close selected tabs</span></span></td><td>Closes every selected tab, which is handy after a search has picked out the pages you no longer need.</td></tr>
+						<tr><td><span class="doc-btn"><span class="icon windowaction discard" aria-hidden="true"></span><span class="doc-name">Discard selected tabs</span></span></td><td>Puts the selected tabs to sleep so that they use less memory, while they stay where they are. A sleeping tab loads again as soon as you open it, so this helps when your computer feels slow.</td></tr>
+						<tr><td><span class="doc-btn"><span class="icon windowaction pin" aria-hidden="true"></span><span class="doc-name">Pin selected tabs</span></span></td><td>Pins the selected tabs to the left end of their window, where they stay small and are hard to close by mistake. Click it again to unpin them.</td></tr>
+						<tr><td><span class="doc-btn"><span class="icon windowaction save-tabs" aria-hidden="true"></span><span class="doc-name">Save selected tabs</span></span></td><td>Keeps the selected tabs together as a new saved window, so you can close them now and open them again later.</td></tr>
+					</table>
+					<p>Here is a quick way to tidy up: search for a word, <svg class="mouse" role="img" aria-label="right-click"><use href="#mouse-right"/></svg>&nbsp;right-click one of the results, and then press the delete keys to close all the selected tabs. While you are still typing in the search box, though, the same keys delete a word of your search instead.</p>
+
+					<h3 id="keys">Keyboard</h3>
+					<p>You can do almost everything without the mouse, which is faster once you know a few keys. The arrow keys move a ring from tab to tab, but the ring only shows where you are, so moving it does not select anything.</p>
+					<table class="doc-table">
+						<tr><th>Keys</th><th>What they do</th></tr>
+						<tr><td><span class="doc-keys"><span class="doc-key-line"><span class="stats-keys"><kbd>←</kbd><kbd>→</kbd></span></span></span></td><td>Move the ring to the tab before or after, so you can walk through a window one tab at a time. In List view, they jump to the window before or after.</td></tr>
+						<tr><td><span class="doc-keys"><span class="doc-key-line"><span class="stats-keys"><kbd>↑</kbd><kbd>↓</kbd></span></span></span></td><td>Move the ring to the window above or below. In List view, where each tab has its own line, they move from tab to tab instead.</td></tr>
+						<tr><td><span class="doc-keys"><span class="doc-key-line"><span class="stats-keys"><kbd>Space</kbd></span></span></span></td><td>Selects the tab under the ring, or takes it out of the selection again, just as a <svg class="mouse" role="img" aria-label="right-click"><use href="#mouse-right"/></svg>&nbsp;right-click does.</td></tr>
+						<tr><td><span class="doc-keys"><span class="doc-key-line"><span class="stats-keys"><kbd>Shift</kbd><kbd>→</kbd></span></span></span></td><td>Moves the ring and selects every tab it passes, which is a fast way to select a whole row of tabs.</td></tr>
+						<tr><td><span class="doc-keys"><span class="doc-key-line"><span class="stats-keys"><kbd>Enter</kbd></span></span></span></td><td>Switches to the tab under the ring when nothing is selected, so a few arrow presses and Enter take you to any tab.</td></tr>
+						<tr><td><span class="doc-keys"><span class="doc-key-line"><span class="stats-keys"><kbd>Ctrl</kbd><kbd>↓</kbd></span></span><span class="doc-key-line">or <span class="stats-keys"><kbd>Alt</kbd><kbd>↓</kbd></span></span><span class="doc-key-line doc-mac"><span class="stats-keys"><kbd>Ctrl</kbd><kbd>↓</kbd></span><small>Mac</small></span></span></td><td>Leaves the search box and moves the ring, while the plain arrow keys keep moving inside your search text.</td></tr>
+						<tr><td><span class="doc-keys"><span class="doc-key-line"><span class="stats-keys"><kbd>Tab</kbd></span></span></span></td><td>Moves the focus from button to button. Then <span class="stats-keys"><kbd>Enter</kbd></span> or <span class="stats-keys"><kbd>Space</kbd></span> presses the button that has the focus.</td></tr>
+						<tr><td><span class="doc-keys"><span class="doc-key-line"><span class="stats-keys"><kbd>Esc</kbd></span></span></span></td><td>The first press closes an open hover card, and the next one clears the search and the selection. After that, another press closes Tab Manager Plus.</td></tr>
+						<tr><td><span class="doc-keys"><span class="doc-key-line"><span class="stats-keys"><kbd>Ctrl</kbd><kbd>Z</kbd></span></span><span class="doc-key-line doc-mac"><span class="stats-keys"><kbd>⌘</kbd><kbd>Z</kbd></span><small>Mac</small></span></span></td><td>Undoes a mistake: it brings back a saved window or saved tab you have just deleted, as long as its Undo note is still showing.</td></tr>
+					</table>
+
+					<h3 id="windows">Windows</h3>
+					<p>Tab Manager Plus gives each window a name made from its sites, like "GitHub, Gmail", so you can tell your windows apart at a glance. You can also give a window your own name and a color, and both stay even after you restart the browser.</p>
+					<p>Your current window always comes first, and the other windows follow in the order you last used them, with minimized windows at the end. This means that the order changes whenever you switch to another window.</p>
+					<p>Each window has a row of buttons, which you can hide in the options if you prefer a cleaner look.</p>
+					<table class="doc-table">
+						<tr><th>Button</th><th>What it is for</th></tr>
+						<tr><td><span class="doc-btn"><span class="icon tabaction save" aria-hidden="true"></span><span class="doc-name">Save this window for later</span></span></td><td>Keeps a list of the window's tabs inside Tab Manager Plus, while the window itself stays open. You can close the window afterwards and open it again later with the same tabs, which is ideal for a project you will come back to next week.</td></tr>
+						<tr><td><span class="doc-btn"><span class="icon tabaction add" aria-hidden="true"></span><span class="doc-name">Open a new tab</span></span></td><td>Opens an empty tab in this window, which is useful when you want a new page next to the related ones and not in the window you happen to be in.</td></tr>
+						<tr><td><span class="doc-btn"><span class="icon tabaction colors" aria-hidden="true"></span><span class="doc-name">Change window name or color</span></span></td><td>Lets you give the window a name and a color of your choice, so you can find it quickly later. Clicking the window's name does the same.</td></tr>
+						<tr><td><span class="doc-btn"><span class="icon tabaction minimize" aria-hidden="true"></span><span class="doc-name">Minimize this window</span></span></td><td>Moves the window out of the way without closing it, so all its tabs stay open. When the window is already minimized, the same button brings it back.</td></tr>
+						<tr><td><span class="doc-btn"><span class="icon tabaction close" aria-hidden="true"></span><span class="doc-name">Close this window</span></span></td><td><strong>Closes the whole window with every tab in it, not just one tab.</strong> If you only want to close one tab, <svg class="mouse" role="img" aria-label="middle-click"><use href="#mouse-middle"/></svg>&nbsp;middle-click that tab instead.</td></tr>
+					</table>
+					<ul>
+						<li>To move a tab, drag it to a new place, and a marker shows you where it will land when you let go.</li>
+						<li>To move several tabs at once, select them first and then drag one of them, so that they travel together as a small stack.</li>
+						<li>To move a tab to another window, drop it on that window, which is often easier than dragging tabs in the browser itself.</li>
+						<li>If your windows keep growing too long, set "Limit Tabs Per Window" in the options, because then new tabs open in a new window once a window is full.</li>
+						<li>If you never use the window buttons, turn off "Show action buttons" in the options so that your windows look cleaner.</li>
+					</ul>
+
+					<h3 id="saved">Saved windows</h3>
+					<p>Saving a window keeps a list of its tabs inside Tab Manager Plus. You can then close the window and open it again later, with the same tabs, size and place on screen. Use it for a project you will come back to next week, or for pages you want to read later but do not want open all the time. Saved windows come after your open windows and have a dashed edge, so you can tell them apart.</p>
+					<table class="doc-table">
+						<tr><th>Do this</th><th>What happens</th></tr>
+						<tr><td><span class="doc-btn"><span class="icon tabaction save" aria-hidden="true"></span><span>On a window</span></span></td><td>Saves the whole window with all of its tabs, so you can close it without losing anything.</td></tr>
+						<tr><td><span class="doc-btn"><span class="icon windowaction save-tabs" aria-hidden="true"></span><span>In the bottom bar</span></span></td><td>Saves only the tabs you selected, which is handy when one window holds several topics and you want to keep just one of them.</td></tr>
+						<tr><td><span class="doc-btn"><span class="icon tabaction restore" aria-hidden="true"></span><span class="doc-name">Restore this saved window</span></span></td><td>Opens the saved window again with its tabs, in the same size and place as before. A window that was maximized comes back maximized on the same monitor, if that monitor is still connected.</td></tr>
+						<tr><td><svg class="mouse" role="img" aria-label="click"><use href="#mouse-left"/></svg>&nbsp;Click a saved tab</td><td>Opens just that one page, which is quicker when you need a single tab and not the whole window.</td></tr>
+						<tr><td><svg class="mouse" role="img" aria-label="click"><use href="#mouse-left"/></svg>&nbsp;Click the name</td><td>Lets you rename the saved window or give it a new color, so that you can find it again among many others.</td></tr>
+						<tr><td><span class="doc-btn"><span class="icon tabaction delete" aria-hidden="true"></span><span class="doc-name">Delete this saved window</span></span></td><td>Deletes the saved window when you no longer need it, and an Undo note shows for 8 seconds. While the note shows, the Undo key from the Keyboard part also brings it back.</td></tr>
+						<tr><td>Drag a saved tab</td><td>Opens that page in the open window you drop it on, while the saved window keeps its own copy.</td></tr>
+						<tr><td>Drag an open tab</td><td>Adds a copy of the tab to the saved window you drop it on, so you can add pages to a saved project.</td></tr>
+						<tr><td>Drag a saved window</td><td>Changes the order of your saved windows when you drag one by its name or edge, so the important ones come first.</td></tr>
+						<tr><td><code>s:tax</code></td><td>Searches only your saved windows, which helps once you have saved many of them over time.</td></tr>
+					</table>
+					<ul>
+						<li>Saved tabs come back without their back and forward history, so the back button in a restored tab has nowhere to go.</li>
+						<li>You can keep a copy of all your saved windows in a backup file that you can store anywhere you like. Click "Export Sessions" in the options to make one, for example before you reinstall your browser.</li>
+						<li>To bring them back, for example on a new computer, click "Import Sessions" and pick that file. Windows that you already have are skipped, so nothing shows up twice.</li>
+						<li>A saved private window opens as a private window again, and private and normal tabs are never mixed in one saved window.</li>
+						<li class="only-firefox">In Firefox, importing does not work in the small popup, so open the options page or open Tab Manager Plus in its own tab first.</li>
+					</ul>
+
+					<h3 id="look">Layouts and theme</h3>
+					<p>You can choose how your windows are laid out, because some layouts suit a few windows and others suit many tabs. The <span class="doc-btn"><span class="icon windowaction blocks-view" aria-hidden="true"></span>&#8288;<span>layout</span></span> button at the right end of the bottom bar changes the layout, and each click moves on to the next one.</p>
+					<table class="doc-table">
+						<tr><th>Layout</th><th>What you see, and when it suits you</th></tr>
+						<tr><td><span class="doc-btn"><span class="icon windowaction blocks-view" aria-hidden="true"></span><span>Block</span></span></td><td>Each window is a card in a grid, with every tab as a small icon. It fits a lot on the screen when you know your sites by their icons.</td></tr>
+						<tr><td><span class="doc-btn"><span class="icon windowaction blocks-big-view" aria-hidden="true"></span><span>Big Block</span></span></td><td>The same grid with bigger cards and icons, which is easier to read and easier to click.</td></tr>
+						<tr><td><span class="doc-btn"><span class="icon windowaction horizontal-view" aria-hidden="true"></span><span>Rows</span></span></td><td>Each window is one long row, which works well when you have a few windows with many tabs each.</td></tr>
+						<tr><td><span class="doc-btn"><span class="icon windowaction vertical-view" aria-hidden="true"></span><span>List</span></span></td><td>One tab per line with its full title, so you can read what each tab is. Four small bars on the right show when you last used it, green for the last few minutes.</td></tr>
+					</table>
+					<ul>
+						<li>The <span class="doc-btn"><span class="icon windowaction theme" data-choice="system" aria-hidden="true"></span>&#8288;<span>theme</span></span> button at the top switches between System, Light and Dark, and System simply follows the dark mode of your computer.</li>
+						<li>If you want to see more at once, turn on "Compact mode" in the options, which makes everything a little tighter.</li>
+						<li>If moving things distract you, turn off "Animations" in the options, and Tab Manager Plus will change without any motion.</li>
+						<li>If you need more room, <svg class="mouse" role="img" aria-label="right-click"><use href="#mouse-right"/></svg>&nbsp;right-click the toolbar icon and pick "Open in own tab", and the options can make this the normal way to open it.</li>
+						<li class="only-firefox">In Firefox, you can <svg class="mouse" role="img" aria-label="right-click"><use href="#mouse-right"/></svg>&nbsp;right-click the toolbar icon and pick "Open sidebar" to keep Tab Manager Plus next to your page while you browse.</li>
+					</ul>
+
+					<h3 id="cards">Hover cards</h3>
+					<p>When you rest the mouse on something for a moment, a small card appears and tells you more about it. This helps you decide which tabs to close without opening each one of them first.</p>
+					<table class="doc-table">
+						<tr><th>Rest on</th><th>The card shows</th></tr>
+						<tr><td>A tab</td><td>When you last used it, and whether it is asleep, muted or pinned. It also shows which tab opened it and where its copies are, which helps you decide if you still need it.</td></tr>
+						<tr><td>A window</td><td>Its tabs, its sites and its size, with a small map of where the window sits on your monitors, so you can find it on the screen.</td></tr>
+						<tr><td>A saved window</td><td>When you saved it, and a map of where it will open, so you know what to expect before you restore it.</td></tr>
+						<tr><td>A button</td><td>What the button does, and the key that does the same thing if there is one, so you learn the shortcuts as you go.</td></tr>
+					</table>
+					<p class="only-chrome">In Chrome, turn on "Show all monitors" in the options if you use more than one screen, so that the map shows every monitor. Chrome will ask for your permission first.</p>
+
+					<h3 id="options">Options worth knowing</h3>
+					<p>Click the <span class="doc-btn"><span class="icon windowaction options" aria-hidden="true"></span>&#8288;<span class="doc-name">Options</span></span> button at the top to open the settings. Most people never need to change anything there, but these settings are worth knowing about.</p>
+					<ul>
+						<li><strong>Popup size</strong> makes Tab Manager Plus larger or smaller, up to 800 by 600, because the browser does not allow anything bigger. If you need more room than that, open it in its own tab.</li>
+						<li><strong>Count Tabs</strong> shows the number of open tabs on the toolbar icon, which reminds you when it is time to tidy up.</li>
+						<li><strong>Donate and Rate buttons</strong> lets you hide those two buttons at the top if you do not want to see them, while the theme button stays where it is.</li>
+						<li><strong>Settings backup</strong> saves your settings in a backup file that you can keep anywhere. You can load it in another browser or on a new computer, so that you do not have to set everything up again.</li>
+						<li><strong>Export tabs for debugging</strong> makes a file with your windows, tabs, saved windows and settings that you can attach to a bug report. Nothing is sent anywhere unless you send the file yourself.</li>
+						<li class="only-chrome"><strong>Allow in Incognito</strong> lets Tab Manager Plus show your incognito tabs too, and its link opens the Chrome page where you can turn this on.</li>
+						<li class="only-firefox"><strong>Allow in Private Windows</strong> lets Tab Manager Plus show your private tabs too. To turn it on, open about:addons, click Tab Manager Plus and set "Run in Private Windows" to Allow.</li>
+						<li><strong>Change shortcut key</strong> lists the keys you have now and lets you change them. When a line says "Not set", that action has no key yet, and you can give it one.</li>
+					</ul>
+
+					<h3 id="faq">Questions people ask</h3>
+					<h4>Can I see tab groups?</h4>
+					<p>Not yet, because Tab Manager Plus does not show tab groups today. The tabs in a group still appear, just like any other tab in their window.</p>
+					<h4>Why do the windows jump around?</h4>
+					<p>The list puts the window you used last at the top, so the order changes every time you switch windows. Your current window is always first, which means the window you are working in is always easy to find.</p>
+					<h4>I can't see all my tabs.</h4>
+					<p>Try the List view, make the popup bigger in the options, or open Tab Manager Plus in its own tab, because all three give you more room. Also check the <span class="doc-btn"><span class="icon windowaction filter" aria-hidden="true"></span>&#8288;<span class="doc-name">Hide tabs that do not match search</span></span> button in the bottom bar. While it is turned on, it hides every tab that does not match your search.</p>
+					<h4>Did the X close my whole window?</h4>
+					<p>Yes, it did. The <span class="doc-btn"><span class="icon tabaction close" aria-hidden="true"></span>&#8288;<span class="doc-name">Close this window</span></span> button (the red X) closes the whole window with all its tabs at once. To get the window back, open your browser's history, or press Ctrl+Shift+T (Cmd+Shift+T on a Mac) to reopen what you closed last.</p>
+					<h4>Does my data leave my browser?</h4>
+					<p>No, because there is no tracking of any kind. Your settings and saved windows stay inside your own browser and are never sent anywhere. You can read the details in the <a href="PRIVACY.md">privacy policy</a>.</p>
+					<h4>Chrome or Firefox?</h4>
+					<p>Both browsers work the same way, apart from a few small differences, and this page only shows the lines that apply to your browser.</p>
+					<ul>
+						<li>In Firefox, you also get the sidebar and the steps for turning on private windows.</li>
+						<li>In Chrome, you also get the "Show all monitors" switch, which lets the window map show every screen.</li>
+					</ul>
+					<h4>Something is broken. Where do I tell you?</h4>
+					<p>Please <a href="https://github.com/stefanXO/Tab-Manager-Plus/issues" target="_blank" rel="noopener">open an issue on GitHub</a> and describe what happened. A debug file from the options helps a lot, because it shows how your windows and tabs looked at the time.</p>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script src="dist/popup/documentation.js"></script>
+</body>
+</html>
