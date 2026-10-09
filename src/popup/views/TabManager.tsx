@@ -26,6 +26,8 @@ import {scheduleWorkerCheck, requiredWorkerVersion, staleWorkerText} from "../wo
 import {applyTheme, nextTheme} from "@helpers/theme";
 import {actionHelp, trashKeys, newWindowKeys, newWindowLabel, newWindowHelp, themeHelp, themeLabel} from "../actionHelp";
 import {StatsLayer, StatsSource} from "./StatsLayer";
+import {escapeClosedCard} from "../statsHover";
+import {escapeKey} from "../escapeKey";
 import {Notice} from "./Notice";
 import {MAX_NOTICES, NoticeBoard, NoticeOrder, NoticeRef, isMacPlatform, isUndoKey, undoKeyCaps, undoKeyForField, refusedText, openFailedText} from "../notices";
 import {PendingDeletes, PendingItem, withoutItems, visibleSessions, noticeText, goneUrls, UNDO_MS} from "../pendingDelete";

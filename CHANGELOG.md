@@ -47,6 +47,7 @@ Keyboard
 - Plain arrows and Shift+arrows keep editing the search text, so typing and fixing a search works the way you would expect
 - The Tab key now reaches the buttons in the bottom bar, at the top, and on windows and saved windows, so you can use every button without the mouse
 - Enter or Space presses the button that has the focus. A ring shows which button has the focus, but only while you use the keyboard, so that it never gets in the way when you use the mouse
+- One press of Escape closes an open hover card and clears the search and selection together
 - Ctrl+Delete and Ctrl+Backspace (Cmd on a Mac) close the selected tabs, whether they are open tabs or saved tabs. Ctrl+Backspace in the search box never closes tabs, even when the box is empty. Ctrl+Z undoes a change to a saved window, as the Saved Windows section below describes
 - New installs get new default keys, because the browser took over the old ones. Alt+Shift+M opens Tab Manager Plus, and Alt+Shift+, switches to the previous tab
 - On a Mac, the new keys are Ctrl+Shift+M and Ctrl+Shift+, instead. Existing installs keep the keys they already had, so nothing about your shortcuts changes when you install the update

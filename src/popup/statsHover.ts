@@ -49,6 +49,9 @@ export interface IStatsTarget {
 export type StatsState = Pick<ITabManagerState,
 	"tabsbyid" | "windowsbyid" | "windows" | "windowrefs" | "lastActive" | "lastOpenWindow" |
 	"selection" | "keyCursor" | "layout" | "optionsActive" | "colorsActive" | "colorsSession" | "compact">;
+// the Escape key events that closed an open card (read by TabManager.checkKey)
+export const escapeClosedCard = new WeakSet<Event>();
+
 export interface StatsSource {
 	state() : StatsState;
 	searchBox() : HTMLInputElement | null;
@@ -206,10 +209,11 @@ export class StatsHover {
 	private readonly onKey = (e : KeyboardEvent) => {
 		if (e.keyCode === 27) {
 			if (this.view.isOpen()) {
-				// a card is open: Escape closes just that, not the popup (and
-				// TabManager's own Escape handling never sees the key)
+				// a card is open: this press closes it, and TabManager's Escape
+				// handling still sees the key (escapeClosedCard) to clear the
+				// search and selection in the same press
 				e.preventDefault();
-				e.stopPropagation();
+				escapeClosedCard.add(e);
 			}
 			this.close();
 			return;
