@@ -38,6 +38,18 @@ for (const li of Array.from(document.querySelectorAll<HTMLLIElement>(".optionsBo
 	if (firefox && !chrome) li.classList.add("only-firefox");
 	if (chrome && !firefox) li.classList.add("only-chrome");
 }
+// A subsection whose lines are all for the other browser (the "Firefox"
+// section on Chrome) would show as a heading over an empty list: hide the
+// heading and the list together.
+for (const ul of Array.from(document.querySelectorAll<HTMLUListElement>(".optionsBox ul"))) {
+	const items = Array.from(ul.children);
+	if (!items.length) continue;
+	const other = IS_FIREFOX ? "only-chrome" : "only-firefox";
+	if (!items.every((li) => li.classList.contains(other))) continue;
+	ul.classList.add(other);
+	const heading = ul.previousElementSibling;
+	if (heading && /^H[2-6]$/.test(heading.tagName)) heading.classList.add(other);
+}
 
 // Clips: <figure class="clip"><video preload="none" poster=…> under a 7.0.0
 // subsection (generated from CHANGELOG.md by scripts/changelog.mjs). Nothing
