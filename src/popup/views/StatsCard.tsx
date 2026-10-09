@@ -3,6 +3,7 @@
 import * as React from "react";
 import {StatsCard as IStatsCard, StatsIcon, StatsLine, Rect, MonitorMap, MapRect, placeCard, placeAtPointer, splitUrl} from "../stats";
 import {FaviconTone} from "@helpers/favicon";
+import {perfSpan} from "../perfSpan";
 
 // a favicon as the tile resolved it, with the tone the tile measured
 export interface IStatsFavicon {
@@ -160,7 +161,7 @@ export class StatsCard extends React.Component<IStatsCardProps> {
 	}
 
 	componentDidUpdate(prev : IStatsCardProps) {
-		this.sync(prev);
+		perfSpan("card.sync", () => this.sync(prev));
 	}
 
 	// after a render (new content, the zoom answered, the keyboard's row
@@ -200,10 +201,11 @@ export class StatsCard extends React.Component<IStatsCardProps> {
 		el.parentElement?.classList.remove("up");
 	}
 
+	// reads layout: a forced layout when the content just changed
 	measure() {
 		const el = this.ref.current;
 		if (!el) return;
-		this.size = { width: el.offsetWidth, height: el.offsetHeight };
+		this.size = perfSpan("card.measure", () => ({ width: el.offsetWidth, height: el.offsetHeight }));
 		this.view = { width: document.documentElement.clientWidth, height: document.documentElement.clientHeight };
 	}
 

@@ -3,6 +3,8 @@
 // under a short one instead of at the tallest card of the row. Placement stays
 // row-major (no `dense`), so the windowAge order is never disturbed.
 
+import {perfSpan} from "./perfSpan";
+
 const ROW = 8;   // px, must match grid-auto-rows in popup.css
 const GAP = 8;   // px, must match --card-gap in popup.css
 
@@ -31,7 +33,7 @@ function span(card : HTMLElement) {
 	if (frame) return;
 	frame = requestAnimationFrame(() => {
 		frame = 0;
-		measure(pending);
+		perfSpan("masonry", () => measure(pending));
 		pending.clear();
 	});
 }

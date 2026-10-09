@@ -11,6 +11,8 @@ let listening = false;
 const SCREEN_MARGIN = 8;
 // never shrink below this: a panel that is still being laid out can report tiny sizes
 const MIN_ROOM = 300;
+// the widest action popup Chrome shows
+const CHROME_POPUP_MAX_WIDTH = 800;
 
 export function sizePopup(width : number, height : number) {
 	if (width > 0 && height > 0) requested = { width, height };
@@ -42,6 +44,12 @@ function apply() {
 		body.width = width + "px";
 		body.height = height + "px";
 	}
+	// Chrome's action popup: the frame's fixed parts take this width instead of
+	// the viewport's (css/layout/frame.css), so Chrome's sizing pass at 25px
+	// wide, run on every frame that changes anything, does not lay every tile
+	// out again. Chrome shows a popup at most 800px wide (the setting's range
+	// is 450-800).
+	if (!IS_FIREFOX && width > 0) document.documentElement.style.setProperty("--popup-width", Math.min(Math.max(width, 450), CHROME_POPUP_MAX_WIDTH) + "px");
 	let minHeight = parseInt(body.height) || 0;
 	if (minHeight < 300) {
 		minHeight = 400;

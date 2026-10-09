@@ -10,6 +10,8 @@
 .stats-layer {
 	position: fixed;
 	inset: 0;
+	/* the popup's width, see layout/frame.css */
+	width: var(--popup-width, auto);
 	z-index: 100000;
 	contain: strict;
 	pointer-events: none;
@@ -26,7 +28,7 @@
 	left: 0;
 	top: 0;
 	box-sizing: border-box;
-	max-width: min(22rem, calc(100vw - 16px));
+	max-width: min(22rem, calc(var(--popup-width, 100vw) - 16px));
 	padding: 0.5rem 0.7rem;
 	border: 1px solid var(--popover-border);
 	border-radius: 8px;
@@ -192,7 +194,7 @@
    of a key that does the same next to it, and what it does under it, wrapped
    (no icon column, no badges) */
 .stats-card.action {
-	max-width: min(20rem, calc(100vw - 16px));
+	max-width: min(20rem, calc(var(--popup-width, 100vw) - 16px));
 }
 .stats-action-line {
 	white-space: normal;

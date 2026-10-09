@@ -151,8 +151,13 @@ p .doc-btn, li .doc-btn {
 	color: var(--text-subtle);
 }
 
-/* narrow (the sidebar, a narrow popup): the example column takes less */
-@media (max-width: 540px) {
+/* narrow (the sidebar, a narrow popup): the example column takes less.
+   From 100px, as the queries in layout/narrow.css: this file is part of the
+   popup's stylesheet too, and Chrome lays an action popup out at 25px wide
+   first on every frame that changes anything. A plain max-width query matched
+   there and not at the popup's width, so every hover restyled the whole popup
+   twice (150 ms+ per frame with ~150 tabs and 17 saved windows) */
+@media (min-width: 100px) and (max-width: 540px) {
 	.doc-table td:first-child {
 		width: 40%;
 	}

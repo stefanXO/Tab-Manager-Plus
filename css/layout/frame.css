@@ -15,11 +15,18 @@ html, body {
 	min-height: 400px;
 }
 
+/* The fixed parts of the frame are as wide as the popup: --popup-width, set
+   in px on Chrome's action popup by src/helpers/popup_size.ts, else the
+   viewport. Not 100% there: Chrome lays the popup out at 25px wide first on
+   every frame that changes anything (see layout/narrow.css), and a width
+   that follows the viewport laid every tile out again at 25px and back,
+   twice per hover (40 ms+ with ~280 tiles). At a fixed width that pass
+   leaves them alone. */
 .window-container, .options-container {
 	position: fixed;
 	top: 2.85rem;
-	bottom: 3.2rem;
-	width: 100%;
+	bottom: var(--bar-height);
+	width: var(--popup-width, 100%);
 	overflow-y: scroll;
 	padding-top: 5px;
 }
@@ -28,11 +35,17 @@ html, body {
 	overflow-y: auto;
 }
 
-/* the header's and the bottom bar's icon rows (components/actions.css):
-   space between two icons, and from the last one to the right edge */
-.window.top, .window.searchbox {
+/* One measure for the header, the bottom bar and the options' footer (they
+   are all a row of --bar-button squares): every button sits --bar-edge from
+   the top, the bottom and the right edge of its bar, --bar-gap from the next
+   one, and the bar is exactly that tall. Text (the header's tab count, the
+   search box) starts on --bar-inset, the cards' left edge. */
+:root {
+	--bar-button: 2rem;
+	--bar-edge: 0.4rem;
 	--bar-gap: 2px;
 	--bar-inset: 0.5rem;
+	--bar-height: calc(var(--bar-button) + 2 * var(--bar-edge));
 }
 
 /* header: the tab count and, under it, the hovered tab's url or a tip */
@@ -46,13 +59,13 @@ html, body {
 	border: 0;
 	top: 0px;
 	left: 0px;
-	width: 100%;
+	width: var(--popup-width, 100%);
 	/* exactly its two inputs (2 x 1.4rem), so the bar's own edge - and the
 	   dark theme's hairline in --shadow-header - is the visible bottom edge.
 	   At 2.5rem the inputs hung 0.3rem below it: the dark header, whose
 	   inputs are transparent, ended short of the content with its line
-	   hidden 4.8px up */
-	height: 2.8rem;
+	   hidden 4.8px up. The same height as the bottom bar (--bar-height) */
+	height: var(--bar-height);
 	z-index: 999999;
 }
 /* the text starts on the bars' inset, the cards' left edge, and stops
@@ -62,7 +75,7 @@ html, body {
 	border: 0;
 	height: 1.4rem;
 	padding-left: var(--bar-inset);
-	padding-right: calc(4 * (2rem + var(--bar-gap)) + var(--bar-inset));
+	padding-right: calc(4 * (var(--bar-button) + var(--bar-gap)) + var(--bar-edge));
 	margin: 0;
 	font-size: 0.9rem;
 	padding-top: 0.25rem;
@@ -75,7 +88,7 @@ html, body {
 }
 /* Donate and Rate turned off in the options: only the theme and options buttons */
 .no-supportLinks .window.top input {
-	padding-right: calc(2 * (2rem + var(--bar-gap)) + var(--bar-inset));
+	padding-right: calc(2 * (var(--bar-button) + var(--bar-gap)) + var(--bar-edge));
 }
 .window.top .taburl {
 	width: 100%;
@@ -97,8 +110,8 @@ html, body {
 	position: fixed;
 	bottom: 0px;
 	left: 0px;
-	width: 100%;
-	height: 3.2rem;
+	width: var(--popup-width, 100%);
+	height: var(--bar-height);
 	border-radius: 0;
 }
 

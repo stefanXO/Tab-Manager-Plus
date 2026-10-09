@@ -9,6 +9,7 @@ import * as browser from 'webextension-polyfill';
 import {TabManager} from '@views';
 import * as React from 'react';
 import { createRoot } from 'react-dom/client';
+import {perfCommit, perfOverlayWanted, startPerfOverlay} from "./perfOverlay";
 
 declare global {
 	interface Window {
@@ -87,9 +88,15 @@ async function loadApp() {
 
 		const container = document.getElementById('TMP');
 		const root = createRoot(container!);
-		root.render(
-			<TabManager optionsActive={!!window.optionPage} boot={boot}/>
-		);
+		const app = <TabManager optionsActive={!!window.optionPage} boot={boot}/>;
+		// development builds only (src/popup/perfOverlay.ts); the production
+		// build turns the condition into false and drops the overlay
+		if (process.env.NODE_ENV !== "production" && perfOverlayWanted()) {
+			startPerfOverlay();
+			root.render(<React.Profiler id="TabManager" onRender={perfCommit}>{app}</React.Profiler>);
+		} else {
+			root.render(app);
+		}
 	} catch (err) {
 		console.error(err);
 		booting = false;
