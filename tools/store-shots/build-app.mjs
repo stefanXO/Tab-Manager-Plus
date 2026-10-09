@@ -40,7 +40,7 @@ export async function buildApp() {
 		minify: true,
 		alias: {'webextension-polyfill': join(here, 'fake-browser.js')},
 		define: {
-			'process.env.VERSION': JSON.stringify('7.0.0'),
+			'process.env.VERSION': JSON.stringify(JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8')).version),
 			'process.env.BROWSER': JSON.stringify('firefox'),
 			'process.env.NODE_ENV': JSON.stringify('production'),
 			// the popup asks the worker for this version (src/popup/workerCheck.ts); fake-browser.js answers with it

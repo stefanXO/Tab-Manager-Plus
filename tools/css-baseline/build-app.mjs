@@ -9,7 +9,7 @@
 //
 // Derived from brag-output/work/build-app.mjs (gitignored), extended with the
 // options + changelog entry points.
-import {cpSync, mkdirSync, rmSync} from 'node:fs'
+import {cpSync, mkdirSync, readFileSync, rmSync} from 'node:fs'
 import {dirname, join} from 'node:path'
 import {fileURLToPath, pathToFileURL} from 'node:url'
 import {fetchFavicons} from './fetch-favicons.mjs'
@@ -48,7 +48,7 @@ export async function buildApp({chrome = false} = {}) {
 		minify: true,
 		alias: {'webextension-polyfill': join(here, 'fake-browser.js')},
 		define: {
-			'process.env.VERSION': JSON.stringify('7.0.0'),
+			'process.env.VERSION': JSON.stringify(JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8')).version),
 			'process.env.BROWSER': JSON.stringify(chrome ? 'chrome' : 'firefox'),
 			'process.env.NODE_ENV': JSON.stringify('production'),
 			// the version of the (fake) service worker the popup asks for (src/popup/workerCheck.ts)

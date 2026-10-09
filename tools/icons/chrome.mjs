@@ -9,6 +9,8 @@ export async function launchChrome() {
 	const pinnedExe = existsSync(pinned) ? readdirSync(pinned).sort().reverse().map((d) => [
 		join(pinned, d, 'chrome-win64', 'chrome.exe'),
 		join(pinned, d, 'chrome-linux64', 'chrome'),
+		join(pinned, d, 'chrome-mac-arm64', 'Google Chrome for Testing.app', 'Contents', 'MacOS', 'Google Chrome for Testing'),
+		join(pinned, d, 'chrome-mac-x64', 'Google Chrome for Testing.app', 'Contents', 'MacOS', 'Google Chrome for Testing'),
 	]).flat() : []
 	const executablePath = [
 		process.env.CHROME_PATH,

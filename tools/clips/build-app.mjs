@@ -29,7 +29,7 @@ await esbuild.build({
 	minify: true,
 	alias: { "webextension-polyfill": join(here, "fake-browser.js") },
 	define: {
-		"process.env.VERSION": JSON.stringify("7.0.0"),
+		"process.env.VERSION": JSON.stringify(JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8')).version),
 		"process.env.BROWSER": JSON.stringify(chrome ? "chrome" : "firefox"),
 		"process.env.NODE_ENV": JSON.stringify("production"),
 		REQUIRED_WORKER_VERSION: JSON.stringify("clips-worker"),

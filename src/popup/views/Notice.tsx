@@ -45,6 +45,11 @@ export class Notice extends React.Component<INotice, {held : boolean}> {
 				aria-live={kind === "error" ? "assertive" : "polite"}
 				onMouseEnter={() => this.hold(true)}
 				onMouseLeave={() => this.hold(false)}
+				onFocus={() => this.hold(true)}
+				onBlur={(e) => {
+					// focus moving between the notice's own buttons keeps the hold
+					if (!e.currentTarget.contains(e.relatedTarget as Node | null)) this.hold(false);
+				}}
 			>
 				<span className="notice-text">{text}</span>
 				{onUndo && <button type="button" className="notice-undo" onClick={onUndo} title={keys ? "Undo (" + keys.join("+") + ")" : "Undo"}>
