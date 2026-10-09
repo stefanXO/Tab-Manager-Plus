@@ -220,3 +220,11 @@ describe("notice text", () => {
 		assert.equal(noticeText([item("a"), item("b"), item("c")]), "Deleted 3 saved windows");
 	});
 });
+
+test("flushOnHide: the visibilitychange flush is for the action popup only", async () => {
+	const { flushOnHide } = await import("../src/popup/pendingDelete.ts");
+	assert.equal(flushOnHide("hidden", true), true);
+	assert.equal(flushOnHide("visible", true), false);
+	assert.equal(flushOnHide("hidden", false), false);
+	assert.equal(flushOnHide("hidden", undefined), false);
+});

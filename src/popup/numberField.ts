@@ -57,6 +57,24 @@ export function storedNumber(value : unknown, fallback : number) : number {
 	return finiteOr(value, fallback);
 }
 
+// The number settings that are stored in the wrong type (text from 5.x, null
+// from a NaN), as the numbers readSettings takes them, for it to write back
+// once: Export Settings reads storage directly. Only a key whose text is a
+// whole number inside the setting's range is written back ("650" becomes 650);
+// "65.5", "abc", " " and null stay as they are in storage and are repaired in
+// memory only. A key that is not stored, or is a number already, is left out,
+// so the write happens once and never loops.
+export function repairedNumbers<K extends string>(stored : Partial<Record<K, unknown>>, defaults : Record<K, number>, ranges : Partial<Record<K, NumberBounds>> = {}) : Partial<Record<K, number>> {
+	const out : Partial<Record<K, number>> = {};
+	for (const key of Object.keys(defaults) as K[]) {
+		const value = stored[key];
+		if (typeof value !== "string") continue;
+		const n = typedInBounds(value, ranges[key] ?? {});
+		if (n !== null) out[key] = n;
+	}
+	return out;
+}
+
 // The bounds an input's min / max attributes give, for settledNumber
 export function boundsOf(min? : string, max? : string) : NumberBounds {
 	const bounds : NumberBounds = {};

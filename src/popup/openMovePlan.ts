@@ -41,3 +41,15 @@ export function openMoveIndices(order : readonly number[], moving : readonly Mov
 	}
 	return moves;
 }
+
+// The dragged tabs in the order the popup shows them: by window (as listed in
+// `windowOrder`, a window not listed last), then by tab index. Selection order
+// is click order; moving in that order shuffles the tabs, as savedAdd.ts and
+// savedMove.ts already avoid for saved tabs. A copy; ties keep their order.
+export function shownOrder<T extends { windowId? : number, index : number }>(tabs : readonly T[], windowOrder : readonly number[]) : T[] {
+	const rank = (tab : T) : number => {
+		const at = tab.windowId === undefined ? -1 : windowOrder.indexOf(tab.windowId);
+		return at < 0 ? windowOrder.length : at;
+	};
+	return tabs.map((tab, at) => ({ tab, at })).sort((a, b) => rank(a.tab) - rank(b.tab) || a.tab.index - b.tab.index || a.at - b.at).map((e) => e.tab);
+}

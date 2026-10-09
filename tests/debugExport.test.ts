@@ -94,3 +94,14 @@ test("no user:password@ in the export, open or saved, and the inputs keep theirs
 	assert.equal(sessions[0].tabs[0].url, "https://me:saved-pass@cred.example.com/");
 	assert.equal(open[0].tabs[0].url, "http://user:secret-pass@cred.example.com/login");
 });
+
+test("urls lose the query string and the fragment, open tabs and saved windows", () => {
+	const open = [{ id: 1, tabs: [{ id: 2, title: "https://a.example/cb?token=1", url: "https://a.example/cb#access_token=eyJ", pendingUrl: "https://a.example/r?password=x" }, { id: 3, title: "Why? Because", url: "https://b.example/p?q=1" }] }];
+	const sessions = [{ id: "s", tabs: [{ url: "https://c.example/p?token=2#f", title: "https://c.example/p?token=2", favIconUrl: "https://c.example/f.ico?k=1" }] }];
+	const out = buildEverythingExport(open, settings, meta, sessions);
+	assert.deepEqual(out.windows[0].tabs.map((t) => [t.title, t.url, t.pendingUrl]), [
+		["https://a.example/cb?token=1", "https://a.example/cb", "https://a.example/r"],
+		["Why? Because", "https://b.example/p", ""],
+	]);
+	assert.deepEqual(out.sessions, [{ id: "s", tabs: [{ url: "https://c.example/p", title: "https://c.example/p?token=2", favIconUrl: "https://c.example/f.ico" }] }]);
+});

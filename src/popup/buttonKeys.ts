@@ -49,3 +49,11 @@ export function keepFocus(e : { preventDefault() : void }) : void {
 
 // What every action button spreads on its element
 export const ACTION_BUTTON = { tabIndex: 0, onKeyDown: actionKeyDown, onMouseDown: keepFocus };
+
+// onKeyDown of a native <button>: it clicks itself on Enter and Space, so
+// the keys only need to stay away from the root's key handler
+// (TabManager.checkKey), where Enter opens a window and Space is a typed key.
+// Nothing is prevented, so the browser still presses the button.
+export function nativeButtonKeyDown(e : { key : string; stopPropagation() : void }) : void {
+	if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") e.stopPropagation();
+}

@@ -4,11 +4,11 @@
 // windows and settings, to
 // attach to a bug report. Pure (no browser APIs), so it is unit tested in
 // tests/debugExport.test.ts. Only the fields listed here are copied. Urls
-// lose their "user:password@" part (./safeUrl.ts): the file goes to bug
+// lose their "user:password@" part, query string and fragment (exportUrl in ./safeUrl.ts): the file goes to bug
 // reports.
 
 import { windowName } from "./windowName.ts";
-import { stripUserinfo, stripUserinfoDeep } from "./safeUrl.ts";
+import { exportUrl, stripUserinfo, stripUserinfoDeep } from "./safeUrl.ts";
 
 interface ExportTabSource {
 	id?: number;
@@ -96,8 +96,8 @@ export function buildDebugExport(windows: ExportWindowSource[], settings: Record
 				id: t.id ?? -1,
 				index: t.index ?? i,
 				title: stripUserinfo(t.title),
-				url: stripUserinfo(t.url),
-				pendingUrl: stripUserinfo(t.pendingUrl),
+				url: exportUrl(t.url),
+				pendingUrl: exportUrl(t.pendingUrl),
 				active: !!t.active,
 				pinned: !!t.pinned,
 				audible: !!t.audible,
@@ -120,8 +120,8 @@ export function buildDebugExport(windows: ExportWindowSource[], settings: Record
 }
 
 // The debug export is the session export plus the debug keys: the sessions
-// file reader finds `sessions` in it. Their urls lose the userinfo too, so a
+// file reader finds `sessions` in it. Their urls lose them too, so a
 // restore from this file opens them without it.
 export function buildEverythingExport(windows: ExportWindowSource[], settings: Record<string, unknown>, meta: DebugMeta, sessions: unknown[]): DebugExport {
-	return { ...buildDebugExport(windows, settings, meta), version: 1, sessions: stripUserinfoDeep(sessions) };
+	return { ...buildDebugExport(windows, settings, meta), version: 1, sessions: stripUserinfoDeep(sessions, (v, k) => k === "title" ? stripUserinfo(v) : exportUrl(v)) };
 }

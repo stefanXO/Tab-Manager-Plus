@@ -194,3 +194,20 @@
 		transform: translateX(0);
 	}
 }
+
+/* The system's reduce-motion preference wins over the "animations" setting
+   (on by default): no entrance, no growth on hover or selection, no pulse, no
+   breathing row, no sliding knob. Two things stay, as they are not motion:
+   the Undo countdown bar (it shows the time left) and the search help's show
+   delay and hide grace (search.css). A preference query does not depend on the width, so it needs no min-width guard. */
+@media (prefers-reduced-motion: reduce) {
+	.animations *:not(.notice-bar-fill), .animations *::before, .animations *::after {
+		animation: none !important;
+	}
+	.animations *:not(.search-help), .animations *::before, .animations *::after {
+		transition: none !important;
+	}
+	.animations .tab, .animations .window .tab {
+		transform: none !important;
+	}
+}

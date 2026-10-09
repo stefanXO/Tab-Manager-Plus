@@ -62,3 +62,21 @@ describe("the props of an action button", () => {
 		assert.equal(ACTION_BUTTON.onMouseDown, keepFocus);
 	});
 });
+
+describe("native buttons on the main screen", () => {
+	test("Enter and Space stay off the root's key handler, nothing is prevented", async () => {
+		const { nativeButtonKeyDown } = await import("../src/popup/buttonKeys.ts");
+		const log : string[] = [];
+		for (const key of ["Enter", " ", "a", "Tab", "Escape"]) nativeButtonKeyDown({ key, stopPropagation: () => log.push(key) });
+		assert.deepEqual(log, ["Enter", " "]);
+	});
+	test("the search help, Undo and Close buttons use it", async () => {
+		const { readFileSync } = await import("node:fs");
+		const notice = readFileSync("src/popup/views/Notice.tsx", "utf8");
+		const manager = readFileSync("src/popup/views/TabManager.tsx", "utf8");
+		assert.equal((notice.match(/<button [^>]*onKeyDown=\{nativeButtonKeyDown\}/g) || []).length, 2);
+		assert.equal((notice.match(/<button /g) || []).length, 2);
+		assert.match(manager, /<button .*search-help-icon.*onKeyDown=.nativeButtonKeyDown./);
+		assert.match(manager, /flushOnHide\(document\.visibilityState, window\.inPopup\)/);
+	});
+});

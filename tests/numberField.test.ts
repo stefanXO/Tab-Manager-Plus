@@ -6,7 +6,7 @@
 
 import { describe, test } from "node:test";
 import assert from "node:assert/strict";
-import { typedInBounds, typedNumber, settledNumber, finiteOr, storedNumber, boundsOf } from "../src/popup/numberField.ts";
+import { typedInBounds, typedNumber, settledNumber, finiteOr, storedNumber, repairedNumbers, boundsOf } from "../src/popup/numberField.ts";
 
 describe("typedNumber: only a whole number reaches the setting", () => {
 	test("numbers, with spaces around, negative too", () => {
@@ -94,4 +94,16 @@ describe("typedInBounds: only a number inside the limits is applied while typing
 		assert.equal(typedInBounds("0", boundsOf("1")), null);
 		assert.equal(typedInBounds("99999", boundsOf("1")), 99999);
 	});
+});
+
+test("repairedNumbers: only keys stored in the wrong type, so the write happens once", () => {
+	const defaults = { tabLimit: 0, tabWidth: 800, tabHeight: 600 };
+	const stored : Record<string, unknown> = { tabLimit: "15", tabWidth: "650", tabHeight: null };
+	assert.deepEqual(repairedNumbers(stored, defaults), { tabLimit: 15, tabWidth: 650 });
+	Object.assign(stored, repairedNumbers(stored, defaults));
+	assert.deepEqual(repairedNumbers(stored, defaults), {});
+	const odd : Record<string, unknown> = { tabLimit: "65.5", tabWidth: "abc", tabHeight: " " };
+	assert.deepEqual(repairedNumbers(odd, defaults), {});
+	assert.deepEqual(repairedNumbers({ tabWidth: "900", tabHeight: "100" }, defaults, { tabWidth: { min: 450, max: 800 }, tabHeight: { min: 400, max: 600 } }), {});
+	assert.deepEqual(repairedNumbers({}, defaults), {});
 });

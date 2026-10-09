@@ -4,7 +4,7 @@ import * as browser from 'webextension-polyfill';
 import {readShowMonitors, resolveShowMonitors, ShowMonitors} from "./monitors";
 import {readTheme, Theme} from "./theme";
 import {mayHoldOldSessionsDefault, upgradeSessionsFeature} from "./sessionsUpgrade";
-import {storedNumber} from "../popup/numberField";
+import {storedNumber, repairedNumbers} from "../popup/numberField";
 
 // The four layouts, by their storage value. The user-facing names live in
 // TabManager.readablelayout().
@@ -83,6 +83,10 @@ export async function readSettings(version : string) : Promise<Settings> {
 	for (const key of Object.keys(SETTING_DEFAULTS)) {
 		if (stored[key] === undefined || (key === "layout" && !stored[key])) missing[key] = SETTING_DEFAULTS[key];
 	}
+	// a number stored as text (5.x) or null (6.x) is written back as a number,
+	// once: after that it is a number and nothing is repaired
+	const numbers = ["tabLimit", "tabWidth", "tabHeight"] as const;
+	Object.assign(missing, repairedNumbers(stored, { tabLimit: SETTING_DEFAULTS.tabLimit, tabWidth: SETTING_DEFAULTS.tabWidth, tabHeight: SETTING_DEFAULTS.tabHeight }, { tabLimit: { min: 0 }, tabWidth: { min: 450, max: 800 }, tabHeight: { min: 400, max: 600 } }));
 	// the first run after 6.x: the theme from the old dark switch
 	if (stored.theme === undefined) missing.theme = readTheme(undefined, legacyDark);
 	await browser.storage.local.set(missing);
@@ -90,7 +94,7 @@ export async function readSettings(version : string) : Promise<Settings> {
 	settings.theme = readTheme(settings.theme);
 	// a number field emptied in 6.x stored NaN, which comes back as null; 5.x
 	// stored them as text ("650")
-	for (const key of ["tabLimit", "tabWidth", "tabHeight"] as const) settings[key] = storedNumber(settings[key], SETTING_DEFAULTS[key]);
+	for (const key of numbers) settings[key] = storedNumber(settings[key], SETTING_DEFAULTS[key]);
 	return settings;
 }
 

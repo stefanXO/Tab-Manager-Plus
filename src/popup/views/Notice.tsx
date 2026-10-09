@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import type {NoticeKind} from "../notices";
+import {nativeButtonKeyDown} from "../buttonKeys";
 
 export interface INotice {
 	kind : NoticeKind;
@@ -58,11 +59,11 @@ export class Notice extends React.Component<INotice, {held : boolean}> {
 				}}
 			>
 				<span className="notice-text">{text}</span>
-				{onUndo && <button type="button" className="notice-undo" onClick={onUndo} title={keys ? "Undo (" + keys.join("+") + ")" : "Undo"}>
+				{onUndo && <button type="button" className="notice-undo" onClick={onUndo} onKeyDown={nativeButtonKeyDown} title={keys ? "Undo (" + keys.join("+") + ")" : "Undo"}>
 					<span className="notice-undo-label">Undo</span>
 					{keys && <span className="notice-keys" aria-hidden="true">{keys.map((k) => <kbd key={k}>{k}</kbd>)}</span>}
 				</button>}
-				<button type="button" className="notice-close" onClick={onClose} aria-label="Close" title="Close">
+				<button type="button" className="notice-close" onClick={onClose} onKeyDown={nativeButtonKeyDown} aria-label="Close" title="Close">
 					<span aria-hidden="true">{"\u00d7"}</span>
 				</button>
 				<div className="notice-bar" aria-hidden="true">

@@ -93,6 +93,7 @@
 								saved, so you can tell at a glance what you have not touched in a while</li>
 							<li>When animations are on, they are now subtle: windows and tabs fade in, changes
 								ease in instead of jumping, and a row that plays sound gently breathes</li>
+							<li>With the system's reduce motion setting on, the popup no longer animates, even when Animations is on in the options</li>
 						</ul>
 						<h4>Faster</h4>
 						<ul>
@@ -193,6 +194,7 @@
 							<li>When you drag several tabs, open or saved, they show as a small stack under the
 								mouse with their number, so you can see what you are moving. The stack shows
 								titles in List view and icons in the icon views, as big as that view's tabs</li>
+							<li>When you drag several open tabs to another place, they keep the order they have in the tab strip, not the order you clicked them in</li>
 							<li>A tab dropped on its own right half, or on the left half of the tab to its
 								right, stays where it is. Every other drop lands exactly where the marker shows,
 								even when you move several tabs inside their window, where they used to land one
@@ -483,6 +485,8 @@
 								left no way into the options</li>
 							<li>On the changelog page, a section whose lines are only for the other browser no longer shows as an empty heading</li>
 							<li>A user name and password in a web address (user:password@) no longer show in the popup or in the debug export file</li>
+							<li>The debug export file holds page addresses without query strings or fragments,
+								so a token after a ? or # is never written to a file you attach to a bug report</li>
 							<li>Long Arabic and Hebrew titles and window names now show their start and are cut at their end, and the name box types right to left</li>
 							<li>Settings saved as text by version 5 (popup size, tab limit) are read correctly.
 								A saved window with a broken name no longer leaves the popup empty. One broken

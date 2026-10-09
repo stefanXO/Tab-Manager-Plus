@@ -15,6 +15,7 @@ A Brand New Look!
 - List view shows how recently you used each tab with four small bars at the right of the row, so you can spot old tabs quickly. The bars fill from the right and fade with age, from green for the last few minutes to grey after a week, and hovering them shows the exact time (#40)
 - Windows show when they were last active, and saved sessions show when they were saved, so you can tell at a glance what you have not touched in a while
 - When animations are on, they are now subtle: windows and tabs fade in, changes ease in instead of jumping, and a row that plays sound gently breathes
+- With the system's reduce motion setting on, the popup no longer animates, even when Animations is on in the options
 
 Faster
 - The popup now opens with its final layout, theme and windows in the very first frame, so nothing jumps or fills in after it appears
@@ -58,6 +59,7 @@ Windows
 - Window names and colors now survive a browser restart, even when the window's tabs changed in the meantime, so you don't have to set them up again (#16, #50, #103, #159, #178, #195, #223, #232, #236, #244)
 - Names and colors of windows that were closed for more than a day are cleaned up, so that a new window can't pick up an old name by mistake (#103, #244)
 - When you drag several tabs, open or saved, they show as a small stack under the mouse with their number, so you can see what you are moving. The stack shows titles in List view and icons in the icon views, as big as that view's tabs
+- When you drag several open tabs to another place, they keep the order they have in the tab strip, not the order you clicked them in
 - A tab dropped on its own right half, or on the left half of the tab to its right, stays where it is. Every other drop lands exactly where the marker shows, even when you move several tabs inside their window, where they used to land one place off
 - The window order no longer resets on its own, so windows stay where you expect them. The current window is always listed first and marked, even when Tab Manager Plus opens as a popup window
 - When Tab Manager Plus is already open in a tab, clicking its icon in the toolbar takes you to that tab. You no longer get a second copy
@@ -155,6 +157,7 @@ Smaller fixes
 - The header icons (Donate, Rate, theme and options) now stay visible in a narrow popup and in the sidebar. At 450 px wide or less they used to be hidden, which left no way into the options
 - On the changelog page, a section whose lines are only for the other browser no longer shows as an empty heading
 - A user name and password in a web address (user:password@) no longer show in the popup or in the debug export file
+- The debug export file holds page addresses without query strings or fragments, so a token after a ? or # is never written to a file you attach to a bug report
 - Long Arabic and Hebrew titles and window names now show their start and are cut at their end, and the name box types right to left
 - Settings saved as text by version 5 (popup size, tab limit) are read correctly. A saved window with a broken name no longer leaves the popup empty. One broken old value no longer stops the move of version 5 saved windows
 

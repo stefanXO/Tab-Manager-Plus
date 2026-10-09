@@ -472,7 +472,7 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 							        onClick={this.copyDebug}>{this.state.debugCopied ? "Copied" : "Copy to clipboard"}</button>
 						</div>
 						<Description
-							text="Writes every open window and tab (title, url, last used, pinned, active), the automatic name Tab Manager Plus gave each window, your saved windows and your settings to a JSON file (tab-manager-plus-everything-date-time.json, which Import Sessions can also read). Nothing is sent anywhere. Attach it to a bug report when a window name or a search result looks wrong."
+							text="Writes every open window and tab (title, page address, last used, pinned, active), the automatic name Tab Manager Plus gave each window, your saved windows and your settings to a JSON file (tab-manager-plus-everything-date-time.json, which Import Sessions can also read). Page addresses are saved without the part after a ? or #, so a secret code there is not saved. Titles are saved as they are. The saved windows in the file follow the same rule, so restoring from it opens the plain page. Nothing is sent anywhere. Attach it to a bug report when a window name or a search result looks wrong."
 							notes={[debugExportNote(p.windowCount, p.tabCount)]}
 						/>
 					</div>
@@ -730,6 +730,14 @@ export class TabOptions extends React.Component<ITabOptions, ITabOptionsState> {
 			let file = files[0];
 			let reader = new FileReader();
 
+			reader.onerror = () => {
+				this.context.showError("Could not read the sessions file");
+				inputField.value = "";
+			};
+			reader.onabort = () => {
+				this.context.showError("Could not read the sessions file");
+				inputField.value = "";
+			};
 			reader.onload = async event => {
 				//console.log('FILE CONTENT', event.target.result);
 				var backupFile;

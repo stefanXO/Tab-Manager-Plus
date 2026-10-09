@@ -6,7 +6,7 @@
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { openMoveIndices } from "../src/popup/openMovePlan.ts";
+import { openMoveIndices, shownOrder } from "../src/popup/openMovePlan.ts";
 
 function replay(order : number[], moves : { id : number, index : number }[]) : number[] {
 	const list = order.slice();
@@ -70,5 +70,23 @@ describe("openMoveIndices", () => {
 				assert.deepEqual(run(w, ids, index), want, `${ids} at ${index}`);
 			}
 		}
+	});
+});
+
+describe("shownOrder", () => {
+	test("dragged tabs come out by window, then index, not by click order", () => {
+		const tabs = [{ id: 3, windowId: 1, index: 2 }, { id: 1, windowId: 1, index: 0 }, { id: 20, windowId: 2, index: 0 }, { id: 2, windowId: 1, index: 1 }];
+		assert.deepEqual(shownOrder(tabs, [2, 1]).map((t) => t.id), [20, 1, 2, 3]);
+		assert.deepEqual(shownOrder(tabs, [1, 2]).map((t) => t.id), [1, 2, 3, 20]);
+		assert.deepEqual(tabs.map((t) => t.id), [3, 1, 20, 2]);
+	});
+	test("planned in shown order, a drop before another window's tab keeps the strip order", () => {
+		const order = [10, 11, 12, 13, 14];
+		const picked = [{ id: 3, windowId: 1, index: 2 }, { id: 1, windowId: 1, index: 0 }, { id: 2, windowId: 1, index: 1 }];
+		assert.deepEqual(replay(order, openMoveIndices(order, shownOrder(picked, [1, 2]), 2)), [10, 11, 1, 2, 3, 12, 13, 14]);
+	});
+	test("a tab of an unknown window goes last; no tabs, no tabs", () => {
+		assert.deepEqual(shownOrder([{ windowId: 9, index: 0 }, { windowId: 1, index: 5 }], [1]).map((t) => t.windowId), [1, 9]);
+		assert.deepEqual(shownOrder([], [1]), []);
 	});
 });

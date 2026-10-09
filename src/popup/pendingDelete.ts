@@ -505,3 +505,11 @@ export function noticeText(items : readonly PendingItem[]) : string {
 	if (windows > 0) parts.push(maybePluralize(windows, "saved window"));
 	return "Deleted " + parts.join(" and ");
 }
+
+// Whether the page being hidden writes the pending deletes at once. Only the
+// action popup: it closes when it loses focus. An own tab or the Firefox
+// sidebar is hidden by almost any click (the browser focuses another tab) and
+// lives on, so the 8 s Undo keeps counting there; "pagehide" still flushes.
+export function flushOnHide(visibility : string, inPopup : boolean | undefined) : boolean {
+	return !!inPopup && visibility === "hidden";
+}

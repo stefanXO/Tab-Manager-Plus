@@ -19,6 +19,13 @@ export function stripUserinfo(url : string | null | undefined) : string {
 	return url.replace(USERINFO, "$1");
 }
 
+// the url for a file that leaves the machine (the debug export): no userinfo,
+// no query string and no fragment, so a token in "?token=" or "#access_token="
+// is not written. Scheme, host and path stay.
+export function exportUrl(url : string | null | undefined) : string {
+	return stripUserinfo(url).replace(/[?#][^]*$/, "");
+}
+
 // a url as the header and the tab card show it: no userinfo, the host in
 // Unicode (./punycode.ts)
 export function shownUrl(url : string | null | undefined) : string {
@@ -29,12 +36,12 @@ export function shownUrl(url : string | null | undefined) : string {
 // under a url key (url, pendingUrl, favIconUrl, and title: a saved tab with
 // no title keeps its url as the title): the saved windows in the debug export
 const URL_KEYS = new Set(["url", "pendingUrl", "favIconUrl", "title"]);
-export function stripUserinfoDeep<T>(value : T) : T {
-	if (Array.isArray(value)) return value.map((v) => stripUserinfoDeep(v)) as T;
+export function stripUserinfoDeep<T>(value : T, clean : (v : string, key : string) => string = (v) => stripUserinfo(v)) : T {
+	if (Array.isArray(value)) return value.map((v) => stripUserinfoDeep(v, clean)) as T;
 	if (value === null || typeof value !== "object") return value;
 	const out : Record<string, unknown> = {};
 	for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
-		out[k] = URL_KEYS.has(k) && typeof v === "string" ? stripUserinfo(v) : stripUserinfoDeep(v);
+		out[k] = URL_KEYS.has(k) && typeof v === "string" ? clean(v, k) : stripUserinfoDeep(v, clean);
 	}
 	return out as T;
 }

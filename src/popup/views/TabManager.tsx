@@ -30,7 +30,7 @@ import {escapeClosedCard} from "../statsHover";
 import {escapeKey} from "../escapeKey";
 import {Notice} from "./Notice";
 import {MAX_NOTICES, NoticeBoard, NoticeOrder, NoticeRef, isMacPlatform, isUndoKey, undoKeyCaps, undoKeyForField, refusedText, openFailedText} from "../notices";
-import {PendingDeletes, PendingItem, withoutItems, visibleSessions, noticeText, goneUrls, UNDO_MS} from "../pendingDelete";
+import {PendingDeletes, PendingItem, withoutItems, visibleSessions, noticeText, goneUrls, flushOnHide, UNDO_MS} from "../pendingDelete";
 import {savedDeleteItems} from "../savedDelete";
 import {editSession, shownSavedName, SessionEdit} from "../sessionEdit";
 import {searchSaved, searchSummary, SavedSearch, SummaryKind} from "../searchSaved";
@@ -41,7 +41,7 @@ import {moveSession, reorderShown} from "../sessionOrder";
 import {tidyStored, listSessions, addSessions, importSessions} from "../sessionStore";
 import {moveSavedTabs, remapSavedKeys, movedText, SavedTabMove, SavedDropTarget} from "../savedMove";
 import {addOpenTabs, addedText, SavedAddResult} from "../savedAdd";
-import {openMoveIndices} from "../openMovePlan";
+import {openMoveIndices, shownOrder} from "../openMovePlan";
 import {splitByKind, planMove, planAdd, whyUnsavable, dropErrorText, openMoveVerdict, openSavedVerdict, refusalNotice, endedOutside, Left, MovePlan, AddPlan, Refusal, DropVerdict} from "../dropReasons";
 import {SavedWrites, SavedChange} from "../savedWrites";
 import {stampUpdated} from "../savedUpdated";
@@ -49,7 +49,7 @@ import {moveUndoRecord, undoMove, emptiedText, undoneText, UndoOffers, MoveUndo}
 import type {SavedTabRef} from "../sessionKeys";
 import {stackTiles, stackKind, encodeSaved, encodeIds, TabDrag} from "../dragPayload";
 import {setStackImage, StackTile} from "../dragImage";
-import {ACTION_BUTTON} from "../buttonKeys";
+import {ACTION_BUTTON, nativeButtonKeyDown} from "../buttonKeys";
 import {Icon} from "@icons/Icon";
 import {ICON_FAMILY} from "../icons";
 import {perfSpan} from "../perfSpan";
@@ -147,7 +147,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 	};
 	// leaving the popup writes the deletes that are still counting down
 	private readonly flushPending = () => this.pending.flush(true);
-	private readonly flushPendingHidden = () => { if (document.visibilityState === "hidden") this.pending.flush(true); };
+	private readonly flushPendingHidden = () => { if (flushOnHide(document.visibilityState, window.inPopup)) this.pending.flush(true); };
 
 	private readonly runUpdate = () => this.setState({ dirty: true });
 	// the open tabs the search (or a highlight) selected, as opposed to the
@@ -782,7 +782,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 								<td className="one">
 									<input className="searchBoxInput" type="text" placeholder="Start typing to search tabs..." aria-describedby="search-help" tabIndex={1} onChange={this.search} onFocus={this.closeSearchHelp} ref={this.searchBoxRef} />
 									{/* the card opens from this icon only (search.css), never from the input; mousedown must not take focus from the search box. A click or tap toggles it (class open); Escape, a click elsewhere or the search box closes it */}
-									<button type="button" className={"search-help-icon" + (this.state.searchHelpOpen ? " open" : "")} aria-label="Search help" aria-describedby="search-help" aria-expanded={!!this.state.searchHelpOpen} tabIndex={1} onMouseDown={(e) => e.preventDefault()} onClick={this.toggleSearchHelp}>
+									<button type="button" className={"search-help-icon" + (this.state.searchHelpOpen ? " open" : "")} aria-label="Search help" aria-describedby="search-help" aria-expanded={!!this.state.searchHelpOpen} tabIndex={1} onMouseDown={(e) => e.preventDefault()} onKeyDown={nativeButtonKeyDown} onClick={this.toggleSearchHelp}>
 										<svg viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="6.75" /><path d="M6.1 6.2a2 2 0 1 1 2.9 1.8c-.7.4-1 .8-1 1.5M8 11.6v.1" /></svg>
 									</button>
 									<div className="search-help" role="tooltip" id="search-help">
@@ -2685,7 +2685,7 @@ export class TabManager extends React.Component<ITabManager, ITabManagerState> {
 		}
 		const left : Left[] = [];
 		if (asked > tabs.length) left.push({ reason: "dragged-open-gone", n: asked - tabs.length });
-		const kinds = splitByKind(tabs, !!target.incognito, "window");
+		const kinds = splitByKind(shownOrder(tabs, this.state.windows.map((w) => w.id)), !!target.incognito, "window");
 		left.push(...kinds.left);
 		const moved = new Set<number>();
 		if (index !== undefined) {
