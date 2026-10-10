@@ -10,6 +10,8 @@ How to read it:
 - 🚫 Left as is by decision. 🆕 Found after the release.
 - Line numbers inside the "Where" column are the 2026-09-22 ones and have drifted; the Status cell has the current line where it matters.
 
+**What 7.0.0 did against this roadmap: ✅ 23 of 57 items done, 🔁 10 overtaken by a different solution, ⬜ 24 open; plus 18 of the 28 findings of the PR #273 review fixed before the merge.** Per section:
+
 | Section | Done | Open | Changed | Items |
 |---------|------|------|---------|-------|
 | P0 Next release (7.0.1) shortlist | — | 11 | — | pointers only |
@@ -51,6 +53,8 @@ Left as they are unless someone sees them: P1b #1, #10, #11, #19 (maintainer dec
 
 ## P1 — Remaining correctness bugs (small, low-risk)
 
+**7.0.0 status: ✅ 9 done · 🔁 1 changed · ⬜ 11 open (of 21).** The search rewrite, the shared settings module, the storage queue, listener cleanup and the restore scroll closed the ones with user-visible effects; what is left is worker hygiene (catches, logging, the hash) and small popup races.
+
 | | # | Issue | Where | Impact / suggested fix | Status |
 |:-:|---|-------|-------|------------------------|--------|
 | ✅ | 1.1 | Search term starts as `undefined`: `tabSearchTerm += " " + tab.url` produces `"undefined https://…"` for title-less tabs, so searching "undefined" matches them | `src/popup/views/TabManager.tsx:971-974` | Initialize `tabSearchTerm = ""` | **Done in 7.0.0**: search was rewritten as `parseQuery`/`matchTab` in `src/popup/search.ts`; there is no concatenated search string any more |
@@ -77,6 +81,8 @@ Left as they are unless someone sees them: P1b #1, #10, #11, #19 (maintainer dec
 
 ## P1b — Findings of the review of PR #273 (2026-10-09/10)
 
+**7.0.0 status: ✅ 18 of 28 fixed before the merge · ⬜ 5 open · 🚫 4 left by decision · 1 regression found and reverted (#24).**
+
 A cloud review of `master...7_0_0` (9 area reviewers, 3 verifiers, two passes) produced 28 findings: 0 blocker, 4 high, 5 medium, 19 low. Full text with failure scenarios and fixes: `REVIEW-7_0_0.md` on the branch `review-7_0_0-findings`. Numbers are the review's. 18 were fixed before the merge; what follows is the rest, in the maintainer's order of value.
 
 Open, planned for 7.0.1:
@@ -98,6 +104,8 @@ Left as they are, by decision, unless seen in use:
 
 ## P2 — Tooling & build
 
+**7.0.0 status: ✅ 9 done · 🔁 2 changed · ⬜ 2 open (of 13).** The build chain is rebuilt: one esbuild config, lockfile, CI on two Node versions, no committed `dist/`, minified release, modern `tsconfig`, a test suite of about 1,580 tests, one version source, and screenshot, drag and Firefox harnesses. Left: `package.json` leftovers and BOMs.
+
 | | # | Issue | Where | Impact / suggested fix | Status |
 |:-:|---|-------|-------|------------------------|--------|
 | ✅ | 2.1 | `watch.mjs` is broken: missing `process.env.NODE_ENV` define → bundled React throws `process is not defined`; missing `src/popup/options.js` entry → stale options bundle | `watch.mjs:5-24` vs `build.mjs:11,27-37` | Extract one shared esbuild config used by both scripts | **Done in 7.0.0**: `watch.mjs` is removed; `build.mjs` (including `--watch`) uses the shared `scripts/bundle.mjs` |
@@ -116,6 +124,8 @@ Left as they are, by decision, unless seen in use:
 
 ## P3 — Firefox build notes (informational)
 
+**7.0.0 status: ✅ 1 done · 🔁 5 changed (of 6).** The whole section is overtaken: Firefox is built from this repo as MV3 and 7.0.0 is on AMO.
+
 Firefox ships as MV3 from this repo since 7.0.0: `manifest.firefox.json` is an overlay merged onto `manifest.json` by `scripts/manifest.mjs`, `npm run build:firefox` emits `build/firefox`, and `npm run release` writes the zip and an unsigned `.xpi`. 7.0.0 is on AMO (addon 2593012, auto-approved 2026-10-10). Most of the notes below were written for the old MV2 build and no longer apply.
 
 | | # | Note | Status |
@@ -129,6 +139,8 @@ Firefox ships as MV3 from this repo since 7.0.0: `manifest.firefox.json` is an o
 
 ## P4 — Modernization (larger efforts)
 
+**7.0.0 status: ✅ 3 done · 🔁 1 changed · ⬜ 4 open (of 8).** React 19, no string refs, CSS tokens with OS dark mode and a deterministic boot are in; the `TabManager` split, immutable state, strict TypeScript and the dead-code sweep remain.
+
 | | # | Effort | Notes | Status |
 |:-:|---|--------|-------|--------|
 | ✅ | 4.1 | React 16 → 18/19 | `ReactDOM.render` (`popup.tsx:80`) is removed in React 19 → `createRoot`; unlocks concurrent features and current tooling; resolves the types mismatch (2.8) properly | **Done in 7.0.0**: React 19.3, `createRoot` in `src/popup/popup.tsx` |
@@ -141,6 +153,8 @@ Firefox ships as MV3 from this repo since 7.0.0: `manifest.firefox.json` is an o
 | 🔁 | 4.8 | Popup boot | `popup.tsx` retries `loadApp` via ten staggered `setTimeout`s up to 15s with a double-checked `window.loaded` flag — replace with a single deterministic entry point | **Changed**: `loadApp()` is called once behind a `booting` guard, with settings, windows and the own-tab check fetched in parallel (`popup/boot.ts`). It retries only after a failed boot, up to 10 times with growing delays; `window.loaded` is gone |
 
 ## P5 — Salvaged from the abandoned "5.3.0" branch
+
+**7.0.0 status: ✅ 1 done · 🔁 1 changed · ⬜ 7 open (of 9).** Favicons after first paint shipped; the rest are feature ideas that were not in scope for 7.0.0.
 
 Before the 6.0.0 TypeScript rewrite, an uncommitted "5.3.0" working tree on the old JSX codebase (September 2024) prototyped a first MV3 port plus several features that never shipped. The MV3 port, storage migration, favicon API, AND/OR search, single-tab session restore, name-popup keyboard handling and dark-mode fixes all landed in 6.0.0 in better form. The items below are the parts that did **not** make it into 6.x. They are described as specs to reimplement in TypeScript, not code to copy — the prototype had bugs noted per item.
 
@@ -159,6 +173,8 @@ Before the 6.0.0 TypeScript rewrite, an uncommitted "5.3.0" working tree on the 
 Items from the same branch that were reviewed and deliberately **not** carried over: an opaque `.color1`–`.color25` palette with `!important` (6.x uses a translucent palette on purpose), a Tahoma/Geneva font stack, removed box-shadows, a `react-tooltip` integration that was already disabled in the prototype, a `focusOnTabAndWindow` that moved windows to `left: 0, top: 0` on every focus (a bug), and a tab-number prefix (`1. Title`) in tab titles.
 
 ## P6 — Found after the release (2026-10-09/10)
+
+**Status: 🆕 12 open, none planned yet beyond the P0 picks.**
 
 New since the review: Copilot's last pass on PR #273, the Firefox harness run (`tools/firefox-check`, Firefox 157, 72 pass / 6 fail, none Firefox-only by the code), and things noticed while recording the update clips and store shots. The planned next ones are in P0.
 
