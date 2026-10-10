@@ -87,9 +87,11 @@ You can install this extension from the [Chrome Web Store](https://chromewebstor
 
 Please enjoy.
 
-## Star history
+## Users and stars
 
-[![Star history chart](https://api.star-history.com/svg?repos=stefanXO/Tab-Manager-Plus&type=Date)](https://star-history.com/#stefanXO/Tab-Manager-Plus&Date)
+![Chrome users, Firefox users and GitHub stars over time](docs/stats/users.svg)
+
+Public numbers from the Chrome Web Store, Firefox Add-ons and GitHub, updated once a week by a GitHub Action. Older points come from Wayback Machine snapshots of the store pages. Nothing is collected from users.
 
 ## License
 MPLv2
