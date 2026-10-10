@@ -108,6 +108,7 @@ Firefox
 - When you save a window, its about:blank tabs are now kept instead of being left out.
 - LibreWolf, Zen and Waterfox are now recognized as Firefox, so the add-on behaves the same way in them.
 
+➤ 6.0.0 ( 1st October 2024 ) open single tabs from saved windows, more reliable closing, moving and restoring
 ➤ 5.2.4 ( 3rd October 2024 ) backups of large saved sessions, favicons update after loading, sidebar no longer opens on install
 ➤ 5.2.3 ( 1st October 2024 ) restore saved sessions from the popup
 ➤ 5.2.1 – 5.2.2 ( 22nd September 2024 ) crash fix for tabs without a hostname or title, permission check fix
