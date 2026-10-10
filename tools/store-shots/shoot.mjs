@@ -1,5 +1,5 @@
 // node tools/store-shots/shoot.mjs [--list] [--only 2,5] [--style A,B] [--tiles chaos,purple,windows|all] [--ring N]
-//                                  [--out DIR] [--no-build] [--no-sheets]
+//                                  [--out DIR] [--no-build] [--no-sheets] [--scale N]
 //
 // Renders the Chrome Web Store screenshots, promo tiles and contact sheets of the REAL popup (bundled against a fake browser)
 // into tools/store-shots/out/. Everything a person tweaks lives in shots.json (see README.md).
@@ -14,6 +14,8 @@
 //   --out DIR            write under DIR instead of tools/store-shots/out
 //   --no-build           reuse the popup bundle in app/ (default: rebuild it from the repo's src/ and css/ every run)
 //   --no-sheets          skip the contact sheets (they are also skipped when --only or --tiles is given)
+//   --scale N            render the shots at device scale N instead of their `scales`, named by the final size, into
+//                        out/<style>-<W>x<H>/ (1.875 gives 2400x1500, the largest 16:10 size Firefox Add-ons takes)
 //
 // Needs Chrome (CHROME_PATH overrides; else a pinned build in ~/.cache/puppeteer, then the system Chrome) and puppeteer-core
 // from the repo's node_modules.
@@ -40,6 +42,8 @@ const only = arg('--only')?.split(',')
 const styles = arg('--style') ? arg('--style').toUpperCase().split(',') : ['B']
 const ring = arg('--ring')
 const outRoot = arg('--out') ? resolve(arg('--out')) : join(here, 'out')
+const scaleArg = arg('--scale') ? Number(arg('--scale')) : null
+if (scaleArg !== null && !(scaleArg > 0)) throw new Error('--scale takes a positive number, got ' + arg('--scale'))
 const tileArg = arg('--tiles')
 const tileIds = tileArg ? (tileArg === 'all' ? cfg.tiles.map((t) => t.id) : tileArg.split(',')) : null
 for (const s of styles) if (!['A', 'B'].includes(s)) throw new Error('--style takes A and/or B, got ' + s)
@@ -69,9 +73,11 @@ function plan() {
 				: only ? named && (shot.styles.includes(style) || (shot.onRequest || []).includes(style)) : shot.styles.includes(style)
 			if (!wanted) continue
 			const s = merged(shot, style)
-			for (const scale of ring ? [1] : s.scales || [1]) {
+			for (const scale of ring ? [1] : scaleArg ? [scaleArg] : s.scales || [1]) {
 				const [w, h] = s.size
-				const rel = ring ? `B-ring${ring}/${sizeName(s.file, w, h, 1)}` : `${style}/${sizeName(s.file, w, h, scale)}`
+				const rel = ring ? `B-ring${ring}/${sizeName(s.file, w, h, 1)}`
+					: scaleArg ? `${style}-${w * scale}x${h * scale}/${sizeName(s.file, w * scale, h * scale, 1)}`
+					: `${style}/${sizeName(s.file, w, h, scale)}`
 				jobs.push({shot, style, scale, w: w * scale, h: h * scale, vw: w, vh: h, rel})
 			}
 		}
