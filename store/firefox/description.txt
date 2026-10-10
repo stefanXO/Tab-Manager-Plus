@@ -3,7 +3,12 @@ Tab Manager Plus
 
 The Marie Kondo for your Firefox tabs! Do all these open tabs bring you joy? Let's organize them ^_^
 
-Find, close or switch to the tabs you need, even when you have dozens of tabs spread across several different windows.
+❤❤❤ Recent reviews : ❤❤❤
+- "The best tool to find, close, or switch to the tabs you want, when you have many tabs and windows."
+- "Amazingly useful. Can't believe I've spent so much time without a tool like this."
+- "In a world of ever-expanding tabs in the browser - this is a helpful addition to keeping them organized and quick switching!"
+- "Exactly what I was already looking for the last few months, almost started building it myself :)"
+- "This is exactly what I needed. Thanks for putting this together."
 
 If you like it, please leave a review! We read every single review ❤
 
@@ -103,9 +108,21 @@ Firefox
 - When you save a window, its about:blank tabs are now kept instead of being left out.
 - LibreWolf, Zen and Waterfox are now recognized as Firefox, so the add-on behaves the same way in them.
 
-➤ 6.0.0 ( 1st October 2024 )
-- You can open single tabs from your saved windows instead of restoring the whole window.
-- Many small fixes make closing, moving and restoring tabs and windows more reliable.
+➤ 5.2.4 ( 3rd October 2024 ) backups of large saved sessions, favicons update after loading, sidebar no longer opens on install
+➤ 5.2.3 ( 1st October 2024 ) restore saved sessions from the popup
+➤ 5.2.1 – 5.2.2 ( 22nd September 2024 ) crash fix for tabs without a hostname or title, permission check fix
+➤ 5.2.0 ( 22nd June 2020 ) smarter search with AND / OR, Shift-right click ranges, sidebar panel, bigger popup, blocks by default
+➤ 5.1.4 – 5.1.6 ( April 2020 ) moving multiple tabs fixed, window names set the Firefox window title, dark input fields, selectable text again
+➤ 5.1.3 ( 4th November 2019 ) popup width adjustable again
+➤ 5.1.2 ( 4th November 2019 ) friendlier context menu, speed
+➤ 5.1.1 ( 1st November 2019 ) duplicates button back
+➤ 5.1.0 ( 31st October 2019 ) sound and sleeping tabs, discard tabs, arrow keys
+➤ 5.0.8 ( 28th October 2019 ) backup and restore saved windows, popup or own tab by default
+➤ 5.0.7 ( 28th October 2019 ) dark mode
+➤ 5.0.4 – 5.0.6 ( October 2019 ) save and restore windows (beta), one permission less, older browsers
+➤ 5.0.3 ( 15th August 2019 ) open in its own tab from the context menu
+➤ 5.0.0 – 5.0.2 ( 5th August 2019 ) launched for Firefox!
+➤ 4.9.0 – 4.9.9 ( 2018 – 2019 ) window colors, auto-hide inactive windows, top sites as window names
 
 Tab Manager Plus is open source, so anyone can read and verify its code.
 
