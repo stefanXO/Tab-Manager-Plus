@@ -6,7 +6,7 @@ import fs from 'node:fs';
 const CSV = new URL('../../docs/stats/history.csv', import.meta.url);
 const SVG = new URL('../../docs/stats/users.svg', import.meta.url);
 const PANELS = [
-	{ metric: 'chrome_users', label: 'Chrome users (the store rounds to 100k steps)', color: '#3b78e7', step: true },
+	{ metric: 'chrome_users', label: 'Chrome weekly users', color: '#3b78e7' },
 	{ metric: 'firefox_users', label: 'Firefox users', color: '#e8743b' },
 	{ metric: 'stars', label: 'GitHub stars', color: '#c9a227' },
 ];

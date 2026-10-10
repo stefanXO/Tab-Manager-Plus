@@ -91,7 +91,7 @@ Please enjoy.
 
 ![Chrome users, Firefox users and GitHub stars over time](docs/stats/users.svg)
 
-Public numbers from the Chrome Web Store, Firefox Add-ons and GitHub, updated once a week by a GitHub Action. Older points come from Wayback Machine snapshots of the store pages. Nothing is collected from users.
+Chrome weekly users come from the Chrome Web Store dashboard since October 2021, and from snapshots of the store page before that. Firefox users and GitHub stars are updated once a week by a GitHub Action, with older points from Wayback Machine snapshots and GitHub. Nothing is collected from users.
 
 ## License
 MPLv2

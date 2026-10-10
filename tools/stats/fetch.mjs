@@ -2,6 +2,11 @@
 //   node tools/stats/fetch.mjs today      adds today's Chrome users, Firefox users and GitHub stars
 //   node tools/stats/fetch.mjs backfill   one-time: Wayback Machine snapshots of both store pages
 //                                         (about one per month) plus the full GitHub star history
+//   node tools/stats/fetch.mjs import-chrome <csv>
+//                                         "Weekly users over time" export from the Chrome Web Store
+//                                         dashboard (exact numbers); one point per week is kept
+// The store page only shows a rounded-down count ("200,000 users" for 280k), so the weekly job
+// stores it as chrome_store, and the chart uses the exact dashboard numbers (chrome_users).
 // Only public numbers from the stores and GitHub; nothing is collected from users.
 import fs from 'node:fs';
 
@@ -55,7 +60,7 @@ async function today() {
 	const date = day(new Date()), rows = [];
 	for (const u of CHROME_URLS) {
 		const r = await get(u); const v = r && chromeUsers(await r.text());
-		if (v) { rows.push({ date, metric: 'chrome_users', value: v }); break; }
+		if (v) { rows.push({ date, metric: 'chrome_store', value: v }); break; }
 	}
 	const amo = await get(`https://addons.mozilla.org/api/v5/addons/addon/${AMO_SLUG}/`);
 	if (amo) rows.push({ date, metric: 'firefox_users', value: (await amo.json()).average_daily_users });
@@ -106,5 +111,13 @@ else if (mode === 'backfill') {
 	for (const u of CHROME_URLS) rows.push(...await wayback(u, chromeUsers, 'chrome_users'));
 	rows.push(...await wayback(AMO_PAGE, amoUsers, 'firefox_users'));
 	rows.push(...await stars());
-} else { console.error('usage: fetch.mjs today|backfill'); process.exit(2); }
+} else if (mode === 'import-chrome') {
+	// Date,Weekly users with dates like 10/29/21; zeros are days before the export starts
+	const lines = fs.readFileSync(process.argv[3], 'utf8').trim().split(/\r?\n/).filter(l => /^\d+\/\d+\/\d+,\d+$/.test(l));
+	const pts = lines.map(l => { const [d, v] = l.split(','); const [m, dd, y] = d.split('/'); return { date: `20${y.padStart(2, '0')}-${m.padStart(2, '0')}-${dd.padStart(2, '0')}`, metric: 'chrome_users', value: +v }; }).filter(r => r.value > 0);
+	const first = pts[0].date;
+	rows = rows.filter(r => !(r.metric === 'chrome_users' && r.date >= first)); // exact numbers replace the snapshots
+	rows.push(...pts.filter((r, i) => i % 7 === 0 || i === pts.length - 1));
+	console.log('chrome dashboard', first, 'to', pts.at(-1).date);
+} else { console.error('usage: fetch.mjs today|backfill|import-chrome <csv>'); process.exit(2); }
 console.log(writeRows(rows), 'rows in', CSV.pathname);
