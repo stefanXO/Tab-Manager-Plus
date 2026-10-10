@@ -13,7 +13,10 @@ export const set_window_color = "set_window_color";
 export const set_window_name = "set_window_name";
 export const create_window_with_tabs = "create_window_with_tabs";
 export const create_window_with_session_tabs = "create_window_with_session_tabs";
+export const restore_diagnostic = "restore_diagnostic";
+export const worker_version = "worker_version";
 export const close_tabs = "close_tabs";
+export const open_saved_tabs = "open_saved_tabs";
 export const switch_to_previous_active_tab = "switch_to_previous_active_tab";
 export const refresh_windows = "refresh_windows";
 
@@ -36,5 +39,9 @@ export const send = "send";
 
 // storage keys
 export const windowHashes = "windowHashes";
+export const windowOrphaned = "windowOrphaned";
+export const windowLastActive = "windowLastActive";
 export const windowColors = "windowColors";
 export const windowNames = "windowNames";
+export const windowAge = "windowAge";
+export const sessions = "sessions";

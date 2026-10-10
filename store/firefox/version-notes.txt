@@ -1,0 +1,14 @@
+7.0.0 - A brand new look
+- All layouts are new: Block view is a grid, List view shows one tab per line, and Rows view shows one window per row.
+- There is a new dark theme, and you can pick System, Light or Dark so the add-on matches your computer.
+- The icons are new, and badges show if a tab plays sound, is muted, is asleep or is pinned.
+- Highlight Duplicates selects only the extra copies and keeps the tab you used last, so you can close the copies in one go.
+- Search is better: use t:title for titles, u:address for addresses, -word to leave tabs out, "a phrase" for exact words, or a /regular expression/.
+- Saved windows are now on by default, and you can rename them, recolor them and drag tabs in and out.
+- When you hover a tab or a window, a card shows details such as when you last used it.
+- Firefox: "Minimize inactive windows" works now, so one window stays active while all the others are minimized.
+- Firefox: the options show how to allow private windows, and "Change shortcut key" opens the Firefox shortcut settings.
+- Firefox: when you save a window, its about:blank tabs are now kept instead of being left out.
+- LibreWolf, Zen and Waterfox are now seen as Firefox, so the add-on works in them the same way.
+- New installs get new default keys: Alt+Shift+M opens the add-on, and Alt+Shift+Comma goes to the previous tab (Ctrl+Shift on a Mac).
+Full list: https://github.com/stefanXO/Tab-Manager-Plus/blob/master/CHANGELOG.md

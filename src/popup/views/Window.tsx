@@ -1,71 +1,99 @@
 "use strict";
 
-import {getLocalStorage, setLocalStorage, getLocalStorageMap} from "@helpers/storage";
+import {getLocalStorageMap} from "@helpers/storage";
 import {Tab} from "@views";
 import * as S from "@strings";
+import {LAYOUT, isBlockLayout} from "@helpers/settings";
 import * as React from "react";
+import {maybePluralize, timeAgo} from "@helpers/utils";
 import * as browser from 'webextension-polyfill';
-import {ICommand, IWindow, IWindowState, ISavedSession} from '@types';
+import {IWindow, IWindowState, ISavedSession} from '@types';
+import {ManagerContext, ITabManagerActions} from '../context';
+import {windowName, compactName, tabsKey} from '../windowName';
+import {sendAndWait} from '../messaging';
+import {refusedText} from '../notices';
+import {buildSavedWindow, newSessionId} from '@helpers/sessions';
+import {isSavedWindowDrag} from '../sessionOrder';
+import {isSavedTabDrag} from '../savedDrag';
+import {isOpenTabDrag} from '../savedAdd';
+import {readTabDrag} from '../dragPayload';
+import {tabShow, isHiddenTab, hidesWholeWindow} from '../selectedShown';
+import {tabDropBefore} from '../tabDropSide';
+import {actionHelp} from '../actionHelp';
+import {ACTION_BUTTON} from '../buttonKeys';
 
 export class Window extends React.Component<IWindow, IWindowState> {
+	static contextType = ManagerContext;
+	declare context : ITabManagerActions;
+
+
 	constructor(props : IWindow) {
 		super(props);
 
 		this.state = {
-			colorActive: false,
-			windowTitles: [],
 			color: "default",
 			name: "",
 			auto_name: "",
-			tabs: 0,
-			hover: false,
-			dirty: false
+			tabsKey: "",
+			hidden: false,
+			tabrefs: new Map<number, React.RefObject<Tab>>()
 		};
 
-		this.addTab = this.addTab.bind(this);
-		this.changeColors = this.changeColors.bind(this);
-		this.changeName = this.changeName.bind(this);
-		this.checkKey = this.checkKey.bind(this);
-		this.closePopup = this.closePopup.bind(this);
-		this.close = this.close.bind(this);
-		this.colors = this.colors.bind(this);
-		this.dragOver = this.dragOver.bind(this);
-		this.dragLeave = this.dragLeave.bind(this);
-		this.drop = this.drop.bind(this);
-		this.maximize = this.maximize.bind(this);
-		this.minimize = this.minimize.bind(this);
-		this.save = this.save.bind(this);
-		this.stop = this.stop.bind(this);
-		this.windowClick = this.windowClick.bind(this);
-		this.selectToFromTab = this.selectToFromTab.bind(this);
-		this.hoverWindow = this.hoverWindow.bind(this);
-		this.hoverWindowOut = this.hoverWindowOut.bind(this);
-		this.checkSettings = this.checkSettings.bind(this);
 	}
 
 	async componentDidMount() {
+		this.tabsSignature = this.signature(this.props.tabs);
 		await this.checkSettings();
 		await this.update();
 	}
 
-	async componentDidUpdate(prevProps, prevState) {
-		if (this.state.dirty) {
+	// what the auto title depends on; props.tabs is a new array on every
+	// refresh, so compare content, not identity
+	private tabsSignature = "";
+	signature(tabs : browser.Tabs.Tab[]) : string {
+		return tabs.map((t) => t.id + ":" + t.status + ":" + (t.pendingUrl || t.url || "")).join("|");
+	}
+
+	// Whether the window has nothing to show: no tab, or (with "Hide
+	// non-matching tabs" on) every tab hidden by the search. A selected tab is
+	// never hidden (../selectedShown.ts), so it keeps its window on screen.
+	private hidesAll() : boolean {
+		return hidesWholeWindow(this.props.tabs.map((tab) => tab.id), this.props.hiddenTabs, this.props.filterTabs, this.props.selection);
+	}
+
+	async componentDidUpdate(prevProps : IWindow) {
+		// Tabs hidden by the search come back when the search ends or the filter
+		// goes off, not only when the tabs change: a window whose shown tabs
+		// moved away or were closed must show again then
+		const hide = this.hidesAll();
+		if (hide !== this.state.hidden) this.setState({ hidden: hide });
+		const sig = this.signature(this.props.tabs);
+		if (sig !== this.tabsSignature) {
+			// tabs added, removed or navigated: the auto title may have changed
+			this.tabsSignature = sig;
 			await this.update();
-			this.setState({ dirty: false });
 		}
 	}
 
-
-	async checkSettings() {
-		let colors = await getLocalStorageMap<number, string>(S.windowColors);
-		let color = colors.get(this.props.window.id) || "default";
-
-		this.setState({
-			color: color
-		});
+	// colour and name from storage; also the answer to refresh_windows, which
+	// the worker sends after it named or coloured a window (a restored session
+	// gets its name only after the window and its tabs exist)
+	checkSettings = async () => {
+		const [colors, names] = await Promise.all([
+			getLocalStorageMap<number, string>(S.windowColors),
+			getLocalStorageMap<number, string>(S.windowNames)
+		]);
+		const color = colors.get(this.props.window.id) || "default";
+		const name = names.get(this.props.window.id) || "";
+		if (color !== this.state.color) this.setState({ color: color });
+		// an empty name means "no custom name": fall back to the auto title
+		if (name !== this.state.name) this.setState({ name: name }, () => { if (!name) this.update(); });
 	}
 
 	async update() {
+		let tabs = this.props.tabs;
+		this.setState({ hidden: this.hidesAll() });
+
 		let name : string;
 		if (!!this.props.window.title) {
 			name = this.props.window.title;
@@ -83,415 +111,188 @@ export class Window extends React.Component<IWindow, IWindowState> {
 			return;
 		}
 
-		let _window_titles = this.state.windowTitles;
-		let _tabs = this.state.tabs;
-		let tabs = await browser.tabs.query({ windowId: this.props.window.id });
-		if (tabs.length == 0) return;
-
-		if (_window_titles.length === 0 || this.state.tabs !== tabs.length + this.props.window.id * 99) {
-			_window_titles.length = 0;
-			_tabs = tabs.length + this.props.window.id * 99;
-
-			for (let i = 0; i < tabs.length; i++) {
-				const _tab = tabs[i];
-				if (!!_tab && (!!_tab.url || !!_tab.pendingUrl)) {
-					let url : URL;
-					if (!!_tab.pendingUrl) {
-						url = new URL(_tab.pendingUrl);
-					} else if (!!_tab.url) {
-						url = new URL(_tab.url);
-					}
-
-					// force refresh once we've loaded tabs
-					if (_tab.status == "loading") _tabs--;
-
-					let protocol = url.protocol || "";
-					let hostname = url.hostname || "";
-					if (protocol.indexOf("view-source") > -1 && !!url.pathname) {
-						url = new URL(url.pathname);
-						hostname = url.hostname || "source";
-					} else if (protocol.indexOf("chrome-extension") > -1) {
-						hostname = _tab.title || "extension";
-					} else if (protocol.indexOf("about") > -1) {
-						hostname = _tab.title || "about";
-					} else if (hostname.indexOf("mail.google") > -1) {
-						hostname = "gmail";
-					} else {
-						if (!hostname) hostname = "";
-						hostname = hostname.replace("www.", "");
-						if (!isIpAddress(hostname)) {
-							let regex_var = new RegExp(/(\.[^\.]{0,2})(\.[^\.]{0,2})(\.*$)|(\.[^\.]*)(\.*$)/);
-							hostname = hostname
-								.replace(regex_var, "")
-								.split(".")
-								.pop();
-						} else {
-							if (!!_tab.title) {
-								hostname = _tab.title;
-							} else {
-								let ip = hostname.split(".");
-								hostname = ip[0] + "." + ip[1] + ".*.*";
-							}
-						}
-					}
-
-					if (!hostname || hostname.length > 7) {
-						let title = _tab.title || "";
-
-						const separators = /\s[—|•-]\s/; // Define separators here
-
-						do {
-							let titles = title.split(separators);
-							let first = titles[0];
-							let last = titles[titles.length - 1];
-							if (slugify(first) == slugify(hostname) || slugify_no_space(first) == slugify_no_space(hostname) || slugify_no_space(first).startsWith(slugify_no_space(hostname).substring(0, 3)) || slugify_no_space(hostname).startsWith(slugify_no_space(first).substring(0, 3))) {
-								title = first;
-							} else if (slugify(last) == slugify(hostname) || slugify_no_space(last) == slugify_no_space(hostname) || slugify_no_space(last).startsWith(slugify_no_space(hostname).substring(0, 3)) || slugify_no_space(hostname).startsWith(slugify_no_space(last).substring(0, 3))) {
-								title = last;
-							} else {
-								titles.sort((a : string, b : string) => a.length - b.length);
-								titles.pop();
-								title = titles.join("-");
-							}
-						} while (title.length > hostname.length && separators.test(title))
-
-						if (!hostname || (!!title && title.length < 23)) {
-							hostname = title;
-						}
-
-						// while (hostname.length > 21 && hostname.indexOf(" ") > -1) {
-						// 	let hostnames = hostname.split(" ");
-						// 	hostnames.pop();
-						// 	hostname = hostnames.join(" ");
-						// }
-
-					}
-
-					_window_titles.push(hostname);
-				}
-			}
-
-			this.setState({
-				tabs: _tabs
-			})
-		}
-
-		if (_window_titles.length > 0) {
-			name = this.topEntries(this.state.windowTitles).join("");
-			this.setState({
-				auto_name: name
-			});
+		// the auto name depends on the sites only, so it is recomputed when a tab is
+		// added, removed or navigated; a loading tab has no final url yet, so leave
+		// the key unset and try again once it settled
+		const key = tabsKey(tabs);
+		if (key !== this.state.tabsKey) {
+			const loading = tabs.some((tab) => tab.status === "loading");
+			this.setState({ tabsKey: loading ? "" : key, auto_name: windowName(tabs) });
 		}
 	}
 
+	// the name as the title bar shows it: the user's name, else the automatic
+	// one (shortened in compact mode); the window card (statsHover) shows the same
+	shownName() : string {
+		if (this.state.name) return this.state.name;
+		return this.props.compact ? compactName(this.state.auto_name) : this.state.auto_name;
+	}
+
 	render() {
-		let _this = this;
+		if (this.state.hidden) return null;
 
 		let color = this.state.color || "default";
 
 		let hideWindow = true;
 		let titleAdded = false;
-		let tabsperrow = this.props.layout.indexOf("blocks") > -1 ? Math.ceil(Math.sqrt(this.props.tabs.length + 2)) : this.props.layout === "vertical" ? 1 : 15;
-		let tabs = this.props.tabs.map(function(tab) {
-			let isHidden : boolean = _this.props.hiddenTabs.has(tab.id) && _this.props.filterTabs;
-			let isSelected : boolean = _this.props.selection.has(tab.id);
+		let tabs = this.props.tabs.map((tab) => {
+			// a selected tab is never hidden: it fades like any non-match
+			const show = tabShow(tab.id, this.props.hiddenTabs, this.props.filterTabs, this.props.selection);
+			const isHidden : boolean = show === "hidden";
+			let isSelected : boolean = this.props.selection.has(tab.id);
+			let isFaded : boolean = show === "faded";
 			if (!isHidden) hideWindow = false;
+
+			let tabRef = this.state.tabrefs.get(tab.id) || React.createRef<Tab>();
+			if (!this.state.tabrefs.has(tab.id)) {
+				this.state.tabrefs.set(tab.id, tabRef);
+			}
+
 			return (
 				<Tab
-					key={"windowtab_" + _this.props.window.id + "_" + tab.id}
-					window={_this.props.window}
-					layout={_this.props.layout}
+					key={"windowtab_" + this.props.window.id + "_" + tab.id}
+					tabs={this.props.tabs}
+					onDragChange={this.refreshTabs}
+					window={this.props.window}
+					layout={this.props.layout}
 					tab={tab}
 					selected={isSelected}
+					keyCursor={this.props.keyCursor === tab.id}
 					hidden={isHidden}
-					middleClick={_this.props.tabMiddleClick}
-					hoverHandler={_this.props.hoverHandler}
-					searchActive={_this.props.searchActive}
-					select={_this.props.select}
-					selectTo={_this.selectToFromTab}
+					faded={isFaded}
+					searchActive={this.props.searchActive}
+					query={this.props.query}
 					draggable={true}
-					drag={_this.props.drag}
-					drop={_this.props.drop}
-					dropWindow={_this.props.dropWindow}
-					dragFavicon={_this.props.dragFavicon}
-					parentUpdate={_this.forceUpdate.bind(_this)}
-					ref={"tab" + tab.id}
+					ref={tabRef}
 					id={"tab-" + tab.id}
 				/>
 			);
 		});
 		if (!hideWindow) {
+			if (!!this.props.lastActive) {
+				tabs.push(
+					<div
+						key={"windowage_" + this.props.window.id}
+						className="window-age"
+						data-hover={"Last active " + timeAgo(this.props.lastActive) + "\n" + new Date(this.props.lastActive).toLocaleString() + "\n "}
+					>
+						{timeAgo(this.props.lastActive)}
+					</div>
+				);
+			}
 			if (!!this.props.tabactions) {
 				tabs.push(
-					<div key={"windownl_" + _this.props.window.id} className="newliner" />,
+					<div key={"windownl_" + this.props.window.id} className="newliner"/>,
 					<div key={"windowactions_" + this.props.window.id} className="window-actions">
 						{this.props.sessionsFeature ? (
 							<div
-								className={"icon tabaction save " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title={
+								className={"icon tabaction save " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
+								role="button"
+								{...ACTION_BUTTON}
+								aria-label="Save this window for later"
+								{...actionHelp(
 									"Save this window for later\nWill save " +
-									tabs.length +
-									" tabs with this window for later. Please note : The saved tabs will lose their history."
-								}
+									maybePluralize(this.props.tabs.length, "tab") +
+									" with this window for later. Please note : The saved tabs will lose their history."
+								)}
 								onClick={this.save}
-								onMouseEnter={this.props.hoverIcon}
 							/>
 						) : false}
 						<div
-							className={"icon tabaction add " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-							title="Open a new tab"
+							className={"icon tabaction add " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
+							role="button"
+							{...ACTION_BUTTON}
+							aria-label="Open a new tab"
+							{...actionHelp("Open a new tab")}
 							onClick={this.addTab}
-							onMouseEnter={this.props.hoverIcon}
 						/>
 						<div
-							className={"icon tabaction colors " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-							title="Change window name or color"
-							onClick={this.colors}
-							onMouseEnter={this.props.hoverIcon}
+							className={"icon tabaction colors " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
+							role="button"
+							{...ACTION_BUTTON}
+							aria-label="Change window name or color"
+							{...actionHelp("Change window name or color")}
+							onClick={this.openOptions}
 						/>
 						{this.props.window.state === "minimized" ? (
 							<div
-								className={"icon tabaction maximize " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title={"Maximize this window\nWill maximize " + tabs.length + " tabs"}
+								className={"icon tabaction maximize " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
+								role="button"
+								{...ACTION_BUTTON}
+								aria-label="Maximize this window"
+								{...actionHelp("Maximize this window\nWill maximize " + maybePluralize(this.props.tabs.length, "tab"))}
 								onClick={this.maximize}
-								onMouseEnter={this.props.hoverIcon}
 							/>
 						) : (
 							<div
-								className={"icon tabaction minimize " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title={"Minimize this window\nWill minimize " + tabs.length + " tabs"}
+								className={"icon tabaction minimize " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
+								role="button"
+								{...ACTION_BUTTON}
+								aria-label="Minimize this window"
+								{...actionHelp("Minimize this window\nWill minimize " + maybePluralize(this.props.tabs.length, "tab"))}
 								onClick={this.minimize}
-								onMouseEnter={this.props.hoverIcon}
 							/>
 						)}
 						<div
-							className={"icon tabaction close " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-							title={"Close this window\nWill close " + tabs.length + " tabs"}
+							className={"icon tabaction close " + (isBlockLayout(this.props.layout) ? "" : "windowaction")}
+							role="button"
+							{...ACTION_BUTTON}
+							aria-label="Close this window"
+							{...actionHelp("Close this window\nWill close " + maybePluralize(this.props.tabs.length, "tab"))}
 							onClick={this.close}
-							onMouseEnter={this.props.hoverIcon}
 						/>
 					</div>
 				);
 			}
-			if (this.state.colorActive) {
-				tabs.push(
-					<div key={"windowcolors_" + _this.props.window.id} className={"window-colors " + (this.state.colorActive ? "" : "hidden")} onClick={this.stop} onKeyDown={this.checkKey}>
-						<h2 className="window-x" onClick={this.closePopup}>
-							x
-						</h2>
-						<h3 className="center">Name the window</h3>
-						<input
-							className="window-name-input"
-							type="text"
-							onChange={this.changeName}
-							value={this.state.name}
-							placeholder={this.state.auto_name ?? "Name window..."}
-							tabIndex={1}
-							ref="namebox"
-							onKeyDown={this.checkKey}
-						/>
-						<h3 className="center">Pick a color</h3>
-						<div className="colors-box">
-							<div
-								className={"icon tabaction default " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "default" })}
-								onMouseEnter={this.props.hoverIcon}
-							/>
-							<div
-								className={"icon tabaction color1 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color1" })}
-								onMouseEnter={this.props.hoverIcon}
-							/>
-							<div
-								className={"icon tabaction color2 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color2" })}
-								onMouseEnter={this.props.hoverIcon}
-							/>
-							<div
-								className={"icon tabaction color3 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color3" })}
-								onMouseEnter={this.props.hoverIcon}
-							/>
-							<div
-								className={"icon tabaction color4 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color4" })}
-								onMouseEnter={this.props.hoverIcon}
-							/>
-							<div
-								className={"icon tabaction color5 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color5" })}
-								onMouseEnter={this.props.hoverIcon}
-							/>
-							<div
-								className={"icon tabaction color6 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color6" })}
-								onMouseEnter={this.props.hoverIcon}
-							/>
-							<div
-								className={"icon tabaction color7 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color7" })}
-								onMouseEnter={this.props.hoverIcon}
-							/>
-							<div
-								className={"icon tabaction color8 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color8" })}
-								onMouseEnter={this.props.hoverIcon}
-							/>
-							<div
-								className={"icon tabaction color9 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color9" })}
-								onMouseEnter={this.props.hoverIcon}
-							/>
-							<div
-								className={"icon tabaction color10 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color10" })}
-								onMouseEnter={this.props.hoverIcon}
-							/>
-							<div
-								className={"icon tabaction color11 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color11" })}
-								onMouseEnter={this.props.hoverIcon}
-							/>
-							<div
-								className={"icon tabaction color12 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color12" })}
-								onMouseEnter={this.props.hoverIcon}
-							/>
-							<div
-								className={"icon tabaction color13 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color13" })}
-								onMouseEnter={this.props.hoverIcon}
-							/>
-							<div
-								className={"icon tabaction color14 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color14" })}
-								onMouseEnter={this.props.hoverIcon}
-							/>
-							<div
-								className={"icon tabaction color15 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color15" })}
-								onMouseEnter={this.props.hoverIcon}
-							/>
-							<div
-								className={"icon tabaction color16 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color16" })}
-								onMouseEnter={this.props.hoverIcon}
-							/>
-							<div
-								className={"icon tabaction color17 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color17" })}
-								onMouseEnter={this.props.hoverIcon}
-							/>
-							<div
-								className={"icon tabaction color18 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color18" })}
-								onMouseEnter={this.props.hoverIcon}
-							/>
-							<div
-								className={"icon tabaction color19 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color19" })}
-								onMouseEnter={this.props.hoverIcon}
-							/>
-							<div
-								className={"icon tabaction color20 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color20" })}
-								onMouseEnter={this.props.hoverIcon}
-							/>
-							<div
-								className={"icon tabaction color21 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color21" })}
-								onMouseEnter={this.props.hoverIcon}
-							/>
-							<div
-								className={"icon tabaction color22 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color22" })}
-								onMouseEnter={this.props.hoverIcon}
-							/>
-							<div
-								className={"icon tabaction color23 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color23" })}
-								onMouseEnter={this.props.hoverIcon}
-							/>
-							<div
-								className={"icon tabaction color24 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color24" })}
-								onMouseEnter={this.props.hoverIcon}
-							/>
-							<div
-								className={"icon tabaction color25 " + (this.props.layout.indexOf("blocks") > -1 ? "" : "windowaction")}
-								title="Change background color"
-								onClick={this.changeColors.bind(this, { colorActive: false, color: "color25" })}
-								onMouseEnter={this.props.hoverIcon}
-							/>
-						</div>
-					</div>
-				);
-			}
-
 			if (this.props.windowTitles) {
 				titleAdded = true;
 				tabs.unshift(
 					<h3
 						key={"window-" + this.props.window.id + "-windowTitle"}
-						className="editName center windowTitle"
-						onClick={this.colors}
-						title="Change the name of this window"
-						onMouseEnter={this.props.hoverIcon}
+						className="center windowTitle"
 					>
-						{this.props.window.incognito ? "🕵" : ""}
-						{!!this.state.name ? this.state.name : this.state.auto_name}
+						<span
+							className="editName windowName"
+							dir="auto"
+							onClick={this.openOptions}
+							data-hover="Change the name of this window"
+						>
+							{this.props.window.incognito ? "🕵" : ""}
+							{this.shownName()}
+						</span>
 					</h3>
 				);
 			}
 
-			if (tabsperrow < 5) {
-				tabsperrow = 5;
-			}
 			let children = [];
 			if (!!titleAdded) {
 				children.push(tabs.shift());
 			}
-			let z = -1;
+			// the tab tiles go in one wrapper, so a layout can treat them as a single
+			// column (strip view: title | tiles, wrapping | actions); elsewhere the
+			// wrapper is display: contents and changes nothing
+			let tiles = [];
 			for (let j = 0; j < tabs.length; j++) {
 				let tab = tabs[j].props.tab;
-				let isHidden = !!tab && !!tab.id && this.props.hiddenTabs.has(tab.id) && this.props.filterTabs;
-				if(isHidden) continue;
-				z++;
-				children.push(tabs[j]);
-
-				if ((z + 1) % tabsperrow === 0 && z && this.props.layout.indexOf("blocks") > -1) {
-					children.push(<div className="newliner" key={"windownlz_" + _this.props.window.id + "_" + z} />);
+				if (!tab) {
+					// not a tile (the newliner and the actions bar): flush the tiles first
+					if (tabs[j].key.startsWith("windowtab_")) continue;
+					if (tiles.length) {
+						children.push(<div key={"tabs_" + this.props.window.id} className="tabs">{tiles}</div>);
+						tiles = [];
+					}
+					children.push(tabs[j]);
+					continue;
 				}
+				let isHidden = !!tab.id && isHiddenTab(tab.id, this.props.hiddenTabs, this.props.filterTabs, this.props.selection);
+				if (isHidden) continue;
+				tiles.push(tabs[j]);
 			}
-			let focused = false;
-			if (this.props.window.focused || this.props.lastOpenWindow === this.props.window.id) {
-				focused = true;
+			if (tiles.length) {
+				children.push(<div key={"tabs_" + this.props.window.id} className="tabs">{tiles}</div>);
 			}
+			// one definition of "current", decided in TabManager.update()
+			const focused = this.props.lastOpenWindow === this.props.window.id;
 			return (
 				<div
 					key={"window-" + this.props.window.id}
@@ -506,7 +307,7 @@ export class Window extends React.Component<IWindow, IWindowState> {
 						" " +
 						color +
 						" " +
-						(this.props.layout.indexOf("blocks") > -1 ? "block" : "") +
+						(isBlockLayout(this.props.layout) ? "block" : "") +
 						" " +
 						this.props.layout +
 						" " +
@@ -514,276 +315,193 @@ export class Window extends React.Component<IWindow, IWindowState> {
 						" " +
 						(focused ? " focused" : "")
 					}
+					style={{ "--i": this.props.order || 0 } as React.CSSProperties}
 					onDragEnter={this.dragOver}
 					onDragOver={this.dragOver}
 					onDragLeave={this.dragLeave}
 					onClick={this.windowClick}
-					title={""}
-					onMouseEnter={this.hoverWindow.bind(null, tabs)}
-					onMouseLeave={this.hoverWindowOut}
 					onDrop={this.drop}
 				>
-					<div key={"windowcontainer_" + this.props.window.id} className="windowcontainer" title={"Focus this window\nWill select this window with " + tabs.length + " tabs"}>{children}</div>
+					<div key={"windowcontainer_" + this.props.window.id} className="windowcontainer" data-hover={"Focus this window\nWill select this window with " + maybePluralize(this.props.tabs.length, "tab")}>{children}</div>
 				</div>
 			);
 		} else {
 			return null;
 		}
 	}
-	stop(e) {
+	openOptions = (e : React.MouseEvent) => {
+		this.stopProp(e);
+		this.context.openWindowOptions(this.props.window.id, this.state.auto_name);
+	}
+	stop = (e) => {
 		this.stopProp(e);
 	}
-	addTab(e) {
+	refreshTabs = () => {
+		this.forceUpdate();
+	}
+	addTab = (e) => {
 		this.stopProp(e);
 		browser.tabs.create({ windowId: this.props.window.id });
 	}
-	dragOver(e) {
-		this.setState({hover: true});
+	dragOver = (e) => {
+		// a saved window card being reordered: no drop here
+		if (isSavedWindowDrag(e.dataTransfer?.types)) return;
+		// Tabs dragged here that would be refused (private and normal never mix,
+		// the dragged saved tabs are gone) or change nothing (one tab on its own
+		// place): the browser's not-allowed cursor, no marker (Tab.dragOver) and
+		// no outline. A drag that ends here shows the reason (TabManager.dragDone).
+		if (isSavedTabDrag(e.dataTransfer?.types) || isOpenTabDrag(e.dataTransfer?.types)) {
+			const place = this.dropPlace(e);
+			if (!this.context.openDropOver(this.props.window.id, place.tabId, place.before)) {
+				this.stopProp(e);
+				e.dataTransfer.dropEffect = "none";
+				return;
+			}
+		}
+		this.stopProp(e);
+		// what the drop does, said outright (as the saved windows do) instead
+		// of left to the browser's guess: saved tabs open here as copies, the
+		// saved window keeps them; open tabs move here
+		if (isSavedTabDrag(e.dataTransfer?.types)) e.dataTransfer.dropEffect = "copy";
+		else if (isOpenTabDrag(e.dataTransfer?.types)) e.dataTransfer.dropEffect = "move";
+	}
+	dragLeave = (e) => {
 		this.stopProp(e);
 	}
-	dragLeave(e) {
-		this.setState({hover: false});
-		e.nativeEvent.preventDefault();
+	// Where a drag at the pointer goes in this window: next to the open tab
+	// under it (before it in its first half), else next to the tab closest to
+	// it (see drop), else (no tab on screen) at the window's end. The same for
+	// the verdict on the drag and for the drop.
+	dropPlace(e) : { tabId? : number, before : boolean } {
+		const over = (e.target as Element)?.closest?.(".tab") as HTMLElement | null;
+		if (over && over.id.startsWith("tab-")) {
+			const id = Number(over.id.slice(4));
+			if (Number.isFinite(id)) {
+				const list = this.props.layout === LAYOUT.list;
+				return { tabId: id, before: tabDropBefore(list, e.nativeEvent.offsetX, e.nativeEvent.offsetY, over.clientWidth, over.clientHeight) };
+			}
+		}
+		const closest = this.closestTab(e.nativeEvent.clientX, e.nativeEvent.clientY);
+		if (!closest) return { before: false };
+		const rect = closest.ref.getBoundingClientRect();
+		return { tabId: closest.id, before: this.props.layout === LAYOUT.list ? e.nativeEvent.clientY < rect.top : e.nativeEvent.clientX < rect.left };
 	}
-	drop(e) {
+	// the open tab on screen whose corner is closest to the point
+	closestTab(x : number, y : number) : { id : number, ref : HTMLElement } | null {
 		let distance = 1000000;
 		let closestTab = null;
 		let closestRef = null;
 
 		for (let i = 0; i < this.props.tabs.length; i++) {
 			let tab = this.props.tabs[i];
-			let tabRef = (this.refs["tab" + tab.id] as Tab).state.tabRef.current;
-			let tabRect = tabRef.getBoundingClientRect();
-			let x = e.nativeEvent.clientX;
-			let y = e.nativeEvent.clientY;
+			let tabRef = this.state.tabrefs.get(tab.id);
+			if (!tabRef) continue;
+			let currentRef = tabRef.current?.tabRef?.current;
+			if (!currentRef) continue;
+			// hidden by the search filter: mounted but display none, no position
+			if (currentRef.offsetParent === null) continue;
+			let tabRect = currentRef.getBoundingClientRect();
 			let dx = tabRect.x - x;
 			let dy = tabRect.y - y;
 			let d = Math.sqrt(dx * dx + dy * dy);
 			if (d < distance) {
 				distance = d;
 				closestTab = tab.id;
-				closestRef = tabRef;
+				closestRef = currentRef;
 			}
 		}
-
+		return closestTab != null ? { id: closestTab, ref: closestRef } : null;
+	}
+	drop = (e) => {
 		this.stopProp(e);
+		const dragged = readTabDrag(e.dataTransfer);
 
-		if (closestTab != null) {
+		const closest = this.closestTab(e.nativeEvent.clientX, e.nativeEvent.clientY);
+		if (closest) {
 			let before : boolean;
-			let boundingRect = closestRef.getBoundingClientRect();
-			if (this.props.layout === "vertical") {
+			let boundingRect = closest.ref.getBoundingClientRect();
+			if (this.props.layout === LAYOUT.list) {
 				before = e.nativeEvent.clientY < boundingRect.top;
 			} else {
 				before = e.nativeEvent.clientX < boundingRect.left;
 			}
-			this.props.drop(closestTab, before);
+			this.context.drop(closest.id, before, dragged);
 		} else {
-			this.props.dropWindow(this.props.window.id);
+			this.context.dropWindow(this.props.window.id, dragged);
 		}
 	}
-	hoverWindow(tabs, _) {
-		this.setState({ hover: true });
-		this.props.hoverIcon("Focus this window\nWill select this window with " + tabs.length + " tabs");
-		// this.props.hoverIcon(e);
-	}
-	hoverWindowOut(_) {
-		this.setState({ hover: false });
-	}
-	async checkKey(e) {
-		// close popup when enter or escape have been pressed
-		if (e.keyCode === 13 || e.keyCode === 27) {
-			this.stopProp(e);
-			await this.closePopup();
-		}
-	}
-	async windowClick(e) {
+	windowClick = async (e) => {
 		this.stopProp(e);
 
 		let windowId = this.props.window.id;
 
-		if (navigator.userAgent.search("Firefox") > -1) {
-			browser.runtime.sendMessage<ICommand>({command: S.focus_on_window_delayed, window_id: windowId});
+		if (IS_FIREFOX) {
+			await sendAndWait({command: S.focus_on_window_delayed, window_id: windowId});
 		} else {
-			browser.runtime.sendMessage<ICommand>({command: S.focus_on_window, window_id: windowId});
+			await sendAndWait({command: S.focus_on_window, window_id: windowId});
 		}
 
-		this.props.parentUpdate();
-		if (!!window.inPopup) window.close();
+		if (!!window.inPopup) {
+			window.close();
+		} else {
+			this.context.reload();
+		}
 		return false;
 	}
-	selectToFromTab(tabId : number) {
-		if (!!tabId) this.props.selectTo(tabId, this.props.tabs);
-	}
-	async close(e) {
+	close = async (e) => {
 		this.stopProp(e);
 		await browser.windows.remove(this.props.window.id);
 	}
-	uuidv4() {
-		return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function(c) {
-			let r = (Math.random() * 16) | 0,
-				v = c === "x" ? r : (r & 0x3) | 0x8;
-			return v.toString(16);
-		});
-	}
-	async save(e) {
+	save = async (e) => {
 		this.stopProp(e);
-
-		console.log("session name", this.state.name);
-		let sessionName = this.state.name || this.topEntries(this.state.windowTitles).join("");
-		let sessionColor = this.state.color || "default";
-
-		console.log("session name", sessionName);
-
-		let session : ISavedSession = {
-			tabs: [],
-			windowsInfo: null,
-			name: sessionName,
-			customName: !!this.state.name,
-			color: sessionColor,
-			date: Date.now(),
-			sessionStartTime: Date.now(),
-			incognito: this.props.window.incognito,
-			id: this.uuidv4()
-		};
 
 		let queryInfo : browser.Tabs.QueryQueryInfoType = {
 			windowId: this.props.window.id
 		};
 		//queryInfo.currentWindow = true;
 
-		console.log(queryInfo);
-
 		let tabs : browser.Tabs.Tab[] = await browser.tabs.query(queryInfo);
-		console.log(tabs);
-		for (let tabkey in tabs) {
-			if (navigator.userAgent.search("Firefox") > -1) {
-				let newTab = tabs[tabkey];
-				if (!!newTab.url && newTab.url.search("about:") > -1) {
-					continue;
-				}
-			}
-			session.tabs.push(tabs[tabkey]);
-		}
-		console.log(session.tabs);
-		session.windowsInfo = await browser.windows.get(this.props.window.id);
-
-		console.log(session);
-
-		let sessions = await getLocalStorage('sessions', {});
-		sessions[session.id] = session;
-
-		let value = await setLocalStorage('sessions', sessions).catch(function(err) {
-			console.log(err);
-			console.error(err.message);
+		const windowsInfo = await browser.windows.get(this.props.window.id);
+		// the saved window is built in ../../helpers/sessions.ts (the selection's save uses it too)
+		let session : ISavedSession = buildSavedWindow({
+			id: newSessionId(),
+			now: Date.now(),
+			tabs: tabs,
+			windowsInfo: windowsInfo,
+			name: this.state.name,
+			autoName: this.state.auto_name,
+			color: this.state.color,
+			incognito: this.props.window.incognito,
+			firefox: IS_FIREFOX
 		});
-		this.props.parentUpdate();
-		console.log("Value is set to " + value);
+		// listed first among the saved windows, written by the manager after
+		// any other change to them (../sessionStore.ts)
+		try {
+			await this.context.addSavedWindows([session]);
+		} catch (err) {
+			console.error("could not save the window", err);
+			this.context.showError(refusedText("save the window", err));
+			return;
+		}
+		this.context.reload();
 
-		setTimeout(function() {
-			this.props.scrollTo("session", session.id);
-		}.bind(this), 150);
+		setTimeout(() => {
+			this.context.scrollTo("session", session.id);
+		}, 150);
 	}
-	async minimize(e) {
+	minimize = async (e) => {
 		this.stopProp(e);
 		await browser.windows.update(this.props.window.id, {
 			state: "minimized"
 		});
-		this.props.parentUpdate();
+		this.context.reload();
 	}
-	async maximize(e) {
+	maximize = async (e) => {
 		this.stopProp(e);
 		await browser.windows.update(this.props.window.id, {
 			state: "normal"
 		});
-		this.props.parentUpdate();
-	}
-	colors(e) {
-		this.stopProp(e);
-		this.props.toggleColors(!this.state.colorActive, this.props.window.id);
-		this.setState({
-			colorActive: !this.state.colorActive
-		});
-		setTimeout(function() {
-			if(this.state.colorActive) {
-				this.refs.namebox.focus();
-			}
-		}.bind(this), 150);
-	}
-	async changeColors(a) {
-		this.setState(a);
-		this.props.toggleColors(!this.state.colorActive, this.props.window.id);
-
-		let color = a.color || "default";
-
-		browser.runtime.sendMessage<ICommand>({
-			command: S.set_window_color,
-			window_id: this.props.window.id,
-			color: color
-		});
-
-		this.setState({ color: color });
-		await this.closePopup();
-	}
-	async closePopup() {
-		this.props.toggleColors(!this.state.colorActive, this.props.window.id);
-		this.setState({
-			colorActive: !this.state.colorActive
-		});
-		await this.update();
-		this.props.parentUpdate();
-	}
-	async changeName(e) {
-		// this.setState(a);
-		let name = "";
-		if(e && e.target && e.target.value) name = e.target.value;
-
-		browser.runtime.sendMessage<ICommand>({
-			command: S.set_window_name,
-			window_id: this.props.window.id,
-			name: name
-		});
-
-		this.setState({
-			name: name
-		});
-		if (navigator.userAgent.search("Firefox") > -1) {
-			if(!!name) {
-				await browser.windows.update(this.props.window.id, {
-					titlePreface: name + " - "
-				});
-			}else{
-				await browser.windows.update(this.props.window.id, {
-					titlePreface: name
-				});
-			}
-		}
-	}
-	topEntries(arr : string[]) : string[] {
-		let cnts = arr.reduce(function(obj, val) {
-			obj[val] = (obj[val] || 0) + 1;
-			return obj;
-		}, {});
-		let sorted = Object.keys(cnts).sort(function(a, b) {
-			return cnts[b] - cnts[a];
-		});
-
-		let more = 0;
-		if (sorted.length === 3) {
-		} else {
-			while (sorted.length > 2) {
-				sorted.pop();
-				more++;
-			}
-		}
-		for (let i = 0; i < sorted.length; i++) {
-			if (i > 0) {
-				sorted[i] = ", " + sorted[i];
-			}
-		}
-		if (more > 0) {
-			sorted.push(" & " + more + " more");
-		}
-		return sorted;
+		this.context.reload();
 	}
 	stopProp(e) {
 		if(e && e.nativeEvent) {
@@ -795,37 +513,4 @@ export class Window extends React.Component<IWindow, IWindowState> {
 			e.stopPropagation();
 		}
 	}
-}
-
-function slugify(text) {
-	return text
-		.toString()
-		.toLowerCase()
-		.replace(/\s+/g, "-") // Replace spaces with -
-		.replace(/[^\w-]+/g, "") // Remove all non-word chars
-		.replace(/--+/g, "-") // Replace multiple - with single -
-		.replace(/^-+/, "") // Trim - from start of text
-		.replace(/-+$/, ""); // Trim - from end of text
-}
-
-function slugify_no_space(text) {
-	return text
-		.toString()
-		.toLowerCase()
-		.replace(/\s+/g, "") // Replace spaces with -
-		.replace(/[^\w-]+/g, "") // Remove all non-word chars
-		.replace(/--+/g, "-") // Replace multiple - with single -
-		.replace(/^-+/, "") // Trim - from start of text
-		.replace(/-+$/, ""); // Trim - from end of text
-}
-
-// Function to check if the string is an IP address (IPv4 or IPv6)
-function isIpAddress(input) {
-	// Regex for IPv4: 0-255.0-255.0-255.0-255
-	const ipv4Regex = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-
-	// Regex for IPv6: Matches standard IPv6 formatting (8 groups of 4 hex digits)
-	const ipv6Regex = /^([a-fA-F0-9]{1,4}:){7}[a-fA-F0-9]{1,4}$/;
-
-	return ipv4Regex.test(input) || ipv6Regex.test(input);
 }

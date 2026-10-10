@@ -5,7 +5,14 @@
 *.tar.gz
 *.sh
 node_modules
-package-lock.json
 build/
 source/
 tab-manager*/
+dist/
+.agents/
+.claude/skills/
+.mcp.json
+skills-lock.json
+
+Folder.DotSettings.user
+key.pe*

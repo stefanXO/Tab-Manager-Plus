@@ -1,0 +1,257 @@
+/* Minimized windows and saved windows, each group under a labelled divider
+   ("Minimized windows", "Saved windows"). Minimized cards are dimmed until
+   hovered. Saved cards stay fully readable but must not pass for open
+   windows: a dashed edge instead of the hairline ring (a draft of a window,
+   not a window), the Saved windows icon in front of the name (Session.tsx),
+   and favicons faded and half grey until the card is hovered. */
+
+.window.minimized {
+	opacity: var(--minimized-opacity);
+}
+
+.window.minimized:hover {
+	opacity: 1 !important;
+}
+
+/* drawn inside the card's edge, so it takes no room and follows the radius */
+.window.session {
+	box-shadow: none;
+	outline: 1px dashed var(--saved-edge);
+	outline-offset: -1px;
+}
+.window.session:hover {
+	outline-color: var(--saved-edge-hover);
+}
+
+/* Reordering by drag (src/popup/sessionOrder.ts): the card being dragged
+   fades; the card it is held over shows the tab drop marker's bar in the gap
+   on the side the dragged card goes, left / right while the cards stand side
+   by side, above / below when they are stacked. */
+.window.session.dragging {
+	opacity: 0.4;
+}
+.window.session.drop-left::before,
+.window.session.drop-right::before,
+.window.session.drop-top::before,
+.window.session.drop-bottom::before {
+	content: "";
+	position: absolute;
+	border-radius: 2px;
+	background-color: var(--drop-marker);
+	pointer-events: none;
+}
+.window.session.drop-left::before,
+.window.session.drop-right::before {
+	top: 0;
+	bottom: 0;
+	width: 3px;
+}
+.window.session.drop-left::before {
+	left: -6px;
+}
+.window.session.drop-right::before {
+	right: -6px;
+}
+.window.session.drop-top::before,
+.window.session.drop-bottom::before {
+	left: 0;
+	right: 0;
+	height: 3px;
+}
+.window.session.drop-top::before {
+	top: -6px;
+}
+.window.session.drop-bottom::before {
+	bottom: -6px;
+}
+/* the Rows view in compact mode keeps only 0.2rem between its cards */
+.compact .window.session.horizontal.drop-top::before {
+	top: -3px;
+}
+.compact .window.session.horizontal.drop-bottom::before {
+	bottom: -3px;
+}
+
+/* saved tabs held over the card, not over one of its tabs
+   (src/popup/savedMove.ts): they go at its end. Its dashed edge turns into a
+   solid one in the drop marker's colour. */
+.window.session.drop-into {
+	outline: 2px solid var(--drop-marker);
+	outline-offset: -2px;
+}
+
+.saved-mark {
+	display: inline-flex;
+	vertical-align: -2px;
+	margin-right: 0.3rem;
+	line-height: 0;
+}
+
+/* the favicons (on the tile's ::after, on .iconoverlay in the List view; see
+   components/tab.css): faded, and half grey unless they are grey anyway (the
+   mono icons, which keep their own invert filter). A selected saved tab and
+   a hovered card show them as they are. */
+.window.session:not(:hover) .icon.tab:not(.selected)::after,
+.window.session:not(:hover) .icon.tab:not(.selected) .iconoverlay {
+	opacity: var(--saved-fav-opacity);
+}
+.window.session:not(:hover) .icon.tab:not(.selected):not(.icon-mono-light):not(.icon-mono-dark)::after,
+.window.session:not(:hover) .icon.tab:not(.selected) .iconoverlay:not(.icon-mono-light):not(.icon-mono-dark) {
+	filter: var(--saved-fav-filter);
+}
+
+/* section divider: a rule with its label on top */
+.hrCont {
+	padding-top: 20px; padding-bottom: 20px;
+	clear: both;
+}
+.hrDiv {
+	width: 100%; height: 8px; border-bottom: 1px solid var(--divider-strong); text-align: center;
+}
+.hrSpan {
+	font-size: 12px; background-color: var(--divider-label-bg); color: var(--divider-label-text); padding: 0 10px;
+}
+
+/* The notices over the bottom bar (src/popup/views/Notice.tsx): the Undo notice
+   after a delete, errors (red edge and tint) and what an import did. They stack
+   in .notices, the newest error on top and Undo at the bottom. Each has its text,
+   Undo with its key caps, a close button and a line along its foot that drains
+   over the countdown: a CSS animation, so it is smooth, and the mouse over the
+   notice (.held) pauses it together with the countdown itself.
+   layout/narrow.css lifts the stack over the taller bottom bar there. */
+.notices {
+	position: fixed;
+	left: 50%;
+	transform: translateX(-50%);
+	bottom: calc(3.2rem + 0.6rem);
+	/* over the name / colour screen (components/colors.css), where a refused write shows too */
+	z-index: 10000000;
+	box-sizing: border-box;
+	width: max-content;
+	max-width: calc(100% - 1rem);
+	display: flex;
+	flex-direction: column;
+	gap: 0.4rem;
+}
+.notice {
+	position: relative;
+	box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+	padding: 0.45rem 0.35rem 0.55rem 0.8rem;
+	border-radius: 0.4rem;
+	overflow: hidden;
+	background: var(--toast-bg);
+	color: var(--toast-text);
+	box-shadow: var(--shadow-popover);
+	font-size: 0.8rem;
+}
+.notice .notice-text {
+	flex: 1 1 auto;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.notice .notice-undo {
+	flex: none;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.15rem 0.5rem 0.15rem 0.6rem;
+	border: 1px solid var(--toast-accent);
+	border-radius: 0.3rem;
+	background: transparent;
+	color: var(--toast-accent);
+	font: inherit;
+	font-weight: bold;
+	cursor: pointer;
+}
+.notice .notice-undo:hover {
+	background: var(--toast-accent);
+	color: var(--toast-bg);
+}
+.notice .notice-keys {
+	display: inline-flex;
+	gap: 0.2rem;
+}
+.notice .notice-keys kbd {
+	display: inline-block;
+	min-width: 1.1em;
+	padding: 0 0.3em;
+	border: 1px solid currentColor;
+	border-bottom-width: 2px;
+	border-radius: 0.25rem;
+	font: inherit;
+	font-size: 0.7rem;
+	font-weight: normal;
+	line-height: 1.3;
+	text-align: center;
+	opacity: 0.8;
+}
+.notice .notice-undo:hover .notice-keys kbd {
+	opacity: 1;
+}
+.notice .notice-close {
+	flex: none;
+	width: 1.5rem;
+	height: 1.5rem;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	font-size: 1.1rem;
+	line-height: 1;
+	opacity: 0.7;
+	cursor: pointer;
+}
+.notice .notice-close:hover {
+	opacity: 1;
+	background: var(--toast-track);
+}
+.notice .notice-undo:focus-visible,
+.notice .notice-close:focus-visible {
+	outline: 2px solid var(--toast-accent);
+	outline-offset: 2px;
+}
+/* an error: a red edge, a red tint and a red line. It says what went wrong, so
+   it may take more than one line. An info wraps too (a settings import lists
+   what it changed and skipped). */
+.notice.error {
+	background: var(--toast-error-bg);
+	border-left: 0.3rem solid var(--toast-error-edge);
+	padding-left: 0.6rem;
+}
+.notice.error .notice-text,
+.notice.info .notice-text {
+	white-space: normal;
+	overflow-wrap: anywhere;
+}
+.notice.error .notice-bar-fill {
+	background: var(--toast-error-edge);
+}
+.notice .notice-bar {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	height: 3px;
+	background: var(--toast-track);
+}
+.notice .notice-bar-fill {
+	height: 100%;
+	background: var(--toast-accent);
+	transform-origin: left center;
+	/* the length is set on the element (the notice's countdown) */
+	animation: notice-drain linear forwards;
+}
+.notice.held .notice-bar-fill {
+	animation-play-state: paused;
+}
+@keyframes notice-drain {
+	from { transform: scaleX(1); }
+	to { transform: scaleX(0); }
+}

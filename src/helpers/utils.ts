@@ -4,7 +4,7 @@
 // leading edge, instead of the trailing.
 export function debounce(func, wait, immediate = false) {
 	var timeout;
-	return function () {
+	return function (this : unknown) {
 		var context = this, args = arguments;
 		var later = function later() {
 			timeout = null;
@@ -42,8 +42,36 @@ export function stringHashcode(string) : number {
 	return hash;
 }
 
+export function timeAgo(at : number, now = Date.now()) : string {
+	const s = Math.max(0, Math.round((now - at) / 1000));
+	if (s < 45) return "just now";
+	const m = Math.round(s / 60);
+	if (m < 60) return maybePluralize(m, "minute") + " ago";
+	const h = Math.round(m / 60);
+	if (h < 24) return maybePluralize(h, "hour") + " ago";
+	const d = Math.round(h / 24);
+	if (d === 1) return "yesterday";
+	if (d < 7) return maybePluralize(d, "day") + " ago";
+	const w = Math.round(d / 7);
+	if (w < 5) return maybePluralize(w, "week") + " ago";
+	const mo = Math.round(d / 30.44);
+	if (mo < 12) return maybePluralize(mo, "month") + " ago";
+	const y = Math.round(d / 365.25);
+	return (y === 1 ? "a year" : y + " years") + " ago";
+}
+
 export function maybePluralize(count, noun, suffix = 's') {
 	return `${count} ${noun}${count !== 1 ? suffix : ''}`;
+}
+
+// JSON.parse, or undefined when the text is not JSON (an old value that went
+// bad must not stop the rest of a migration)
+export function parseJsonOr(text : string) : unknown {
+	try {
+		return JSON.parse(text);
+	} catch (e) {
+		return undefined;
+	}
 }
 
 export function toBoolean(str) {

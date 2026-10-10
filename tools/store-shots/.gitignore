@@ -1,0 +1,6 @@
+# regenerated from the repo's popup on every shoot
+app/
+# PNGs, regenerate with `npm run store:shots`
+out/
+# third-party brand favicons, filled on first use by fetch-favicons.mjs
+fav/

@@ -1,11 +1,13 @@
 {
 	"name": "Tab Manager Plus for Chrome",
+	"key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQC6OaS0pAm9cJN3QdHTllQWFVgsn5IpscRi5OhJOHeopM1TaNHYbs9quhItlKBoycenIgOCpQ4Q/EQHgndJZtmNdxzARTSyRQc71+XjFKdvjjfw7ly0dbAnxEkNMY0G32g4jGKZTISGp0sPcf9sUZU/6a3VSZm8r8OXktifz7yEuwIDAQAB",
 	"short_name": "Tab Manager+",
-	"version": "6.0.0",
+	"version": "7.0.0",
 	"manifest_version": 3,
 	"offline_enabled": true,
 	"description": "Quickly find open tabs, see all windows in one view, find duplicates and limit tabs per window. The best Tab Manager for Chrome.",
 	"author": "stefanXO",
+	"minimum_chrome_version": "104",
 	"icons": {
 		"16": "images/browsers16.png",
 		"48": "images/browsers48.png",
@@ -17,12 +19,14 @@
 		"tabs",
 		"contextMenus",
 		"storage",
-		"favicon"
+		"unlimitedStorage",
+		"favicon",
+		"alarms"
 	],
 	"optional_permissions": [
 		"system.display"
 	],
-	"incognito":"spanning",
+	"incognito": "spanning",
 	"background": {
 		"service_worker": "dist/service_worker/service_worker.js"
 	},
@@ -41,16 +45,16 @@
 	"commands": {
 		"_execute_action": {
 			"suggested_key": {
-				"default": "Ctrl+Shift+M",
-				"windows": "Ctrl+Shift+M",
-				"mac": "Command+Shift+M"
+				"default": "Alt+Shift+M",
+				"windows": "Alt+Shift+M",
+				"mac": "MacCtrl+Shift+M"
 			}
 		},
 		"switch_to_previous_active_tab": {
 			"suggested_key": {
-				"default": "Ctrl+Shift+Space",
-				"windows": "Ctrl+Shift+Space",
-				"mac": "Command+Shift+Space"
+				"default": "Alt+Shift+Comma",
+				"windows": "Alt+Shift+Comma",
+				"mac": "MacCtrl+Shift+Comma"
 			},
 			"description": "Switches to previously active tab"
 		}

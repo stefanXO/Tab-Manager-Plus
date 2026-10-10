@@ -1,0 +1,105 @@
+/* The drag image of a drag that takes several tabs (src/popup/dragImage.ts):
+   up to three tab tiles stacked, the dragged one in front at the top left
+   (under the pointer), the others peeking out below and to the right of it,
+   and the number of tabs under the stack. It lives off screen for the moment
+   setDragImage takes its picture; the theme's tokens colour it. The picture
+   is the element's box: the shadows stay inside it (--pad).
+
+   Two looks, by the layout the popup is in (stackKind() in dragPayload.ts):
+   .titled, favicon and title in a row as the List layout draws a tab, and
+   .icons / .icons-big, the favicon on a square tile of the size that layout's
+   tabs have (tab.css: 1.4rem, Big blocks 2.5rem), no title. */
+.drag-stack {
+	--tile-w: 190px;
+	--tile-h: 30px;
+	--step: 6px;
+	--pad: 4px;
+	position: fixed;
+	top: 0;
+	left: -10000px;
+	width: calc(var(--tile-w) + (var(--layers) - 1) * var(--step) + 2 * var(--pad));
+	height: calc(var(--tile-h) + (var(--layers) - 1) * var(--step) + 2 * var(--pad) + 24px);
+	font-size: 12px;
+	line-height: 1.2;
+	color: var(--text);
+	pointer-events: none;
+}
+.drag-tile {
+	position: absolute;
+	left: calc(var(--pad) + var(--depth) * var(--step));
+	top: calc(var(--pad) + var(--depth) * var(--step));
+	box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	width: var(--tile-w);
+	height: var(--tile-h);
+	padding: 0 8px;
+	border: 1px solid var(--tile-border);
+	border-radius: 6px;
+	background-color: var(--tile-bg);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+/* the tiles behind the dragged one: the page's ground colour, so their
+   edges read as more tiles, not as a thicker border */
+.drag-tile.behind {
+	background-color: var(--bg);
+}
+.drag-fav {
+	flex: none;
+	width: 16px;
+	height: 16px;
+	background: var(--fav, none) center / 16px 16px no-repeat;
+}
+/* a white or black favicon keeps the filter its real tile gives it
+   (tab.css, "Favicon visibility") */
+.drag-fav.icon-mono-light {
+	filter: var(--fav-mono-light-filter);
+}
+.drag-fav.icon-mono-dark {
+	filter: var(--fav-mono-dark-filter);
+}
+.drag-title {
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+/* icon tiles only: the square tile of the layout (Blocks, Rows: 1.4rem with a
+   1rem icon; Big blocks: 2.5rem with a 1.5rem icon), a little closer
+   together, and the stack at least as wide as the count under it */
+.drag-stack.icons, .drag-stack.icons-big {
+	--tile-w: 1.4rem;
+	--tile-h: 1.4rem;
+	--icon: 1rem;
+	--step: 5px;
+	min-width: 5.5rem;
+}
+.drag-stack.icons-big {
+	--tile-w: 2.5rem;
+	--tile-h: 2.5rem;
+	--icon: 1.5rem;
+}
+.icons .drag-tile, .icons-big .drag-tile {
+	justify-content: center;
+	padding: 0;
+	border-radius: 3px;
+}
+.icons-big .drag-tile {
+	border-radius: 5px;
+}
+.icons .drag-fav, .icons-big .drag-fav {
+	width: var(--icon);
+	height: var(--icon);
+	background-size: var(--icon) var(--icon);
+}
+.drag-count {
+	position: absolute;
+	left: var(--pad);
+	bottom: var(--pad);
+	padding: 3px 8px;
+	border-radius: 10px;
+	background-color: var(--toast-bg);
+	color: var(--toast-text);
+	font-weight: 600;
+	white-space: nowrap;
+}

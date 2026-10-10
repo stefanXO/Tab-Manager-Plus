@@ -1,0 +1,312 @@
+/* Dark theme: html[data-theme="dark"], set by src/helpers/theme.ts.
+
+   Mostly a redefinition of the semantic tokens (base/tokens.css). No image
+   inversion or blend tricks: favicons and the toolbar icons are shown as they
+   are, tiles are a lighter panel with a hairline, and the header / search bar
+   are panels, not a coloured band.
+
+   A few rules cannot be tokens: the light theme has no counterpart for them
+   (a hover well, placeholder colours, native inputs, the colour edge on
+   window cards). They are at the end of this file. Each joins the layer of the
+   rules it refines, placed after them, so it wins exactly where it wins by
+   specificity - as the old body.dark rules did - and not merely by being in a
+   later layer. */
+
+@layer themes {
+	html[data-theme="dark"] {
+		/* native scrollbars and form controls in dark, the page itself below */
+		color-scheme: dark;
+
+		--bg: var(--dk-ground);
+		--text: var(--dk-text);
+		--text-muted: var(--dk-text-2);
+		--text-faint: rgba(255, 255, 255, 0.6);
+		--surface: var(--dk-panel);
+		--surface-sunken: var(--dk-ground);
+		--surface-incognito: var(--gray-900);
+
+		--shadow-card: 0 0 0 1px var(--dk-line);
+		/* 12% white over --dk-ground, see tokens.css */
+		--bar-line: #31353a;
+		--shadow-header: 0 1px 0 var(--bar-line);
+		--shadow-footer: 0 -1px 0 var(--bar-line);
+		--shadow-popover: 0 4px 14px rgba(0, 0, 0, 0.5);
+		--focus-ring: rgba(183, 154, 232, 0.6);
+		--divider: rgba(255, 255, 255, 0.1);
+		--divider-strong: var(--dk-line-strong);
+		--divider-label-bg: var(--dk-ground);
+		--divider-label-text: var(--dk-text-2);
+
+		--toast-bg: var(--dk-tile-hover);
+		--toast-text: var(--dk-text);
+		--toast-accent: var(--dk-select);
+		--toast-track: rgba(255, 255, 255, 0.18);
+		--toast-error-bg: #55302f;
+		--toast-error-edge: #ff8379;
+
+		--minimized-opacity: 0.85;
+
+		--saved-edge: rgba(255, 255, 255, 0.3);
+		--saved-edge-hover: rgba(255, 255, 255, 0.5);
+		--saved-fav-opacity: 0.7;
+
+		--selection: var(--dk-select);
+		--selection-hover: var(--dk-select-hover);
+		--selection-text: var(--dk-ink);
+
+		--active-border: rgba(255, 255, 255, 0.8);
+		--active-ring: rgba(255, 255, 255, 0.25);
+
+		--key-cursor: #4fc3f7;
+
+		/* tiles are a lighter panel with a hairline, in every state */
+		--tile-bg: var(--dk-tile);
+		--tile-hover: var(--dk-tile-hover);
+		--tile-border: var(--dk-line);
+		--tile-border-accent: var(--dk-line);
+		--tile-active-bg: var(--dk-tile-hover);
+		--tile-incognito-active-bg: var(--dk-tile-hover);
+		--tile-incognito-active-border: var(--active-border);
+		/* no tint behind light favicons: the dark tile already gives them an
+		   edge, so a light-favicon tile takes each state's plain colour (the
+		   selected one stays yellow; it was the bare tile, yellow on hover only) */
+		--tile-tint: var(--dk-tile);
+		--tile-tint-active: var(--tile-active-bg);
+		--tile-tint-selected: var(--selection);
+		--tile-tint-selected-hover: var(--selection-hover);
+		/* white-only favicons as they are, black-only ones inverted */
+		--fav-mono-light-filter: none;
+		--fav-mono-dark-filter: invert(1);
+		--drop-marker: #ffffff;
+		--badge-ring: 0 0 0 1.5px var(--dk-panel);
+
+		/* action icons keep their own colours; they sit on a tile, and only
+		   the hover well changes */
+		--action-bg: var(--dk-tile);
+		--action-border: 1px solid var(--dk-line);
+		--action-hover: var(--dk-tile-hover);
+		--action-add-hover: var(--dk-tile-hover);
+		--action-close-hover: var(--dk-tile-hover);
+		--hover-mark: var(--dk-tile-hover);
+		--button-bg: var(--dk-tile);
+		--button-bg-hover: var(--dk-tile-hover);
+		--line-strong: var(--dk-line-strong);
+		--accent: var(--dk-accent);
+
+		--header-field-bg: transparent;
+
+		/* list view: rows are lines of text, not tiles */
+		--chip-bg: rgba(255, 255, 255, 0.06);
+		--chip-border: rgba(255, 255, 255, 0.15);
+		--chip-solid-bg: transparent;
+		--fresh-4: #3ddc74;
+		--fresh-3: #6cc68c;
+		--fresh-2: #7fae8f;
+		--fresh-1: #858d88;
+		--row-divider: rgba(255, 255, 255, 0.08);
+		--row-hover: rgba(255, 255, 255, 0.08);
+		/* row states, same precedence as light: pinned < active < playing < muted < selected */
+		--row-pinned-edge: rgba(255, 17, 119, 0.85);
+		--row-pinned-bg: rgba(255, 17, 119, 0.12);
+		--row-pinned-hover: rgba(255, 17, 119, 0.2);
+		--row-active-edge: rgba(183, 154, 232, 0.9);
+		--row-active-bg: rgba(183, 154, 232, 0.1);
+		--row-active-hover: rgba(183, 154, 232, 0.2);
+		--row-playing-bg: rgba(66, 133, 244, 0.12);
+		--row-playing-hover: rgba(66, 133, 244, 0.2);
+		--row-playing-pulse: rgba(66, 133, 244, 0.3);
+		--row-muted-edge: rgba(255, 255, 255, 0.35);
+		/* yellow over the blue-grey ground mixes to olive; an amber wash
+		   (hue shifted toward orange) lands on a warm gold instead */
+		--row-selected-edge: var(--dk-select);
+		--row-selected-bg: rgba(255, 170, 0, 0.2);
+		--row-selected-hover: rgba(255, 170, 0, 0.28);
+		--row-selected-text: #fff;
+
+		/* options screen: hairlines, fields and the switch. Off: a grey knob
+		   on a tile-coloured track with a light ring (knob 5.8:1 on the
+		   track); on: a dark knob on the green (10:1). */
+		--rule: var(--dk-line);
+		--rule-strong: var(--dk-line-strong);
+		--field-border: var(--dk-line-strong);
+		--switch-track: var(--dk-tile);
+		--switch-border: var(--dk-line-strong);
+		--switch-knob: var(--dk-text-2);
+		--switch-shadow: rgba(0, 0, 0, 0.4);
+		--switch-on: var(--green-switch);
+		--switch-on-border: transparent;
+		--switch-knob-on: var(--dk-ground);
+		/* the choice row: dark text on the grey knob */
+		--choice-on-text: var(--dk-ground);
+		--kbd-bg: var(--dk-tile);
+		--kbd-border: var(--dk-line-strong);
+		--warning-text: var(--red-text-soft);
+
+		--popover-border: var(--dk-line);
+		--popover-text: var(--dk-text);
+		--popover-text-muted: var(--dk-text-2);
+		--map-monitor-fill: rgba(255, 255, 255, 0.04);
+		--map-window: rgba(183, 154, 232, 0.4);
+		--map-window-edge: var(--dk-accent);
+		--map-window-minimized: rgba(183, 154, 232, 0.24);
+		--map-other-minimized: rgba(255, 255, 255, 0.1);
+		--code-bg: var(--dk-tile);
+
+		/* changelog page: link chips, inline code and the update notice */
+		--text-subtle: var(--dk-text-2);
+		--link-chip-bg: rgba(255, 255, 255, 0.06);
+		--link-chip-bg-hover: rgba(255, 255, 255, 0.12);
+		--link-chip-border: var(--dk-line-strong);
+		--link-chip-border-hover: rgba(255, 255, 255, 0.45);
+		--code-inline-bg: rgba(255, 255, 255, 0.08);
+		--code-inline-border: var(--dk-line);
+		--notice-bg: rgba(183, 154, 232, 0.12);
+		--notice-border: rgba(183, 154, 232, 0.45);
+		--notice-text: var(--dk-text);
+
+		/* window colours: a dark ground carries a colour badly as a fill (yellows
+		   go olive), so every colour is the same faint wash plus a top edge in
+		   the hue: soft edge for row 1, vivid for row 2 */
+		--win-1: #2f2828; --win-1-hover: #393231; --win-1-edge: #cd7670;
+		--win-2: #2e2926; --win-2-hover: #393330; --win-2-edge: #c87d52;
+		--win-3: #2d2925; --win-3-hover: #38332f; --win-3-edge: #bd853f;
+		--win-4: #2c2a25; --win-4-hover: #36342e; --win-4-edge: #a79139;
+		--win-5: #292b26; --win-5-hover: #333530; --win-5-edge: #839e4f;
+		--win-6: #272c27; --win-6-hover: #313631; --win-6-edge: #5da56e;
+		--win-7: #252c2a; --win-7-hover: #2f3634; --win-7-edge: #32a88e;
+		--win-8: #252b2d; --win-8-hover: #2f3537; --win-8-edge: #21a3bc;
+		--win-9: #272a2f; --win-9-hover: #313439; --win-9-edge: #6295d4;
+		--win-10: #282a2f; --win-10-hover: #323439; --win-10-edge: #7f8cd5;
+		--win-11: #2b292e; --win-11-hover: #353338; --win-11-edge: #a280c8;
+		--win-12: #2e282b; --win-12-hover: #383235; --win-12-edge: #c276a2;
+		--win-13: #2f2828; --win-13-hover: #393231; --win-13-edge: #ff877f;
+		--win-14: #2e2926; --win-14-hover: #393330; --win-14-edge: #ff9246;
+		--win-15: #2d2925; --win-15-hover: #38332f; --win-15-edge: #fba100;
+		--win-16: #2c2a25; --win-16-hover: #36342e; --win-16-edge: #dab400;
+		--win-17: #292b26; --win-17-hover: #333530; --win-17-edge: #9fc93e;
+		--win-18: #272c27; --win-18-hover: #313631; --win-18-edge: #56d57b;
+		--win-19: #252c2a; --win-19-hover: #2f3634; --win-19-edge: #00d9b1;
+		--win-20: #252b2d; --win-20-hover: #2f3537; --win-20-edge: #00d1fa;
+		--win-21: #272a2f; --win-21-hover: #313439; --win-21-edge: #66b9ff;
+		--win-22: #282a2f; --win-22-hover: #323439; --win-22-edge: #99acff;
+		--win-23: #2b292e; --win-23-hover: #353338; --win-23-edge: #d198ff;
+		--win-24: #2e282b; --win-24-hover: #383235; --win-24-edge: #ff87d0;
+		--win-25: #2a2a2a; --win-25-hover: #343434; --win-25-edge: #9e9e9e;
+	}
+}
+
+/* ---------------------------------------------------------------- residual */
+
+@layer components {
+	html[data-theme="dark"] {
+		/* the app root paints the ground as well */
+		& #root, & #TMP {
+			background-color: var(--bg);
+			color: var(--text);
+		}
+
+		/* tiles: a hover well, and dark text on the selection */
+		& .icon.tab:hover {
+			background-color: var(--tile-hover);
+		}
+		& .tab.selected {
+			color: var(--selection-text);
+		}
+		& .tab.selected.vertical:hover, & .icon.incognito.vertical.selected {
+			background-color: var(--selection);
+			color: var(--selection-text);
+		}
+		& .tab.selected:hover {
+			background-color: var(--selection-hover);
+		}
+		/* every drop marker, also the idle ones (light: only the shown ones) */
+		& .tab > .limiter {
+			background-color: var(--drop-marker);
+		}
+
+		/* the toolbar's toggled buttons (Highlight duplicates, …) */
+		/* the light theme's mint well, as a teal wash with a teal ring */
+		& .window.searchbox .icon.enabled {
+			background-color: rgba(110, 205, 205, 0.2);
+			border-color: rgba(140, 225, 225, 0.75);
+			box-shadow: inset 0 0 0 1px rgba(140, 225, 225, 0.35);
+		}
+
+		/* fields: native inputs on the dark ground, readable placeholders */
+		& input.tabtitle::placeholder, & input.taburl::placeholder {
+			color: var(--text-muted);
+			opacity: 1;
+		}
+		& .window.searchbox input,
+		& .window-colors input,
+		& .optionsBox input {
+			background-color: var(--bg);
+			color: var(--text);
+			border-color: var(--tile-border);
+		}
+		& .window input::placeholder {
+			color: var(--text-muted);
+		}
+
+		& a {
+			color: var(--accent);
+		}
+		/* changelog link chips: the black service marks (GitHub, Patreon) in
+		   white, the coloured ones stay as they are */
+		& .optionsBox a[href*="github.com"] { --link-icon: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3E%3Cpath fill=%22%23fff%22 d=%22M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12%22/%3E%3C/svg%3E"); }
+		& .optionsBox a[href*="patreon.com"] { --link-icon: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22%3E%3Cpath fill=%22%23fff%22 d=%22M5 2.5h8.2a6.5 6.5 0 0 1 0 13H10.6v6H5z%22/%3E%3C/svg%3E"); }
+
+		/* list chips take the row's text colour */
+		& .tab-pinned, & .tab-highlighted, & .tab-selected, & .tab-audible, & .tab-discarded {
+			color: inherit;
+		}
+
+		/* window colours: the wash (tokens) plus a top edge in the hue */
+		& :is(.color1, .color2, .color3, .color4, .color5, .color6, .color7, .color8, .color9, .color10, .color11, .color12, .color13, .color14, .color15, .color16, .color17, .color18, .color19, .color20, .color21, .color22, .color23, .color24, .color25) {
+			border-top: 3px solid var(--win-edge);
+		}
+		/* a saved window's top edge is dashed like the rest of its edge
+		   (components/session.css) */
+		& .window.session[class*=" color"] {
+			border-top-style: dashed;
+		}
+		/* the picker shows the edge colour as the swatch itself */
+		& .colors-box .icon[class*="color"] {
+			border-top-width: 1px;
+		}
+		& .colors-box .icon:is(.color1, .color2, .color3, .color4, .color5, .color6, .color7, .color8, .color9, .color10, .color11, .color12, .color13, .color14, .color15, .color16, .color17, .color18, .color19, .color20, .color21, .color22, .color23, .color24, .color25) {
+			--win: var(--win-edge);
+			--win-hover: var(--win-edge);
+		}
+
+		/* list rows (.vertical tiles): no tile box, only the left accent slot */
+		& .icon.vertical {
+			border: 0;
+			border-left: 3px solid transparent;
+			background-color: transparent;
+			box-shadow: none;
+		}
+	}
+}
+
+@layer layout {
+	html[data-theme="dark"] {
+		/* a hovered list row shows its state's hover tint even when it is also
+		   selected (on the light theme the selection wins) */
+		& .window.vertical .tab.full.pinned:hover {
+			background-color: var(--row-pinned-hover);
+		}
+		& .window.vertical .tab.full.highlighted:hover {
+			background-color: var(--row-active-hover);
+		}
+		& .window.vertical .tab.full.audible:hover {
+			background-color: var(--row-playing-hover);
+		}
+		& .window.vertical .tab.full.muted:hover {
+			background-color: var(--row-hover);
+		}
+		& .window.vertical .tab.full.selected {
+			color: var(--row-selected-text);
+		}
+	}
+}

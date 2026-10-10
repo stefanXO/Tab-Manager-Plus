@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<!-- Promo tile, style "bold purple". URL: tile-purple.html?tile=<marquee|small>
+     Deep purple gradient built on the accent #9b7bd4, white headline, logo on a white-ring badge with a glow,
+     faint dot grid. Marquee: the real popup (/app/popup.html, fake browser) peeks in from the right edge.
+     window.ready() resolves once the popup (if any), fonts and the logo are loaded. -->
+<link rel="stylesheet" href="/app/font.css">
+<style>
+	:root { --W: 1400px; --H: 560px; }
+	html, body { margin: 0; width: var(--W); height: var(--H); overflow: hidden; }
+	body { font-family: "interfont", system-ui, sans-serif; position: relative; -webkit-font-smoothing: antialiased; color: #fff; background: #4b2f7a; }
+
+	/* backdrop: deep base -> accent, a lighter bloom behind the logo, a dark vignette bottom-right under the popup */
+	#bg { position: absolute; inset: 0; background:
+		radial-gradient(34% 75% at 16% 50%, rgba(200, 170, 255, 0.50), transparent 70%),
+		radial-gradient(60% 90% at 100% 110%, rgba(30, 14, 64, 0.55), transparent 70%),
+		linear-gradient(120deg, #3a1f6e 0%, #4b2f7a 30%, #6a45ae 65%, #8a64cc 100%); }
+	/* dot grid, fading out toward the text */
+	#dots { position: absolute; inset: 0;
+		background-image: radial-gradient(rgba(255,255,255,0.20) 1.2px, transparent 1.6px); background-size: 22px 22px;
+		-webkit-mask-image: linear-gradient(100deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.15) 45%, rgba(0,0,0,0.15) 60%, rgba(0,0,0,0.7) 100%); }
+
+	/* logo badge: translucent disc with a white ring and a soft glow */
+	.badge { position: relative; flex: none; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+		background: radial-gradient(circle at 50% 40%, rgba(255,255,255,0.32), rgba(255,255,255,0.12) 72%);
+		box-shadow: inset 0 0 0 3px rgba(255,255,255,0.85), 0 0 0 10px rgba(255,255,255,0.10), 0 0 70px 10px rgba(205,180,255,0.45), 0 24px 50px rgba(20,8,50,0.45); }
+	.badge img { display: block; filter: drop-shadow(0 10px 18px rgba(20,8,50,0.40)); }
+
+	.brand { position: absolute; inset: 0; display: flex; flex-direction: row; align-items: center; }
+	.name { font-weight: 700; color: #fff; white-space: nowrap; text-shadow: 0 4px 24px rgba(20,8,50,0.35); }
+	.line { color: #e6dcff; }
+
+	.marquee { padding-left: 48px; gap: 46px; }
+	.marquee .badge { width: 320px; height: 320px; }
+	.marquee .name { font-size: 62px; line-height: 1.05; letter-spacing: -1.4px; }
+	.marquee .line { font-size: 29px; margin-top: 14px; }
+
+	.small { padding-left: 26px; gap: 18px; }
+	.small .badge { width: 148px; height: 148px; box-shadow: inset 0 0 0 2px rgba(255,255,255,0.85), 0 0 0 6px rgba(255,255,255,0.10), 0 0 40px 6px rgba(205,180,255,0.45), 0 14px 30px rgba(20,8,50,0.45); }
+	.small .name { font-size: 33px; line-height: 1.05; letter-spacing: -0.6px; white-space: normal; }
+	.small .line { font-size: 18px; margin-top: 12px; line-height: 1.3; }
+
+	/* keycaps for the dark backdrop: solid white caps, purple legends, a deep purple edge */
+	.keys { display: flex; align-items: center; gap: 12px; margin-top: 30px; }
+	.keys .plus { font-size: 24px; font-weight: 700; color: #d9ccff; }
+	.key { height: 50px; min-width: 50px; padding: 0 16px; box-sizing: border-box; border-radius: 11px; background: #fff; color: #4b2f7a;
+		font-size: 21px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+		box-shadow: 0 5px 0 #2c1856, 0 12px 26px rgba(20,8,50,0.45); }
+
+	/* the real popup as a card, peeking in from the right edge, flush with the bottom */
+	.card { position: absolute; border-radius: 14px 0 0 0; overflow: hidden; background: #fff;
+		box-shadow: 0 0 0 1px rgba(255,255,255,0.55), 0 0 0 7px rgba(255,255,255,0.12), 0 30px 80px rgba(15,5,40,0.60), 0 0 90px rgba(205,180,255,0.30); }
+	.card iframe { border: 0; display: block; transform-origin: 0 0; }
+</style>
+</head>
+<body>
+<div id="bg"></div>
+<div id="dots"></div>
+<div id="card" class="card"><iframe id="frame" src="/app/popup.html"></iframe></div>
+
+<script>
+const TILE = new URLSearchParams(location.search).get("tile") || "marquee";
+const big = TILE === "marquee";
+const $ = (id) => document.getElementById(id);
+const POP_W = 640, POP_H = 368;
+const CARD_X = 960;  // whole popup height, bottom-aligned; the tile crops it on the right
+document.documentElement.style.setProperty("--W", big ? "1400px" : "440px");
+document.documentElement.style.setProperty("--H", big ? "560px" : "280px");
+
+const frames = [];
+const b = document.createElement("div");
+b.className = "brand " + TILE;
+// logo2.svg for the marquee and every 2x tile; the 128 px PNG at 1:1 in the 1x small tile
+const logo = big || devicePixelRatio > 1 ? "/logo2.svg" : "/logo2.png";
+if (big) {
+	const c = $("card"), f = $("frame");
+	Object.assign(c.style, { left: CARD_X + "px", top: 560 - POP_H + "px", width: POP_W + "px", height: POP_H + "px" });
+	Object.assign(f.style, { width: POP_W + "px", height: POP_H + "px" });
+	frames.push(f);
+	b.innerHTML = `<div class="badge"><img src="${logo}" width="276" height="276"></div>
+		<div class="text"><div class="name">Tab Manager Plus</div><div class="line">Every window. One view.</div>
+		<div class="keys"><div class="key">Alt</div><span class="plus">+</span><div class="key">⇧ Shift</div><span class="plus">+</span><div class="key">M</div></div></div>`;
+} else {
+	$("card").remove();
+	b.innerHTML = `<div class="badge"><img src="${logo}" width="128" height="128"></div>
+		<div class="text"><div class="name">Tab Manager<br>Plus</div><div class="line">Every window.<br>One view.</div></div>`;
+}
+document.body.appendChild(b);
+
+window.ready = () => new Promise((resolve) => {
+	const check = async () => {
+		const loaded = (f) => { const d = f.contentDocument; return d && d.querySelector(".searchBoxInput") && d.querySelectorAll(".window").length >= 3; };
+		const img = b.querySelector("img");
+		if (frames.every(loaded) && document.fonts.status === "loaded" && img.complete) {
+			await new Promise((r) => setTimeout(r, 900));  // let React settle
+			requestAnimationFrame(() => requestAnimationFrame(() => resolve(true)));
+		} else setTimeout(check, 50);
+	};
+	check();
+});
+</script>
+</body>
+</html>

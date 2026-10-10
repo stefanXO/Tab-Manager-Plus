@@ -1,0 +1,19 @@
+# regenerated from the repo's css on every shoot
+app/
+
+# ~5.7 MB of PNGs, regenerate instead of committing (see README.md)
+baseline/
+diff/
+
+# scale-axis baseline (shoot.mjs --scales-only) and report.mjs output
+baseline-scale/
+report/
+reports/
+
+# before/after shot sets of a change (shoot.mjs into after-<step>/...)
+after-*/
+live/
+fav/
+# third-party brand favicons, downloaded on first use by fetch-favicons.mjs
+fav/
+font-*/

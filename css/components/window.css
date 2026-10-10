@@ -1,0 +1,139 @@
+/* A window card: its box, title, name, action row and states. How cards are
+   arranged per view lives in layout/view-*.css. The header and the bottom bar
+   are .window too (layout/frame.css). */
+
+.window {
+	background-color: var(--surface);
+	color: var(--text);
+	width: 100%;
+	display: inline-block;
+	border-radius: 10px;
+	position: relative;
+	vertical-align: top;
+	margin: 0.125rem 0rem 0.125rem;
+	padding: 0;
+	/* a hairline ring, not a blurred shadow */
+	box-shadow: var(--shadow-card);
+	cursor: pointer;
+}
+.window.block {
+	border-top: none;
+	margin: 0.25rem;
+	padding: 0.5rem;
+	width: auto;
+	display: inline-table;
+}
+.windowcontainer {
+	display: inline-block;
+}
+.window.horizontal .windowcontainer {
+	padding: 0.5rem;
+	display: table-cell;
+	width: 100%;
+}
+.window.vertical .windowcontainer {
+	padding: 0.5rem;
+	display: table-cell;
+	width: 100%;
+}
+/* the window that has the focus */
+.focused {
+	box-shadow: 0 0 0 2px var(--focus-ring) !important;
+}
+
+.no-windowTitles .windowTitle { display: none; }
+.windowTitle { font-size: 12px; font-family: sans-serif; }
+
+.window.incognito {
+	background-color: var(--surface-incognito);
+}
+
+/* the session name field and other inputs inside a card */
+.window input {
+	border: 1px solid var(--field-border);
+	border-radius: 3px;
+	height: 2rem;
+	box-sizing: border-box;
+	min-width: 200px;
+	width: 14.7rem;
+	margin: 0.5rem 0.25rem 0 0.5rem;
+	padding: 1rem;
+	font-size: 1rem;
+}
+.placeholder {
+	border-width: 0px;
+	height: 3rem;
+	z-index: -1;
+	opacity: 0.001;
+	display: none;
+}
+.window.vertical, .window.horizontal {
+	display: table;
+}
+.window.horizontal {
+	width: calc(100% - 1rem);
+	margin: 0.6rem 0.5rem;
+}
+
+.window-actions {
+	display: inline-block;
+	float: right;
+}
+/* when the window was last active: bottom left of the card, in the actions row */
+.window-age {
+	position: absolute;
+	left: 0.75rem;
+	bottom: 0.7rem;
+	font-size: 11px;
+	line-height: 1;
+	color: var(--text-faint);
+	white-space: nowrap;
+}
+.window.horizontal .window-age {
+	display: none;
+}
+
+.compact .window {
+	margin: 0.1rem;
+	padding: 0.1rem;
+	padding-bottom: 0.2rem;
+}
+.compact .window.horizontal, .compact .window.vertical {
+	margin: 0.1rem 0;
+	padding: 0.1rem 0;
+}
+
+.window-lastchild {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	height: 30px;
+	background-color: var(--ink);
+}
+
+/* the window's name in its title bar: click to rename */
+.editName {
+	cursor: text;
+	display: table;
+	margin-left: auto;
+	margin-right: auto;
+}
+/* the name inside the title bar: shrinks to its text, truncates like the bar
+   (border-box: its side padding counts in max-width, else a long name spills
+   past the bar by the padding and the bar cuts the end of the ellipsis off) */
+.windowName {
+	display: inline-block;
+	box-sizing: border-box;
+	max-width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	vertical-align: top;
+	margin: 0;
+	padding: 0 0.3rem;
+	border-radius: 3px;
+}
+.editName:hover {
+	background-color: var(--hover-mark);
+}

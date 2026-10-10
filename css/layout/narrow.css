@@ -1,0 +1,130 @@
+/* ---------------------------------------------------------------------------
+   Narrow: the Firefox sidebar, or a small popup. The header drops buttons.
+   Cards never ask for more than the width there is.
+
+   Both queries start at 100px: Chrome sizes an extension popup by laying it
+   out at 25px wide first (its minimum), on every frame that changes anything
+   (a hover, the stats card moving). A plain max-width query matched at 25px
+   and not at the popup's real width, so each frame switched these rules on
+   and off twice, and every switch restyled and laid out the whole popup
+   (all of its elements, and its fonts again: 30-60 ms with ~200 tabs). No
+   real popup, sidebar or tab is under 100px wide.
+   (The popup's 450px minimum gives way below 450px in layout/frame.css,
+   without a query.)
+   --------------------------------------------------------------------------- */
+@media (min-width: 100px) and (max-width: 450px) {
+	/* the bottom bar's height: the search box row and one row of actions,
+	   each a --bar-button tall, --bar-edge from the top, the bottom and the
+	   sides, --narrow-row-gap between the rows */
+	:root {
+		--narrow-row-gap: 0.2rem;
+		--searchbox-height: calc(2 * var(--bar-edge) + 2 * var(--bar-button) + var(--narrow-row-gap));
+	}
+	.window.searchbox {
+		height: var(--searchbox-height);
+	}
+	.window-container {
+		bottom: var(--searchbox-height);
+	}
+	.notices {
+		bottom: calc(var(--searchbox-height) + 0.6rem);
+	}
+	.window.searchbox table,
+	.window.searchbox tbody,
+	.window.searchbox tr,
+	.window.searchbox td.one,
+	.window.searchbox td.two {
+		display: block;
+		width: auto;
+	}
+	/* the input row: the help button's insets follow these paddings */
+	.window.searchbox td.one {
+		--sb-pr: var(--bar-edge);
+		--sb-pb: var(--narrow-row-gap);
+		padding: var(--sb-pt) var(--sb-pr) var(--sb-pb) var(--bar-inset);
+	}
+	.window.searchbox input.searchBoxInput {
+		font-size: 0.7rem;
+		padding-left: 0.6rem;
+	}
+	/* the actions in a row, packed against the right edge like the wide bar;
+	   spare width stays on the left instead of opening gaps. The wide bar
+	   floats them right, so the markup lists them last to first: a reversed
+	   row puts them back in the order the wide bar shows, however many
+	   there are (eight, nine with the save-selected-tabs button) */
+	.window.searchbox td.two {
+		display: flex;
+		flex-direction: row-reverse;
+		justify-content: flex-start;
+		gap: var(--bar-gap);
+		padding: 0 var(--bar-edge) var(--bar-edge);
+	}
+	.window.searchbox td.two .icon {
+		float: none;
+		margin: 0;
+		flex: none;
+	}
+	/* the rename / color screen: its wide side padding would leave the title
+	   and the name field no room */
+	.window-colors {
+		padding: 3rem 1rem 1rem;
+		overflow-y: auto;
+	}
+	/* the close button in the corner, above the title */
+	.window-x {
+		right: 0;
+		top: 0;
+		margin: 0.5rem;
+	}
+	.window-colors input {
+		min-width: 0;
+		box-sizing: border-box;
+	}
+	/* the search help spans the bar instead of its fixed 26rem, and scrolls
+	   rather than growing up under the header */
+	.search-help {
+		right: 0.25rem;
+		max-width: none;
+		max-height: calc(100vh - 2.85rem - var(--searchbox-height) - 1rem);
+		overflow-y: auto;
+		box-sizing: border-box;
+	}
+	/* when the window was last active: no room for it next to the tabs or
+	   the actions, and it moves around as they wrap; the hover text has it */
+	.window-age {
+		display: none;
+	}
+	.window.horizontal .windowTitle {
+		flex: 1 1 100%;
+		margin: 0 0 0.3rem 0;
+	}
+	.window.horizontal .tabs {
+		flex: 1 1 100%;
+	}
+	.window.horizontal .window-actions {
+		padding: 0.3rem 0 0 0;
+	}
+}
+/* the options bottom bar: the labels go, the icons stay (the buttons keep
+   their aria-label). From 100px: see the top of this file. */
+@media (min-width: 100px) and (max-width: 450px) {
+	.options-footer-button span.label {
+		display: none;
+	}
+	/* icons only: the header's squares */
+	.options-footer-button {
+		width: var(--bar-button);
+		padding: 0;
+	}
+}
+/* the options screen and the changelog: a box spans the width instead of a
+   centred 90%. Kept at 540px, a little wider than the popup block above.
+   From 100px: see the top of this file. */
+@media (min-width: 100px) and (max-width: 540px) {
+	.optionsBox {
+		width: auto;
+		max-width: none;
+		margin: 1rem 0;
+		padding: 10px 12px;
+	}
+}

@@ -110,6 +110,11 @@ export async function setupContextMenus() {
 		parentId: "code_menu"
 	});
 
+}
+
+// must stay synchronous: it runs during the service worker's first event loop
+// turn so that a menu click that woke the worker is not missed
+export function setupContextMenuListeners() {
 	browser.contextMenus.onClicked.removeListener(contextListeners);
 	browser.contextMenus.onClicked.addListener(contextListeners);
 }
@@ -152,7 +157,7 @@ async function contextListeners(info: browser.Menus.OnClickData, tab?: browser.T
 			await browser.tabs.create({url: 'mailto:markus+tmp@stefanxo.com'});
 			break;
 		case S.review:
-			if (navigator.userAgent.search("Firefox") > -1) {
+			if (IS_FIREFOX) {
 				await browser.tabs.create({url: 'https://addons.mozilla.org/en-US/firefox/addon/tab-manager-plus-for-firefox/'});
 			} else {
 				await browser.tabs.create({url: 'https://chrome.google.com/webstore/detail/tab-manager-plus-for-chro/cnkdjjdmfiffagllbiiilooaoofcoeff'});

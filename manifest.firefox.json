@@ -1,0 +1,54 @@
+{
+	"$comment": "Overlay on manifest.json, merged by scripts/manifest.mjs: objects deep-merge, arrays replace, null deletes. Never put the version here - it comes from the base. Firefox ships MV3 only, so nothing here is an MV2 fallback.",
+
+	"name": "Tab Manager Plus for Firefox",
+	"description": "Quickly find open tabs, see all windows in one view, find duplicates and limit tabs per window. The best Tab Manager for Firefox.",
+
+	"key": null,
+	"minimum_chrome_version": null,
+	"offline_enabled": null,
+	"optional_permissions": null,
+	"content_security_policy": null,
+
+	"permissions": [
+		"tabs",
+		"contextMenus",
+		"storage",
+		"unlimitedStorage",
+		"alarms"
+	],
+
+	"background": {
+		"service_worker": null,
+		"scripts": [
+			"dist/service_worker/service_worker.js"
+		]
+	},
+
+	"sidebar_action": {
+		"default_icon": {
+			"16": "images/browsers16.png",
+			"48": "images/browsers48.png",
+			"64": "images/browsers64.png",
+			"128": "images/browsers128.png",
+			"256": "images/browsers256.png"
+		},
+		"default_title": "Tab Manager Plus",
+		"default_panel": "popup.html?panel=true"
+	},
+
+	"browser_specific_settings": {
+		"gecko": {
+			"id": "{45f2dc53-96cd-4c41-91f6-f4a73a8fb2b0}",
+			"strict_min_version": "140.0",
+			"data_collection_permissions": {
+				"required": [
+					"none"
+				]
+			}
+		},
+		"gecko_android": {
+			"strict_min_version": "142.0"
+		}
+	}
+}

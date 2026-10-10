@@ -1,0 +1,4 @@
+# regenerated from the repo's popup on every render
+app/
+# frames (~120 MB), the encoded clips, sheets
+out/

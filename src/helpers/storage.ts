@@ -47,3 +47,15 @@ export async function setLocalStorageMap<T, V>(key : string, value : Map<T,V>) {
 export async function removeLocalStorage(key){
 	return browser.storage.local.remove(key);
 }
+
+// storage.local has no transactions: two interleaved get, change, set cycles
+// on the same key drop one of the writes. Every read-modify-write of the
+// window bookkeeping (windowAge, windowNames, windowColors, windowHashes,
+// windowOrphaned) in the worker goes through this queue, so they run one at a
+// time. Never call it from inside a queued function: that waits on itself.
+let queue : Promise<unknown> = Promise.resolve();
+export function serialized<T>(fn : () => Promise<T>) : Promise<T> {
+	const run = queue.then(fn, fn);
+	queue = run.catch(function () {});
+	return run;
+}

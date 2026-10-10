@@ -1,32 +1,28 @@
-﻿import * as browser from "webextension-polyfill";
-import {MouseEvent} from "react";
-import * as React from "react";
+import {Layout} from "../helpers/settings";
+import {SearchQuery} from "../popup/search";
+import * as browser from "webextension-polyfill";
 
 export interface IWindow {
 	window?: browser.Windows.Window,
 	windowTitles: boolean,
+	// compact mode: the automatic name ends in "+ 3" instead of "& 3 more"
+	compact?: boolean,
 	tabs: browser.Tabs.Tab[],
 	searchActive: boolean,
-	layout: string,
+	// the search, for the matched parts of a title (bold in List view)
+	query?: SearchQuery | null,
+	layout: Layout,
 	tabactions: boolean,
 	sessionsFeature?: boolean,
-	hoverIcon: (e: MouseEvent<HTMLDivElement> | string) => void,
 	hiddenTabs: Set<number>,
 	selection: Set<number>,
+	// the tab the arrow keys are on, or 0
+	keyCursor?: number,
 	filterTabs: boolean,
 	lastOpenWindow: number,
 	incognito: boolean,
 	draggable: boolean,
-
-	hoverHandler: (tab: browser.Tabs.Tab) => void,
-	scrollTo: (what: string, id: number) => void,
-	parentUpdate: () => void,
-	toggleColors: (active: boolean, windowId: number) => void,
-	tabMiddleClick: (tabId: number) => void,
-	select: (id: number) => void,
-	selectTo?: (id: number, tabs: browser.Tabs.Tab[]) => void,
-	drag?: (e: React.DragEvent<HTMLDivElement>, id: number) => void,
-	drop?: (id: number, before: boolean) => void,
-	dropWindow?: (windowId: number) => void,
-	dragFavicon?: (icon: string) => string
+	// position in the list, staggers the entrance animation
+	order?: number,
+	lastActive?: number
 }

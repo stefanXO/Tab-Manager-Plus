@@ -1,10 +1,11 @@
-﻿export interface IWindowState {
-	windowTitles: string[];
+﻿import { Tab } from "@views";
+import * as React from "react";
+
+export interface IWindowState {
 	name: string,
 	auto_name: string,
 	color: string,
-	tabs: number,
-	colorActive: boolean,
-	hover: boolean,
-	dirty: boolean
+	tabsKey: string,
+	hidden: boolean,
+	tabrefs: Map<number, React.RefObject<Tab>>,
 }

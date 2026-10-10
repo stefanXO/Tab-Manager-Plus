@@ -1,0 +1,305 @@
+/* ---------------------------------------------------------------------------
+   Vertical layout as a list: window cards in a grid (one column in the popup,
+   more when there is room), each a header plus compact rows. Rows are flex:
+   favicon, title (truncated), state chips at the end. The active tab gets a
+   left accent instead of an outlined box.
+   --------------------------------------------------------------------------- */
+.window-container.vertical {
+	/* 30rem = one column in the 800px popup, two from about 1000px: titles stay readable */
+	--card-min: 30rem;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(min(var(--card-min), 100%), 1fr));
+	grid-auto-rows: 8px;
+	grid-auto-flow: row;
+	align-items: start;
+	gap: 8px;
+	padding: 8px 8px 1rem;
+	box-sizing: border-box;
+}
+.window-container.vertical .hrCont {
+	grid-column: 1 / -1;
+	padding: 0.6rem 0 0.4rem;
+}
+.window-container.vertical .window.vertical {
+	display: block;
+	float: none;
+	width: auto;
+	margin: 0;
+	padding: 0.35rem 0.5rem 0.4rem;
+	min-width: 0;
+}
+.window-container.vertical .window.vertical .windowcontainer {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	padding: 0 !important;
+	box-sizing: border-box;
+}
+/* header */
+.window.vertical .windowTitle {
+	display: block;
+	margin: 0 0 0.3rem;
+	padding: 0.15rem 0.4rem 0.35rem;
+	text-align: left;
+	font-size: 12.5px;
+	line-height: 1.4;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	border-bottom: 1px solid var(--divider);
+}
+/* rows */
+.window.vertical .tab.full {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	min-width: 0;
+	height: 1.75rem;
+	margin: 0;
+	padding: 0 0.4rem;
+	border-radius: 4px;
+	border-left: 3px solid transparent;
+	background-position: initial;
+}
+.window.vertical .tab.full > .iconoverlay {
+	order: 0;
+	flex: none;
+	width: 1.1rem;
+	height: 1.1rem;
+	margin: 0;
+	border: 0;
+	box-shadow: none;
+	border-radius: 3px;
+	background-size: 1rem 1rem;
+	background-color: transparent;
+}
+.window.vertical .tab.full > .tabtitle {
+	order: 1;
+	flex: 1 1 auto;
+	min-width: 0;
+	position: static;
+	height: auto;
+	max-width: none;
+	padding: 0;
+	line-height: 1.75rem;
+	font-size: 13px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	/* dir="auto": an Arabic or Hebrew title is cut at its end, the ellipsis on
+	   the left; a short one still starts next to the icon, as in Chrome's tabs */
+	text-align: left;
+}
+.window.vertical .tab.full > .tab-pinned,
+.window.vertical .tab.full > .tab-highlighted,
+.window.vertical .tab.full > .tab-selected,
+.window.vertical .tab.full > .tab-audible,
+.window.vertical .tab.full > .tab-discarded {
+	order: 2;
+	position: static;
+	flex: none;
+	display: inline-flex;
+	align-items: center;
+	gap: 3px;
+	height: auto;
+	margin: 0;
+	padding: 1px 5px 1px 2px;
+	font-size: 9px;
+	line-height: 1.2;
+	border: 1px solid var(--chip-border);
+	border-radius: 4px;
+	background: var(--chip-bg);
+	box-shadow: none;
+	opacity: 0.85;
+}
+/* the badge in front of the chip text */
+.window.vertical .tab.full > .tab-pinned::before,
+.window.vertical .tab.full > .tab-highlighted::before,
+.window.vertical .tab.full > .tab-selected::before,
+.window.vertical .tab.full > .tab-audible::before,
+.window.vertical .tab.full > .tab-discarded::before {
+	content: "";
+	width: 11px;
+	height: 11px;
+	border-radius: 3px;
+	background: var(--badge-pinned) center / 11px 11px no-repeat;
+}
+.window.vertical .tab.full > .tab-highlighted::before {
+	background-image: var(--badge-active);
+}
+.window.vertical .tab.full > .tab-selected::before {
+	background-image: var(--badge-selected);
+}
+.window.vertical .tab.full > .tab-audible::before {
+	background-image: var(--badge-playing);
+}
+.animations .window.vertical .tab.full > .tab-audible::before {
+	background-image: var(--badge-playing-anim);
+}
+.window.vertical .tab.full.muted > .tab-audible::before {
+	background-image: var(--badge-muted);
+}
+.window.vertical .tab.full > .tab-discarded::before {
+	background-image: var(--badge-suspended);
+}
+/* a row the search hides (a saved window's tabs): .tab.hidden loses to the row's display:flex above */
+.window.vertical .tab.full.hidden {
+	display: none;
+}
+/* a chip that is not on: the generic .hidden loses to the chip rule above by cascade order */
+.window.vertical .tab.full > .tab-pinned.hidden,
+.window.vertical .tab.full > .tab-highlighted.hidden,
+.window.vertical .tab.full > .tab-selected.hidden,
+.window.vertical .tab.full > .tab-audible.hidden,
+.window.vertical .tab.full > .tab-discarded.hidden,
+.window.vertical .tab.full > .limiter {
+	display: none;
+}
+/* the drop marker while a tab is dragged over the row (css/components/tab.css) */
+.window.vertical .tab.full.top > .limiter,
+.window.vertical .tab.full.bottom > .limiter {
+	display: block;
+}
+/* hairline between rows, no ring on the active row: the accent and tint mark it */
+.window.vertical .tab.full + .tab.full {
+	border-top: 1px solid var(--row-divider);
+}
+.window.vertical .tab.full {
+	box-shadow: none;
+	border-radius: 0;
+}
+/* the arrow keys' row (components/tab.css .key-cursor): the ring inside, the
+   left edge in the cursor colour; the row keeps its size */
+.window.vertical .tab.full.key-cursor {
+	box-shadow: inset 0 0 0 2px var(--key-cursor);
+	border-left-color: var(--key-cursor);
+}
+.window.vertical .tab.full:hover {
+	background-color: var(--row-hover);
+}
+/* Row states, each a coloured left accent plus a faint tint. One accent slot,
+   so the order here is the precedence, last wins:
+   pinned red < active purple < playing blue < muted grey < selected yellow */
+.window.vertical .tab.full.pinned {
+	border-left-color: var(--row-pinned-edge);
+	background-color: var(--row-pinned-bg);
+}
+.window.vertical .tab.full.pinned:hover {
+	background-color: var(--row-pinned-hover);
+}
+.window.vertical .tab.full.highlighted {
+	border-left-color: var(--row-active-edge);
+	background-color: var(--row-active-bg);
+}
+.window.vertical .tab.full.highlighted:hover {
+	background-color: var(--row-active-hover);
+}
+.window.vertical .tab.full.audible {
+	border-left-color: var(--row-playing-edge);
+	background-color: var(--row-playing-bg);
+}
+.window.vertical .tab.full.audible:hover {
+	background-color: var(--row-playing-hover);
+}
+/* a playing row breathes (motion.css) */
+.window.vertical .tab.full.muted {
+	border-left-color: var(--row-muted-edge);
+	background-color: transparent;
+}
+.window.vertical .tab.full.muted:hover {
+	background-color: var(--row-hover);
+}
+.window.vertical .tab.full.muted > .iconoverlay {
+	background-color: transparent;
+}
+.window.vertical .tab.full.selected {
+	border-left-color: var(--row-selected-edge);
+	background-color: var(--row-selected-bg);
+}
+.window.vertical .tab.full.selected:hover {
+	background-color: var(--row-selected-hover);
+}
+/* actions: last line, right, no per-icon floats */
+.window.vertical .window-actions {
+	display: flex;
+	float: none;
+	align-self: flex-end;
+	margin-top: 0.35rem;
+}
+.window.vertical .window-actions .windowaction {
+	float: none;
+	margin: 0 0.1rem;
+}
+.window.vertical .newliner {
+	display: none;
+}
+
+/* Freshness: how recently the tab was used (src/popup/freshness.ts). The last
+   thing in the row, after the chips, so it lines up as one column: four equal
+   bars, filled from the right edge, as many lit as the level (4 under 5 min,
+   3 under an hour, 2 under a day, 1 under a week). All in the level's colour
+   (--fresh-c, from .fresh-<n>); the bars after the lit run drop off steeply.
+   Older than a week: all grey and faint. Not rendered when the browser gives
+   no lastAccessed. One fixed width, so no level ever moves the title. */
+.window.vertical .tab.full > .tab-fresh {
+	--fresh-c: var(--fresh-1);
+	/* bar width, gap and height in CSS px, before snapping */
+	--fresh-w: 3px;
+	--fresh-g: 1px;
+	--fresh-h: 10px;
+	--fresh-bw: var(--fresh-w);
+	--fresh-bgap: var(--fresh-g);
+	--fresh-bh: var(--fresh-h);
+	--fresh-step: calc(var(--fresh-bw) + var(--fresh-bgap));
+	order: 3;
+	flex: none;
+	display: block;
+	width: calc(var(--fresh-step) * 3 + var(--fresh-bw));
+	height: calc(var(--fresh-h) + 2px);
+	margin: 0 0 0 1px;
+	overflow: visible;
+	fill: var(--fresh-c);
+	/* whole device pixels: no antialiased edges */
+	shape-rendering: crispEdges;
+}
+/* the same sizes snapped to whole device pixels (--dpr, set by
+   src/popup/early.ts; 1 when absent). The gap rounds down so 150% gives 5+1,
+   not 5+2. Equal widths and an equal step put every bar on the same sub-pixel
+   phase, so crispEdges rounds them all alike. Browsers without round()
+   (Chrome < 125) keep the plain sizes above. */
+@supports (width: round(1px, 1px)) {
+	.window.vertical .tab.full > .tab-fresh {
+		--fresh-d: var(--dpr, 1);
+		--fresh-bw: calc(max(1px, round(calc(var(--fresh-w) * var(--fresh-d)), 1px)) / var(--fresh-d));
+		--fresh-bgap: calc(max(1px, round(down, calc(var(--fresh-g) * var(--fresh-d)), 1px)) / var(--fresh-d));
+		--fresh-bh: calc(round(calc(var(--fresh-h) * var(--fresh-d)), 1px) / var(--fresh-d));
+	}
+}
+.window.vertical .tab.full > .tab-fresh.fresh-2 { --fresh-c: var(--fresh-2); }
+.window.vertical .tab.full > .tab-fresh.fresh-3 { --fresh-c: var(--fresh-3); }
+.window.vertical .tab.full > .tab-fresh.fresh-4 { --fresh-c: var(--fresh-4); }
+/* four bars, bottom-aligned; child 1 is the rightmost */
+.window.vertical .tab.full > .tab-fresh > rect {
+	y: calc(var(--fresh-h) + 2px - var(--fresh-bh));
+	width: var(--fresh-bw);
+	height: var(--fresh-bh);
+}
+.window.vertical .tab.full > .tab-fresh > rect:nth-child(1) { x: calc(var(--fresh-step) * 3); }
+.window.vertical .tab.full > .tab-fresh > rect:nth-child(2) { x: calc(var(--fresh-step) * 2); }
+.window.vertical .tab.full > .tab-fresh > rect:nth-child(3) { x: var(--fresh-step); }
+.window.vertical .tab.full > .tab-fresh > rect:nth-child(4) { x: 0; }
+/* the bars after the lit run (child 1 is the rightmost); level 0 from the first */
+.window.vertical .tab.full > .tab-fresh.fresh-0 > rect:nth-child(1) { opacity: 0.55; }
+.window.vertical .tab.full > .tab-fresh.fresh-0 > rect:nth-child(2),
+.window.vertical .tab.full > .tab-fresh.fresh-1 > rect:nth-child(2),
+.window.vertical .tab.full > .tab-fresh.fresh-2 > rect:nth-child(3),
+.window.vertical .tab.full > .tab-fresh.fresh-3 > rect:nth-child(4) { opacity: 0.3; }
+.window.vertical .tab.full > .tab-fresh.fresh-0 > rect:nth-child(3),
+.window.vertical .tab.full > .tab-fresh.fresh-1 > rect:nth-child(3),
+.window.vertical .tab.full > .tab-fresh.fresh-2 > rect:nth-child(4) { opacity: 0.18; }
+.window.vertical .tab.full > .tab-fresh.fresh-0 > rect:nth-child(4),
+.window.vertical .tab.full > .tab-fresh.fresh-1 > rect:nth-child(4) { opacity: 0.1; }
+.compact .window.vertical .tab.full > .tab-fresh {
+	--fresh-w: 2px;
+	--fresh-h: 8px;
+}

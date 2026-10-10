@@ -1,0 +1,89 @@
+/* The window colour / name screen (.window-colors, opened from a card's
+   colour action), and the colour slots themselves: .color1 … .color25 on a
+   window card or on a picker swatch. The colours are tokens (--win-N in
+   base/tokens.css, redefined by the dark theme). */
+
+/* round close button, top right */
+.window-x {
+	position: absolute;
+	right: 25px;
+	top: 48px;
+	display: block;
+	width: 25px;
+	height: 25px;
+	background: var(--button-bg);
+	border-radius: 50%;
+	margin: 20px;
+	cursor: pointer;
+	user-select: none;
+}
+.window-x:hover {
+	background: var(--button-bg-hover);
+}
+
+.colors-box, .window-name-input {
+	max-width: 400px;
+	margin: auto;
+	display: block;
+}
+/* palette in reading order regardless of layout (no per-icon floats) */
+.colors-box {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+}
+.colors-box .icon {
+	float: none;
+}
+
+.window-colors {
+	position: fixed;
+	inset: 0;
+	padding: 60px 110px;
+	background-color: var(--surface);
+	z-index: 9999999;
+	outline: none;
+}
+.window-colors h2, .window-colors h3 {
+	text-align: center;
+}
+.window-colors h3 {
+	padding-top: 10px;
+}
+.window-colors input {
+	width: 100%;
+	text-align: center;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+/* colour slots: each class picks its slot, one rule paints them all.
+   --win-edge is only drawn by the dark theme. */
+.color1 { --win: var(--win-1); --win-hover: var(--win-1-hover); --win-edge: var(--win-1-edge); }
+.color2 { --win: var(--win-2); --win-hover: var(--win-2-hover); --win-edge: var(--win-2-edge); }
+.color3 { --win: var(--win-3); --win-hover: var(--win-3-hover); --win-edge: var(--win-3-edge); }
+.color4 { --win: var(--win-4); --win-hover: var(--win-4-hover); --win-edge: var(--win-4-edge); }
+.color5 { --win: var(--win-5); --win-hover: var(--win-5-hover); --win-edge: var(--win-5-edge); }
+.color6 { --win: var(--win-6); --win-hover: var(--win-6-hover); --win-edge: var(--win-6-edge); }
+.color7 { --win: var(--win-7); --win-hover: var(--win-7-hover); --win-edge: var(--win-7-edge); }
+.color8 { --win: var(--win-8); --win-hover: var(--win-8-hover); --win-edge: var(--win-8-edge); }
+.color9 { --win: var(--win-9); --win-hover: var(--win-9-hover); --win-edge: var(--win-9-edge); }
+.color10 { --win: var(--win-10); --win-hover: var(--win-10-hover); --win-edge: var(--win-10-edge); }
+.color11 { --win: var(--win-11); --win-hover: var(--win-11-hover); --win-edge: var(--win-11-edge); }
+.color12 { --win: var(--win-12); --win-hover: var(--win-12-hover); --win-edge: var(--win-12-edge); }
+.color13 { --win: var(--win-13); --win-hover: var(--win-13-hover); --win-edge: var(--win-13-edge); }
+.color14 { --win: var(--win-14); --win-hover: var(--win-14-hover); --win-edge: var(--win-14-edge); }
+.color15 { --win: var(--win-15); --win-hover: var(--win-15-hover); --win-edge: var(--win-15-edge); }
+.color16 { --win: var(--win-16); --win-hover: var(--win-16-hover); --win-edge: var(--win-16-edge); }
+.color17 { --win: var(--win-17); --win-hover: var(--win-17-hover); --win-edge: var(--win-17-edge); }
+.color18 { --win: var(--win-18); --win-hover: var(--win-18-hover); --win-edge: var(--win-18-edge); }
+.color19 { --win: var(--win-19); --win-hover: var(--win-19-hover); --win-edge: var(--win-19-edge); }
+.color20 { --win: var(--win-20); --win-hover: var(--win-20-hover); --win-edge: var(--win-20-edge); }
+.color21 { --win: var(--win-21); --win-hover: var(--win-21-hover); --win-edge: var(--win-21-edge); }
+.color22 { --win: var(--win-22); --win-hover: var(--win-22-hover); --win-edge: var(--win-22-edge); }
+.color23 { --win: var(--win-23); --win-hover: var(--win-23-hover); --win-edge: var(--win-23-edge); }
+.color24 { --win: var(--win-24); --win-hover: var(--win-24-hover); --win-edge: var(--win-24-edge); }
+.color25 { --win: var(--win-25); --win-hover: var(--win-25-hover); --win-edge: var(--win-25-edge); }
+
+:is(.color1, .color2, .color3, .color4, .color5, .color6, .color7, .color8, .color9, .color10, .color11, .color12, .color13, .color14, .color15, .color16, .color17, .color18, .color19, .color20, .color21, .color22, .color23, .color24, .color25) { background-color: var(--win) !important; }
+:is(.color1, .color2, .color3, .color4, .color5, .color6, .color7, .color8, .color9, .color10, .color11, .color12, .color13, .color14, .color15, .color16, .color17, .color18, .color19, .color20, .color21, .color22, .color23, .color24, .color25):hover { background-color: var(--win-hover) !important; }

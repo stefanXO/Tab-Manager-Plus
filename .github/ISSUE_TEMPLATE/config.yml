@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: What's new in each version
+    url: https://github.com/stefanXO/Tab-Manager-Plus/releases
+    about: Check the release notes first. Your issue might already be fixed in the latest version.

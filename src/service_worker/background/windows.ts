@@ -1,14 +1,21 @@
 ﻿"use strict";
 
 import {cleanupDebounce} from "@background/tracking";
-import {getLocalStorage, getLocalStorageMap, setLocalStorage, setLocalStorageMap} from "@helpers/storage";
-import {is_in_bounds, stringHashcode} from "@helpers/utils";
+import {getLocalStorage, getLocalStorageMap, setLocalStorage, setLocalStorageMap, serialized} from "@helpers/storage";
+import {restorePlan, knownDisplayList, windowsToMinimize, chooseRestoreDisplays, displayList} from "@helpers/geometry";
+import {maximizeOnDisplay, WindowApi} from "@helpers/restoreMaximize";
+import {RestoreTrace, appendRestoreLog, buildRestoreDiagnostic, RestoreDiagnostic, savedBox, windowBox} from "@helpers/restoreDiagnostic";
+import {hashcode} from "@helpers/windows";
+import {firefoxCanOpen} from "@helpers/aboutPages";
 import {setWindowColor, setWindowName} from "@background/actions";
 import * as S from "@strings";
 import * as browser from 'webextension-polyfill';
-import {ISavedSession} from "@types";
+import {getSetting} from "@helpers/settings";
+import {ISavedSession, IScreenBounds} from "@types";
 
-export async function setupWindowListeners() {
+// must stay synchronous: it runs during the service worker's first event loop
+// turn so that the events that woke the worker are not missed
+export function setupWindowListeners() {
 	browser.windows.onFocusChanged.removeListener(windowFocus);
 	browser.windows.onCreated.removeListener(windowCreated);
 	browser.windows.onRemoved.removeListener(windowRemoved);
@@ -63,7 +70,9 @@ export async function createWindowWithTabs(tabs : browser.Tabs.Tab[], isIncognit
 	await browser.windows.update(w.id, {focused: true});
 }
 
-export async function createWindowWithSessionTabs(session: ISavedSession, tabId: number) {
+// resolves with the id of the new window, so the popup can scroll to it
+// `displays`: the list the popup's landing preview went by (see windowGeometry)
+export async function createWindowWithSessionTabs(session: ISavedSession, tabId: number, screen? : IScreenBounds, displays? : IScreenBounds[]) : Promise<number | undefined> {
 
 	var customName : string;
 	if (session && session.name && session.customName) {
@@ -74,43 +83,39 @@ export async function createWindowWithSessionTabs(session: ISavedSession, tabId:
 		color = session.color;
 	}
 
-	var whitelistWindow = ["left", "top", "width", "height", "incognito", "type"];
-
-	if (navigator.userAgent.search("Firefox") > -1) {
-		whitelistWindow = ["left", "top", "width", "height", "incognito", "type"];
-	}
-
 	var whitelistTab = ["url", "active", "selected", "pinned", "index"];
 
-	if (navigator.userAgent.search("Firefox") > -1) {
+	if (IS_FIREFOX) {
 		whitelistTab = ["url", "active", "pinned", "index"];
 	}
 
-	var filteredWindow : browser.Windows.CreateCreateDataType = Object.keys(session.windowsInfo)
-		.filter(function (key) {
-			return whitelistWindow.includes(key);
-		})
-		.reduce(function (obj, key) {
-			obj[key] = session.windowsInfo[key];
-			return obj;
-		}, {});
+	const trace = await windowGeometry(session.windowsInfo, screen, displays);
+	const plan = trace.plan;
+	const filteredWindow = plan.create;
 
-	if (filteredWindow.left < 0 || filteredWindow.left > 800) filteredWindow.left = 0;
-	if (filteredWindow.top < 0 || filteredWindow.top > 600) filteredWindow.top = 0;
-	if (filteredWindow.width > 800) filteredWindow.width = 800;
-	if (filteredWindow.height > 600) filteredWindow.height = 600;
-
-	filteredWindow.type = "normal";
-
-	// console.log("filtered window", filteredWindow);
-
-	const newWindow = await browser.windows.create(filteredWindow).catch(function (error) {
-		console.error(error);
-		console.log(error);
-		console.log(error.message);
+	let newWindow : browser.Windows.Window | void = await browser.windows.create(filteredWindow).catch(function (error) {
+		console.error("restoring with the saved geometry failed, using the fallback", filteredWindow, error);
+		trace.steps.push({step: "create refused", error: String(error)});
 	});
+	if (newWindow && plan.maximize) {
+		// maximized on its monitor, and checked (helpers/restoreMaximize.ts)
+		await maximizeOnDisplay(windowApi, newWindow.id, plan, trace.steps);
+	}
+	if (!newWindow) {
+		// the browser refused the geometry: the old, always-accepted 800x600 at the corner
+		newWindow = await browser.windows.create({
+			type: "normal",
+			incognito: !!session.windowsInfo.incognito,
+			left: 0, top: 0, width: 800, height: 600
+		}).catch(function (error) {
+			console.error(error);
+			trace.steps.push({step: "fallback refused", error: String(error)});
+		});
+		if (newWindow) trace.steps.push({step: "fallback", window: windowBox(newWindow)});
+	}
+	await logRestore(trace);
 
-	if (!newWindow) return;
+	if (!newWindow) return undefined;
 
 	let emptyTab = newWindow.tabs[0].id;
 
@@ -131,11 +136,10 @@ export async function createWindowWithSessionTabs(session: ISavedSession, tabId:
 		}
 		fTab.windowId = newWindow.id;
 
-		if (navigator.userAgent.search("Firefox") > -1) {
-			if (!!fTab.url && fTab.url.search("about:") > -1) {
-				console.log("filtered by about: url", fTab.url);
-				fTab.url = "";
-			}
+		// Firefox refuses its about: pages (helpers/aboutPages.ts): a new tab instead
+		if (IS_FIREFOX && !firefoxCanOpen(fTab.url)) {
+			console.log("filtered by about: url", fTab.url);
+			fTab.url = "";
 		}
 		try {
 			await browser.tabs.create(fTab).catch(function (error) {
@@ -166,61 +170,144 @@ export async function createWindowWithSessionTabs(session: ISavedSession, tabId:
 	}
 
 	await browser.windows.update(newWindow.id, {focused: true});
+	return newWindow.id;
+}
+
+// browser.windows for helpers/restoreMaximize.ts
+const windowApi : WindowApi = {
+	get: (windowId) => browser.windows.get(windowId),
+	update: (windowId, props) => browser.windows.update(windowId, props),
+	sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+};
+
+// the last restores, in storage.session (kept across worker restarts, not
+// across browser restarts), for the everything export
+const RESTORE_LOG = "restoreLog";
+async function logRestore(trace : RestoreTrace) {
+	try {
+		const stored = await browser.storage.session.get(RESTORE_LOG);
+		await browser.storage.session.set({[RESTORE_LOG]: appendRestoreLog(stored[RESTORE_LOG], trace)});
+	} catch (e) {
+		console.error(e);
+	}
+}
+
+// How a saved window comes back (helpers/geometry.ts restorePlan): a
+// maximized window maximized on the monitor it was saved on when that is
+// connected (created normal inside it, then maximized), else on the popup's;
+// anything else at its saved position and size, fitted into a display that exists now (#208; a window saved on an
+// ultrawide, restored on a laptop). The displays come from the
+// system.display permission when granted, else the one display the popup
+// reported. The old fix squeezed every window into 800x600 at the top left
+// corner (#205). The popup's landing preview (the saved window's hover card)
+// calls the same function, and the popup sends the display list it used:
+// the restore goes by that one unless the worker knows more monitors itself
+// (geometry.ts chooseRestoreDisplays). Going by its own list alone, a worker
+// that saw fewer monitors than the popup put a window saved maximized on
+// monitor 2 on the popup's monitor while the card said "monitor 2".
+// Resolves with the trace of this restore, which holds the plan.
+async function windowGeometry(saved : browser.Windows.Window, screen? : IScreenBounds, sent? : IScreenBounds[]) : Promise<RestoreTrace> {
+	const own = await knownDisplays(screen);
+	const choice = chooseRestoreDisplays(sent, own.displays);
+	const trace : RestoreTrace = {
+		at: new Date().toISOString(),
+		saved: savedBox(saved),
+		screen: screen || null,
+		own: own.displays,
+		sent: displayList(sent),
+		from: choice.from,
+		plan: restorePlan(saved, choice.displays),
+		steps: []
+	};
+	if (own.error) trace.ownError = own.error;
+	return trace;
+}
+
+// the displays available now: all of them with the permission, else the one
+// the popup is on (first in the list, so it is the fallback target). A failed
+// query (no system.display in the worker) is logged and leaves the popup's
+// monitor; the restore then goes by the popup's list.
+async function knownDisplays(screen? : IScreenBounds) : Promise<{ displays : IScreenBounds[], info : chrome.system.display.DisplayUnitInfo[], permission : boolean | null, error? : string }> {
+	if (IS_FIREFOX) {
+		return { displays: knownDisplayList(screen, []), info: [], permission: null };
+	} else {
+		let permission = false;
+		try {
+			permission = await browser.permissions.contains({ permissions: ["system.display"] });
+			if (permission) {
+				const info = await chrome.system.display.getInfo();
+				return { displays: knownDisplayList(screen, info), info, permission };
+			}
+		} catch (e) {
+			console.error("the monitors are not known in the worker", e);
+			return { displays: knownDisplayList(screen, []), info: [], permission, error: String(e) };
+		}
+		return { displays: knownDisplayList(screen, []), info: [], permission };
+	}
+}
+
+// The "restore" part of the everything export (helpers/restoreDiagnostic.ts):
+// the monitors as the worker sees them, and for each saved window the plan a
+// restore would use now, with the popup's screen and display list.
+export async function restoreDiagnostic(screen? : IScreenBounds, sent? : IScreenBounds[]) : Promise<RestoreDiagnostic> {
+	const own = await knownDisplays(screen);
+	const stored = await browser.storage.local.get("sessions").catch(() => ({} as Record<string, unknown>));
+	const map = stored.sessions;
+	const sessions = map && typeof map === "object" ? Object.values(map as Record<string, ISavedSession>) : [];
+	const log = await browser.storage.session.get(RESTORE_LOG).then((x) => x[RESTORE_LOG], () => []);
+	return buildRestoreDiagnostic({
+		browser: IS_FIREFOX ? "firefox" : "chrome",
+		permission: own.permission,
+		displayInfo: own.info,
+		displayError: own.error,
+		screen: screen || null,
+		popupDisplays: sent,
+		sessions: sessions,
+		log
+	});
 }
 
 export function focusOnWindowDelayed(windowId: number) {
-	setTimeout(focusOnWindow.bind(this, windowId), 125);
+	setTimeout(() => focusOnWindow(windowId), 125);
 }
 
 export async function focusOnWindow(windowId : number) {
 	await browser.windows.update(windowId, {focused: true});
 }
 
+// "Minimize inactive windows": when a window gets the focus, minimize the
+// other windows. Chrome: the ones on its monitor (every monitor is known
+// through the optional system.display permission; nothing without it).
+// Firefox has no display API: every other window, on every monitor, so one
+// window stays active in all.
 async function hideWindows(windowId : number) {
-	if (navigator.userAgent.search("Firefox") > -1) return;
 	if (!windowId || windowId < 0) return;
 
-	let hide_windows = await getLocalStorage("hideWindows", false);
+	let hide_windows = await getSetting("hideWindows");
 	if (!hide_windows) return;
 
-	let has_permission = await browser.permissions.contains({permissions: ['system.display']});
-	if (!has_permission) return;
+	const displays = await hideDisplays();
+	if (displays !== null && displays.length === 0) return;
 
-	let displaylayouts = await chrome.system.display.getInfo();
-	let monitor_bounds = [];
-
-	try {
-		for (let displaylayout of displaylayouts) {
-			monitor_bounds.push(displaylayout.bounds);
-		}
-	} catch (err) {
-		console.error(err);
-		return;
+	const windows = await browser.windows.getAll();
+	for (const id of windowsToMinimize(windowId, windows, displays)) {
+		await browser.windows.update(id, {"state": "minimized"});
 	}
+}
 
-	let windows = await browser.windows.getAll({populate: true});
-	let monitor = null;
-
-	for (let window of windows) {
-		if (window.id === windowId) {
-			for (let bounds_index in monitor_bounds) {
-				let _monitor = monitor_bounds[bounds_index];
-				let _is_in_bounds = is_in_bounds(window, _monitor);
-				if (_is_in_bounds) {
-					monitor = _monitor;
-					break;
-				}
-			}
-		}
-	}
-
-	if (monitor == null) return;
-
-	for (let window of windows) {
-		if (window.id !== windowId) {
-			if (is_in_bounds(window, monitor)) {
-				await browser.windows.update(window.id, {"state": "minimized"});
-			}
+// null on Firefox (no monitors: every window counts); if/else, so the Firefox
+// build drops the system.display branch entirely
+async function hideDisplays() : Promise<IScreenBounds[] | null> {
+	if (IS_FIREFOX) {
+		return null;
+	} else {
+		let has_permission = await browser.permissions.contains({permissions: ['system.display']});
+		if (!has_permission) return [];
+		try {
+			return (await chrome.system.display.getInfo()).map((d) => d.bounds);
+		} catch (err) {
+			console.error(err);
+			return [];
 		}
 	}
 }
@@ -228,13 +315,20 @@ async function hideWindows(windowId : number) {
 export async function windowActive(windowId : number) {
 	if (windowId < 0) return;
 
-	var windows = [];
-	var windowAge = await getLocalStorage("windowAge", []);
-	if (windowAge instanceof Array) windows = windowAge;
+	await serialized(async function () {
+		var windows = [];
+		var windowAge = await getLocalStorage(S.windowAge, []);
+		if (windowAge instanceof Array) windows = windowAge;
 
-	if (windows.indexOf(windowId) > -1) windows.splice(windows.indexOf(windowId), 1);
-	windows.unshift(windowId);
-	await setLocalStorage("windowAge", windows);
+		if (windows.indexOf(windowId) > -1) windows.splice(windows.indexOf(windowId), 1);
+		windows.unshift(windowId);
+		await setLocalStorage(S.windowAge, windows);
+
+		// when each window was last active, shown on its card in the popup
+		const lastActive : Map<number, number> = await getLocalStorageMap<number, number>(S.windowLastActive);
+		lastActive.set(windowId, Date.now());
+		await setLocalStorageMap(S.windowLastActive, lastActive);
+	});
 
 	// browser.windows.getLastFocused({ populate: true }, function (w) {
 	// 	for (let i = 0; i < w.tabs.length; i++) {
@@ -278,12 +372,27 @@ async function windowCreated(window : browser.Windows.Window) {
 async function windowRemoved(windowId : number) {
 	try {
 		if (!!windowId) {
-			await windowActive(windowId);
+			await windowInactive(windowId);
 		}
 	} catch (e) {
 
 	}
 	// console.log("onRemoved", windowId);
+}
+
+async function windowInactive(windowId : number) {
+	await serialized(async function () {
+		var windows = [];
+		var windowAge = await getLocalStorage(S.windowAge, []);
+		if (windowAge instanceof Array) windows = windowAge;
+
+		if (windows.indexOf(windowId) > -1) {
+			windows.splice(windows.indexOf(windowId), 1);
+			await setLocalStorage(S.windowAge, windows);
+		}
+		const lastActive : Map<number, number> = await getLocalStorageMap<number, number>(S.windowLastActive);
+		if (lastActive.delete(windowId)) await setLocalStorageMap(S.windowLastActive, lastActive);
+	});
 }
 
 export async function checkWindow(windowId : number) {
@@ -292,34 +401,21 @@ export async function checkWindow(windowId : number) {
 	const colors: Map<number, string> = await getLocalStorageMap<number, string>(S.windowColors);
 	const names: Map<number, string> = await getLocalStorageMap<number, string>(S.windowNames);
 
-	if (!names[windowId] && !colors[windowId]) return;
+	if (!names.has(windowId) && !colors.has(windowId)) return;
 
-	const hashes: Map<number, number> = await getLocalStorageMap<number, number>(S.windowHashes);
-
+	let window : browser.Windows.Window;
 	try {
-		const window = await browser.windows.get(windowId, {populate: true});
+		window = await browser.windows.get(windowId, {populate: true});
+	} catch (e) {
+		// closed since the tab event that queued this check
+		return;
+	}
+	const newHash = hashcode(window);
 
-		let newHash = hashcode(window);
+	await serialized(async function () {
+		const hashes: Map<number, number> = await getLocalStorageMap<number, number>(S.windowHashes);
+		if (hashes.get(windowId) === newHash) return;
 		hashes.set(windowId, newHash);
 		await setLocalStorageMap(S.windowHashes, hashes);
-	} catch (e) {
-		console.log(e);
-	}
-}
-
-export function hashcode(window : browser.Windows.Window) : number {
-	let urls = [];
-	for (let i = 0; i < window.tabs.length; i++) {
-		if (!window.tabs[i].url) continue;
-		urls.push(window.tabs[i].url);
-	}
-	urls.sort();
-
-	let hash = 0;
-	for (let i = 0; i < urls.length; i++) {
-		const code = stringHashcode(urls[i]);
-		hash = ((hash << 5) - hash) + code;
-		hash = hash & hash; // Convert to 32bit integer
-	}
-	return hash;
+	});
 }

@@ -1,0 +1,53 @@
+name: Something isn't working
+description: Tell us what went wrong. A few lines are enough.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report this! Only the first box is required. Fill in what you can and skip the rest.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead? A screenshot helps a lot.
+      placeholder: "I clicked a tab in the popup and it opened in the wrong window..."
+    validations:
+      required: true
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Which browser?
+      options:
+        - Chrome
+        - Firefox
+        - Edge
+        - Brave
+        - Opera / Vivaldi
+        - Other (please say which below)
+    validations:
+      required: false
+  - type: input
+    id: version
+    attributes:
+      label: Tab Manager Plus version
+      description: |
+        It is shown at the top of the Tab Manager Plus options. You can also find it in `chrome://extensions` (Chrome, Edge, Brave) or `about:addons` (Firefox).
+        If you are on an older version, please update first. Many bugs are already fixed in the latest one.
+      placeholder: "7.0.0"
+    validations:
+      required: false
+  - type: input
+    id: system
+    attributes:
+      label: Operating system
+      placeholder: "Windows 11, macOS 15, Ubuntu 24.04..."
+    validations:
+      required: false
+  - type: textarea
+    id: more
+    attributes:
+      label: Anything else?
+      description: Steps to reproduce, how many windows and tabs you have open, settings you changed. Optional.
+    validations:
+      required: false
