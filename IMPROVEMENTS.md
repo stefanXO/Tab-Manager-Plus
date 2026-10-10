@@ -10,18 +10,30 @@ How to read it:
 - 🚫 Left as is by decision. 🆕 Found after the release.
 - Line numbers inside the "Where" column are the 2026-09-22 ones and have drifted; the Status cell has the current line where it matters.
 
-**What 7.0.0 did against this roadmap: ✅ 23 of 57 items done, 🔁 10 overtaken by a different solution, ⬜ 24 open; plus 18 of the 28 findings of the PR #273 review fixed before the merge.** Per section:
+| | Section | Done | Open | Changed | Items |
+|:-:|---------|------|------|---------|-------|
+| ✅ | **7.0.0 release (2026-10-09/10)**: 23 roadmap items done, 10 overtaken by a different solution, 18 of 28 review findings fixed before the merge | **41** | — | 10 | see [7.0.0 — what shipped](#700--what-shipped) |
+| ⬜ | P0 Next release (7.0.1) shortlist | — | 11 | — | pointers only |
+| | P1 Remaining correctness bugs | 9 | 11 | 1 | 21 |
+| | P1b Findings of the PR #273 review | 18 | 5 | 4 left as is | 28 |
+| | P2 Tooling and build | 9 | 2 | 2 | 13 |
+| | P3 Firefox notes | 1 | 0 | 5 | 6 |
+| | P4 Modernization | 3 | 4 | 1 | 8 |
+| | P5 Salvaged from 5.3.0 | 1 | 7 | 1 | 9 |
+| 🆕 | P6 Found after the release | — | 12 | — | 12 |
 
-| Section | Done | Open | Changed | Items |
-|---------|------|------|---------|-------|
-| P0 Next release (7.0.1) shortlist | — | 11 | — | pointers only |
-| P1 Remaining correctness bugs | 9 | 11 | 1 | 21 |
-| P1b Findings of the PR #273 review | 10 | 5 | 4 left as is | 19 |
-| P2 Tooling and build | 9 | 2 | 2 | 13 |
-| P3 Firefox notes | 1 | 0 | 5 | 6 |
-| P4 Modernization | 3 | 4 | 1 | 8 |
-| P5 Salvaged from 5.3.0 | 1 | 7 | 1 | 9 |
-| P6 Found after the release | — | 12 | — | 12 |
+## 7.0.0 — what shipped
+
+Against this roadmap, 7.0.0 (PR #273, 364 commits on top of 6.0.0, about 1,580 tests) closed:
+
+- **Correctness (P1)**: 9 of 21. Search rewritten as a parsed query (1.1, 1.16), keycode fix (1.2), one storage queue in the worker and no whole-storage writes from the popup (1.4, 1.5), hash update under the queue (1.9), listener cleanup on unmount (1.10), restore scrolls to the new window (1.18), one shared settings module (1.21).
+- **Review of PR #273 (P1b)**: 18 of 28 findings fixed before the merge, one regression caught and reverted.
+- **Tooling (P2)**: 9 of 13. One esbuild config, lockfile, CI on Node 22 and 24, no committed `dist/`, minified release, modern `tsconfig`, a test suite, one version source. Plus screenshot, drag and Firefox harnesses (2.13, built differently than proposed).
+- **Firefox (P3)**: the whole section is overtaken. Firefox builds as MV3 from this repo and 7.0.0 is on AMO.
+- **Modernization (P4)**: 3 of 8. React 19, no string refs, CSS tokens with OS dark mode; popup boot made deterministic (4.8).
+- **Salvaged ideas (P5)**: 1 of 9. Favicons that arrive after first paint (5.6).
+
+Not on this roadmap but in the release: saved windows (save, restore, drag between open and saved, Undo), search syntax (`t:`, `u:`, `s:`, `-`, quotes, regex, OR), keyboard cursor, System/Light/Dark themes, a new icon set, recent-tab highlighting, stats card, settings export and import, public-suffix window names, and the Firefox build. See `CHANGELOG.md`.
 
 The biggest 6.0.0 bugs were addressed in separate PRs before the 7.0.0 work:
 
