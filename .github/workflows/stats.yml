@@ -1,0 +1,32 @@
+name: Usage stats
+
+# Once a week: add the public Chrome and Firefox user counts and the GitHub
+# star count to docs/stats/history.csv and redraw docs/stats/users.svg.
+on:
+  schedule:
+    - cron: "17 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  stats:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node tools/stats/fetch.mjs today
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: node tools/stats/chart.mjs
+      - name: Commit if changed
+        run: |
+          git add docs/stats
+          if git diff --cached --quiet; then echo "no change"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "stats: weekly usage numbers"
+          git push

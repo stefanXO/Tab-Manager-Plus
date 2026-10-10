@@ -2,6 +2,8 @@
 
 ##### Search your tabs fast, save windows for later, limit open tabs per window, and more.
 
+[![Chrome users](https://img.shields.io/chrome-web-store/users/cnkdjjdmfiffagllbiiilooaoofcoeff?label=Chrome%20users)](https://chromewebstore.google.com/detail/tab-manager-plus-for-chro/cnkdjjdmfiffagllbiiilooaoofcoeff) [![Chrome rating](https://img.shields.io/chrome-web-store/rating/cnkdjjdmfiffagllbiiilooaoofcoeff?label=Chrome%20rating)](https://chromewebstore.google.com/detail/tab-manager-plus-for-chro/cnkdjjdmfiffagllbiiilooaoofcoeff) [![Firefox users](https://img.shields.io/amo/users/tab-manager-plus-for-firefox?label=Firefox%20users)](https://addons.mozilla.org/en-US/firefox/addon/tab-manager-plus-for-firefox/) [![Firefox rating](https://img.shields.io/amo/rating/tab-manager-plus-for-firefox?label=Firefox%20rating)](https://addons.mozilla.org/en-US/firefox/addon/tab-manager-plus-for-firefox/) [![GitHub stars](https://img.shields.io/github/stars/stefanXO/Tab-Manager-Plus?style=flat)](https://github.com/stefanXO/Tab-Manager-Plus/stargazers) [![Latest release](https://img.shields.io/github/v/release/stefanXO/Tab-Manager-Plus)](https://github.com/stefanXO/Tab-Manager-Plus/releases/latest)
+
 Tab Manager Plus shows all of your open tabs and windows in one place, so you can find, sort and close them quickly. It is an extended version of the old Tab Manager extension for Chrome, built without any malware and without any tracking.
 
 [<img src="images/webstore.png" alt="Tab Manager Plus for Chrome">](https://chromewebstore.google.com/detail/tab-manager-plus-for-chro/cnkdjjdmfiffagllbiiilooaoofcoeff) [<img src="images/get-the-addon.png" align="left" alt="Tab Manager Plus for Firefox">](https://addons.mozilla.org/en-US/firefox/addon/tab-manager-plus-for-firefox/)
@@ -84,6 +86,12 @@ You can install this extension from the [Chrome Web Store](https://chromewebstor
 
 
 Please enjoy.
+
+## Users and stars
+
+![Chrome users, Firefox users and GitHub stars over time](docs/stats/users.svg)
+
+Chrome weekly users come from the Chrome Web Store dashboard since October 2021, and from snapshots of the store page before that. Firefox users and GitHub stars are updated once a week by a GitHub Action, with older points from Wayback Machine snapshots and GitHub. Nothing is collected from users.
 
 ## License
 MPLv2

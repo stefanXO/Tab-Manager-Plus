@@ -2,7 +2,7 @@
 
 **7.0.0 shipped. Half of this list is done. Here is the other half.**
 
-| **50** fixed | **41** open | **11** up next |
+| **50** fixed | **51** open | **11** up next |
 |:-:|:-:|:-:|
 | 32 roadmap items and 18 review findings closed in 7.0.0 | bugs, ideas and cleanups still on the list | the 7.0.1 shortlist, [P0](#p0--next-release-701-shortlist) |
 
@@ -32,7 +32,8 @@ Each section has three groups: **Do next** (on the 7.0.1 shortlist), **Open**, a
 | | [P4 Modernization](#p4--modernization-larger-efforts) | 4 | 4 | 0 | 8 |
 | | [P5 Salvaged from 5.3.0](#p5--salvaged-from-the-abandoned-530-branch) | 1 | 7 | 1 | 9 |
 | | [P6 Found after the release](#p6--found-after-the-release-2026-10-0910) | — | 12 | — | 12 |
-| | **Total** | **50** | **41** | 1, plus 4 left as is | **97** |
+| | [P7 Milestone 7.1.0](#p7--milestone-710-2026-10-10) | — | 10 | — | 10 |
+| | **Total** | **50** | **51** | 1, plus 4 left as is | **107** |
 
 ## 7.0.0 — what shipped
 
@@ -755,3 +756,21 @@ New since the review. Sources: Copilot's last pass on PR #273, the Firefox test 
 </details>
 
 Fixed between the review and the release, so not listed above: the discarded-tab icons that stayed at 80 % opacity during a search (`css/components/tab.css:271`), the prefix-only search that selected every tab, the hover slowdown with many tabs (an unguarded `max-width` media query made the popup restyle on every mouse move), and the popup size clamp.
+
+## P7 — Milestone 7.1.0 (2026-10-10)
+
+> [!NOTE]
+> **10 items for 7.1.0.** Six are the issues on the [7.1.0 milestone](https://github.com/stefanXO/Tab-Manager-Plus/milestone/2), four come from the maintainer's own notes on release day.
+
+| | Item | What is wrong | Where | Fix |
+|:-:|---|---|---|---|
+| 🟠 | <a id="i-7-1"></a>**7.1** A missed click between two tabs closes the popup ([#152](https://github.com/stefanXO/Tab-Manager-Plus/issues/152)) | While selecting tabs (Shift held, or a few tabs already selected), a click that lands in the gap between two tabs counts as a click on the window. The popup closes, the window gets focus, and the selection is lost. | `Window.tsx:322` (`onClick={this.windowClick}` on the whole window), handler at `Window.tsx:433` | do not focus the window when Shift, Ctrl or Cmd is held or when any tab is selected; only a plain click on empty window space focuses it. #152 also asks to keep the selection when the popup is opened again (idea, later). |
+| 🟡 | <a id="i-7-2"></a>**7.2** Side padding is too wide at tiny widths | In very narrow pages, like the Firefox sidebar, the side padding takes space the tabs need. | `css/layout/narrow.css:15` (`max-width: 450px` block) | smaller side padding below about 320 px. |
+| 🟠 | <a id="i-7-3"></a>**7.3** The options break out of their box at small widths | At small widths the Theme choice (System, Light, Dark) runs past the box, and the "Donate and Rate buttons" text wraps under its switch instead of staying next to it. | `css/components/controls.css:96` (`.choice`), `css/components/options.css:170` (`@container (min-width: 26rem)`) | let the choice shrink (smaller padding, then wrap), and keep each switch and its label on one row. |
+| 🟡 | <a id="i-7-4"></a>**7.4** Text is a little large at small widths | Together with 7.2 and 7.3: at small widths a slightly smaller font would fit more. | `css/layout/narrow.css`, `css/base/typography.css` | lower the base size a step in the narrow rules (watch the 25 px first-layout rule in `tests/popupWidthQueries.test.ts`). |
+| 🔵 | <a id="i-7-5"></a>**7.5** Show which window a dragged tab will land in ([#97](https://github.com/stefanXO/Tab-Manager-Plus/issues/97)) | While dragging tabs there is a marker between tabs, but nothing shows which window is under the pointer. | `Window.tsx:319-321` (`dragOver`, `dragLeave`), `css/components/drag.css` | add a class on the window under the pointer during a drag (outline or tinted background), cleared on leave and drop. |
+| 🔵 | <a id="i-7-6"></a>**7.6** Font size and weight options ([#99](https://github.com/stefanXO/Tab-Manager-Plus/issues/99)) | Users ask for a font size setting and bold or normal titles. The selected-tab colours in the issue are fixed in 7.0.0. | options, `css/base/tokens.css` | same as [**5.9**](#i-5-9): a size and a weight setting that set CSS variables. |
+| 🔵 | <a id="i-7-7"></a>**7.7** A switch to stop window reordering ([#160](https://github.com/stefanXO/Tab-Manager-Plus/issues/160)) | Windows move around as focus changes, which is disorienting while managing tabs. | `sortWindows` in `src/helpers/windows.ts:13` | a "Keep window order" option; see also #136 and #253. |
+| 🔵 | <a id="i-7-8"></a>**7.8** Custom window sorting ([#266](https://github.com/stefanXO/Tab-Manager-Plus/issues/266)) | Users want to sort windows by number of tabs, age and so on, so the layout does not shift when they focus a big window. | `sortWindows` in `src/helpers/windows.ts:13` | a sort setting next to 7.7; see [**5.1**](#i-5-1). |
+| 🟡 | <a id="i-7-9"></a>**7.9** The tab count badge cuts off above 999 ([#250](https://github.com/stefanXO/Tab-Manager-Plus/issues/250)) | With more than 999 tabs the number on the toolbar icon is cut off. | `src/service_worker/background/tabs.ts:115` (`setBadgeText`) | show a short form above 999, like "1.6k", and keep the full number in the icon's tooltip. |
+| 🔴 | <a id="i-7-10"></a>**7.10** Firefox window names can be lost after a restart ([#159](https://github.com/stefanXO/Tab-Manager-Plus/issues/159)) | After quitting and restarting Firefox, names given to windows are not always kept. | window matching in `src/helpers/windows.ts` | same cause as [**1.15**](#i-1-15); fix there, then test on Firefox. |
