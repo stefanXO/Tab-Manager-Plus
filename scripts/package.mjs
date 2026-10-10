@@ -6,6 +6,9 @@
 //   tab-manager-plus-<version>.chrome.zip    upload to the Chrome Web Store (and Edge, Opera)
 //   tab-manager-plus-<version>.chrome.crx    self-hosted install; only when a key is found
 //   tab-manager-plus-<version>.firefox.zip   upload to addons.mozilla.org
+//   tab-manager-plus-<version>.firefox.xpi   the same file under the .xpi name, for the
+//                                             GitHub release; unsigned, so release Firefox
+//                                             only loads it as a temporary add-on
 //   tab-manager-plus-<version>.source.zip    the committed source (git archive HEAD),
 //                                             for store reviewers that ask for it
 //
@@ -17,7 +20,7 @@
 // The .crx is signed with the key from $CRX_KEY, else key.pem, else key.pem.bak.
 // No key is ever generated: a new key would give the extension a new id.
 
-import { createReadStream, createWriteStream, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
+import { copyFileSync, createReadStream, createWriteStream, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 import { execFileSync } from "node:child_process";
 import yazl from "yazl";
@@ -83,6 +86,9 @@ async function main() {
 	const base = join(OUT, `${NAME}-${version}`);
 
 	await writeZip(build("firefox"), `${base}.firefox.zip`);
+	// TODO: ship a signed .xpi (AMO signs each approved version; web-ext sign can fetch it) so release Firefox installs it
+	copyFileSync(`${base}.firefox.zip`, `${base}.firefox.xpi`);
+	console.log(`wrote ${base}.firefox.xpi (unsigned copy of the .zip)`);
 
 	const chrome = build("chrome");
 	await writeZip(chrome, `${base}.chrome.zip`);

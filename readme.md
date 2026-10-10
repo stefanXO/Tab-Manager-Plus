@@ -6,7 +6,7 @@ Tab Manager Plus shows all of your open tabs and windows in one place, so you ca
 
 [<img src="images/webstore.png" alt="Tab Manager Plus for Chrome">](https://chromewebstore.google.com/detail/tab-manager-plus-for-chro/cnkdjjdmfiffagllbiiilooaoofcoeff) [<img src="images/get-the-addon.png" align="left" alt="Tab Manager Plus for Firefox">](https://addons.mozilla.org/en-US/firefox/addon/tab-manager-plus-for-firefox/)
 
-Version 7.0.0 is for Chrome and the other browsers that are built on Chromium. The Firefox add-on stays on the older version for now, and its update will follow later.
+Version 7.0.0 is out for Chrome, the other browsers that are built on Chromium, and Firefox.
 
 ![Tab Manager Plus in Block view](store/images/screenshot-1-1280x800.png)
 
