@@ -1,0 +1,27 @@
+name: Idea or feature request
+description: Suggest something new or a change to how it works.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the idea! One idea per issue makes it much easier to track and to close when it's done.
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like?
+      description: Describe the idea, and if you like, the problem it would solve for you.
+    validations:
+      required: true
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Which browser do you use?
+      options:
+        - Chrome
+        - Firefox
+        - Edge
+        - Brave
+        - Other
+    validations:
+      required: false
