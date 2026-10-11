@@ -16,3 +16,6 @@ skills-lock.json
 
 Folder.DotSettings.user
 key.pe*
+
+# Chrome Web Store dashboard exports, private
+/store/data/
