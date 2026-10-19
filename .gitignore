@@ -16,3 +16,15 @@ skills-lock.json
 
 Folder.DotSettings.user
 key.pe*
+/release/
+/plans/
+
+# agent skills installed with `npx skills add ...` / `npx modern-web-guidance install`
+brag-output*
+/scratchpad/
+
+# Chrome Web Store dashboard exports, private
+/store/data/
+
+# GitHub Pages site, built by tools/site/build.mjs
+/_site/
