@@ -25,8 +25,16 @@ for (const f of readdirSync(SITE).filter((f) => f.endsWith('.html') && f !== '40
 	}
 }
 
+// a pinned build from `npx @puppeteer/browsers install chrome@<version>` wins over the system Chrome
 const pinned = join(homedir(), '.cache', 'puppeteer', 'chrome')
-const exe = process.env.CHROME_PATH || join(pinned, readdirSync(pinned).sort().reverse()[0], 'chrome-win64', 'chrome.exe')
+const pinnedExe = existsSync(pinned) ? readdirSync(pinned).sort().reverse().map((d) => [
+	join(pinned, d, 'chrome-win64', 'chrome.exe'),
+	join(pinned, d, 'chrome-linux64', 'chrome'),
+	join(pinned, d, 'chrome-mac-arm64', 'Google Chrome for Testing.app', 'Contents', 'MacOS', 'Google Chrome for Testing'),
+	join(pinned, d, 'chrome-mac-x64', 'Google Chrome for Testing.app', 'Contents', 'MacOS', 'Google Chrome for Testing'),
+]).flat() : []
+const exe = [process.env.CHROME_PATH, ...pinnedExe, 'C:/Program Files/Google/Chrome/Application/chrome.exe', '/usr/bin/google-chrome', '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'].filter(Boolean).find((p) => existsSync(p))
+if (!exe) { console.error('no Chrome found: set CHROME_PATH or install a pinned build (see tools/css-baseline/README.md)'); process.exit(2) }
 const browser = await puppeteer.launch({executablePath: exe, headless: true, args: ['--no-first-run', '--autoplay-policy=no-user-gesture-required']})
 const result = {}
 async function visit(file, scheme = 'light') {

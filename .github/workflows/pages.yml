@@ -18,6 +18,7 @@ on:
       - documentation.html
       - PRIVACY.md
       - LICENSE.md
+      - manifest.json
       - readme.md
       - "docs/stats/**"
       - "store/images/**"

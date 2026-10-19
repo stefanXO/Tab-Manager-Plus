@@ -129,13 +129,16 @@ async function stars() {
 
 async function firefoxRatings(rows) {
 	const scores = []; // [date, score]
+	let expected = -1;
 	for (let url = `https://addons.mozilla.org/api/v5/ratings/rating/?addon=${AMO_SLUG}&page_size=50`; url;) {
-		const r = await get(url); if (!r) break;
+		const r = await get(url);
+		if (!r) { console.error('Firefox ratings: page failed, existing rows kept'); return rows; }
 		const j = await r.json();
+		expected = j.count;
 		scores.push(...j.results.map(x => [x.created.slice(0, 10), x.score]));
 		url = j.next;
 	}
-	if (!scores.length) { console.error('no Firefox ratings fetched'); return rows; }
+	if (!scores.length || scores.length !== expected) { console.error(`Firefox ratings: got ${scores.length} of ${expected}, existing rows kept`); return rows; }
 	scores.sort((a, b) => a[0].localeCompare(b[0]));
 	rows = rows.filter(r => !(r.metric === 'firefox_rating_avg' || /^firefox_new_\d$/.test(r.metric)));
 	let count = 0, sum = 0, month = {}, key = '';
