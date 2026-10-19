@@ -37,6 +37,8 @@ export function servePages() {
 
 // the body is the text of an async function over `B` (the page's browser API)
 // and `A` (the argument); its result goes back as JSON
+// Marionette's WebDriver:ExecuteScript awaits a returned Promise (unlike the W3C command of the same name), so the async body
+// below resolves before the value comes back; every check of the 2026-10-09 full run went through this path.
 const wrap = (body) => `const B = window.wrappedJSObject.browser; const A = arguments[0]; return (async () => { ${body} })().then((r) => JSON.stringify(r === undefined ? null : r))`
 
 export class Harness {

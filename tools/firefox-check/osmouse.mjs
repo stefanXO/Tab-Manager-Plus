@@ -69,12 +69,12 @@ export function assertFirefoxAt(points) {
 
 // a straight drag from a to b (screen px): press, move in steps, hold, release
 export function osDrag(a, b, {steps = 14, hold = 250} = {}) {
-	const pts = [a, b]; for (let i = 1; i < 6; i++) pts.push({x: Math.round(a.x + (b.x - a.x) * i / 6), y: Math.round(a.y + (b.y - a.y) * i / 6)})
-	assertFirefoxAt(pts)
 	const list = [['m', a.x, a.y], ['s', 120], ['d'], ['s', 80]]
 	// first nudge starts the drag
 	list.push(['m', a.x + 6, a.y + 6], ['s', 60], ['m', a.x + 14, a.y + 12], ['s', 60])
 	for (let i = 1; i <= steps; i++) list.push(['m', Math.round(a.x + (b.x - a.x) * i / steps), Math.round(a.y + (b.y - a.y) * i / steps)], ['s', 30])
 	list.push(['m', b.x + 1, b.y + 1], ['s', hold], ['m', b.x, b.y], ['s', hold], ['u'])
+	// the ownership check covers every point the mouse will actually visit, not a sample of the line
+	assertFirefoxAt(list.filter((s) => s[0] === 'm').map(([, x, y]) => ({x, y})))
 	osMouse(list)
 }
