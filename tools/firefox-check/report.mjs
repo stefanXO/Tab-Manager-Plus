@@ -44,9 +44,11 @@ export const EXTRA = [
 	['Upgrade 5.2.4 -> 7.0.0', ['U00', 'U01', 'U02', 'U03', 'U04']],
 ]
 
-const roll = (rs) => {
+// rs: the results found for an item's checks, total: how many checks the item has (a partial run is not a PASS)
+const roll = (rs, total) => {
 	if (!rs.length) return 'NOT RUN'
 	if (rs.some((r) => r.status === 'FAIL')) return 'FAIL'
+	if (rs.length < total) return 'INCOMPLETE (' + rs.length + ' of ' + total + ' run)'
 	if (rs.some((r) => r.status === 'MANUAL')) return 'MANUAL (rest PASS)'
 	return 'PASS'
 }
@@ -62,7 +64,7 @@ export function writeResults({results, env, started, OUT}) {
 	for (const [n, text, ids, note] of CHECKLIST) {
 		const rs = ids.map((i) => by.get(i)).filter(Boolean)
 		const ev = rs.map((r) => r.id + ': ' + r.status + ' - ' + String(r.evidence).slice(0, 260)).join(' // ') + (note ? ' // ' + note : '')
-		lines.push(`| ${n} | ${cell(text)} | ${roll(rs)} | ${cell(ev)} |`)
+		lines.push(`| ${n} | ${cell(text)} | ${roll(rs, ids.length)} | ${cell(ev)} |`)
 	}
 	lines.push('', '## Extra checks', '', '| group | id | check | result | evidence |', '|---|---|---|---|---|')
 	for (const [group, ids] of EXTRA) for (const id of ids) {

@@ -383,10 +383,11 @@ export function checks(ctx) {
 		if (!n.some((x) => /^undo: Removed .Taxes. \(left empty\)/.test(x))) throw new Error('notices: ' + JSON.stringify(n))
 		const age = await p.ev(`return (document.querySelector('#session-s1 .window-age') || {}).textContent`)
 		await p.click('.notice.undo .notice-undo')
-		await settleExpect(savedTitles, {s1: ['Hotel', 'India', 'Juliett', 'Kilo', 'Lima', 'Mike', 'November'], s2: ['Lima', 'Mike', 'November']}, 'after Undo (move undone keeps the added copies? see note)').catch(() => {})
-		const after = await savedTitles()
+		// undoMove puts both windows back as they were (tests/moveUndo.test.ts)
+		const want = {s1: ['Hotel', 'India', 'Juliett', 'Kilo'], s2: ['Lima', 'Mike', 'November']}
+		const after = await settle(savedTitles, want)
 		const s = await shot(p, 'F09')
-		if (!after.s2) throw new Error('Taxes did not come back: ' + JSON.stringify(after) + ' ' + s)
+		if (!same(after, want)) throw new Error('after Undo: expected ' + JSON.stringify(want) + ', got ' + JSON.stringify(after) + ' ' + s)
 		if (!/just now/.test(age || '')) throw new Error('Reading card age says ' + JSON.stringify(age) + ' ' + s)
 		return 'notice ' + JSON.stringify(n[0]) + ', Undo brought Taxes back ' + JSON.stringify(after) + ', Reading says ' + JSON.stringify(age) + ', ' + s
 	})

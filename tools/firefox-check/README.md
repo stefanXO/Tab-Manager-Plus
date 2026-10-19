@@ -8,7 +8,11 @@ Minimize inactive windows and an upgrade from 5.2.4. It starts its own Firefox w
 node tools/firefox-check/run.mjs                 # builds build/firefox, runs everything, ~15 min
 node tools/firefox-check/run.mjs --no-build --only F21,K0     # comma separated ids or words
 node tools/firefox-check/run.mjs --skip-upgrade  # without the 5.2.4 download and upgrade
+node tools/firefox-check/run.mjs --headless      # no desktop window: every check that needs a real drag is MANUAL
 ```
+
+`FFCHECK_NORETRY=1` runs each check once (no second try on failure). Real mouse input only goes to the Firefox the harness
+started: a drag is refused when another process's window (your own Firefox included) is under any point of it.
 
 Needs Firefox at `C:\Program Files\Mozilla Firefox\firefox.exe` (or `FIREFOX_PATH`), `gh` for the 5.2.4 download, Windows
 (the drag part uses `user32`). **It moves the real mouse cursor for real OS drags: do not use the mouse while it runs.**

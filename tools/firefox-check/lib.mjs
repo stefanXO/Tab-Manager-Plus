@@ -6,7 +6,7 @@ import {mkdirSync, existsSync, readdirSync, readFileSync, rmSync} from 'node:fs'
 import {join, resolve, dirname} from 'node:path'
 import {fileURLToPath} from 'node:url'
 import {Marionette, launchFirefox, sleep} from './marionette.mjs'
-import {osDrag} from './osmouse.mjs'
+import {osDrag, allowFirefoxPid, forgetFirefoxPid} from './osmouse.mjs'
 
 export {sleep}
 export const here = dirname(fileURLToPath(import.meta.url))
@@ -44,12 +44,14 @@ export class Harness {
 		this.port = port; this.headless = headless; this.profile = profile; this.extPath = extPath; this.log = log
 		this.m = new Marionette(port)
 		this.pages = []
+		if (headless) this.noDrags = 'headless run: no desktop window for real OS drags, every check that needs a drag is MANUAL'
 	}
 	async start({prefs = {}, install = true} = {}) {
 		const {server, origin} = await servePages()
 		this.server = server; this.origin = origin
 		this.proc = await launchFirefox({profile: this.profile, port: this.port, headless: this.headless, log: join(this.profile, '..', 'firefox-stdio.log'),
 			prefs: {'extensions.webextensions.uuids': JSON.stringify({[GECKO_ID]: UUID}), ...prefs}})
+		allowFirefoxPid(this.proc.pid)
 		await this.m.connect()
 		const caps = await this.m.newSession()
 		this.version = caps.capabilities?.browserVersion
@@ -62,6 +64,7 @@ export class Harness {
 	}
 	page(name) { return this.origin + '/p/' + encodeURIComponent(name) }
 	async stop() {
+		if (this.proc) forgetFirefoxPid(this.proc.pid)
 		await this.m.quit()
 		this.m.close()
 		this.server?.close()

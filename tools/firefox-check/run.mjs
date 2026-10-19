@@ -52,17 +52,24 @@ try {
 	const all = checks(ctx)
 	all.sort((a, b) => (a.late ? 1 : 0) - (b.late ? 1 : 0))
 	for (const c of all) {
-		if (only && !only.split(',').some((o) => (c.id + ' ' + c.name).toLowerCase().includes(o.toLowerCase()))) continue
+		if (!wanted(c)) continue
 		results.push(await runCheck(c, ctx))
 	}
 } finally {
 	await h.stop()
 }
 
-if (!opt('--skip-upgrade') && (!only || only.split(',').some((o) => /^u/i.test(o.trim())))) {
+// U01-U04 run the shared upgrade flow lazily, so any one of them works alone
+if (!opt('--skip-upgrade')) {
 	for (const c of upgradeChecks({OUT, root, buildDir, headless})) {
+		if (!wanted(c)) continue
 		results.push(await runCheck(c, {}))
 	}
+}
+
+// --only: comma separated tokens, a check runs when one appears in its id or name
+function wanted(c) {
+	return !only || only.split(',').some((o) => (c.id + ' ' + c.name).toLowerCase().includes(o.trim().toLowerCase()))
 }
 
 async function runCheck(c, ctx) {
@@ -76,14 +83,13 @@ async function runCheck(c, ctx) {
 			break
 		} catch (e) {
 			if (e && e.manual) { last = {status: 'MANUAL', evidence: e.message}; break }
-			last = {status: 'FAIL', evidence: String(e && e.message || e).slice(0, 1500), flaky: undefined, firstFailure: attempt === 1 ? String(e && e.message || e).slice(0, 400) : firstFail}
-			if (attempt === 1) firstFail = last.firstFailure
-			if (attempt === 1 && !c.noRetry && !process.env.FFCHECK_NORETRY) { console.log('  retry', c.id, last.evidence.slice(0, 200)); continue }
+			last = {status: 'FAIL', evidence: String(e && e.message || e).slice(0, 1500), flaky: attempt === 2 ? 'failed twice' : undefined, firstFailure: firstFail}
+			if (attempt === 1 && !c.noRetry && !process.env.FFCHECK_NORETRY) { firstFail = last.evidence.slice(0, 400); console.log('  retry', c.id, last.evidence.slice(0, 200)); continue }
+			break
 		}
 		finally { c.ms = Date.now() - t0 }
 	}
 	const r = {id: c.id, item: c.name, patches: c.patches, ...last}
-	if (last.status === 'FAIL' && last.firstFailure) r.flaky = 'failed twice'
 	console.log((r.status + '     ').slice(0, 7), r.id, r.item.slice(0, 80), '-', String(r.evidence).slice(0, 140), r.flaky ? '[' + r.flaky + ']' : '')
 	return r
 }

@@ -26,7 +26,7 @@ public static class M {
 "@
 [M]::SetProcessDPIAware() | Out-Null
 if ($owners) {
-  foreach ($q in ($owners -split ';')) { $c = $q.Split(','); $pt = New-Object M+PT; $pt.x = [int]$c[0]; $pt.y = [int]$c[1]; $h = [M]::GetAncestor([M]::WindowFromPoint($pt), 2); $procId = 0; [M]::GetWindowThreadProcessId($h, [ref]$procId) | Out-Null; $n = (Get-Process -Id $procId -ErrorAction SilentlyContinue).ProcessName; Write-Output ($q + '=' + $n) }
+  foreach ($q in ($owners -split ';')) { $c = $q.Split(','); $pt = New-Object M+PT; $pt.x = [int]$c[0]; $pt.y = [int]$c[1]; $h = [M]::GetAncestor([M]::WindowFromPoint($pt), 2); $procId = 0; [M]::GetWindowThreadProcessId($h, [ref]$procId) | Out-Null; $n = (Get-Process -Id $procId -ErrorAction SilentlyContinue).ProcessName; $parentPid = (Get-CimInstance Win32_Process -Filter "ProcessId = $procId" -ErrorAction SilentlyContinue).ParentProcessId; Write-Output ($q + '=' + $n + '=' + $procId + '=' + $parentPid) }
   exit 0
 }
 foreach ($s in ($steps -split ';')) {
@@ -49,16 +49,22 @@ export function osMouse(steps) {
 	if (r.status !== 0) throw new Error('osMouse failed: ' + r.stderr)
 }
 
-// The process owning the top window at each screen point (no input is sent). A drag is refused unless Firefox is under every point it
-// will press, pass or release on: otherwise the physical mouse would drag things in whatever other window sits there.
+// The process owning the top window at each screen point (no input is sent): [point, name, pid, parentPid]. A drag is refused unless
+// the Firefox this harness started is under every point it will press, pass or release on: otherwise the physical mouse would drag
+// things in whatever other window sits there, the developer's own Firefox included. firefox.exe on Windows is a launcher whose
+// child is the real browser, so the window owner is often the child of the pid we spawned: the parent pid counts too.
+const allowed = new Set()
+export function allowFirefoxPid(pid) { allowed.add(pid) }
+export function forgetFirefoxPid(pid) { allowed.delete(pid) }
 export function windowOwners(points) {
 	const r = spawnSync('powershell.exe', ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', script, '-steps', 'x', '-owners', points.map((p) => p.x + ',' + p.y).join(';')], {encoding: 'utf8'})
 	if (r.status !== 0) throw new Error('windowOwners failed: ' + r.stderr)
-	return r.stdout.split('\n').map((l) => l.trim()).filter(Boolean).map((l) => l.split('='))
+	return r.stdout.split('\n').map((l) => l.trim()).filter(Boolean).map((l) => { const [p, n, pid, ppid] = l.split('='); return [p, n, Number(pid) || 0, Number(ppid) || 0] })
 }
 export function assertFirefoxAt(points) {
-	const bad = windowOwners(points).filter(([, n]) => !/^firefox$/i.test(n || ''))
-	if (bad.length) throw new Error('refusing to move the mouse: the window under ' + bad.map(([p, n]) => '(' + p + ') is ' + (n || 'unknown')).join(', ') + ', not Firefox (something covers the test window)')
+	const ours = ([, n, pid, ppid]) => /^firefox$/i.test(n || '') && (allowed.has(pid) || allowed.has(ppid))
+	const bad = windowOwners(points).filter((o) => !ours(o))
+	if (bad.length) throw new Error('refusing to move the mouse: the window under ' + bad.map(([p, n, pid, ppid]) => '(' + p + ') is ' + (n || 'unknown') + ' pid ' + pid + ' (parent ' + ppid + ')').join(', ') + ', not the Firefox this harness started (allowed pids: ' + [...allowed].join(', ') + '; something covers the test window)')
 }
 
 // a straight drag from a to b (screen px): press, move in steps, hold, release
