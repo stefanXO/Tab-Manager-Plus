@@ -4,7 +4,8 @@
 //   node tools/firefox-check/run.mjs [--only <substring>] [--headless] [--skip-upgrade] [--no-build]
 //
 // Never touches your own Firefox profile (a fresh one under out/), never
-// starts or connects to Chrome, changes nothing outside tools/firefox-check/.
+// starts or connects to Chrome. Outside tools/firefox-check/ it only rebuilds
+// build/firefox (node build.mjs --firefox; skip with --no-build).
 import {mkdirSync, rmSync, writeFileSync, existsSync, readdirSync, readFileSync} from 'node:fs'
 import {join} from 'node:path'
 import {spawnSync} from 'node:child_process'

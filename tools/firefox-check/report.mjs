@@ -25,7 +25,7 @@ export const CHECKLIST = [
 	[16, 'Private window: select one normal + one private tab, Save selected tabs: two saved windows, normal first; restore the private one: opens private [10]', ['F16'], 'granting the permission through about:addons: MANUAL M3'],
 	[17, 'Private open tab onto a normal saved window: not-allowed cursor, no marker, red notice; private saved tab onto a normal open window opens [11, 16, 37, 40]', ['F17a', 'F17b'], 'the not-allowed CURSOR: MANUAL M4'],
 	[18, '(important) about:preferences + normal tab onto a saved window: one copy + red "1 of 2 tabs left out: 1 about: page can\'t be saved on Firefox"; only about: tab: "Nothing added ..." [37]', ['F18']],
-	[19, 'Type `alpha OR charlie`, Ctrl+click a faded tab, Hide non-matching: selected tab stays; drag a selected match: all selected move, stack counts them [39]', ['F19']],
+	[19, 'Type `alpha OR charlie`, Ctrl+click a faded tab, Hide non-matching: selected tab stays; drag a selected match: all selected move, stack counts them [39]', ['F19'], 'run as `alpha OR delta`: words in two windows of the fixture, as the checklist intends'],
 	[20, 'Saved cards and hover cards look right (dashed edge, saved icon, faded favicons, map with dashed rectangle) [05, 06, 08]', ['F20'], 'MANUAL M6'],
 	[21, '(important) Sidebar keys: plain Delete closes nothing, Ctrl+Delete closes all three, text stays; Ctrl+Backspace in the box edits text; Ctrl+Delete on 2 saved tabs: Undo [23, 26, 28]', ['F21a', 'F21a2', 'F21b', 'F21c']],
 	[22, 'Ctrl+click saved tabs of two windows + Enter: one window in the order shown; `s:` + word + Enter; filter on with a non-matching selected [23, 26, 39]', ['F22a', 'F22b', 'F22c']],

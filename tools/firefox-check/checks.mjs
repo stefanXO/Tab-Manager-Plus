@@ -670,7 +670,9 @@ export function checks(ctx) {
 	// =====================================================================
 	// 19 filter + selected tabs
 	// =====================================================================
-	add('F19', 'Type "alpha OR charlie", Ctrl+click a faded tab, "Hide non-matching tabs": selected tab stays on screen; drag a selected match to another window: all selected tabs move, the stack counts them', '39', async () => {
+	// The checklist says "alpha OR charlie (words in two open windows)"; in this fixture Alpha and Charlie share the First
+	// window, so the query is "alpha OR delta" (First and Second) to keep the two-window point of the check.
+	add('F19', 'Type "alpha OR delta" (the checklist says "alpha OR charlie"; words in two windows of this fixture), Ctrl+click a faded tab, "Hide non-matching tabs": selected tab stays on screen; drag a selected match to another window: all selected tabs move, the stack counts them', '39', async () => {
 		const {w1, w2} = await fixture()
 		const p = await openPopup('tab')
 		await typeIn(p, 'alpha OR delta')
