@@ -14,7 +14,8 @@ permissions (`system.display` is Chrome only; the monitor options are unavailabl
 
 Other manifest parts: `sidebar_action` (the Firefox sidebar panel, `popup.html?panel=true`),
 background `scripts` (no service worker), gecko id `{45f2dc53-96cd-4c41-91f6-f4a73a8fb2b0}`,
-`strict_min_version` 140.0 (Android 142.0).
+`strict_min_version` 140.0. No `gecko_android` entry: Firefox for Android add-ons have no windows, sidebar or
+toolbar popup, so the extension is desktop only.
 
 ## Build from source (for the reviewer)
 
