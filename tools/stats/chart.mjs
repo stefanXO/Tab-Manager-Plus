@@ -78,7 +78,8 @@ PANELS.forEach((p, i) => {
 			let up = 0, down = 0;
 			for (const { s, v } of m.parts) {
 				const top = s.up ? up + v : -down, bottom = s.up ? up : -down - v;
-				body += `<rect x="${x(m.t).toFixed(1)}" y="${y(top).toFixed(1)}" width="${bw.toFixed(1)}" height="${(y(bottom) - y(top)).toFixed(1)}" fill="${s.color}"/>`;
+				const bx = Math.max(L, x(m.t)), bwid = Math.max(1, x(m.t) + bw - bx); // the first month may start before the axis
+				body += `<rect x="${bx.toFixed(1)}" y="${y(top).toFixed(1)}" width="${bwid.toFixed(1)}" height="${(y(bottom) - y(top)).toFixed(1)}" fill="${s.color}"/>`;
 				if (s.up) up += v; else down += v;
 			}
 			last = m;

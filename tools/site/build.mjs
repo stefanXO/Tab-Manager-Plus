@@ -59,6 +59,9 @@ if (process.argv.includes('--rebuild') || stale) {
 	execSync('npm run build', {cwd: ROOT, stdio: 'inherit'})
 } else console.log('reusing build/chrome')
 
+// the output folder is wiped: refuse the repository itself, anything above it, or a drive root
+const rel = relative(OUT, ROOT)
+if (!rel.startsWith('..') || OUT === dirname(OUT)) { console.error(`refusing to wipe ${OUT}: it contains the repository`); process.exit(2) }
 rmSync(OUT, {recursive: true, force: true})
 mkdirSync(OUT, {recursive: true})
 for (const dir of ['css', 'images', 'fonts', 'features']) cpSync(join(EXT, dir), join(OUT, dir), {recursive: true})

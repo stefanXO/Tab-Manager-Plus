@@ -19,7 +19,7 @@ const missing = []
 for (const f of readdirSync(SITE).filter((f) => f.endsWith('.html') && f !== '404.html')) {
 	const html = readFileSync(join(SITE, f), 'utf8')
 	for (const [, url] of html.matchAll(/(?:href|src|poster)="([^"]+)"/g)) {
-		if (/^(https?:|mailto:|#|data:)/.test(url) || url.includes("${")) continue // ${...}: roadmap client templates
+		if (/^(https?:|mailto:|#|data:|\/)/.test(url) || url.includes("${")) continue // ${...}: roadmap client templates; root-relative urls are Pages paths
 		const path = decodeURIComponent(url.replace(/[?#].*$/, ''))
 		if (!existsSync(join(SITE, path))) missing.push(`${f}: ${url}`)
 	}
