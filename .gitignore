@@ -28,3 +28,6 @@ brag-output*
 
 # GitHub Pages site, built by tools/site/build.mjs
 /_site/
+
+# Firefox harness output: profiles, screenshots, unpacked old release
+tools/firefox-check/out/
