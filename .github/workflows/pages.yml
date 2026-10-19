@@ -1,0 +1,66 @@
+name: Pages
+
+# Builds the project site (tools/site/build.mjs -> _site/) and publishes it to
+# https://stefanxo.github.io/Tab-Manager-Plus/
+#
+# One-time repo setting: Settings -> Pages -> Source must be "GitHub Actions":
+#   gh api -X POST repos/stefanXO/Tab-Manager-Plus/pages -f build_type=workflow
+#
+# stats.yml starts this workflow after its weekly commit (pushes made with
+# GITHUB_TOKEN do not trigger other workflows on their own).
+on:
+  push:
+    branches: [master]
+    paths:
+      - IMPROVEMENTS.md
+      - CHANGELOG.md
+      - changelog.html
+      - documentation.html
+      - PRIVACY.md
+      - LICENSE.md
+      - readme.md
+      - "docs/stats/**"
+      - "store/images/**"
+      - store/description.txt
+      - "features/**"
+      - "css/**"
+      - "images/**"
+      - "fonts/**"
+      - "tools/site/**"
+      - scripts/changelog.mjs
+      - .github/workflows/pages.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node tools/site/build.mjs   # runs npm run build, then writes _site/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

@@ -10,6 +10,8 @@ Tab Manager Plus shows all of your open tabs and windows in one place, so you ca
 
 Version 7.0.0 is out for Chrome, the other browsers that are built on Chromium, and Firefox.
 
+The project site has the [Help](https://stefanxo.github.io/Tab-Manager-Plus/help.html), [What's new](https://stefanxo.github.io/Tab-Manager-Plus/changelog.html), the [Roadmap](https://stefanxo.github.io/Tab-Manager-Plus/roadmap.html) and [Stats](https://stefanxo.github.io/Tab-Manager-Plus/stats.html): [stefanxo.github.io/Tab-Manager-Plus](https://stefanxo.github.io/Tab-Manager-Plus/)
+
 ![Tab Manager Plus in Block view](store/images/screenshot-1-1280x800.png)
 
 ## What is new in 7.0.0
@@ -87,11 +89,11 @@ You can install this extension from the [Chrome Web Store](https://chromewebstor
 
 Please enjoy.
 
-## Users and stars
+## Users, stars and ratings
 
-![Chrome users, Firefox users and GitHub stars over time](docs/stats/users.svg)
+![Chrome users, Firefox users, GitHub stars, new Chrome and Firefox ratings per month by star (4 and 5 stars up, 1 to 3 stars down) and average rating over time, with releases and store events marked](docs/stats/users.svg)
 
-Chrome weekly users come from the Chrome Web Store dashboard since October 2021, and from snapshots of the store page before that. Firefox users and GitHub stars are updated once a week by a GitHub Action, with older points from Wayback Machine snapshots and GitHub. Nothing is collected from users.
+Chrome weekly users and ratings come from the Chrome Web Store dashboard (users since October 2021, ratings since April 2018), and from snapshots of the store page before that. Firefox users, every Firefox rating (date and stars from the public Firefox Add-ons API), the Chrome store rating and GitHub stars are updated once a week by a GitHub Action, with older points from Wayback Machine snapshots and GitHub. The dashed lines mark releases (yellow) and store events (grey) ([milestones.csv](docs/stats/milestones.csv)). Nothing is collected from users.
 
 ## License
 MPLv2
