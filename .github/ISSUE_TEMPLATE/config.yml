@@ -3,3 +3,9 @@ contact_links:
   - name: What's new in each version
     url: https://github.com/stefanXO/Tab-Manager-Plus/releases
     about: Check the release notes first. Your issue might already be fixed in the latest version.
+  - name: Roadmap
+    url: https://tabmanagerplus.com/roadmap.html
+    about: What is planned, done, or left as is. Comment on the linked issue instead of opening a duplicate.
+  - name: Contributing guide
+    url: https://github.com/stefanXO/Tab-Manager-Plus/blob/master/CONTRIBUTING.md
+    about: Rules for issues and pull requests. Code is reviewed only as a pull request, never as a zip.

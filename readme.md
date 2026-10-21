@@ -51,6 +51,11 @@ Your patronage means that my work was able to help you - and that's already very
 [<img src="images/paypal.jpg" alt="Donate to keep extensions alive">](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=67TZLSEGYQFFW)
 [<img src="images/donate.gif" alt="Donate to keep extensions alive">](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=67TZLSEGYQFFW)
 
+## Contributing
+
+Issues and pull requests are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) first;
+the [roadmap](https://tabmanagerplus.com/roadmap.html) shows what is planned.
+
 ## Building from source
 
 The extension is written in TypeScript and bundled with esbuild into `build/<browser>/`, which is not part of the repository. Each build is a complete, loadable extension folder: the manifest, the pages, `css/`, `images/` and the bundles under `dist/`. You need [Node.js](https://nodejs.org/) 22.18 or newer (24 recommended; the tests run the TypeScript sources directly, which older versions cannot).
