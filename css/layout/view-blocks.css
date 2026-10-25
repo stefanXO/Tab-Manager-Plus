@@ -52,6 +52,26 @@
 	width: 100%;
 	padding: 0;
 }
+/* keep the tile wrapper as a full-width grid so the rows share one centred
+   column layout; titles and actions keep the parent row layout */
+.window-container.blocks .window.block .tabs,
+.window-container.blocks-big .window.block .tabs {
+	--tab-track: 1.9rem;
+	display: grid;
+	flex: 0 0 100%;
+	grid-template-columns: repeat(auto-fill, var(--tab-track));
+	justify-content: center;
+	width: 100%;
+}
+.window-container.blocks-big .window.block .tabs {
+	--tab-track: 3rem;
+}
+.compact .window-container.blocks .window.block .tabs {
+	--tab-track: 1.6rem;
+}
+.compact .window-container.blocks-big .window.block .tabs {
+	--tab-track: 2.7rem;
+}
 /* title on its own line (centred, truncated), tiles below, actions on a last line at the right */
 .window.block .windowTitle {
 	flex: 1 1 100%;
