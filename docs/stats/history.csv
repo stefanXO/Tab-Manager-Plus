@@ -1762,8 +1762,6 @@ date,metric,value
 2026-10-12,chrome_store,200000
 2026-10-12,firefox_users,4148
 2026-10-12,stars,498
-2026-10-13,firefox_new_5,10
-2026-10-13,firefox_rating_avg,4.5
 2026-10-15,chrome_users,282814
 2026-10-16,chrome_rating_avg,4.66
 2026-10-16,chrome_ratings,1088
@@ -1777,3 +1775,11 @@ date,metric,value
 2026-10-19,firefox_ratings,261
 2026-10-19,firefox_users,4132
 2026-10-19,stars,511
+2026-10-21,firefox_new_5,11
+2026-10-21,firefox_rating_avg,4.5
+2026-10-26,chrome_rating,4.6
+2026-10-26,chrome_store,200000
+2026-10-26,firefox_rating,4.5
+2026-10-26,firefox_ratings,262
+2026-10-26,firefox_users,4123
+2026-10-26,stars,516
