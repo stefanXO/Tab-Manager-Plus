@@ -11,8 +11,8 @@
    gets its own width instead, so it never scrolls sideways (a percentage, not
    a media query: see layout/narrow.css) */
 html, body {
-	min-width: min(450px, 100%);
-	min-height: 400px;
+	min-width: min(var(--popup-width, 450px), 100%);
+	min-height: var(--popup-min-height, 400px);
 }
 
 /* The fixed parts of the frame are as wide as the popup: --popup-width, set
