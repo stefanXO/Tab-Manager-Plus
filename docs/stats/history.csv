@@ -1789,3 +1789,9 @@ date,metric,value
 2026-11-02,firefox_ratings,262
 2026-11-02,firefox_users,4103
 2026-11-02,stars,519
+2026-11-09,chrome_rating,4.5
+2026-11-09,chrome_store,200000
+2026-11-09,firefox_rating,4.5
+2026-11-09,firefox_ratings,262
+2026-11-09,firefox_users,4111
+2026-11-09,stars,520
