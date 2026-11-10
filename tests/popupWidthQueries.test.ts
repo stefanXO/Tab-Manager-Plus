@@ -35,6 +35,12 @@ test("every max-width query of the popup's stylesheet starts at 100px", () => {
 	}
 });
 
+test("the frame's minimum size follows the fitted popup", () => {
+	const frame = read("layout/frame.css");
+	assert.match(frame, /min-width: min\(var\(--popup-width, 450px\), 100%\)/);
+	assert.match(frame, /min-height: var\(--popup-min-height, 400px\)/);
+});
+
 test("the frame's fixed parts take the popup's width, not the viewport's", () => {
 	const frame = read("layout/frame.css");
 	for (const sel of [".window-container, .options-container {", ".window.top {", ".window.searchbox {"]) {
